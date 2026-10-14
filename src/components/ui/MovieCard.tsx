@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
 import { Play, Star, Heart, Info } from 'lucide-react'
 import { getPosterUrl } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
 import type { MediaItem } from '@/types'
+import LazyImage from './LazyImage'
+import { FLUID_EASE, SPRING_SNAPPY } from '@/utils/motion'
 
 interface MovieCardProps {
   item: MediaItem
@@ -14,7 +17,6 @@ interface MovieCardProps {
 const MovieCard = ({ item, index = 0 }: MovieCardProps) => {
   const navigate = useNavigate()
   const { addFavorite, removeFavorite, isFavorite } = useAppStore()
-  const [imgError, setImgError] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
 
   const favorite = isFavorite(item.id)
@@ -44,93 +46,123 @@ const MovieCard = ({ item, index = 0 }: MovieCardProps) => {
     navigate(`/details/${item.type}/${item.id}`)
   }
 
+  const { ref, focused } = useFocusable({ onEnterPress: handleClick })
+
   const year = item.releaseDate ? new Date(item.releaseDate).getFullYear() : ''
+  const posterUrl = getPosterUrl(item.posterPath)
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.03 }}
-      className="movie-card group cursor-pointer relative"
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        duration: 0.32,
+        delay: Math.min(index * 0.035, 0.4),
+        ease: FLUID_EASE,
+      }}
+      whileHover={{
+        y: -6,
+        scale: 1.035,
+        transition: SPRING_SNAPPY,
+      }}
+      whileTap={{
+        scale: 0.97,
+        transition: { duration: 0.1 },
+      }}
+      ref={ref}
+      className={`group cursor-pointer relative select-none ${
+        focused ? 'tv-focused' : ''
+      }`}
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Poster */}
-      <div className="relative rounded-xl overflow-hidden aspect-[2/3] bg-bg-card">
-        {imgError ? (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-bg-card text-text-muted">
-            <span className="text-4xl mb-2">🎬</span>
-            <span className="text-xs text-center px-2">{item.title}</span>
-          </div>
-        ) : (
-          <img
-            src={getPosterUrl(item.posterPath)}
-            alt={item.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-            onError={() => setImgError(true)}
-          />
-        )}
+      {/* Container de Imagem com Lazy Loading & Blur-up */}
+      <div className="relative rounded-xl overflow-hidden aspect-[2/3] bg-bg-card border border-white/5 shadow-md group-hover:shadow-2xl group-hover:shadow-red-950/20 transition-shadow duration-300">
+        <LazyImage
+          src={posterUrl}
+          alt={item.title}
+          fallbackTitle={item.title}
+          aspectRatio="aspect-[2/3]"
+          className="transition-transform duration-500 ease-out group-hover:scale-105"
+        />
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-card-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Gradiente sutil escuro ao passar o mouse */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-250 pointer-events-none" />
 
-        {/* Hover actions */}
-        <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handlePlay}
-            className="bg-accent-red hover:bg-red-600 text-white rounded-full p-3 shadow-lg glow-red tv-focusable"
-            aria-label="Assistir"
-          >
-            <Play className="h-5 w-5 fill-white" />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleToggleFav}
-            className={`rounded-full p-2.5 shadow-lg tv-focusable transition-colors ${
-              favorite ? 'bg-red-500 text-white' : 'bg-black/50 text-white hover:bg-black/70'
-            }`}
-            aria-label={favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-          >
-            <Heart className={`h-4 w-4 ${favorite ? 'fill-white' : ''}`} />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={(e) => { e.stopPropagation(); handleClick() }}
-            className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2.5 shadow-lg tv-focusable"
-            aria-label="Detalhes"
-          >
-            <Info className="h-4 w-4" />
-          </motion.button>
-        </div>
+        {/* Ações com Micro-interações táteis */}
+        <AnimatePresence>
+          {isHovered && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ duration: 0.18, ease: FLUID_EASE }}
+              className="absolute inset-0 flex items-center justify-center gap-2 z-10"
+            >
+              <motion.button
+                whileHover={{ scale: 1.12 }}
+                whileTap={{ scale: 0.9 }}
+                transition={SPRING_SNAPPY}
+                onClick={handlePlay}
+                className="bg-accent-red hover:bg-red-600 text-white rounded-full p-3 shadow-xl glow-red tv-focusable"
+                aria-label="Assistir agora"
+              >
+                <Play className="h-5 w-5 fill-white" />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.12 }}
+                whileTap={{ scale: 0.9 }}
+                transition={SPRING_SNAPPY}
+                onClick={handleToggleFav}
+                className={`rounded-full p-2.5 shadow-xl tv-focusable transition-colors ${
+                  favorite ? 'bg-red-500 text-white' : 'bg-black/60 text-white hover:bg-black/80'
+                }`}
+                aria-label={favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+              >
+                <Heart className={`h-4 w-4 ${favorite ? 'fill-white' : ''}`} />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.12 }}
+                whileTap={{ scale: 0.9 }}
+                transition={SPRING_SNAPPY}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleClick()
+                }}
+                className="bg-black/60 hover:bg-black/80 text-white rounded-full p-2.5 shadow-xl tv-focusable"
+                aria-label="Ver detalhes"
+              >
+                <Info className="h-4 w-4" />
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Rating badge */}
-        <div className="absolute top-2 left-2">
-          <span className="rating-badge">
-            <Star className="h-2.5 w-2.5" />
+        <div className="absolute top-2 left-2 z-10">
+          <span className="rating-badge shadow-md">
+            <Star className="h-2.5 w-2.5 fill-black" />
             {item.rating.toFixed(1)}
           </span>
         </div>
 
         {/* Type badge */}
-        <div className="absolute top-2 right-2">
-          <span className="quality-badge bg-black/70 text-white/80">
+        <div className="absolute top-2 right-2 z-10">
+          <span className="quality-badge bg-black/75 backdrop-blur-sm text-white/90 border border-white/10 shadow-sm">
             {item.type === 'movie' ? 'FILME' : item.type === 'anime' ? 'ANIME' : 'SÉRIE'}
           </span>
         </div>
       </div>
 
-      {/* Info */}
-      <div className="mt-2 px-0.5">
-        <h3 className="text-sm font-medium text-white line-clamp-1 group-hover:text-red-400 transition-colors">
+      {/* Título & Metadados */}
+      <div className="mt-2.5 px-0.5">
+        <h3 className="text-xs md:text-sm font-semibold text-white/90 line-clamp-1 group-hover:text-red-400 transition-colors duration-200">
           {item.title}
         </h3>
-        <p className="text-xs text-text-secondary mt-0.5">{year}</p>
+        {year && <p className="text-[11px] text-white/40 mt-0.5 font-medium">{year}</p>}
       </div>
     </motion.div>
   )

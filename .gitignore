@@ -33,3 +33,6 @@ android/app/build/
 android/.gradle/
 android/captures/
 android/gradleBuild/
+
+# Local scratch files
+resultado.txt

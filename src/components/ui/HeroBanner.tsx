@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Info, ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import { getBackdropUrl, getPosterUrl } from '@/services/tmdb'
 import type { MediaItem } from '@/types'
+import { SkeletonHero } from '@/components/ui/SkeletonCard'
+import { FLUID_EASE, SPRING_SNAPPY } from '@/utils/motion'
 
 interface HeroBannerProps {
   items: MediaItem[]
@@ -42,38 +44,46 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
   }
 
   if (loading || featured.length === 0) {
-    return (
-      <div className="relative h-[70vh] min-h-[500px] bg-bg-secondary">
-        <div className="skeleton absolute inset-0" />
-      </div>
-    )
+    return <SkeletonHero />
   }
 
   const item = featured[current]
   const year = item.releaseDate ? new Date(item.releaseDate).getFullYear() : ''
+
+  const backdropVariants = {
+    enter: (dir: number) => ({ opacity: 0, x: dir * 40, scale: 1.04 }),
+    center: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.55, ease: FLUID_EASE } },
+    exit: (dir: number) => ({ opacity: 0, x: dir * -40, scale: 0.97, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }),
+  }
+
+  const contentVariants = {
+    enter: { opacity: 0, y: 24 },
+    center: { opacity: 1, y: 0, transition: { duration: 0.42, delay: 0.1, ease: FLUID_EASE } },
+    exit: { opacity: 0, y: -16, transition: { duration: 0.2, ease: [0.4, 0, 1, 1] } },
+  }
 
   return (
     <div className="relative h-[75vh] min-h-[520px] overflow-hidden">
       {/* Backdrop */}
       <AnimatePresence mode="wait" custom={direction}>
         <motion.div
-          key={item.id}
+          key={item.id + '-bg'}
           custom={direction}
-          initial={{ opacity: 0, x: direction * 60 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: direction * -60 }}
-          transition={{ duration: 0.6, ease: 'easeInOut' }}
+          variants={backdropVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
           className="absolute inset-0"
         >
           <img
             src={getBackdropUrl(item.backdropPath, 'original')}
             alt={item.title}
             className="hero-backdrop w-full h-full object-cover object-top"
+            decoding="async"
           />
-          {/* Gradients */}
           <div className="absolute inset-0 hero-overlay" />
-          <div className="absolute bottom-0 left-0 right-0 h-48 hero-overlay-bottom" />
-          <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-transparent to-black/20" />
+          <div className="absolute bottom-0 left-0 right-0 h-56 hero-overlay-bottom" />
+          <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-transparent to-black/30" />
         </motion.div>
       </AnimatePresence>
 
@@ -84,23 +94,25 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
             <AnimatePresence mode="wait">
               <motion.div
                 key={item.id + '-content'}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
+                variants={contentVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
                 className="space-y-3"
               >
-                {/* Type tag */}
-                <span className="inline-block quality-badge bg-accent-red text-white text-xs px-2 py-1">
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.28, delay: 0.15, ease: FLUID_EASE }}
+                  className="inline-block quality-badge bg-accent-red text-white text-xs px-2.5 py-1 rounded-md"
+                >
                   {item.type === 'movie' ? 'FILME' : item.type === 'anime' ? 'ANIME' : 'SÉRIE'}
-                </span>
+                </motion.span>
 
-                {/* Title */}
                 <h1 className="font-display font-black text-3xl md:text-5xl text-white leading-tight drop-shadow-2xl">
                   {item.title}
                 </h1>
 
-                {/* Meta */}
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="rating-badge">
                     <Star className="h-3 w-3" />
@@ -112,25 +124,25 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                   </span>
                 </div>
 
-                {/* Overview */}
                 <p className="text-sm md:text-base text-white/75 line-clamp-3 leading-relaxed">
                   {item.overview || 'Sem descrição disponível.'}
                 </p>
 
-                {/* Buttons */}
                 <div className="flex gap-3 pt-1">
                   <motion.button
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={SPRING_SNAPPY}
                     onClick={() => navigate(`/watch/${item.type}/${item.id}`)}
-                    className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg glow-red tv-focusable"
+                    className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-xl shadow-xl glow-red tv-focusable"
                   >
                     <Play className="h-5 w-5 fill-white" />
                     Assistir
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={SPRING_SNAPPY}
                     onClick={() => navigate(`/details/${item.type}/${item.id}`)}
                     className="flex items-center gap-2 glass hover:bg-white/10 text-white font-medium px-5 py-3 rounded-xl transition-all tv-focusable"
                   >
@@ -144,29 +156,38 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
         </div>
       </div>
 
-      {/* Navigation arrows */}
-      <button
+      {/* Nav arrows */}
+      <motion.button
+        whileHover={{ scale: 1.1, x: -2 }}
+        whileTap={{ scale: 0.92 }}
+        transition={SPRING_SNAPPY}
         onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/70 rounded-full text-white transition-all glass tv-focusable"
+        className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/40 hover:bg-black/70 rounded-full text-white glass tv-focusable"
       >
         <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.1, x: 2 }}
+        whileTap={{ scale: 0.92 }}
+        transition={SPRING_SNAPPY}
         onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/70 rounded-full text-white transition-all glass tv-focusable"
+        className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/40 hover:bg-black/70 rounded-full text-white glass tv-focusable"
       >
         <ChevronRight className="h-5 w-5" />
-      </button>
+      </motion.button>
 
-      {/* Dots */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-1.5">
+      {/* Progress dots */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2">
         {featured.map((_, i) => (
-          <button
+          <motion.button
             key={i}
             onClick={() => goTo(i)}
-            className={`transition-all rounded-full ${
-              i === current ? 'w-6 h-2 bg-accent-red' : 'w-2 h-2 bg-white/30 hover:bg-white/50'
-            }`}
+            animate={{
+              width: i === current ? 24 : 8,
+              backgroundColor: i === current ? '#e50914' : 'rgba(255,255,255,0.35)',
+            }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+            className="h-2 rounded-full"
           />
         ))}
       </div>
@@ -174,21 +195,26 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
       {/* Thumbnail strip */}
       <div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-2">
         {featured.map((f, i) => (
-          <button
+          <motion.button
             key={f.id}
             onClick={() => goTo(i)}
-            className={`relative rounded-lg overflow-hidden transition-all ${
-              i === current
-                ? 'ring-2 ring-accent-red opacity-100 w-16 h-10'
-                : 'opacity-40 hover:opacity-70 w-14 h-9'
+            animate={{
+              opacity: i === current ? 1 : 0.4,
+              scale: i === current ? 1 : 0.88,
+            }}
+            whileHover={{ opacity: 0.9, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+            className={`relative rounded-lg overflow-hidden ${
+              i === current ? 'ring-2 ring-accent-red w-16 h-10' : 'w-14 h-9'
             }`}
           >
             <img
               src={getPosterUrl(f.posterPath, 'w185')}
               alt={f.title}
               className="w-full h-full object-cover"
+              decoding="async"
             />
-          </button>
+          </motion.button>
         ))}
       </div>
     </div>

@@ -47,7 +47,7 @@ const Details = () => {
       }
     }
     fetch()
-  }, [id, type])
+  }, [id, type, isMovie, mediaId])
 
   if (loading) {
     return (
@@ -150,7 +150,7 @@ const Details = () => {
                 src={getPosterUrl(posterPath, 'w500')}
                 alt={title}
                 className="w-full h-full object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-poster.jpg' }}
+                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-poster.svg' }}
               />
             </div>
           </motion.div>
@@ -349,7 +349,7 @@ const Details = () => {
                           alt={actor.name}
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/placeholder-avatar.jpg'
+                            (e.target as HTMLImageElement).src = '/placeholder-avatar.svg'
                           }}
                         />
                       </div>
@@ -384,7 +384,7 @@ const Details = () => {
                         src={getPosterUrl(season.poster_path, 'w185')}
                         alt={season.name}
                         className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-poster.jpg' }}
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-poster.svg' }}
                       />
                     </div>
                     <div className="flex-1">

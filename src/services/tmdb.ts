@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useAppStore } from '@/store/useAppStore'
 import type {
   TMDBPaginatedResponse,
   TMDBMovie,
@@ -12,9 +13,12 @@ import type {
   MediaType,
 } from '@/types'
 
-// ===== TMDB Configuration =====
-// Using a public/demo key - user should replace with their own from themoviedb.org
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY || '4e44d9029b1270a757cddc766a1bcb63'
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY
+
+if (!API_KEY) {
+  console.error('[CineBG] VITE_TMDB_API_KEY não configurada. Crie o arquivo .env ou defina a variável.')
+  throw new Error('VITE_TMDB_API_KEY é obrigatória para o TMDB')
+}
 const BASE_URL = 'https://api.themoviedb.org/3'
 
 export const IMAGE_BASE = 'https://image.tmdb.org/t/p'
@@ -27,20 +31,73 @@ export const tmdb = axios.create({
   },
 })
 
+// ===== Filtro infantil =====
+// Gêneros considerados apropriados para o perfil infantil (perfil com `kids`).
+const KIDS_GENRES = new Set([16, 10751, 10762, 12, 14, 35, 10402, 10765])
+
+export const isKidsMode = (): boolean => {
+  const { profiles, activeProfileId } = useAppStore.getState()
+  return profiles.find((p) => p.id === activeProfileId)?.kids ?? false
+}
+
+const forKids = (items: MediaItem[]): MediaItem[] =>
+  isKidsMode() ? items.filter((item) => item.genreIds.some((g) => KIDS_GENRES.has(g))) : items
+
 // ===== Image URLs =====
 export const getPosterUrl = (path: string | null | undefined, size: 'w185' | 'w342' | 'w500' | 'w780' | 'original' = 'w500'): string => {
-  if (!path) return '/placeholder-poster.jpg'
+  if (!path) return '/placeholder-poster.svg'
   return `${IMAGE_BASE}/${size}${path}`
 }
 
 export const getBackdropUrl = (path: string | null | undefined, size: 'w300' | 'w780' | 'w1280' | 'original' = 'w1280'): string => {
-  if (!path) return '/placeholder-backdrop.jpg'
+  if (!path) return '/placeholder-backdrop.svg'
   return `${IMAGE_BASE}/${size}${path}`
 }
 
 export const getProfileUrl = (path: string | null | undefined): string => {
-  if (!path) return '/placeholder-avatar.jpg'
+  if (!path) return '/placeholder-avatar.svg'
   return `${IMAGE_BASE}/w185${path}`
+}
+
+// ===== Cache & Deduplication =====
+const requestCache = new Map<string, { data: unknown; expiresAt: number }>()
+const inflightMap = new Map<string, Promise<unknown>>()
+
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutos
+
+const buildCacheKey = (method: string, url: string, params?: Record<string, unknown>) => {
+  const p = params ? JSON.stringify(params) : ''
+  return `${method.toUpperCase()}:${url}:${p}`
+}
+
+const cachedGet = async <T>(url: string, params?: Record<string, unknown>): Promise<T> => {
+  const key = buildCacheKey('GET', url, { ...params, __kids: isKidsMode() })
+  const now = Date.now()
+  const cached = requestCache.get(key)
+  if (cached && cached.expiresAt > now) {
+    return cached.data as T
+  }
+  if (inflightMap.has(key)) {
+    return inflightMap.get(key) as Promise<T>
+  }
+
+  const promise = tmdb
+    .get<T>(url, { params })
+    .then((res) => res.data)
+    .finally(() => {
+      inflightMap.delete(key)
+    })
+
+  inflightMap.set(key, promise)
+
+  try {
+    const data = await promise
+    requestCache.set(key, { data, expiresAt: now + CACHE_TTL_MS })
+    return data
+  } catch (error) {
+    inflightMap.delete(key)
+    throw error
+  }
 }
 
 // ===== Helper: convert to MediaItem =====
@@ -77,34 +134,36 @@ export const getTrending = async (
   mediaType: 'movie' | 'tv' | 'all',
   timeWindow: 'day' | 'week' = 'week',
 ): Promise<MediaItem[]> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBMovie & TMDBShow>>(
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie & TMDBShow>>(
     `/trending/${mediaType}/${timeWindow}`
   )
-  return data.results.map((item) => {
-    if ('title' in item) return movieToMediaItem(item as TMDBMovie)
-    return showToMediaItem(item as TMDBShow)
-  })
+  return forKids(
+    data.results.map((item) => {
+      if ('title' in item) return movieToMediaItem(item as TMDBMovie)
+      return showToMediaItem(item as TMDBShow)
+    })
+  )
 }
 
 // Movies
 export const getPopularMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBMovie>>('/movie/popular', { params: { page } })
-  return { items: data.results.map(movieToMediaItem), totalPages: data.total_pages }
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/movie/popular', { page })
+  return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
 export const getTopRatedMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBMovie>>('/movie/top_rated', { params: { page } })
-  return { items: data.results.map(movieToMediaItem), totalPages: data.total_pages }
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/movie/top_rated', { page })
+  return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
 export const getNowPlayingMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBMovie>>('/movie/now_playing', { params: { page } })
-  return { items: data.results.map(movieToMediaItem), totalPages: data.total_pages }
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/movie/now_playing', { page })
+  return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
 export const getUpcomingMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBMovie>>('/movie/upcoming', { params: { page } })
-  return { items: data.results.map(movieToMediaItem), totalPages: data.total_pages }
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/movie/upcoming', { page })
+  return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
 export const discoverMovies = async (params: {
@@ -114,32 +173,30 @@ export const discoverMovies = async (params: {
   sort?: string
   minRating?: number
 }): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBMovie>>('/discover/movie', {
-    params: {
-      page: params.page || 1,
-      with_genres: params.genre,
-      primary_release_year: params.year,
-      sort_by: params.sort || 'popularity.desc',
-      'vote_average.gte': params.minRating,
-    },
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/discover/movie', {
+    page: params.page || 1,
+    with_genres: params.genre,
+    primary_release_year: params.year,
+    sort_by: params.sort || 'popularity.desc',
+    'vote_average.gte': params.minRating,
   })
-  return { items: data.results.map(movieToMediaItem), totalPages: data.total_pages }
+  return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
 // TV Shows
 export const getPopularShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBShow>>('/tv/popular', { params: { page } })
-  return { items: data.results.map((s) => showToMediaItem(s, 'tv')), totalPages: data.total_pages }
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/popular', { page })
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 
 export const getTopRatedShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBShow>>('/tv/top_rated', { params: { page } })
-  return { items: data.results.map((s) => showToMediaItem(s, 'tv')), totalPages: data.total_pages }
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/top_rated', { page })
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 
 export const getAiringToday = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBShow>>('/tv/airing_today', { params: { page } })
-  return { items: data.results.map((s) => showToMediaItem(s, 'tv')), totalPages: data.total_pages }
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/airing_today', { page })
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 
 export const discoverShows = async (params: {
@@ -150,80 +207,84 @@ export const discoverShows = async (params: {
   minRating?: number
   isAnime?: boolean
 }): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
-    params: {
-      page: params.page || 1,
-      with_genres: params.isAnime ? 16 : params.genre,
-      first_air_date_year: params.year,
-      sort_by: params.sort || 'popularity.desc',
-      'vote_average.gte': params.minRating,
-      with_keywords: params.isAnime ? '210024|287501' : undefined,
-      with_original_language: params.isAnime ? 'ja' : undefined,
-    },
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
+    page: params.page || 1,
+    with_genres: params.isAnime ? 16 : params.genre,
+    first_air_date_year: params.year,
+    sort_by: params.sort || 'popularity.desc',
+    'vote_average.gte': params.minRating,
+    with_keywords: params.isAnime ? '210024|287501' : undefined,
+    with_original_language: params.isAnime ? 'ja' : undefined,
   })
   const type: MediaType = params.isAnime ? 'anime' : 'tv'
-  return { items: data.results.map((s) => showToMediaItem(s, type)), totalPages: data.total_pages }
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, type))), totalPages: data.total_pages }
 }
 
 // Details
 export const getMovieDetails = async (id: number): Promise<TMDBMovieDetails> => {
-  const { data } = await tmdb.get<TMDBMovieDetails>(`/movie/${id}`, {
-    params: { append_to_response: 'videos,credits,similar,recommendations' },
+  const data = await cachedGet<TMDBMovieDetails>(`/movie/${id}`, {
+    append_to_response: 'videos,credits,similar,recommendations',
   })
   return data
 }
 
 export const getShowDetails = async (id: number): Promise<TMDBShowDetails> => {
-  const { data } = await tmdb.get<TMDBShowDetails>(`/tv/${id}`, {
-    params: { append_to_response: 'videos,credits,similar,recommendations' },
+  const data = await cachedGet<TMDBShowDetails>(`/tv/${id}`, {
+    append_to_response: 'videos,credits,similar,recommendations',
   })
   return data
 }
 
 export const getSeasonDetails = async (showId: number, seasonNumber: number): Promise<TMDBSeason> => {
-  const { data } = await tmdb.get<TMDBSeason>(`/tv/${showId}/season/${seasonNumber}`)
+  const data = await cachedGet<TMDBSeason>(`/tv/${showId}/season/${seasonNumber}`)
   return data
 }
 
 export const getMovieVideos = async (id: number): Promise<TMDBVideo[]> => {
-  const { data } = await tmdb.get<{ results: TMDBVideo[] }>(`/movie/${id}/videos`)
+  const data = await cachedGet<{ results: TMDBVideo[] }>(`/movie/${id}/videos`)
   return data.results.filter((v) => v.site === 'YouTube')
 }
 
 export const getMovieCredits = async (id: number): Promise<TMDBCredits> => {
-  const { data } = await tmdb.get<TMDBCredits>(`/movie/${id}/credits`)
+  const data = await cachedGet<TMDBCredits>(`/movie/${id}/credits`)
   return data
 }
 
 export const getShowCredits = async (id: number): Promise<TMDBCredits> => {
-  const { data } = await tmdb.get<TMDBCredits>(`/tv/${id}/credits`)
+  const data = await cachedGet<TMDBCredits>(`/tv/${id}/credits`)
   return data
 }
 
 // Search
 export const searchMulti = async (query: string, page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBMovie & TMDBShow & { media_type: string }>>('/search/multi', {
-    params: { query, page, include_adult: false },
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie & TMDBShow & { media_type: string }>>('/search/multi', {
+    query,
+    page,
+    include_adult: false,
   })
-  const items = data.results
-    .filter((r) => r.media_type === 'movie' || r.media_type === 'tv')
-    .map((r) => {
-      if (r.media_type === 'movie') return movieToMediaItem(r as TMDBMovie)
-      return showToMediaItem(r as TMDBShow)
-    })
+  const items = forKids(
+    data.results
+      .filter((r) => r.media_type === 'movie' || r.media_type === 'tv')
+      .map((r) => {
+        if (r.media_type === 'movie') return movieToMediaItem(r as TMDBMovie)
+        return showToMediaItem(r as TMDBShow)
+      })
+  )
   return { items, totalPages: data.total_pages }
 }
 
 export const searchMovies = async (query: string, page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBMovie>>('/search/movie', {
-    params: { query, page },
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/search/movie', {
+    query,
+    page,
   })
-  return { items: data.results.map(movieToMediaItem), totalPages: data.total_pages }
+  return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
 export const searchShows = async (query: string, page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const { data } = await tmdb.get<TMDBPaginatedResponse<TMDBShow>>('/search/tv', {
-    params: { query, page },
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/search/tv', {
+    query,
+    page,
   })
-  return { items: data.results.map((s) => showToMediaItem(s, 'tv')), totalPages: data.total_pages }
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }

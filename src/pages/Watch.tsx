@@ -1,25 +1,34 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Star, Calendar, Clock, Film, Tv } from 'lucide-react'
+import { ArrowLeft, Star, Calendar, Clock, Film, Tv, Download, Check, Loader2 } from 'lucide-react'
 import StreamPlayer from '@/components/player/StreamPlayer'
 import EpisodeSelector from '@/components/player/EpisodeSelector'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import GenreBadge from '@/components/ui/GenreBadge'
 import { getMovieDetails, getShowDetails, getPosterUrl } from '@/services/tmdb'
+import { resolveMegaEmbed } from '@/services/streams'
+import { buildFileName, downloadVideo, downloadsSupported } from '@/services/downloads'
 import { useAppStore } from '@/store/useAppStore'
-import type { TMDBMovieDetails, TMDBShowDetails } from '@/types'
+import type { DownloadItem, MediaType, TMDBMovieDetails, TMDBShowDetails } from '@/types'
 
 const Watch = () => {
   const { type, id } = useParams<{ type: 'movie' | 'tv' | 'anime'; id: string }>()
   const navigate = useNavigate()
-  const { addToHistory, getLastWatched } = useAppStore()
+  const [searchParams] = useSearchParams()
+  const { addToHistory, getLastWatched, updateHistoryProgress, addDownload, isDownloaded } = useAppStore()
+
+  const querySeason = Number(searchParams.get('season')) || null
+  const queryEpisode = Number(searchParams.get('episode')) || null
   
   const [movieData, setMovieData] = useState<TMDBMovieDetails | null>(null)
   const [showData, setShowData] = useState<TMDBShowDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [season, setSeason] = useState(1)
   const [episode, setEpisode] = useState(1)
+  const [resumeAt, setResumeAt] = useState<number | undefined>(undefined)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState(0)
 
   useEffect(() => {
     if (!id || !type) return
@@ -30,24 +39,30 @@ const Watch = () => {
         if (type === 'movie') {
           const data = await getMovieDetails(Number(id))
           setMovieData(data)
+          const lastWatched = getLastWatched(data.id)
+          setResumeAt(lastWatched?.progress)
           addToHistory({
             id: data.id,
             type: 'movie',
             title: data.title,
             posterPath: data.poster_path,
-            watchedAt: Date.now()
+            watchedAt: Date.now(),
+            progress: lastWatched?.progress,
           })
         } else {
           const data = await getShowDetails(Number(id))
           setShowData(data)
           
-          // Recupera histórico para continuar de onde parou
+          // Prioriza o episódio vindo da URL (?season=&episode=), senão continua do histórico
           const lastWatched = getLastWatched(data.id)
-          const targetSeason = lastWatched?.season || 1
-          const targetEpisode = lastWatched?.episode || 1
+          const targetSeason = querySeason || lastWatched?.season || 1
+          const targetEpisode = queryEpisode || lastWatched?.episode || 1
+          const sameEpisode =
+            lastWatched?.season === targetSeason && lastWatched?.episode === targetEpisode
 
           setSeason(targetSeason)
           setEpisode(targetEpisode)
+          setResumeAt(sameEpisode ? lastWatched?.progress : undefined)
 
           addToHistory({
             id: data.id,
@@ -56,7 +71,8 @@ const Watch = () => {
             posterPath: data.poster_path,
             watchedAt: Date.now(),
             season: targetSeason,
-            episode: targetEpisode
+            episode: targetEpisode,
+            progress: sameEpisode ? lastWatched?.progress : undefined,
           })
         }
       } catch (err) {
@@ -67,11 +83,12 @@ const Watch = () => {
     }
     
     loadDetails()
-  }, [id, type])
+  }, [id, type, querySeason, queryEpisode, addToHistory, getLastWatched])
 
   const handleEpisodeSelect = (s: number, e: number) => {
     setSeason(s)
     setEpisode(e)
+    setResumeAt(undefined)
     if (showData) {
       addToHistory({
         id: showData.id,
@@ -80,7 +97,8 @@ const Watch = () => {
         posterPath: showData.poster_path,
         watchedAt: Date.now(),
         season: s,
-        episode: e
+        episode: e,
+        progress: 0,
       })
     }
   }
@@ -88,6 +106,52 @@ const Watch = () => {
   const handleNextEpisode = () => {
     const nextEp = episode + 1
     handleEpisodeSelect(season, nextEp)
+  }
+
+  const handleProgress = (seconds: number) => {
+    updateHistoryProgress(Number(id), Math.floor(seconds))
+  }
+
+  const handleDownload = async () => {
+    if (!downloadsSupported()) {
+      alert('Downloads estão disponíveis apenas no aplicativo Android.')
+      return
+    }
+    setDownloading(true)
+    setDownloadProgress(0)
+    try {
+      const resolved = await resolveMegaEmbed(
+        Number(id),
+        type === 'movie' ? 'movie' : 'tv',
+        season,
+        episode,
+      )
+      if (!resolved.dubbedMp4) {
+        alert('Esta fonte não está disponível para download. Tente novamente mais tarde.')
+        return
+      }
+      const base: DownloadItem = {
+        id: Number(id),
+        type: type as MediaType,
+        title: title || '',
+        posterPath: posterPath ?? null,
+        season: type === 'movie' ? undefined : season,
+        episode: type === 'movie' ? undefined : episode,
+        url: resolved.dubbedMp4,
+        path: '',
+        createdAt: Date.now(),
+      }
+      const path = await downloadVideo(resolved.dubbedMp4, buildFileName(base), (r) =>
+        setDownloadProgress(r),
+      )
+      addDownload({ ...base, path })
+    } catch (err) {
+      console.error('Download failed:', err)
+      alert('Não foi possível baixar. Verifique sua conexão e tente novamente.')
+    } finally {
+      setDownloading(false)
+      setDownloadProgress(0)
+    }
   }
 
   if (loading) {
@@ -118,6 +182,11 @@ const Watch = () => {
   const genres = isMovie ? movieData?.genres : showData?.genres
   const runtime = isMovie ? movieData?.runtime : null
   const posterPath = isMovie ? movieData?.poster_path : showData?.poster_path
+  const alreadyDownloaded = isDownloaded(
+    Number(id),
+    isMovie ? undefined : season,
+    isMovie ? undefined : episode,
+  )
 
   return (
     <motion.div
@@ -145,7 +214,39 @@ const Watch = () => {
               episode={episode}
               title={title || ''}
               onNextEpisode={type !== 'movie' ? handleNextEpisode : undefined}
+              startAt={resumeAt}
+              onProgress={handleProgress}
             />
+
+            {/* Download offline */}
+            <div className="flex flex-wrap items-center gap-3 glass rounded-xl px-4 py-3">
+              {alreadyDownloaded ? (
+                <span className="flex items-center gap-2 text-sm font-semibold text-green-400">
+                  <Check className="h-4 w-4" />
+                  Baixado — disponível em Downloads
+                </span>
+              ) : (
+                <>
+                  <span className="text-sm text-white/70 flex-1 min-w-[200px]">
+                    Baixe e assista offline, sem precisar de internet.
+                  </span>
+                  <button
+                    onClick={handleDownload}
+                    disabled={downloading}
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                  >
+                    {downloading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                    {downloading
+                      ? `Baixando ${Math.round(downloadProgress * 100)}%`
+                      : 'Baixar'}
+                  </button>
+                </>
+              )}
+            </div>
 
             {/* Details below player on mobile, hide on desktop if space is tight */}
             <div className="glass rounded-xl p-6">

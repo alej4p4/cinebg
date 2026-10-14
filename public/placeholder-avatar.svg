@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450" role="img" aria-label="Avatar indisponível">
+  <rect width="300" height="450" fill="#12121a"/>
+  <circle cx="150" cy="185" r="55" fill="#2d2d3e"/>
+  <path d="M60 340 Q150 250 240 340 L240 450 L60 450 Z" fill="#2d2d3e"/>
+  <text x="150" y="410" font-family="Inter, Arial, sans-serif" font-size="20" fill="#4a5568" text-anchor="middle">Sem foto</text>
+</svg>

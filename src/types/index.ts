@@ -69,6 +69,8 @@ export interface TMDBShowDetails extends TMDBShow {
   status: string
   tagline: string
   homepage: string
+  last_episode_to_air?: TMDBEpisode | null
+  next_episode_to_air?: TMDBEpisode | null
   networks: { id: number; name: string; logo_path: string | null }[]
   created_by: { id: number; name: string; profile_path: string | null }[]
   credits?: TMDBCredits
@@ -156,6 +158,7 @@ export interface WatchHistoryItem {
   watchedAt: number
   season?: number
   episode?: number
+  progress?: number
 }
 
 export interface FavoriteItem {
@@ -165,6 +168,18 @@ export interface FavoriteItem {
   posterPath: string | null
   rating: number
   addedAt: number
+}
+
+export interface DownloadItem {
+  id: number
+  type: MediaType
+  title: string
+  posterPath: string | null
+  season?: number
+  episode?: number
+  url: string
+  path: string
+  createdAt: number
 }
 
 export interface AppStore {
