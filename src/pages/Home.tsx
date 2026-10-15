@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import HeroBanner from '@/components/ui/HeroBanner'
 import Carousel from '@/components/ui/Carousel'
@@ -13,6 +13,7 @@ import {
   getPopularShows,
   getNowPlayingMovies,
   getUpcomingMovies,
+  discoverMovies,
   discoverShows,
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
@@ -29,14 +30,24 @@ const Home = () => {
   const [topShows, setTopShows] = useState<MediaItem[]>([])
   const [airingNow, setAiringNow] = useState<MediaItem[]>([])
   const [animeItems, setAnimeItems] = useState<MediaItem[]>([])
+  const [actionMovies, setActionMovies] = useState<MediaItem[]>([])
+  const [comedyMovies, setComedyMovies] = useState<MediaItem[]>([])
+  const [scifiMovies, setScifiMovies] = useState<MediaItem[]>([])
+  const [actionShows, setActionShows] = useState<MediaItem[]>([])
+  const [comedyShows, setComedyShows] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  const { history } = useAppStore()
+  const { history, favorites } = useAppStore()
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [t, pm, tom, np, up, ps, ts, a, anime] = await Promise.all([
+        const [
+          t,
+          pm, tom, np, up, ps, ts, a, anime,
+          actionM, comedyM, scifiM,
+          actionS, comedyS,
+        ] = await Promise.all([
           getTrending('all', 'week'),
           getPopularMovies(),
           getTopRatedMovies(),
@@ -46,7 +57,13 @@ const Home = () => {
           getTopRatedShows(),
           getAiringToday(),
           discoverShows({ isAnime: true }),
+          discoverMovies({ genre: 28, sort: 'popularity.desc' }),
+          discoverMovies({ genre: 35, sort: 'popularity.desc' }),
+          discoverMovies({ genre: 878, sort: 'popularity.desc' }),
+          discoverShows({ genre: 10759, sort: 'popularity.desc' }),
+          discoverShows({ genre: 35, sort: 'popularity.desc' }),
         ])
+
         setTrending(t)
         setPopularMovies(pm.items)
         setTopMovies(tom.items)
@@ -56,6 +73,11 @@ const Home = () => {
         setTopShows(ts.items)
         setAiringNow(a.items)
         setAnimeItems(anime.items)
+        setActionMovies(actionM.items)
+        setComedyMovies(comedyM.items)
+        setScifiMovies(scifiM.items)
+        setActionShows(actionS.items)
+        setComedyShows(comedyS.items)
       } catch (err) {
         console.error('Failed to load home data:', err)
       } finally {
@@ -66,7 +88,7 @@ const Home = () => {
   }, [])
 
   const historyItems: MediaItem[] = history
-    .slice(0, 10)
+    .slice(0, 12)
     .map((h) => ({
       id: h.id,
       title: h.season ? `${h.title} (S${h.season}E${h.episode})` : h.title,
@@ -80,6 +102,29 @@ const Home = () => {
       genreIds: [],
     }))
 
+  const progressMap = useMemo(() => {
+    const map = new Map<string, number>()
+    history.slice(0, 12).forEach((h) => {
+      if (typeof h.progress === 'number') map.set(`${h.type}-${h.id}`, h.progress)
+    })
+    return map
+  }, [history])
+
+  const favoriteItems: MediaItem[] = favorites.map((f) => ({
+    id: f.id,
+    title: f.title,
+    overview: '',
+    posterPath: f.posterPath,
+    backdropPath: null,
+    releaseDate: '',
+    rating: f.rating,
+    voteCount: 0,
+    type: f.type,
+    genreIds: [],
+  }))
+
+  const top10 = trending.slice(0, 10)
+
   return (
     <>
       <ProgressBar isLoading={loading} />
@@ -92,10 +137,15 @@ const Home = () => {
       >
         <HeroBanner items={trending} loading={loading} />
 
-        <div className="space-y-10 py-10">
+        <div className="space-y-8 md:space-y-10 py-8 md:py-10">
           <AnimatePresence>
             {historyItems.length > 0 && (
-              <Carousel title="Continuar Assistindo" emoji="▶️" items={historyItems} />
+              <Carousel
+                title="Continuar Assistindo"
+                emoji="▶️"
+                items={historyItems}
+                getProgress={(item) => progressMap.get(`${item.type}-${item.id}`) ?? 0}
+              />
             )}
           </AnimatePresence>
 
@@ -107,15 +157,28 @@ const Home = () => {
             </>
           ) : (
             <>
-              <Carousel title="Em Alta esta Semana" emoji="🔥" items={trending} />
-              <Carousel title="Em Cartaz nos Cinemas" emoji="🎭" items={nowPlaying} />
-              <Carousel title="Filmes Populares" emoji="🎬" items={popularMovies} />
-              <Carousel title="Mais Bem Avaliados" emoji="🏆" items={topMovies} />
-              <Carousel title="Em Breve nos Cinemas" emoji="📅" items={upcoming} />
+              {favoriteItems.length > 0 && (
+                <Carousel title="Minha Lista" emoji="❤️" items={favoriteItems} />
+              )}
+
+              {top10.length > 0 && (
+                <Carousel title="Top 10 da Semana" emoji="🏆" items={top10} showRanking />
+              )}
+
+              <Carousel title="Em Cartaz nos Cinemas" emoji="🎬" items={nowPlaying} />
+              <Carousel title="Novidades em Filmes" emoji="🆕" items={popularMovies} />
+              <Carousel title="Filmes Populares" emoji="🔥" items={popularMovies.slice(6)} />
+              <Carousel title="Filmes de Ação" emoji="💥" items={actionMovies} />
+              <Carousel title="Comédias" emoji="😂" items={comedyMovies} />
+              <Carousel title="Ficção Científica" emoji="👽" items={scifiMovies} />
+              <Carousel title="Mais Bem Avaliados" emoji="⭐" items={topMovies} />
+              <Carousel title="Em Breve" emoji="🎥" items={upcoming} />
               <Carousel title="Séries Populares" emoji="📺" items={popularShows} />
+              <Carousel title="Ação e Aventura em Séries" emoji="⚔️" items={actionShows} />
+              <Carousel title="Comédia em Séries" emoji="😄" items={comedyShows} />
               <Carousel title="Em Exibição Hoje" emoji="🔴" items={airingNow} />
-              <Carousel title="Top Séries de Todos os Tempos" emoji="⭐" items={topShows} />
-              <Carousel title="Anime em Destaque" emoji="⛩️" items={animeItems} />
+              <Carousel title="Top Séries" emoji="⭐" items={topShows} />
+              <Carousel title="Anime em Destaque" emoji="🃏" items={animeItems} />
             </>
           )}
         </div>

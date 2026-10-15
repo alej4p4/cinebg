@@ -12,9 +12,11 @@ import { FLUID_EASE, SPRING_SNAPPY } from '@/utils/motion'
 interface MovieCardProps {
   item: MediaItem
   index?: number
+  progress?: number
+  rank?: number
 }
 
-const MovieCard = ({ item, index = 0 }: MovieCardProps) => {
+const MovieCard = ({ item, index = 0, progress, rank }: MovieCardProps) => {
   const navigate = useNavigate()
   const { addFavorite, removeFavorite, isFavorite } = useAppStore()
   const [isHovered, setIsHovered] = useState(false)
@@ -86,6 +88,18 @@ const MovieCard = ({ item, index = 0 }: MovieCardProps) => {
           aspectRatio="aspect-[2/3]"
           className="transition-transform duration-500 ease-out group-hover:scale-105"
         />
+
+        {typeof rank === 'number' && (
+          <div className="absolute -left-1 bottom-0 z-20 font-display font-black text-6xl md:text-7xl leading-none text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]" style={{ WebkitTextStroke: '2px rgba(0,0,0,0.8)' }}>
+            {rank}
+          </div>
+        )}
+
+        {typeof progress === 'number' && progress > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 z-20 h-1 bg-white/20">
+            <div className="h-full bg-accent-red" style={{ width: `${Math.min(progress, 100)}%` }} />
+          </div>
+        )}
 
         {/* Gradiente sutil escuro ao passar o mouse */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-250 pointer-events-none" />
