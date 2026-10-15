@@ -314,3 +314,7 @@ input:focus, button:focus {
     gap: 24px;
   }
 }
+
+/* Aproveita area segura em celulares em paisagem */
+:root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
+.cinebg-landscape { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
