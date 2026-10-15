@@ -318,3 +318,8 @@ input:focus, button:focus {
 /* Aproveita area segura em celulares em paisagem */
 :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
 .cinebg-landscape { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
+
+/* Fullscreen e safe-area para orientacao paisagem no Android */
+html, body { min-height: 100%; }
+#root { min-height: 100dvh; }
+@media (orientation: landscape) { body { overflow-x: hidden; } }
