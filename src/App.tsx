@@ -6,6 +6,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { useEpisodeNotifications } from '@/hooks/useEpisodeNotifications'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
+import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
 import { useAppStore } from '@/store/useAppStore'
 import { isTVDevice } from '@/utils/tv'
 
@@ -65,6 +66,7 @@ const AnimatedRoutes = () => {
 
 function App() {
   useEpisodeNotifications()
+  useOrientationFullscreen()
 
   return (
     <BrowserRouter>
