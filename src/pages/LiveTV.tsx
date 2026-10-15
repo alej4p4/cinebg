@@ -42,6 +42,7 @@ const LiveTV = () => {
   const [channels, setChannels] = useState<LiveChannel[]>([])
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState<string>('all')
+  const [genre, setGenre] = useState<string>('all')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<LiveChannel | null>(null)
   const [favorites, setFavorites] = useState<Set<string>>(() => loadLiveFavorites())
@@ -89,15 +90,21 @@ const LiveTV = () => {
     return LIVE_CATEGORIES.filter((c) => present.has(c.id))
   }, [channels])
 
+  const availableGenres = useMemo(() => {
+    const present = new Set(channels.flatMap((c) => c.genres || []))
+    return Array.from(present).filter((g) => g && g !== 'Geral').sort((a, b) => a.localeCompare(b))
+  }, [channels])
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return channels.filter((c) => {
       if (category === 'favorites' && !favorites.has(c.id)) return false
       if (category !== 'all' && category !== 'favorites' && c.category !== category) return false
+      if (genre !== 'all' && !(c.genres || []).includes(genre)) return false
       if (q !== '' && !c.name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [channels, category, query, favorites])
+  }, [channels, category, query, favorites, genre])
 
   return (
     <motion.div
@@ -224,6 +231,34 @@ const LiveTV = () => {
                 }`}
               >
                 {cat.emoji} {cat.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!loading && availableGenres.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-2 -mx-1 px-1">
+            <button
+              onClick={() => setGenre('all')}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors tv-focusable ${
+                genre === 'all'
+                  ? 'bg-accent-red text-white'
+                  : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              Todos os generos
+            </button>
+            {availableGenres.map((item) => (
+              <button
+                key={item}
+                onClick={() => setGenre(item)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors tv-focusable ${
+                  genre === item
+                    ? 'bg-accent-red text-white'
+                    : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {item}
               </button>
             ))}
           </div>

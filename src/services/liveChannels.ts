@@ -26,6 +26,7 @@ export interface LiveChannel {
   sources: string[]
   quality: string | null
   geoBlocked: boolean
+  genres: string[]
 }
 
 export const LIVE_CATEGORIES: LiveCategory[] = [
@@ -80,6 +81,7 @@ export const CURATED_CHANNELS: LiveChannel[] = [
     ],
     quality: '1080p',
     geoBlocked: false,
+    genres: ['Geral'],
   },
   {
     id: 'cbs-news',
@@ -92,6 +94,7 @@ export const CURATED_CHANNELS: LiveChannel[] = [
     ],
     quality: '1080p',
     geoBlocked: false,
+    genres: ['Geral'],
   },
   {
     id: 'france24-en',
@@ -102,6 +105,7 @@ export const CURATED_CHANNELS: LiveChannel[] = [
     sources: ['https://static.france24.com/live/F24_EN_LO_HLS/live_web.m3u8'],
     quality: '720p',
     geoBlocked: false,
+    genres: ['Geral'],
   },
   {
     id: 'france24-fr',
@@ -112,6 +116,7 @@ export const CURATED_CHANNELS: LiveChannel[] = [
     sources: ['https://static.france24.com/live/F24_FR_HI_HLS/live_web.m3u8'],
     quality: '720p',
     geoBlocked: false,
+    genres: ['Geral'],
   },
   {
     id: 'france24-es',
@@ -122,6 +127,7 @@ export const CURATED_CHANNELS: LiveChannel[] = [
     sources: ['https://static.france24.com/live/F24_ES_HI_HLS/live_web.m3u8'],
     quality: '720p',
     geoBlocked: false,
+    genres: ['Geral'],
   },
   {
     id: 'france24-ar',
@@ -132,6 +138,7 @@ export const CURATED_CHANNELS: LiveChannel[] = [
     sources: ['https://static.france24.com/live/F24_AR_HI_HLS/live_web.m3u8'],
     quality: '720p',
     geoBlocked: false,
+    genres: ['Geral'],
   },
   {
     id: 'arirang',
@@ -144,6 +151,7 @@ export const CURATED_CHANNELS: LiveChannel[] = [
     ],
     quality: '1080p',
     geoBlocked: false,
+    genres: ['Geral'],
   },
   {
     id: 'nasa-tv',
@@ -156,6 +164,7 @@ export const CURATED_CHANNELS: LiveChannel[] = [
     ],
     quality: '1080p',
     geoBlocked: false,
+    genres: ['Geral'],
   },
   {
     id: 'redbull-tv',
@@ -166,6 +175,7 @@ export const CURATED_CHANNELS: LiveChannel[] = [
     sources: ['https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8'],
     quality: '1080p',
     geoBlocked: false,
+    genres: ['Geral'],
   },
 ]
 
@@ -189,6 +199,32 @@ const attr = (extinf: string, name: string): string | null => {
 const isPlayable = (url: string): boolean =>
   /^https?:\/\//i.test(url) && (/\.m3u8(\?|$)/i.test(url) || /\.mp4(\?|$)/i.test(url))
 
+const GENRE_GROUPS: { genre: string; keywords: string[] }[] = [
+  { genre: 'Ação', keywords: ['action', 'acao', 'ação', 'superhero'] },
+  { genre: 'Aventura', keywords: ['adventure', 'aventura'] },
+  { genre: 'Terror', keywords: ['horror', 'terror', 'scary'] },
+  { genre: 'Comédia', keywords: ['comedy', 'comedia', 'comedias', 'funny'] },
+  { genre: 'Drama', keywords: ['drama', 'dramas'] },
+  { genre: 'Ficção Científica', keywords: ['sci-fi', 'scifi', 'science fiction', 'ficcao cientifica', 'ficção científica'] },
+  { genre: 'Fantasia', keywords: ['fantasy', 'fantasia'] },
+  { genre: 'Animação', keywords: ['animation', 'animacao', 'animação', 'cartoon'] },
+  { genre: 'Documentário', keywords: ['documentary', 'documentario', 'documentário', 'doc'] },
+  { genre: 'Romance', keywords: ['romance', 'romantic'] },
+  { genre: 'Suspense', keywords: ['thriller', 'suspense'] },
+  { genre: 'Crime', keywords: ['crime', 'crimes'] },
+  { genre: 'Família', keywords: ['family', 'familia', 'infantil', 'kids'] },
+  { genre: 'Guerra', keywords: ['war', 'guerra'] },
+]
+
+export const deriveLiveGenres = (text: string): string[] => {
+  const normalized = text.toLowerCase()
+  const found = GENRE_GROUPS.filter((entry) =>
+    entry.keywords.some((keyword) => normalized.includes(keyword)),
+  ).map((entry) => entry.genre)
+
+  return found.length > 0 ? Array.from(new Set(found)) : ['Geral']
+}
+
 export const parseM3U = (text: string, category: string): LiveChannel[] => {
   const lines = text.split(/\r?\n/)
   const channels: LiveChannel[] = []
@@ -209,6 +245,7 @@ export const parseM3U = (text: string, category: string): LiveChannel[] => {
     if (current && isPlayable(line)) {
       const tvgId = attr(current, 'tvg-id')
       const logo = attr(current, 'tvg-logo')
+      const groupTitle = attr(current, 'group-title') ?? ''
       const rawName = current.slice(current.lastIndexOf(',') + 1).trim()
       const name = stripTags(rawName)
       const qualityMatch = rawName.match(/\((\d{3,4}p)\)/i)
@@ -225,6 +262,7 @@ export const parseM3U = (text: string, category: string): LiveChannel[] => {
           sources: [line],
           quality: qualityMatch ? qualityMatch[1].toLowerCase() : null,
           geoBlocked,
+          genres: deriveLiveGenres(`${groupTitle} ${name}`),
         })
       }
     }
