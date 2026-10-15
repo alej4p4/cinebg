@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Loader2, Play, Search as SearchIcon, Tv, X } from 'lucide-react'
+import { LayoutGrid, List as ListIcon, Loader2, Play, Search as SearchIcon, Tv, X } from 'lucide-react'
 import LivePlayer from '@/components/player/LivePlayer'
 import {
   LIVE_CATEGORIES,
@@ -46,6 +46,17 @@ const LiveTV = () => {
   const [selected, setSelected] = useState<LiveChannel | null>(null)
   const [favorites, setFavorites] = useState<Set<string>>(() => loadLiveFavorites())
   const [lastChannelId, setLastChannelId] = useState<string | null>(() => loadLastLiveChannelId())
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() =>
+    typeof window !== 'undefined' && localStorage.getItem('cinebg:liveViewMode') === 'list' ? 'list' : 'grid',
+  )
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinebg:liveViewMode', viewMode)
+    } catch {
+      /* ignore */
+    }
+  }, [viewMode])
 
   const resumeChannel = useMemo(
     () => channels.find((c) => c.id === lastChannelId) ?? null,
@@ -117,6 +128,27 @@ const LiveTV = () => {
               ▶ Retomar: {resumeChannel.name}
             </button>
           )}
+
+          <div className="flex items-center gap-2 bg-white/5 rounded-xl p-1 border border-white/8">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-colors tv-focusable ${
+                viewMode === 'grid' ? 'bg-accent-red text-white' : 'text-white/50 hover:text-white'
+              }`}
+              title="Grade"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-colors tv-focusable ${
+                viewMode === 'list' ? 'bg-accent-red text-white' : 'text-white/50 hover:text-white'
+              }`}
+              title="Lista"
+            >
+              <ListIcon className="h-4 w-4" />
+            </button>
+          </div>
 
           <div className="relative w-full sm:w-72">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
@@ -212,7 +244,13 @@ const LiveTV = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-16">
+          <div
+            className={
+              viewMode === 'list'
+                ? 'flex flex-col gap-3 pb-16'
+                : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-16'
+            }
+          >
             {filtered.map((channel, i) => (
               <div className="relative" key={channel.id}>
                 <motion.button
@@ -224,28 +262,50 @@ const LiveTV = () => {
                   setSelected(channel)
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
-                className={`group bg-bg-card border rounded-xl p-4 text-left transition-all tv-focusable ${
+                className={`group bg-bg-card border rounded-xl text-left transition-all tv-focusable ${
+                  viewMode === 'list' ? 'p-3 flex items-center gap-4' : 'p-4'
+                } ${
                   selected?.id === channel.id
                     ? 'border-accent-red/70 bg-white/5'
                     : 'border-white/5 hover:border-accent-red/50 hover:bg-white/5'
                 }`}
               >
-                <div className="flex items-center justify-center h-16 mb-3">
+                <div
+                  className={
+                    viewMode === 'list'
+                      ? 'flex items-center justify-center h-12 w-12 flex-shrink-0'
+                      : 'flex items-center justify-center h-16 mb-3'
+                  }
+                >
                   <ChannelLogo channel={channel} />
                 </div>
-                <h3 className="text-sm font-bold text-white truncate group-hover:text-red-400 transition-colors">
-                  {channel.name}
-                </h3>
-                <div className="flex items-center justify-between mt-2 gap-2">
-                  <span className="text-[11px] text-white/50 bg-white/5 px-2 py-0.5 rounded truncate">
-                    {categoryLabel(channel.category)}
-                  </span>
-                  <span className="text-xs text-white/50 flex-shrink-0">
-                    {countryFlag(channel.country)}
-                  </span>
+                <div className={viewMode === 'list' ? 'min-w-0 flex-1' : ''}>
+                  <h3 className="text-sm font-bold text-white truncate group-hover:text-red-400 transition-colors">
+                    {channel.name}
+                  </h3>
+                  <div className="flex items-center justify-between mt-1 gap-2">
+                    <span className="text-[11px] text-white/50 bg-white/5 px-2 py-0.5 rounded truncate">
+                      {categoryLabel(channel.category)}
+                    </span>
+                    <span className="text-xs text-white/50 flex-shrink-0">
+                      {countryFlag(channel.country)}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-3 flex items-center justify-center w-7 h-7 rounded-full bg-accent-red/20 text-accent-red opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="h-3.5 w-3.5 fill-current" />
+                <div
+                  className={
+                    viewMode === 'list'
+                      ? 'flex items-center gap-2 flex-shrink-0'
+                      : 'mt-3 flex items-center justify-center w-7 h-7 rounded-full bg-accent-red/20 text-accent-red opacity-0 group-hover:opacity-100 transition-opacity'
+                  }
+                >
+                  <Play
+                    className={
+                      viewMode === 'list'
+                        ? 'h-4 w-4 text-accent-red'
+                        : 'h-3.5 w-3.5 fill-current'
+                    }
+                  />
                 </div>
               </motion.button>
                 <span
