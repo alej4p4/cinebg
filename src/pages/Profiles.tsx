@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Plus, Trash2, Baby, Bell, BellOff, Languages, Tv } from 'lucide-react'
+import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog } from 'lucide-react'
 import { useAppStore, type UserProfile } from '@/store/useAppStore'
 import {
   checkForNewEpisodes,
@@ -8,8 +8,8 @@ import {
   isNativeNotificationsAvailable,
 } from '@/services/notifications'
 
-const EMOJIS = ['🍿', '🚀', '🐱', '🐼', '🦊', '🎮', '⭐', '🌙', '👶', '🎬']
-const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899']
+const EMOJIS = ['😀', '😎', '😍', '🤩', '😎', '🥳', '🤔', '😴', '🤓', '🥰', '😎', '🤠', '😇', '🧠', '👻', '🤖', '🦸', '🦹', '🧙', '🧚']
+const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e', '#a855f7', '#0ea5e9', '#14b8a6']
 
 const Profiles = () => {
   const {
@@ -24,6 +24,8 @@ const Profiles = () => {
     setTvMode,
     audioOption,
     setAudioOption,
+    subtitleOption,
+    setSubtitleOption,
   } = useAppStore()
 
   const [name, setName] = useState('')
@@ -64,7 +66,7 @@ const Profiles = () => {
         <div className="py-6">
           <h1 className="font-display font-black text-3xl text-white">Perfis</h1>
           <p className="text-text-secondary text-sm mt-1">
-            Cada perfil tem seus próprios favoritos e histórico.
+            Cada perfil tem seus prÃ³prios favoritos e histÃ³rico.
           </p>
         </div>
 
@@ -157,12 +159,71 @@ const Profiles = () => {
 
         <div className="glass rounded-xl p-5 mt-8">
           <h2 className="font-bold text-white mb-2 flex items-center gap-2">
-            <Bell className="h-5 w-5 text-accent-red" />
-            Notificações
+            <UserCog className="h-5 w-5 text-accent-red" />
+            PreferÃªncias do perfil
           </h2>
           <p className="text-text-secondary text-sm mb-4">
-            Receba avisos quando um episódio novo de uma série favorita for lançado. Funciona no
-            aplicativo Android (requer permissão de notificações).
+            Configure idioma, Ã¡udio e legendas para este perfil.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <p className="text-white/60 text-xs font-semibold mb-2">ÿudio</p>
+              <div className="flex flex-wrap gap-2">
+                {(['dub', 'sub', 'orig'] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => setAudioOption(opt)}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+                      audioOption === opt
+                        ? 'bg-accent-red text-white'
+                        : 'bg-white/5 text-white/70 hover:bg-white/10'
+                    }`}
+                  >
+                    {opt === 'dub' ? '🇧🇷 Dublado' : opt === 'sub' ? '🇧🇷 Legendado' : '🌐 Original'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-white/60 text-xs font-semibold mb-2">Legendas</p>
+              <div className="flex flex-wrap gap-2">
+                {(['off', 'pt', 'en'] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => setSubtitleOption(opt)}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+                      subtitleOption === opt
+                        ? 'bg-accent-red text-white'
+                        : 'bg-white/5 text-white/70 hover:bg-white/10'
+                    }`}
+                  >
+                    {opt === 'off' ? '🚫 Desativado' : opt === 'pt' ? '🇧🇷 Português' : '🇺🇸 Inglês'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleAdd}
+            disabled={!name.trim()}
+            className="w-full mt-6 flex items-center justify-center gap-2 bg-accent-red text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-red-900/40"
+          >
+            <Plus className="h-4 w-4" />
+            Adicionar perfil
+          </button>
+        </div>
+
+        <div className="glass rounded-xl p-5 mt-8">
+          <h2 className="font-bold text-white mb-2 flex items-center gap-2">
+            <Bell className="h-5 w-5 text-accent-red" />
+            NotificaÃ§Ãµes
+          </h2>
+          <p className="text-text-secondary text-sm mb-4">
+            Receba avisos quando um episÃ³dio novo de uma sÃ©rie favorita for lanÃ§ado. Funciona no
+            aplicativo Android (requer permissÃ£o de notificaÃ§Ãµes).
           </p>
           <button
             onClick={handleToggleNotifications}
@@ -173,39 +234,8 @@ const Profiles = () => {
             }`}
           >
             {notificationsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-            {notificationsEnabled ? 'Notificações ativadas' : 'Ativar notificações'}
+            {notificationsEnabled ? 'NotificaÃ§Ãµes ativadas' : 'Ativar notificaÃ§Ãµes'}
           </button>
-        </div>
-
-        <div className="glass rounded-xl p-5 mt-8">
-          <h2 className="font-bold text-white mb-2 flex items-center gap-2">
-            <Languages className="h-5 w-5 text-accent-red" />
-            Idioma e áudio
-          </h2>
-          <p className="text-text-secondary text-sm mb-4">
-            Preferência do perfil ativo (vale também no player).
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {(
-              [
-                { id: 'dub', label: '🇧🇷 Dublado' },
-                { id: 'sub', label: '📝 Legendado' },
-                { id: 'orig', label: '🇺🇸 Original' },
-              ] as const
-            ).map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => setAudioOption(opt.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-                  audioOption === opt.id
-                    ? 'bg-accent-red text-white'
-                    : 'bg-white/5 text-white/70 hover:bg-white/10'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         <div className="glass rounded-xl p-5 mt-8">
@@ -214,7 +244,7 @@ const Profiles = () => {
             Modo TV
           </h2>
           <p className="text-text-secondary text-sm mb-4">
-            Ativa a navegação por controle remoto (D-pad) com foco espacial. Em TVs Android é
+            Ativa a navegaÃ§Ã£o por controle remoto (D-pad) com foco espacial. Em TVs Android Ã©
             detectado automaticamente.
           </p>
           <button
@@ -233,57 +263,31 @@ const Profiles = () => {
   )
 }
 
-const ProfileCard = ({
-  profile,
-  active,
-  canRemove,
-  onSelect,
-  onRemove,
-}: {
-  profile: UserProfile
-  active: boolean
-  canRemove: boolean
-  onSelect: () => void
-  onRemove: () => void
-}) => (
+const ProfileCard = ({ profile, active, canRemove, onSelect, onRemove }: { profile: UserProfile; active: boolean; canRemove: boolean; onSelect: () => void; onRemove: () => void }) => (
   <motion.div
     whileHover={{ y: -4 }}
     className={`relative rounded-xl p-5 cursor-pointer border transition-all ${
-      active
-        ? 'border-accent-red bg-white/10'
-        : 'border-white/5 bg-bg-card hover:border-white/20'
+      active ? 'border-accent-red bg-white/10' : 'border-white/5 bg-bg-card hover:border-white/20'
     }`}
     onClick={onSelect}
   >
     {active && (
       <span className="absolute top-2 right-2 flex items-center gap-1 bg-accent-red text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-        <Check className="h-3 w-3" />
-        Ativo
+        <Check className="h-3 w-3" /> Ativo
       </span>
     )}
     {canRemove && (
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          onRemove()
-        }}
-        className="absolute bottom-2 right-2 p-1.5 text-white/30 hover:text-red-400 transition-colors"
-        title="Remover perfil"
-      >
+      <button onClick={(e) => { e.stopPropagation(); onRemove() }} className="absolute bottom-2 right-2 p-1.5 text-white/30 hover:text-red-400 transition-colors" title="Remover perfil">
         <Trash2 className="h-4 w-4" />
       </button>
     )}
-    <div
-      className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-3"
-      style={{ backgroundColor: `${profile.color}33`, border: `2px solid ${profile.color}` }}
-    >
+    <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-3" style={{ backgroundColor: `${profile.color}33`, border: `2px solid ${profile.color}` }}>
       {profile.emoji}
     </div>
     <p className="text-white font-bold truncate">{profile.name}</p>
     {profile.kids && (
       <span className="inline-flex items-center gap-1 text-[10px] text-white/50 mt-1">
-        <Baby className="h-3 w-3" />
-        Infantil
+        <Baby className="h-3 w-3" /> Infantil
       </span>
     )}
   </motion.div>
