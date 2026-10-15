@@ -559,9 +559,10 @@ const StreamPlayer = ({
             className="w-full h-full border-0"
             sandbox={
               isMirrorSandboxed(activeMirror)
-                ? 'allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-orientation-lock allow-modals allow-downloads'
+                ? 'allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-orientation-lock allow-modals allow-downloads allow-encrypted-media'
                 : undefined
             }
+            referrerPolicy="no-referrer"
             onLoad={handleIframeLoad}
             onError={handleStreamFailure}
           />
