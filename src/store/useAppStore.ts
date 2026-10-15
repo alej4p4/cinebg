@@ -1,101 +1,373 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { FavoriteItem, WatchHistoryItem } from '@/types'
+import type { DownloadItem, FavoriteItem, WatchHistoryItem } from '@/types'
 
 export type Language = 'pt' | 'en'
 export type AudioOption = 'dub' | 'sub' | 'orig'
 
-interface AppState {
+export interface UserProfile {
+  id: string
+  name: string
+  emoji: string
+  color: string
+  kids: boolean
+}
+
+interface ProfileData {
   favorites: FavoriteItem[]
   history: WatchHistoryItem[]
-  selectedSource: string
+  language: Language
+  audioOption: AudioOption
+}
+
+interface PersistedState {
+  profiles: UserProfile[]
+  activeProfileId: string
+  dataByProfile: Record<string, ProfileData>
+  notificationsEnabled: boolean
+  tvMode: boolean
+  downloads: DownloadItem[]
+}
+
+const DEFAULT_PROFILE_ID = 'default'
+
+export const DEFAULT_PROFILE: UserProfile = {
+  id: DEFAULT_PROFILE_ID,
+  name: 'Principal',
+  emoji: '🍿',
+  color: '#ef4444',
+  kids: false,
+}
+
+const emptyData = (language: Language = 'pt', audioOption: AudioOption = 'dub'): ProfileData => ({
+  favorites: [],
+  history: [],
+  language,
+  audioOption,
+})
+
+interface AppState {
+  profiles: UserProfile[]
+  activeProfileId: string
+  dataByProfile: Record<string, ProfileData>
+
+  // Espelhos do perfil ativo (mantidos em sincronia para as telas existentes)
+  favorites: FavoriteItem[]
+  history: WatchHistoryItem[]
   language: Language
   audioOption: AudioOption
 
-  // Favorites
+  notificationsEnabled: boolean
+  tvMode: boolean
+
+  // Perfis
+  setActiveProfile: (id: string) => void
+  addProfile: (profile: Omit<UserProfile, 'id'>) => void
+  updateProfile: (id: string, patch: Partial<Omit<UserProfile, 'id'>>) => void
+  removeProfile: (id: string) => void
+
+  // Favoritos
   addFavorite: (item: FavoriteItem) => void
   removeFavorite: (id: number) => void
   isFavorite: (id: number) => boolean
 
-  // History
+  // Histórico
   addToHistory: (item: WatchHistoryItem) => void
   removeFromHistory: (id: number) => void
   clearHistory: () => void
   getLastWatched: (id: number) => WatchHistoryItem | undefined
+  updateHistoryProgress: (id: number, progress: number) => void
 
-  // Source
-  setSelectedSource: (sourceId: string) => void
-
-  // Language & Audio
+  // Idioma & Áudio (por perfil)
   setLanguage: (lang: Language) => void
   setAudioOption: (option: AudioOption) => void
+
+  // Notificações
+  setNotificationsEnabled: (enabled: boolean) => void
+
+  // TV / leanback
+  setTvMode: (enabled: boolean) => void
+
+  // Downloads
+  downloads: DownloadItem[]
+  addDownload: (item: DownloadItem) => void
+  removeDownload: (id: number, season?: number, episode?: number) => void
+  isDownloaded: (id: number, season?: number, episode?: number) => boolean
 }
+
+const dataFor = (state: Pick<AppState, 'dataByProfile' | 'activeProfileId'>): ProfileData =>
+  state.dataByProfile[state.activeProfileId] ?? emptyData()
 
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      profiles: [DEFAULT_PROFILE],
+      activeProfileId: DEFAULT_PROFILE_ID,
+      dataByProfile: { [DEFAULT_PROFILE_ID]: emptyData() },
       favorites: [],
       history: [],
-      selectedSource: 'vidsrc-me',
       language: 'pt',
       audioOption: 'dub', // YuCine logic: Default to Dublado (PT-BR)
+      notificationsEnabled: false,
+      tvMode: false,
+      downloads: [],
 
-      addFavorite: (item) => {
-        const existing = get().favorites.find((f) => f.id === item.id)
-        if (!existing) {
-          set((state) => ({ favorites: [item, ...state.favorites] }))
-        }
+      setActiveProfile: (id) => {
+        const state = get()
+        if (!state.profiles.some((p) => p.id === id)) return
+        const data = state.dataByProfile[id] ?? emptyData()
+        set({
+          activeProfileId: id,
+          favorites: data.favorites,
+          history: data.history,
+          language: data.language,
+          audioOption: data.audioOption,
+        })
       },
 
-      removeFavorite: (id) => {
-        set((state) => ({ favorites: state.favorites.filter((f) => f.id !== id) }))
-      },
-
-      isFavorite: (id) => {
-        return get().favorites.some((f) => f.id === id)
-      },
-
-      addToHistory: (item) => {
+      addProfile: (profile) => {
+        const id = `p_${Date.now().toString(36)}`
         set((state) => ({
-          history: [item, ...state.history.filter((h) => h.id !== item.id)].slice(0, 50),
+          profiles: [...state.profiles, { id, ...profile }],
+          dataByProfile: { ...state.dataByProfile, [id]: emptyData() },
         }))
       },
 
-      getLastWatched: (id) => {
-        return get().history.find((h) => h.id === id)
-      },
+      updateProfile: (id, patch) =>
+        set((state) => ({
+          profiles: state.profiles.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+        })),
 
-      removeFromHistory: (id) => {
-        set((state) => ({ history: state.history.filter((h) => h.id !== id) }))
-      },
+      removeProfile: (id) =>
+        set((state) => {
+          if (state.profiles.length <= 1) return {}
+          const profiles = state.profiles.filter((p) => p.id !== id)
+          const dataByProfile = { ...state.dataByProfile }
+          delete dataByProfile[id]
+          const activeProfileId =
+            state.activeProfileId === id ? profiles[0].id : state.activeProfileId
+          const active = dataByProfile[activeProfileId] ?? emptyData()
+          return {
+            profiles,
+            dataByProfile,
+            activeProfileId,
+            favorites: active.favorites,
+            history: active.history,
+            language: active.language,
+            audioOption: active.audioOption,
+          }
+        }),
 
-      clearHistory: () => {
-        set({ history: [] })
-      },
+      addFavorite: (item) =>
+        set((state) => {
+          const data = dataFor(state)
+          if (data.favorites.some((f) => f.id === item.id)) return {}
+          const favorites = [item, ...data.favorites]
+          return {
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, favorites },
+            },
+            favorites,
+          }
+        }),
 
-      setSelectedSource: (sourceId) => {
-        set({ selectedSource: sourceId })
-      },
+      removeFavorite: (id) =>
+        set((state) => {
+          const data = dataFor(state)
+          const favorites = data.favorites.filter((f) => f.id !== id)
+          return {
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, favorites },
+            },
+            favorites,
+          }
+        }),
 
-      setLanguage: (lang) => {
-        set({ language: lang, audioOption: lang === 'pt' ? 'dub' : 'orig' })
-      },
+      isFavorite: (id) => dataFor(get()).favorites.some((f) => f.id === id),
 
-      setAudioOption: (option) => {
-        set({
-          audioOption: option,
-          language: option === 'orig' ? 'en' : 'pt',
-        })
-      },
+      addToHistory: (item) =>
+        set((state) => {
+          const data = dataFor(state)
+          const history = [item, ...data.history.filter((h) => h.id !== item.id)].slice(0, 50)
+          return {
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, history },
+            },
+            history,
+          }
+        }),
+
+      getLastWatched: (id) => dataFor(get()).history.find((h) => h.id === id),
+
+      updateHistoryProgress: (id, progress) =>
+        set((state) => {
+          const data = dataFor(state)
+          if (!data.history.some((h) => h.id === id)) return {}
+          const history = data.history.map((h) => (h.id === id ? { ...h, progress } : h))
+          return {
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, history },
+            },
+            history,
+          }
+        }),
+
+      removeFromHistory: (id) =>
+        set((state) => {
+          const data = dataFor(state)
+          const history = data.history.filter((h) => h.id !== id)
+          return {
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, history },
+            },
+            history,
+          }
+        }),
+
+      clearHistory: () =>
+        set((state) => {
+          const data = dataFor(state)
+          return {
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, history: [] },
+            },
+            history: [],
+          }
+        }),
+
+      setLanguage: (lang) =>
+        set((state) => {
+          const data = dataFor(state)
+          const audioOption: AudioOption = lang === 'pt' ? 'dub' : 'orig'
+          return {
+            language: lang,
+            audioOption,
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, language: lang, audioOption },
+            },
+          }
+        }),
+
+      setAudioOption: (option) =>
+        set((state) => {
+          const data = dataFor(state)
+          const language: Language = option === 'orig' ? 'en' : 'pt'
+          return {
+            language,
+            audioOption: option,
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, language, audioOption: option },
+            },
+          }
+        }),
+
+      setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
+
+      setTvMode: (enabled) => set({ tvMode: enabled }),
+
+      addDownload: (item) =>
+        set((state) => {
+          const exists = state.downloads.some(
+            (d) => d.id === item.id && d.season === item.season && d.episode === item.episode,
+          )
+          if (exists) return {}
+          return { downloads: [item, ...state.downloads] }
+        }),
+
+      removeDownload: (id, season, episode) =>
+        set((state) => ({
+          downloads: state.downloads.filter(
+            (d) => !(d.id === id && d.season === season && d.episode === episode),
+          ),
+        })),
+
+      isDownloaded: (id, season, episode) =>
+        get().downloads.some(
+          (d) => d.id === id && d.season === season && d.episode === episode,
+        ),
     }),
     {
       name: 'cinebg-storage',
+      version: 3,
+      migrate: (persisted, version) => {
+        const state = (persisted ?? {}) as Partial<PersistedState> & {
+          favorites?: FavoriteItem[]
+          history?: WatchHistoryItem[]
+          language?: Language
+          audioOption?: AudioOption
+        }
+
+        const fallbackLang: Language = state.language ?? 'pt'
+        const fallbackAudio: AudioOption = state.audioOption ?? 'dub'
+
+        if (version < 2 || !state.profiles) {
+          const favorites = state.favorites ?? []
+          const history = state.history ?? []
+          return {
+            profiles: [DEFAULT_PROFILE],
+            activeProfileId: DEFAULT_PROFILE_ID,
+            dataByProfile: {
+              [DEFAULT_PROFILE_ID]: {
+                favorites,
+                history,
+                language: fallbackLang,
+                audioOption: fallbackAudio,
+              },
+            },
+            notificationsEnabled: state.notificationsEnabled ?? false,
+            tvMode: state.tvMode ?? false,
+            downloads: state.downloads ?? [],
+          }
+        }
+
+        const profiles = state.profiles ?? [DEFAULT_PROFILE]
+        const dataByProfile: Record<string, ProfileData> = {}
+        for (const profile of profiles) {
+          const raw = state.dataByProfile?.[profile.id]
+          dataByProfile[profile.id] = {
+            favorites: raw?.favorites ?? [],
+            history: raw?.history ?? [],
+            language: raw?.language ?? fallbackLang,
+            audioOption: raw?.audioOption ?? fallbackAudio,
+          }
+        }
+
+        return {
+          profiles,
+          activeProfileId: state.activeProfileId ?? profiles[0].id,
+          dataByProfile,
+          notificationsEnabled: state.notificationsEnabled ?? false,
+          tvMode: state.tvMode ?? false,
+          downloads: state.downloads ?? [],
+        }
+      },
+      // Recalcula os espelhos após reidratar (não persistem sozinhos).
+      merge: (persisted, current) => {
+        const merged = { ...current, ...(persisted as object) } as AppState
+        const data = dataFor(merged)
+        return {
+          ...merged,
+          favorites: data.favorites,
+          history: data.history,
+          language: data.language,
+          audioOption: data.audioOption,
+        }
+      },
       partialize: (state) => ({
-        favorites: state.favorites,
-        history: state.history,
-        selectedSource: state.selectedSource,
-        language: state.language,
-        audioOption: state.audioOption,
+        profiles: state.profiles,
+        activeProfileId: state.activeProfileId,
+        dataByProfile: state.dataByProfile,
+        notificationsEnabled: state.notificationsEnabled,
+        tvMode: state.tvMode,
+        downloads: state.downloads,
       }),
     }
   )

@@ -99,16 +99,17 @@ body {
   background-clip: text;
 }
 
-/* ===== SKELETON LOADER ===== */
+/* ===== SKELETON LOADER (PRO POLISH) ===== */
 .skeleton {
   background: linear-gradient(
     90deg,
-    #1a1a2e 0%,
-    #252540 50%,
-    #1a1a2e 100%
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.8s infinite;
+  animation: shimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  border-radius: 8px;
 }
 
 @keyframes shimmer {
@@ -116,16 +117,41 @@ body {
   100% { background-position: -200% 0; }
 }
 
+/* ===== PROGRESS BAR ===== */
+@keyframes indeterminateProgress {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(20%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-progress-fast {
+  animation: indeterminateProgress 1.4s ease-in-out infinite;
+}
+
+/* ===== ACCESSIBILITY: REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton {
+    animation: none !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+}
+
 /* ===== MOVIE CARD HOVER ===== */
 .movie-card {
   transform-origin: center;
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow 0.3s ease;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .movie-card:hover {
-  transform: scale(1.08) translateY(-4px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  transform: translateY(-5px) scale(1.04);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.7);
   z-index: 10;
 }
 
@@ -142,6 +168,23 @@ body {
   outline: 3px solid var(--accent-red);
   outline-offset: 4px;
   border-radius: 8px;
+}
+
+/* Anel de foco controlado pelo norigin (navegação espacial) */
+.tv-focused {
+  outline: 3px solid var(--accent-red);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+/* ===== MODO TV (LEANBACK) ===== */
+.tv-mode * {
+  scrollbar-width: none;
+}
+
+.tv-mode::-webkit-scrollbar,
+.tv-mode *::-webkit-scrollbar {
+  display: none;
 }
 
 /* ===== SCROLLABLE CAROUSEL ===== */

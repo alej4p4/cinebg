@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Play, Tv } from 'lucide-react'
+import { Play } from 'lucide-react'
 import { LIVE_CHANNELS, type LiveChannel } from '@/services/streams'
 
 const LiveTV = () => {

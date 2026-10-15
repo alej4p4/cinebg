@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio } from 'lucide-react'
+import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, UserRound, Download } from 'lucide-react'
+import { useAppStore } from '@/store/useAppStore'
+import Focusable from '@/components/tv/Focusable'
 
 const NAV_LINKS = [
   { to: '/', label: 'Início', icon: Home },
@@ -18,6 +20,9 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const { profiles, activeProfileId, setActiveProfile } = useAppStore()
+  const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? profiles[0]
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30)
@@ -42,31 +47,34 @@ const Navbar = () => {
     >
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-accent-red flex items-center justify-center font-display font-black text-white text-sm">
-            C
-          </div>
-          <span className="font-display font-black text-xl text-white hidden sm:block">
-            Cine<span className="text-accent-red">BG</span>
-          </span>
-        </Link>
+        <Focusable onEnterPress={() => navigate('/')} className="flex-shrink-0">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-accent-red flex items-center justify-center font-display font-black text-white text-sm">
+              C
+            </div>
+            <span className="font-display font-black text-xl text-white hidden sm:block">
+              Cine<span className="text-accent-red">BG</span>
+            </span>
+          </Link>
+        </Focusable>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1 ml-4">
           {NAV_LINKS.map(({ to, label }) => {
             const active = location.pathname === to
             return (
-              <Link
-                key={to}
-                to={to}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  active
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {label}
-              </Link>
+              <Focusable key={to} onEnterPress={() => navigate(to)}>
+                <Link
+                  to={to}
+                  className={`block px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    active
+                      ? 'bg-white/10 text-white'
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {label}
+                </Link>
+              </Focusable>
             )
           })}
         </nav>
@@ -101,20 +109,119 @@ const Navbar = () => {
         </form>
 
         {/* Favorites */}
-        <Link
-          to="/favorites"
-          className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors hidden sm:flex"
-        >
-          <Heart className="h-4 w-4" />
-        </Link>
+        <Focusable onEnterPress={() => navigate('/favorites')} className="hidden sm:block">
+          <Link
+            to="/favorites"
+            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex"
+          >
+            <Heart className="h-4 w-4" />
+          </Link>
+        </Focusable>
 
         {/* History */}
-        <Link
-          to="/history"
-          className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors hidden sm:flex"
-        >
-          <Clock className="h-4 w-4" />
-        </Link>
+        <Focusable onEnterPress={() => navigate('/history')} className="hidden sm:block">
+          <Link
+            to="/history"
+            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex"
+          >
+            <Clock className="h-4 w-4" />
+          </Link>
+        </Focusable>
+
+        {/* Downloads */}
+        <Focusable onEnterPress={() => navigate('/downloads')} className="hidden sm:block">
+          <Link
+            to="/downloads"
+            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex"
+          >
+            <Download className="h-4 w-4" />
+          </Link>
+        </Focusable>
+
+        {/* Perfil ativo */}
+        <div className="relative">
+          <Focusable onEnterPress={() => setProfileOpen((v) => !v)}>
+            <button
+              onClick={() => setProfileOpen((v) => !v)}
+              className="flex items-center gap-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors pl-1 pr-2 py-1"
+              title="Trocar de perfil"
+            >
+              <span
+                className="w-7 h-7 rounded-full flex items-center justify-center text-base"
+                style={{
+                  backgroundColor: `${activeProfile.color}33`,
+                  border: `2px solid ${activeProfile.color}`,
+                }}
+              >
+                {activeProfile.emoji}
+              </span>
+              <span className="text-white/70 text-sm hidden lg:block max-w-[90px] truncate">
+                {activeProfile.name}
+              </span>
+            </button>
+          </Focusable>
+
+          <AnimatePresence>
+            {profileOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="absolute right-0 top-full mt-2 z-50 w-56 navbar-blur border border-white/10 rounded-xl p-2 shadow-xl"
+                >
+                  <p className="text-white/40 text-[11px] font-semibold px-3 py-1.5">Perfis</p>
+                  {profiles.map((profile) => (
+                    <Focusable
+                      key={profile.id}
+                      onEnterPress={() => {
+                        setActiveProfile(profile.id)
+                        setProfileOpen(false)
+                      }}
+                    >
+                      <button
+                        onClick={() => {
+                          setActiveProfile(profile.id)
+                          setProfileOpen(false)
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-left"
+                      >
+                        <span
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-base flex-shrink-0"
+                          style={{
+                            backgroundColor: `${profile.color}33`,
+                            border: `2px solid ${profile.color}`,
+                          }}
+                        >
+                          {profile.emoji}
+                        </span>
+                        <span className="text-white text-sm truncate flex-1">{profile.name}</span>
+                        {profile.id === activeProfileId && (
+                          <Check className="h-4 w-4 text-accent-red flex-shrink-0" />
+                        )}
+                      </button>
+                    </Focusable>
+                  ))}
+                  <Focusable
+                    onEnterPress={() => {
+                      navigate('/profiles')
+                      setProfileOpen(false)
+                    }}
+                  >
+                    <Link
+                      to="/profiles"
+                      onClick={() => setProfileOpen(false)}
+                      className="block text-center text-accent-red text-xs font-bold mt-1 py-2 rounded-lg hover:bg-white/5 transition-colors"
+                    >
+                      Gerenciar perfis
+                    </Link>
+                  </Focusable>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Mobile menu */}
         <button
@@ -164,6 +271,20 @@ const Navbar = () => {
                   className="flex items-center gap-2 text-sm text-white/70"
                 >
                   <Clock className="h-4 w-4" /> Histórico
+                </Link>
+                <Link
+                  to="/downloads"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 text-sm text-white/70"
+                >
+                  <Download className="h-4 w-4" /> Downloads
+                </Link>
+                <Link
+                  to="/profiles"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 text-sm text-white/70"
+                >
+                  <UserRound className="h-4 w-4" /> Perfis
                 </Link>
               </div>
             </div>

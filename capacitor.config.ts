@@ -7,7 +7,10 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     cleartext: true,
-    allowNavigation: ['*'],
+    // Restringe a navegação de topo do WebView à própria origem do app.
+    // Assim, tentativas de redirect de iframes de anúncio NÃO sequestram o app
+    // (são abertas externamente/ignoradas em vez de substituir a aplicação).
+    allowNavigation: ['localhost'],
   },
   android: {
     allowMixedContent: true,

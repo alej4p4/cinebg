@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-label="Imagem indisponível">
+  <rect width="1280" height="720" fill="#0c0c12"/>
+  <g transform="translate(640 330)" fill="#e50914" opacity="0.6">
+    <rect x="-90" y="-55" width="180" height="110" rx="14" fill="none" stroke="#e50914" stroke-width="10"/>
+    <path d="M-38 -38 L38 0 L-38 38 Z" fill="#e50914" stroke="none"/>
+  </g>
+  <text x="640" y="500" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#3d3d5e" text-anchor="middle">CineBG</text>
+</svg>

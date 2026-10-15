@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import HeroBanner from '@/components/ui/HeroBanner'
 import Carousel from '@/components/ui/Carousel'
+import { SkeletonCarousel } from '@/components/ui/SkeletonCard'
+import ProgressBar from '@/components/ui/ProgressBar'
 import {
   getTrending,
   getTopRatedMovies,
@@ -15,10 +17,10 @@ import {
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
 import type { MediaItem } from '@/types'
+import { PAGE_VARIANTS } from '@/utils/motion'
 
 const Home = () => {
   const [trending, setTrending] = useState<MediaItem[]>([])
-  const [trendingMovies, setTrendingMovies] = useState<MediaItem[]>([])
   const [popularMovies, setPopularMovies] = useState<MediaItem[]>([])
   const [topMovies, setTopMovies] = useState<MediaItem[]>([])
   const [nowPlaying, setNowPlaying] = useState<MediaItem[]>([])
@@ -34,20 +36,8 @@ const Home = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [
-          t,
-          tm,
-          pm,
-          tom,
-          np,
-          up,
-          ps,
-          ts,
-          a,
-          anime,
-        ] = await Promise.all([
+        const [t, pm, tom, np, up, ps, ts, a, anime] = await Promise.all([
           getTrending('all', 'week'),
-          getTrending('movie', 'week'),
           getPopularMovies(),
           getTopRatedMovies(),
           getNowPlayingMovies(),
@@ -58,7 +48,6 @@ const Home = () => {
           discoverShows({ isAnime: true }),
         ])
         setTrending(t)
-        setTrendingMovies(tm)
         setPopularMovies(pm.items)
         setTopMovies(tom.items)
         setNowPlaying(np.items)
@@ -77,8 +66,6 @@ const Home = () => {
   }, [])
 
   const historyItems: MediaItem[] = history
-    .slice()
-    .reverse()
     .slice(0, 10)
     .map((h) => ({
       id: h.id,
@@ -94,98 +81,46 @@ const Home = () => {
     }))
 
   return (
-    <motion.div
-      className="min-h-screen bg-bg-primary page-enter"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      {/* Hero Banner */}
-      <HeroBanner items={trending} loading={loading} />
+    <>
+      <ProgressBar isLoading={loading} />
+      <motion.div
+        className="min-h-screen bg-bg-primary"
+        variants={PAGE_VARIANTS}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        <HeroBanner items={trending} loading={loading} />
 
-      {/* Content sections */}
-      <div className="space-y-10 py-10">
-        {/* Continue watching */}
-        {historyItems.length > 0 && (
-          <Carousel
-            title="Continuar Assistindo"
-            emoji="▶️"
-            items={historyItems}
-          />
-        )}
+        <div className="space-y-10 py-10">
+          <AnimatePresence>
+            {historyItems.length > 0 && (
+              <Carousel title="Continuar Assistindo" emoji="▶️" items={historyItems} />
+            )}
+          </AnimatePresence>
 
-        {/* Trending all */}
-        <Carousel
-          title="Em Alta esta Semana"
-          emoji="🔥"
-          items={trending}
-          loading={loading}
-        />
-
-        {/* Now playing */}
-        <Carousel
-          title="Em Cartaz nos Cinemas"
-          emoji="🎭"
-          items={nowPlaying}
-          loading={loading}
-        />
-
-        {/* Popular movies */}
-        <Carousel
-          title="Filmes Populares"
-          emoji="🎬"
-          items={popularMovies}
-          loading={loading}
-        />
-
-        {/* Top rated movies */}
-        <Carousel
-          title="Filmes Mais Bem Avaliados"
-          emoji="🏆"
-          items={topMovies}
-          loading={loading}
-        />
-
-        {/* Upcoming movies */}
-        <Carousel
-          title="Em Breve nos Cinemas"
-          emoji="📅"
-          items={upcoming}
-          loading={loading}
-        />
-
-        {/* Popular shows */}
-        <Carousel
-          title="Séries Populares"
-          emoji="📺"
-          items={popularShows}
-          loading={loading}
-        />
-
-        {/* Airing today */}
-        <Carousel
-          title="Séries em Exibição Hoje"
-          emoji="🔴"
-          items={airingNow}
-          loading={loading}
-        />
-
-        {/* Top rated shows */}
-        <Carousel
-          title="Top Séries de Todos os Tempos"
-          emoji="⭐"
-          items={topShows}
-          loading={loading}
-        />
-
-        {/* Anime */}
-        <Carousel
-          title="Anime em Destaque"
-          emoji="⛩️"
-          items={animeItems}
-          loading={loading}
-        />
-      </div>
-    </motion.div>
+          {loading ? (
+            <>
+              <SkeletonCarousel />
+              <SkeletonCarousel />
+              <SkeletonCarousel />
+            </>
+          ) : (
+            <>
+              <Carousel title="Em Alta esta Semana" emoji="🔥" items={trending} />
+              <Carousel title="Em Cartaz nos Cinemas" emoji="🎭" items={nowPlaying} />
+              <Carousel title="Filmes Populares" emoji="🎬" items={popularMovies} />
+              <Carousel title="Mais Bem Avaliados" emoji="🏆" items={topMovies} />
+              <Carousel title="Em Breve nos Cinemas" emoji="📅" items={upcoming} />
+              <Carousel title="Séries Populares" emoji="📺" items={popularShows} />
+              <Carousel title="Em Exibição Hoje" emoji="🔴" items={airingNow} />
+              <Carousel title="Top Séries de Todos os Tempos" emoji="⭐" items={topShows} />
+              <Carousel title="Anime em Destaque" emoji="⛩️" items={animeItems} />
+            </>
+          )}
+        </div>
+      </motion.div>
+    </>
   )
 }
 
