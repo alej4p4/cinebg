@@ -19,6 +19,7 @@ const Watch = lazy(() => import('@/pages/Watch'))
 const Details = lazy(() => import('@/pages/Details'))
 const Search = lazy(() => import('@/pages/Search'))
 const Favorites = lazy(() => import('@/pages/Favorites'))
+const MyList = lazy(() => import('@/pages/MyList'))
 const History = lazy(() => import('@/pages/History'))
 const Profiles = lazy(() => import('@/pages/Profiles'))
 const Downloads = lazy(() => import('@/pages/Downloads'))
@@ -44,6 +45,7 @@ const AnimatedRoutes = () => {
           <Route path="/live" element={<LiveTV />} />
           <Route path="/search" element={<Search />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/my-list" element={<MyList />} />
           <Route path="/history" element={<History />} />
           <Route path="/profiles" element={<Profiles />} />
           <Route path="/downloads" element={<Downloads />} />

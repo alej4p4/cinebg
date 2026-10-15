@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Play, Star, Calendar, Clock, Film, Heart,
-  ChevronRight, Tv
+  ChevronRight, Tv, X
 } from 'lucide-react'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import GenreBadge from '@/components/ui/GenreBadge'
@@ -24,6 +24,7 @@ const Details = () => {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'overview' | 'cast' | 'seasons'>('overview')
   const [imgError, setImgError] = useState(false)
+  const [trailerOpen, setTrailerOpen] = useState(false)
 
   const isMovie = type === 'movie'
   const mediaId = Number(id)
@@ -82,6 +83,8 @@ const Details = () => {
   const numEpisodes = !isMovie ? showData!.number_of_episodes : null
 
   const favorite = isFavorite(mediaId)
+  const videos = (data as any)?.videos?.results ?? []
+  const trailer = videos.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer') ?? videos[0]
 
   const handleToggleFav = () => {
     if (favorite) {
@@ -238,6 +241,18 @@ const Details = () => {
                 <Heart className={`h-5 w-5 ${favorite ? 'fill-current' : ''}`} />
                 {favorite ? 'Nos Favoritos' : 'Favoritar'}
               </motion.button>
+
+              {trailer && (
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setTrailerOpen(true)}
+                  className="flex items-center gap-2 font-semibold px-5 py-3.5 rounded-xl border bg-white/5 border-white/20 text-white/80 hover:bg-white/10 transition-all"
+                >
+                  <Play className="h-5 w-5" />
+                  Trailer
+                </motion.button>
+              )}
             </div>
           </motion.div>
         </div>
@@ -401,6 +416,41 @@ const Details = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Trailer Modal */}
+      <AnimatePresence>
+        {trailerOpen && trailer && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm"
+              onClick={() => setTrailerOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[90] w-[90vw] max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl"
+            >
+              <button
+                onClick={() => setTrailerOpen(false)}
+                className="absolute top-3 right-3 z-10 p-2 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <iframe
+                src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0`}
+                title="Trailer"
+                allow="autoplay; fullscreen; encrypted-media"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
