@@ -4,6 +4,7 @@ import type { DownloadItem, FavoriteItem, WatchHistoryItem } from '@/types'
 
 export type Language = 'pt' | 'en'
 export type AudioOption = 'dub' | 'sub' | 'orig'
+export type SubtitleOption = 'off' | 'pt' | 'en'
 
 export interface UserProfile {
   id: string
@@ -18,6 +19,7 @@ interface ProfileData {
   history: WatchHistoryItem[]
   language: Language
   audioOption: AudioOption
+  subtitleOption: SubtitleOption
 }
 
 interface PersistedState {
@@ -44,6 +46,7 @@ const emptyData = (language: Language = 'pt', audioOption: AudioOption = 'dub'):
   history: [],
   language,
   audioOption,
+  subtitleOption: 'off',
 })
 
 interface AppState {
@@ -56,6 +59,7 @@ interface AppState {
   history: WatchHistoryItem[]
   language: Language
   audioOption: AudioOption
+  subtitleOption: SubtitleOption
 
   notificationsEnabled: boolean
   tvMode: boolean
@@ -81,6 +85,7 @@ interface AppState {
   // Idioma & Áudio (por perfil)
   setLanguage: (lang: Language) => void
   setAudioOption: (option: AudioOption) => void
+  setSubtitleOption: (option: SubtitleOption) => void
 
   // Notificações
   setNotificationsEnabled: (enabled: boolean) => void
@@ -108,6 +113,7 @@ export const useAppStore = create<AppState>()(
       history: [],
       language: 'pt',
       audioOption: 'dub', // YuCine logic: Default to Dublado (PT-BR)
+      subtitleOption: 'off',
       notificationsEnabled: false,
       tvMode: false,
       downloads: [],
@@ -122,6 +128,7 @@ export const useAppStore = create<AppState>()(
           history: data.history,
           language: data.language,
           audioOption: data.audioOption,
+          subtitleOption: data.subtitleOption,
         })
       },
 
@@ -269,6 +276,18 @@ export const useAppStore = create<AppState>()(
           }
         }),
 
+      setSubtitleOption: (option) =>
+        set((state) => {
+          const data = dataFor(state)
+          return {
+            subtitleOption: option,
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, subtitleOption: option },
+            },
+          }
+        }),
+
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
 
       setTvMode: (enabled) => set({ tvMode: enabled }),
@@ -337,6 +356,7 @@ export const useAppStore = create<AppState>()(
             history: raw?.history ?? [],
             language: raw?.language ?? fallbackLang,
             audioOption: raw?.audioOption ?? fallbackAudio,
+            subtitleOption: raw?.subtitleOption ?? 'off',
           }
         }
 
@@ -359,6 +379,7 @@ export const useAppStore = create<AppState>()(
           history: data.history,
           language: data.language,
           audioOption: data.audioOption,
+          subtitleOption: data.subtitleOption,
         }
       },
       partialize: (state) => ({
