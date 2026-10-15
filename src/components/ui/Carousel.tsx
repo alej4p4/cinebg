@@ -11,9 +11,11 @@ interface CarouselProps {
   items: MediaItem[]
   loading?: boolean
   emoji?: string
+  showRanking?: boolean
+  getProgress?: (item: MediaItem) => number
 }
 
-const Carousel = ({ title, items, loading, emoji }: CarouselProps) => {
+const Carousel = ({ title, items, loading, emoji, showRanking, getProgress }: CarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (dir: 'left' | 'right') => {
@@ -80,7 +82,12 @@ const Carousel = ({ title, items, loading, emoji }: CarouselProps) => {
                 variants={STAGGER_ITEM}
                 className="w-40 md:w-44 flex-shrink-0"
               >
-                <MovieCard item={item} index={i} />
+                <MovieCard
+                  item={item}
+                  index={i}
+                  progress={getProgress?.(item)}
+                  rank={showRanking ? i + 1 : undefined}
+                />
               </motion.div>
             ))}
           </motion.div>
