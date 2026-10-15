@@ -9,6 +9,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.barrasoft.cinebg"
     compileSdk rootProject.ext.compileSdkVersion
+    archivesBaseName = "CineBG"
     defaultConfig {
         applicationId "com.barrasoft.cinebg"
         minSdkVersion rootProject.ext.minSdkVersion
