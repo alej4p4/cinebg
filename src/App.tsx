@@ -9,6 +9,8 @@ import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
 import { useAppStore } from '@/store/useAppStore'
 import { isTVDevice } from '@/utils/tv'
+import { useAppUpdate } from '@/hooks/useAppUpdate'
+import UpdateModal from '@/components/UpdateModal'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Movies = lazy(() => import('@/pages/Movies'))
@@ -69,6 +71,7 @@ const AnimatedRoutes = () => {
 function App() {
   useEpisodeNotifications()
   useOrientationFullscreen()
+  const { update, dismiss } = useAppUpdate()
 
   return (
     <BrowserRouter>
@@ -80,6 +83,11 @@ function App() {
           </main>
         </div>
       </ErrorBoundary>
+      <UpdateModal
+        visible={!!update}
+        downloadUrl={update?.downloadUrl ?? ''}
+        onDismiss={dismiss}
+      />
     </BrowserRouter>
   )
 }
