@@ -1,102 +1,88 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Film } from 'lucide-react'
-import { SkeletonGrid } from '@/components/ui/SkeletonCard'
-import ErrorState from '@/components/ui/ErrorState'
-import MovieCard from '@/components/ui/MovieCard'
+import HeroBanner from '@/components/ui/HeroBanner'
+import Carousel from '@/components/ui/Carousel'
+import { SkeletonCarousel } from '@/components/ui/SkeletonCard'
 import ProgressBar from '@/components/ui/ProgressBar'
-import { getPopularMovies, getTopRatedMovies, getNowPlayingMovies } from '@/services/tmdb'
+import ErrorState from '@/components/ui/ErrorState'
+import {
+  getPopularMovies,
+  getTopRatedMovies,
+  getNowPlayingMovies,
+  getUpcomingMovies,
+} from '@/services/tmdb'
 import type { MediaItem } from '@/types'
-import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
-
-const TABS = [
-  { label: 'Populares', id: 'popular' },
-  { label: 'Mais Avaliados', id: 'toprated' },
-  { label: 'Em Cartaz', id: 'nowplaying' },
-]
+import { PAGE_VARIANTS } from '@/utils/motion'
 
 const Movies = () => {
-  const [items, setItems] = useState<MediaItem[]>([])
+  const [popular, setPopular] = useState<MediaItem[]>([])
+  const [topRated, setTopRated] = useState<MediaItem[]>([])
+  const [nowPlaying, setNowPlaying] = useState<MediaItem[]>([])
+  const [upcoming, setUpcoming] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [activeTab, setActiveTab] = useState('popular')
   const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     setLoading(true)
     setError(false)
-    const fetch = async () => {
+    const load = async () => {
       try {
-        const result =
-          activeTab === 'popular'
-            ? await getPopularMovies()
-            : activeTab === 'toprated'
-            ? await getTopRatedMovies()
-            : await getNowPlayingMovies()
-        setItems(result.items)
+        const [popularResult, topResult, nowResult, upcomingResult] = await Promise.all([
+          getPopularMovies(),
+          getTopRatedMovies(),
+          getNowPlayingMovies(),
+          getUpcomingMovies(),
+        ])
+        setPopular(popularResult.items)
+        setTopRated(topResult.items)
+        setNowPlaying(nowResult.items)
+        setUpcoming(upcomingResult.items)
       } catch {
         setError(true)
+      } finally {
+        setLoading(false)
       }
-      finally { setLoading(false) }
     }
-    fetch()
-  }, [activeTab, reloadKey])
+    load()
+  }, [reloadKey])
 
   return (
     <>
       <ProgressBar isLoading={loading} />
       <motion.div
-        className="min-h-screen bg-bg-primary pt-24 pb-12"
+        className="min-h-screen bg-bg-primary"
         variants={PAGE_VARIANTS}
         initial="initial"
         animate="animate"
         exit="exit"
       >
-        <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
-          <div className="flex items-center gap-3 mb-8">
-            <Film className="h-7 w-7 text-accent-red" />
-            <h1 className="font-display font-black text-2xl md:text-3xl text-white">Filmes</h1>
-          </div>
+        <HeroBanner items={popular} loading={loading} />
 
-          {/* Tabs */}
-          <div className="flex gap-2 mb-8 border-b border-white/8 pb-0">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative px-4 py-2.5 text-sm font-semibold transition-colors ${
-                  activeTab === tab.id ? 'text-white' : 'text-white/40 hover:text-white/70'
-                }`}
-              >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="movies-tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-red rounded-full"
-                    transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                  />
-                )}
-              </button>
-            ))}
+        <div className="space-y-6 md:space-y-8 py-8 md:py-10">
+          <div className="max-w-screen-2xl mx-auto px-4 md:px-8 flex items-center gap-3 -mt-2">
+            <Film className="h-6 w-6 text-accent-red" />
+            <h1 className="font-display font-black text-xl md:text-2xl text-white">Filmes</h1>
           </div>
 
           {loading ? (
-            <SkeletonGrid count={18} />
+            <>
+              <SkeletonCarousel />
+              <SkeletonCarousel />
+              <SkeletonCarousel />
+            </>
           ) : error ? (
-            <ErrorState onRetry={() => setReloadKey((k) => k + 1)} />
+            <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
+              <ErrorState onRetry={() => setReloadKey((k) => k + 1)} />
+            </div>
           ) : (
-            <motion.div
-              className="content-grid"
-              variants={STAGGER_CONTAINER}
-              initial="hidden"
-              animate="visible"
-            >
-              {items.map((item, i) => (
-                <motion.div key={item.id} variants={STAGGER_ITEM}>
-                  <MovieCard item={item} index={i} />
-                </motion.div>
-              ))}
-            </motion.div>
+            <>
+              <Carousel title="Em Cartaz nos Cinemas" emoji="🎬" items={nowPlaying} />
+              <Carousel title="Filmes Populares" emoji="🔥" items={popular} />
+              <Carousel title="Mais Bem Avaliados" emoji="⭐" items={topRated} />
+              <Carousel title="Em Breve nos Cinemas" emoji="🎥" items={upcoming} />
+            </>
           )}
         </div>
       </motion.div>
