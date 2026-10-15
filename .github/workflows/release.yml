@@ -50,7 +50,7 @@ jobs:
             "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/keystore.properties
 
       - name: Assemble release
-        run: cd android && ./gradlew assembleRelease
+        run: cd android && chmod +x gradlew && ./gradlew assembleRelease
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
