@@ -9,6 +9,10 @@ import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
 import { useAppStore } from '@/store/useAppStore'
 import { isTVDevice } from '@/utils/tv'
+import { useAppUpdate } from '@/hooks/useAppUpdate'
+import UpdateModal from '@/components/UpdateModal'
+import { useLicense } from '@/hooks/useLicense'
+import LicenseGate from '@/components/LicenseGate'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Movies = lazy(() => import('@/pages/Movies'))
@@ -19,6 +23,7 @@ const Watch = lazy(() => import('@/pages/Watch'))
 const Details = lazy(() => import('@/pages/Details'))
 const Search = lazy(() => import('@/pages/Search'))
 const Favorites = lazy(() => import('@/pages/Favorites'))
+const MyList = lazy(() => import('@/pages/MyList'))
 const History = lazy(() => import('@/pages/History'))
 const Profiles = lazy(() => import('@/pages/Profiles'))
 const Downloads = lazy(() => import('@/pages/Downloads'))
@@ -44,6 +49,7 @@ const AnimatedRoutes = () => {
           <Route path="/live" element={<LiveTV />} />
           <Route path="/search" element={<Search />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/my-list" element={<MyList />} />
           <Route path="/history" element={<History />} />
           <Route path="/profiles" element={<Profiles />} />
           <Route path="/downloads" element={<Downloads />} />
@@ -67,6 +73,20 @@ const AnimatedRoutes = () => {
 function App() {
   useEpisodeNotifications()
   useOrientationFullscreen()
+  const { update, dismiss } = useAppUpdate()
+  const { isLicensed, isTrial, loading } = useLicense()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white/10 border-t-accent-red rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!isLicensed && !isTrial) {
+    return <LicenseGate />
+  }
 
   return (
     <BrowserRouter>
@@ -78,6 +98,11 @@ function App() {
           </main>
         </div>
       </ErrorBoundary>
+      <UpdateModal
+        visible={!!update}
+        downloadUrl={update?.downloadUrl ?? ''}
+        onDismiss={dismiss}
+      />
     </BrowserRouter>
   )
 }

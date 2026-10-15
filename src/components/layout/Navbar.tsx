@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, UserRound, Download } from 'lucide-react'
+import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, UserRound, Download, List, Settings } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import Focusable from '@/components/tv/Focusable'
 
@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { to: '/movies', label: 'Filmes', icon: Film },
   { to: '/series', label: 'Séries', icon: Tv },
   { to: '/anime', label: 'Anime', icon: Star },
+  { to: '/my-list', label: 'Minha Lista', icon: List },
   { to: '/live', label: 'TV ao Vivo', icon: Radio },
 ]
 
@@ -21,7 +22,8 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const { profiles, activeProfileId, setActiveProfile } = useAppStore()
+  const { profiles, activeProfileId, setActiveProfile, language, audioOption, setLanguage, setAudioOption } = useAppStore()
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? profiles[0]
 
   useEffect(() => {
@@ -205,6 +207,23 @@ const Navbar = () => {
                   ))}
                   <Focusable
                     onEnterPress={() => {
+                      setSettingsOpen(true)
+                      setProfileOpen(false)
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        setSettingsOpen(true)
+                        setProfileOpen(false)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-left"
+                    >
+                      <Settings className="h-4 w-4 text-white/60" />
+                      <span className="text-white text-sm">Configurações</span>
+                    </button>
+                  </Focusable>
+                  <Focusable
+                    onEnterPress={() => {
                       navigate('/profiles')
                       setProfileOpen(false)
                     }}
@@ -223,7 +242,74 @@ const Navbar = () => {
           </AnimatePresence>
         </div>
 
-        {/* Mobile menu */}
+        {/* Settings Modal */}
+      <AnimatePresence>
+        {settingsOpen && (
+          <>
+            <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" onClick={() => setSettingsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90vw] max-w-sm bg-[#13131c] border border-white/10 rounded-2xl p-6 shadow-2xl"
+            >
+              <h2 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
+                <Settings className="h-5 w-5 text-accent-red" />
+                Configurações
+              </h2>
+
+              <div className="space-y-5">
+                <div>
+                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Idioma</p>
+                  <div className="flex gap-2">
+                    {([['pt', 'Português'], ['en', 'English']] as const).map(([lang, label]) => (
+                      <button
+                        key={lang}
+                        onClick={() => setLanguage(lang)}
+                        className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          language === lang
+                            ? 'bg-accent-red text-white'
+                            : 'bg-white/5 text-white/60 hover:bg-white/10'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Áudio Padrão</p>
+                  <div className="flex gap-2">
+                    {([['dub', 'Dublado'], ['orig', 'Original']] as const).map(([opt, label]) => (
+                      <button
+                        key={opt}
+                        onClick={() => setAudioOption(opt)}
+                        className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          audioOption === opt
+                            ? 'bg-accent-red text-white'
+                            : 'bg-white/5 text-white/60 hover:bg-white/10'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSettingsOpen(false)}
+                className="w-full mt-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold transition-colors"
+              >
+                Fechar
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile menu */}
         <button
           className="md:hidden p-2 text-white"
           onClick={() => setMenuOpen(!menuOpen)}
