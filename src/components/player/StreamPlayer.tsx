@@ -8,6 +8,7 @@ import {
   Captions,
   CaptionsOff,
   PictureInPicture2,
+  X,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -79,6 +80,13 @@ const StreamPlayer = ({
   const lastProgressRef = useRef(0)
 
   const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2]
+  const AUTO_NEXT_DELAY = 10 // seconds
+
+  const [autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null)
+  const autoNextTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [qualityOpen, setQualityOpen] = useState(false)
+  const [availableQualities, _setAvailableQualities] = useState<{ label: string; url: string; type: 'hls' | 'mp4' }[]>([])
+  const [currentQuality, setCurrentQuality] = useState<string | null>(null)
 
   const embedUrl =
     type === 'movie'
@@ -277,10 +285,11 @@ const StreamPlayer = ({
     }
   }, [directSrc])
 
-  // Limpa o timer do feedback ao desmontar.
+  // Limpa o timer do feedback e auto-next ao desmontar.
   useEffect(
     () => () => {
       if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
+      if (autoNextTimerRef.current) clearInterval(autoNextTimerRef.current)
     },
     []
   )
@@ -361,7 +370,31 @@ const StreamPlayer = ({
   }
 
   const handleEnded = () => {
-    if (onNextEpisode) onNextEpisode()
+    if (type !== 'movie' && onNextEpisode) {
+      startAutoNextCountdown()
+    } else if (onNextEpisode) {
+      onNextEpisode()
+    }
+  }
+
+  const startAutoNextCountdown = () => {
+    let remaining = AUTO_NEXT_DELAY
+    setAutoNextCountdown(remaining)
+    autoNextTimerRef.current = setInterval(() => {
+      remaining -= 1
+      if (remaining <= 0) {
+        if (autoNextTimerRef.current) clearInterval(autoNextTimerRef.current)
+        setAutoNextCountdown(null)
+        if (onNextEpisode) onNextEpisode()
+      } else {
+        setAutoNextCountdown(remaining)
+      }
+    }, 1000)
+  }
+
+  const cancelAutoNext = () => {
+    if (autoNextTimerRef.current) clearInterval(autoNextTimerRef.current)
+    setAutoNextCountdown(null)
   }
 
   // Ao carregar os metadados: lê legendas e retoma da posição salva.
@@ -703,7 +736,10 @@ const StreamPlayer = ({
 
           {onNextEpisode && type !== 'movie' && (
             <button
-              onClick={onNextEpisode}
+              onClick={() => {
+                cancelAutoNext()
+                onNextEpisode()
+              }}
               className="flex items-center gap-1.5 px-3 py-2 bg-accent-red hover:bg-red-600 rounded-lg text-white font-bold text-xs transition-colors backdrop-blur-sm shadow-lg shadow-red-900/40"
               title="Próximo Episódio"
             >
@@ -711,6 +747,58 @@ const StreamPlayer = ({
               <span>Próximo Ep</span>
             </button>
           )}
+
+          {autoNextCountdown !== null && (
+            <div className="flex items-center gap-2 bg-black/80 text-white px-3 py-1.5 rounded-lg text-xs font-mono backdrop-blur-sm border border-white/10">
+              <span>Próximo em</span>
+              <span className="bg-accent-red text-white px-2 py-0.5 rounded">{autoNextCountdown}s</span>
+              <button
+                onClick={cancelAutoNext}
+                className="ml-1 p-1 hover:bg-white/10 rounded"
+                title="Cancelar"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+
+          {directSrc && availableQualities.length > 1 && (
+            <div className="relative">
+              <button
+                onClick={() => setQualityOpen(!qualityOpen)}
+                className="px-2.5 py-2 bg-black/70 hover:bg-black/90 rounded-lg text-white text-xs font-bold transition-colors backdrop-blur-sm"
+                title="Qualidade"
+              >
+                {currentQuality || 'Auto'}
+              </button>
+              {qualityOpen && (
+                <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 flex flex-col min-w-[80px]">
+                  <button
+                    onClick={() => {
+                      setCurrentQuality(null)
+                      setQualityOpen(false)
+                    }}
+                    className={`px-3 py-1.5 text-xs rounded text-left transition-colors ${!currentQuality ? 'bg-accent-red text-white font-bold' : 'text-white/70 hover:bg-white/10'}`}
+                  >
+                    Auto
+                  </button>
+                  {availableQualities.map((q) => (
+                    <button
+                      key={q.label}
+                      onClick={() => {
+                        setCurrentQuality(q.label)
+                        setQualityOpen(false)
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded text-left transition-colors ${currentQuality === q.label ? 'bg-accent-red text-white font-bold' : 'text-white/70 hover:bg-white/10'}`}
+                    >
+                      {q.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <button
             onClick={handleManualRefresh}
             className="p-2 bg-black/70 hover:bg-black/90 rounded-lg text-white/60 hover:text-white transition-colors backdrop-blur-sm"

@@ -74,6 +74,7 @@ export interface TMDBShowDetails extends TMDBShow {
   networks: { id: number; name: string; logo_path: string | null }[]
   created_by: { id: number; name: string; profile_path: string | null }[]
   credits?: TMDBCredits
+  videos?: { results: TMDBVideo[] }
 }
 
 export interface TMDBMovieDetails extends TMDBMovie {
@@ -92,6 +93,7 @@ export interface TMDBMovieDetails extends TMDBMovie {
     backdrop_path: string | null
   } | null
   credits?: TMDBCredits
+  videos?: { results: TMDBVideo[] }
 }
 
 export interface TMDBVideo {
