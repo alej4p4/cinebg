@@ -1,10 +1,10 @@
-import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+﻿import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import MovieCard from '@/components/ui/MovieCard'
 import { useAppStore } from '@/store/useAppStore'
 import type { MediaItem } from '@/types'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
+import { EmptyFavorites } from '@/components/ui/EmptyState'
 
 const Favorites = () => {
   const { favorites } = useAppStore()
@@ -36,30 +36,14 @@ const Favorites = () => {
           <h1 className="font-display font-black text-2xl md:text-3xl text-white">Favoritos</h1>
           {items.length > 0 && (
             <span className="ml-1 text-sm text-white/40 font-medium">
-              {items.length} {items.length === 1 ? 'título' : 'títulos'}
+              {items.length} {items.length === 1 ? 'tÃ­tulo' : 'tÃ­tulos'}
             </span>
           )}
-        </div>
-
-        {items.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="text-center py-24 text-white/40"
-          >
-            <Heart className="h-16 w-16 mx-auto mb-4 opacity-20" />
-            <p className="text-lg font-medium">Você ainda não tem favoritos</p>
-            <p className="text-sm mt-1 opacity-60">
-              Toque no coração de um título para salvá-lo aqui.
-            </p>
-            <Link
-              to="/"
-              className="inline-block mt-6 bg-accent-red hover:bg-red-600 text-white font-bold px-6 py-3 rounded-xl transition-colors"
-            >
-              Explorar catálogo
-            </Link>
-          </motion.div>
+        </div>        {items.length === 0 ? (
+          <EmptyFavorites
+            onAction={() => {}}
+            actionLabel="Explorar catálogo"
+          />
         ) : (
           <motion.div
             className="content-grid"
@@ -80,3 +64,4 @@ const Favorites = () => {
 }
 
 export default Favorites
+
