@@ -39,7 +39,7 @@ export const LIVE_CATEGORIES: LiveCategory[] = [
   { id: 'music', label: 'Música', emoji: '🎵' },
   { id: 'entertainment', label: 'Entretenimento', emoji: '🎭' },
   { id: 'science', label: 'Ciência', emoji: '🔬' },
-  { id: 'br', label: 'Brasil', emoji: '🇧🇷' },
+  { id: 'br', label: 'Português', emoji: '🇧🇷' },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
@@ -59,6 +59,7 @@ const REMOTE_SOURCES: { category: string; url: string }[] = [
   { category: 'entertainment', url: `${REMOTE_BASE}/categories/entertainment.m3u` },
   { category: 'science', url: `${REMOTE_BASE}/categories/science.m3u` },
   { category: 'br', url: `${REMOTE_BASE}/countries/br.m3u` },
+  { category: 'br', url: `${REMOTE_BASE}/countries/pt.m3u` },
 ]
 
 const MAX_PER_CATEGORY = 48
@@ -70,110 +71,79 @@ const FETCH_TIMEOUT_MS = 12000
 // =========================================================================
 export const CURATED_CHANNELS: LiveChannel[] = [
   {
-    id: 'dw-en',
-    name: 'DW English',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Deutsche_Welle_symbol_2012.svg/240px-Deutsche_Welle_symbol_2012.svg.png',
-    category: 'news',
-    country: 'DE',
-    sources: [
-      'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8',
-      'https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/index.m3u8',
-    ],
-    quality: '1080p',
-    geoBlocked: false,
-    genres: ['Geral'],
-  },
-  {
-    id: 'cbs-news',
-    name: 'CBS News 24/7',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/CBS_News_24-7_Logo.png/240px-CBS_News_24-7_Logo.png',
-    category: 'news',
-    country: 'US',
-    sources: [
-      'https://cbsn-us.cbsnstream.cbsnews.com/out/v1/55a8648e8f134e82a470f83d562deeca/master.m3u8',
-    ],
-    quality: '1080p',
-    geoBlocked: false,
-    genres: ['Geral'],
-  },
-  {
-    id: 'france24-en',
-    name: 'France 24 English',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/France24_Logo_2013.svg/240px-France24_Logo_2013.svg.png',
-    category: 'news',
-    country: 'FR',
-    sources: ['https://static.france24.com/live/F24_EN_LO_HLS/live_web.m3u8'],
+    id: 'band-hd',
+    name: 'Band',
+    logo: 'https://i.imgur.com/1r5T6Pw.png',
+    category: 'br',
+    country: 'BR',
+    sources: ['http://170.84.165.204/BAND_HD/index.m3u8'],
     quality: '720p',
     geoBlocked: false,
     genres: ['Geral'],
   },
   {
-    id: 'france24-fr',
-    name: 'France 24 Français',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/France24_Logo_2013.svg/240px-France24_Logo_2013.svg.png',
-    category: 'news',
-    country: 'FR',
-    sources: ['https://static.france24.com/live/F24_FR_HI_HLS/live_web.m3u8'],
+    id: 'band-sports',
+    name: 'Band Sports',
+    logo: 'https://i.imgur.com/EuPvzJe.png',
+    category: 'br',
+    country: 'BR',
+    sources: ['https://cdn-5.nxplay.com.br/BAND_SPORTS/index.m3u8'],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Esporte'],
+  },
+  {
+    id: 'band-news',
+    name: 'BandNews',
+    logo: 'https://i.imgur.com/EuPvzJe.png',
+    category: 'br',
+    country: 'BR',
+    sources: ['https://cdn-5.nxplay.com.br/BAND_NEWS/index.m3u8'],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Notícias'],
+  },
+  {
+    id: 'record-hd',
+    name: 'Record',
+    logo: 'https://i.imgur.com/sz9gTTr.png',
+    category: 'br',
+    country: 'BR',
+    sources: ['http://170.84.165.204/Record_HD/index.m3u8'],
     quality: '720p',
     geoBlocked: false,
     genres: ['Geral'],
   },
   {
-    id: 'france24-es',
-    name: 'France 24 Español',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/France24_Logo_2013.svg/240px-France24_Logo_2013.svg.png',
-    category: 'news',
-    country: 'FR',
-    sources: ['https://static.france24.com/live/F24_ES_HI_HLS/live_web.m3u8'],
+    id: 'record-news',
+    name: 'Record News',
+    logo: 'https://i.imgur.com/HZDRG0K.png',
+    category: 'br',
+    country: 'BR',
+    sources: ['http://45.162.64.114/RECORD_NEWS/index.m3u8'],
+    quality: '720p',
+    geoBlocked: false,
+    genres: ['Notícias'],
+  },
+  {
+    id: 'sbt-interior',
+    name: 'SBT Interior',
+    logo: 'https://i.imgur.com/IkZfa4j.png',
+    category: 'br',
+    country: 'BR',
+    sources: ['https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8'],
     quality: '720p',
     geoBlocked: false,
     genres: ['Geral'],
   },
   {
-    id: 'france24-ar',
-    name: 'France 24 العربية',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/France24_Logo_2013.svg/240px-France24_Logo_2013.svg.png',
-    category: 'news',
-    country: 'FR',
-    sources: ['https://static.france24.com/live/F24_AR_HI_HLS/live_web.m3u8'],
+    id: 'sbt-cuiaba',
+    name: 'SBT Cuiaba',
+    logo: 'https://i.imgur.com/EZJWQ3i.png',
+    category: 'br',
+    country: 'BR',
+    sources: ['https://video09.logicahost.com.br/sbtcuiaba/sbtcuiaba/playlist.m3u8'],
     quality: '720p',
-    geoBlocked: false,
-    genres: ['Geral'],
-  },
-  {
-    id: 'arirang',
-    name: 'Arirang TV',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Arirang_TV_Logo.svg/240px-Arirang_TV_Logo.svg.png',
-    category: 'entertainment',
-    country: 'KR',
-    sources: [
-      'https://amdlive-ch01-ctnd-com.akamaized.net/arirang_1ch/smil:arirang_1ch.smil/playlist.m3u8',
-    ],
-    quality: '1080p',
-    geoBlocked: false,
-    genres: ['Geral'],
-  },
-  {
-    id: 'nasa-tv',
-    name: 'NASA TV',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/NASA_logo.svg/240px-NASA_logo.svg.png',
-    category: 'science',
-    country: 'US',
-    sources: [
-      'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8',
-    ],
-    quality: '1080p',
-    geoBlocked: false,
-    genres: ['Geral'],
-  },
-  {
-    id: 'redbull-tv',
-    name: 'Red Bull TV',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Red_Bull_TV_logo.svg/240px-Red_Bull_TV_logo.svg.png',
-    category: 'sports',
-    country: 'AT',
-    sources: ['https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8'],
-    quality: '1080p',
     geoBlocked: false,
     genres: ['Geral'],
   },
@@ -320,10 +290,14 @@ export const loadLiveChannels = async (): Promise<LiveChannel[]> => {
     const byCategory = new Map<string, LiveChannel[]>()
     results.forEach((result, index) => {
       if (result.status !== 'fulfilled') return
-      const category = REMOTE_SOURCES[index].category
+      const source = REMOTE_SOURCES[index]
+      const isPortuguese = (channel: LiveChannel) =>
+        source.category === 'br' || channel.country === 'BR' || channel.country === 'PT'
       const limited = dedupe(result.value)
         .filter((c) => !c.geoBlocked)
+        .filter((c) => isPortuguese(c))
         .slice(0, MAX_PER_CATEGORY)
+      const category = source.category
       byCategory.set(category, limited)
     })
 
