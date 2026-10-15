@@ -9,6 +9,7 @@ import {
   CaptionsOff,
   PictureInPicture2,
   X,
+  RotateCcw,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -16,6 +17,7 @@ import {
   getInitialMirrorForAudio,
   isMirrorSandboxed,
   resolveMegaEmbed,
+  MIRRORS,
 } from '@/services/streams'
 import { useAppStore } from '@/store/useAppStore'
 import type { AudioOption } from '@/store/useAppStore'
@@ -88,6 +90,13 @@ const StreamPlayer = ({
   const [availableQualities, _setAvailableQualities] = useState<{ label: string; url: string; type: 'hls' | 'mp4' }[]>([])
   const [currentQuality, setCurrentQuality] = useState<string | null>(null)
 
+  // ===== Auto-fallback state =====
+  const [fallbackAttempt, setFallbackAttempt] = useState(0)
+  const [isAutoFallback, setIsAutoFallback] = useState(false)
+  const fallbackSequence = audioOption === 'dub'
+    ? ['megaembed', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'vidlink', 'multiembed']
+    : ['vidsrc-sh', 'vidsrc-io', 'vsembed', 'megaembed', 'vidlink', 'multiembed']
+
   const embedUrl =
     type === 'movie'
       ? buildMovieUrl(tmdbId, audioOption, activeMirror)
@@ -111,10 +120,23 @@ const StreamPlayer = ({
   const handleStreamFailure = () => {
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
     nativeActiveRef.current = false
-    setLoaded(false)
-    setError(true)
-    setDirectSrc(null)
-    setDirectKind(null)
+    // Use functional update to avoid stale closure on fallbackAttempt
+    setFallbackAttempt((prev) => {
+      const nextIndex = prev + 1
+      if (nextIndex >= fallbackSequence.length) {
+        // Esgotou todas as fontes nativas -> tenta iframe
+        setIsAutoFallback(false)
+        setAllowIframe(true)
+        return 0
+      }
+      setActiveMirror(fallbackSequence[nextIndex])
+      setLoaded(false)
+      setError(false)
+      setDirectSrc(null)
+      setDirectKind(null)
+      setKey((k) => k + 1)
+      return nextIndex
+    })
   }
 
   const handleManualRefresh = () => {
@@ -124,6 +146,8 @@ const StreamPlayer = ({
     setError(false)
     setDirectSrc(null)
     setDirectKind(null)
+    setFallbackAttempt(0)
+    setActiveMirror(getInitialMirrorForAudio(audioOption))
     setKey((k) => k + 1)
   }
 
@@ -150,6 +174,7 @@ const StreamPlayer = ({
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, tmdbId, season, episode, audioOption, activeMirror])
 
   // Resolve a fonte nativa: MP4 dublado (PT) ou HLS proxy do MegaEmbed.
@@ -472,6 +497,11 @@ const StreamPlayer = ({
     orig: '🇺🇸 Áudio Original',
   }
 
+  const getMirrorLabel = (id: string) => {
+    const mirror = MIRRORS.find(m => m.id === id)
+    return mirror ? mirror.name : id
+  }
+
   // O iframe (provedor externo) só entra em cena se o usuário pedir explicitamente.
   const showIframe = allowIframe && !resolvingDirect
 
@@ -544,14 +574,18 @@ const StreamPlayer = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-10 gap-3">
             <div className="w-12 h-12 border-2 border-white/5 border-t-accent-red rounded-full animate-spin" />
             <div className="text-center">
-              <p className="text-white/80 text-sm font-semibold">Carregando transmissão...</p>
+              <p className="text-white/80 text-sm font-semibold">
+                {isAutoFallback
+                  ? `Tentando ${getMirrorLabel(activeMirror)} (${fallbackAttempt + 1}/${fallbackSequence.length})...`
+                  : 'Carregando transmissão...'}
+              </p>
               <p className="text-white/40 text-xs mt-0.5">{audioLabels[audioOption]}</p>
             </div>
           </div>
         )}
 
         {/* Error Overlay */}
-        {error && (
+        {error && !isAutoFallback && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-10 gap-4 p-6">
             <AlertCircle className="h-12 w-12 text-red-400" />
             <div className="text-center">
@@ -579,6 +613,31 @@ const StreamPlayer = ({
                 Usar outra fonte
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Auto-fallback indicator */}
+        {isAutoFallback && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10]/95 z-20 gap-3">
+            <RotateCcw className="h-10 w-10 text-accent-red animate-spin" />
+            <div className="text-center">
+              <p className="text-white font-semibold text-lg">Tentando próxima fonte...</p>
+              <p className="text-white/70 text-sm mt-1">
+                {getMirrorLabel(activeMirror)} ({fallbackAttempt + 1}/{fallbackSequence.length})
+              </p>
+              <p className="text-white/40 text-xs mt-2">
+                Isso acontece automaticamente. Aguarde...
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setIsAutoFallback(false)
+                setAllowIframe(true)
+              }}
+              className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              Pular para iframe
+            </button>
           </div>
         )}
 
