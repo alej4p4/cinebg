@@ -12,7 +12,7 @@ import {
   getPosterUrl, getBackdropUrl, getProfileUrl
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
-import type { TMDBMovieDetails, TMDBShowDetails, TMDBCast } from '@/types'
+import type { TMDBMovieDetails, TMDBShowDetails, TMDBCast, TMDBVideo } from '@/types'
 
 const Details = () => {
   const { type, id } = useParams<{ type: 'movie' | 'tv' | 'anime'; id: string }>()
@@ -83,8 +83,8 @@ const Details = () => {
   const numEpisodes = !isMovie ? showData!.number_of_episodes : null
 
   const favorite = isFavorite(mediaId)
-  const videos = (data as any)?.videos?.results ?? []
-  const trailer = videos.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer') ?? videos[0]
+  const videos: TMDBVideo[] = data?.videos?.results ?? []
+  const trailer = videos.find((v) => v.site === 'YouTube' && v.type === 'Trailer') ?? videos[0]
 
   const handleToggleFav = () => {
     if (favorite) {
