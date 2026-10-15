@@ -4,6 +4,7 @@ import { Search as SearchIcon, X, SlidersHorizontal } from 'lucide-react'
 import MovieCard from '@/components/ui/MovieCard'
 import { SkeletonGrid } from '@/components/ui/SkeletonCard'
 import ErrorState from '@/components/ui/ErrorState'
+import { EmptySearch } from '@/components/ui/EmptyState'
 import { searchMulti } from '@/services/tmdb'
 import { MOVIE_GENRES, TV_GENRES, type MediaItem } from '@/types'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
@@ -164,16 +165,12 @@ const Search = () => {
             ))}
           </motion.div>
         ) : searched ? (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="text-center py-24 text-white/40"
-          >
-            <SearchIcon className="h-16 w-16 mx-auto mb-4 opacity-20" />
-            <p className="text-lg font-medium">Nenhum resultado para &ldquo;{query}&rdquo;</p>
-            <p className="text-sm mt-1 opacity-60">Tente outro termo de busca</p>
-          </motion.div>
+          <EmptySearch
+            query={query}
+            onAction={() => {}}
+            actionLabel="Limpar busca"
+            onSecondaryAction={() => {}}
+          />
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 12 }}

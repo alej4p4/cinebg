@@ -103,18 +103,60 @@ body {
 .skeleton {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.03) 100%
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.1) 60%,
+    rgba(255, 255, 255, 0.04) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   border-radius: 8px;
+}
+
+.skeleton-card {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.skeleton-text {
+  border-radius: 4px;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+.skeleton-pill {
+  border-radius: 9999px;
 }
 
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Skeleton variants */
+.skeleton-pulse {
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.skeleton-wave {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
+}
+
+/* Staggered skeleton children */
+.skeleton-stagger > * {
+  animation-delay: calc(var(--skeleton-index, 0) * 80ms);
 }
 
 /* ===== PROGRESS BAR ===== */
