@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react'
-import Hls from 'hls.js'
 import {
   Maximize2,
   RefreshCw,
@@ -216,26 +215,35 @@ const StreamPlayer = ({
       return
     }
 
-    if (!Hls.isSupported()) {
-      handleDirectMediaError()
-      return
-    }
+    let cancelled = false
+    let hlsInstance: { destroy: () => void } | null = null
 
-    const hls = new Hls({ enableWorker: true })
-    hls.subtitleDisplay = true
-    hls.loadSource(directSrc)
-    hls.attachMedia(video)
-    hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => refreshTextTracks())
-    hls.on(Hls.Events.MANIFEST_PARSED, () => window.setTimeout(() => refreshTextTracks(), 300))
-    hls.on(Hls.Events.ERROR, (_event, data) => {
-      if (data.fatal) {
-        hls.destroy()
+    void import('hls.js').then((mod) => {
+      if (cancelled) return
+      const Hls = mod.default
+      if (!Hls.isSupported()) {
         handleDirectMediaError()
+        return
       }
+
+      const hls = new Hls({ enableWorker: true })
+      hlsInstance = hls
+      hls.subtitleDisplay = true
+      hls.loadSource(directSrc)
+      hls.attachMedia(video)
+      hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => refreshTextTracks())
+      hls.on(Hls.Events.MANIFEST_PARSED, () => window.setTimeout(() => refreshTextTracks(), 300))
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) {
+          hls.destroy()
+          handleDirectMediaError()
+        }
+      })
     })
 
     return () => {
-      hls.destroy()
+      cancelled = true
+      if (hlsInstance) hlsInstance.destroy()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [directSrc, directKind])

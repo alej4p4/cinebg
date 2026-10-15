@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import Hls from 'hls.js'
 import { AlertCircle, Maximize2, RefreshCw, Volume2, VolumeX } from 'lucide-react'
 import type { LiveChannel } from '@/services/liveChannels'
 import { categoryLabel, countryFlag } from '@/services/liveChannels'
@@ -38,7 +37,11 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
     setLoaded(false)
     setError(false)
 
+    let cancelled = false
+    let hlsInstance: { destroy: () => void } | null = null
+
     const goNext = () => {
+      if (cancelled) return
       if (sourceIndex < channel.sources.length - 1) {
         setSourceIndex((i) => i + 1)
       } else {
@@ -53,38 +56,47 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
       const onErr = () => goNext()
       video.addEventListener('error', onErr)
       return () => {
+        cancelled = true
         video.removeEventListener('error', onErr)
         video.removeAttribute('src')
       }
     }
 
-    if (!Hls.isSupported()) {
-      setError(true)
-      return
-    }
-
-    const hls = new Hls({ enableWorker: true, liveDurationInfinity: true })
-    hls.loadSource(src)
-    hls.attachMedia(video)
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      video.play().catch(() => {})
-    })
-    hls.on(Hls.Events.ERROR, (_event, data) => {
-      if (!data.fatal) return
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-        try {
-          hls.recoverMediaError()
-          return
-        } catch {
-          /* segue para a próxima fonte */
-        }
+    void import('hls.js').then((mod) => {
+      if (cancelled) return
+      const Hls = mod.default
+      if (!Hls.isSupported()) {
+        setError(true)
+        return
       }
-      hls.destroy()
-      goNext()
+
+      const hls = new Hls({ enableWorker: true, liveDurationInfinity: true })
+      hlsInstance = hls
+      hls.loadSource(src)
+      hls.attachMedia(video)
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (!cancelled) video.play().catch(() => {})
+      })
+      hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
+        if (cancelled) return
+        const payload = data as { fatal?: boolean; type?: string }
+        if (!payload.fatal) return
+        if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          try {
+            hls.recoverMediaError()
+            return
+          } catch {
+            /* segue para a proxima fonte */
+          }
+        }
+        hls.destroy()
+        goNext()
+      })
     })
 
     return () => {
-      hls.destroy()
+      cancelled = true
+      if (hlsInstance) hlsInstance.destroy()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel.id, sourceIndex, mountKey])
