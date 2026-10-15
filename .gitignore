@@ -34,5 +34,11 @@ android/.gradle/
 android/captures/
 android/gradleBuild/
 
+# Android release signing material (never commit)
+*.jks
+*.keystore
+keystore.properties
+android/cinebg-release.jks
+
 # Local scratch files
 resultado.txt
