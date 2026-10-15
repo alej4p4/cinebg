@@ -248,7 +248,7 @@ const LiveTV = () => {
             className={
               viewMode === 'list'
                 ? 'flex flex-col gap-3 pb-16'
-                : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-16'
+                : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-16 auto-rows-[210px] items-stretch'
             }
           >
             {filtered.map((channel, i) => (
@@ -263,7 +263,7 @@ const LiveTV = () => {
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
                 className={`group bg-bg-card border rounded-xl text-left transition-all tv-focusable ${
-                  viewMode === 'list' ? 'p-3 flex items-center gap-4' : 'p-4'
+                  viewMode === 'list' ? 'p-3 flex items-center gap-4' : 'p-4 h-full flex flex-col'
                 } ${
                   selected?.id === channel.id
                     ? 'border-accent-red/70 bg-white/5'
@@ -296,7 +296,7 @@ const LiveTV = () => {
                   className={
                     viewMode === 'list'
                       ? 'flex items-center gap-2 flex-shrink-0'
-                      : 'mt-3 flex items-center justify-center w-7 h-7 rounded-full bg-accent-red/20 text-accent-red opacity-0 group-hover:opacity-100 transition-opacity'
+                      : 'mt-auto pt-3 flex items-center justify-center w-7 h-7 rounded-full bg-accent-red/20 text-accent-red opacity-0 group-hover:opacity-100 transition-opacity'
                   }
                 >
                   <Play
