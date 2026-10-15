@@ -11,6 +11,8 @@ import { useAppStore } from '@/store/useAppStore'
 import { isTVDevice } from '@/utils/tv'
 import { useAppUpdate } from '@/hooks/useAppUpdate'
 import UpdateModal from '@/components/UpdateModal'
+import { useLicense } from '@/hooks/useLicense'
+import LicenseGate from '@/components/LicenseGate'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Movies = lazy(() => import('@/pages/Movies'))
@@ -72,6 +74,19 @@ function App() {
   useEpisodeNotifications()
   useOrientationFullscreen()
   const { update, dismiss } = useAppUpdate()
+  const { isLicensed, isTrial, loading } = useLicense()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white/10 border-t-accent-red rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!isLicensed && !isTrial) {
+    return <LicenseGate />
+  }
 
   return (
     <BrowserRouter>
