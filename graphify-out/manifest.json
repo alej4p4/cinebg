@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792186606.0965445,
-    "seen": 1792186883.7995434,
-    "ast_hash": "30f9d0c8d47d49cf1455267947448ac4",
+    "mtime": 1792187856.4865394,
+    "seen": 1792188107.0826392,
+    "ast_hash": "7aab61842d640acc97501940f6dc9c13",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792186723.1418078,
-    "seen": 1792186883.7995574,
+    "mtime": 1792187985.0608342,
+    "seen": 1792188107.0826519,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -18,8 +18,8 @@
     "semantic_hash": "c777a4127ae7213f7da22c4105bdfeab"
   },
   "android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java": {
-    "mtime": 1792186279.325594,
-    "seen": 1792186883.799571,
+    "mtime": 1792187003.6058812,
+    "seen": 1792188107.0826674,
     "ast_hash": "fa21436cc41c106401284db28a026f7b",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792186723.1408083,
-    "seen": 1792186883.7995863,
+    "mtime": 1792187985.0598345,
+    "seen": 1792188107.0826845,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -102,9 +102,9 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792186624.7403553,
-    "seen": 1792186883.7996316,
-    "ast_hash": "65f78d378a7707e895b12f95a2b1a0fa",
+    "mtime": 1792187876.3995266,
+    "seen": 1792188107.0827615,
+    "ast_hash": "9f414fb2d6307c1b997361dd5cc26acb",
     "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
@@ -114,9 +114,9 @@
     "semantic_hash": "8cbbe642bff0ba34f045ae149ace0df8"
   },
   "src/components/LicenseGate.tsx": {
-    "mtime": 1792180155.5533185,
-    "seen": 1792181605.1418517,
-    "ast_hash": "512022bf0ceaefeb1e6cef01f15094e3",
+    "mtime": 1792187910.5330045,
+    "seen": 1792188107.0827734,
+    "ast_hash": "9759ff5c5c96b99f93ab5b039c3783db",
     "semantic_hash": ""
   },
   "src/components/UpdateModal.tsx": {
@@ -126,8 +126,8 @@
     "semantic_hash": "92b35a3a7883490af64616b3d72717aa"
   },
   "src/components/layout/Navbar.tsx": {
-    "mtime": 1792186583.757271,
-    "seen": 1792186883.799647,
+    "mtime": 1792187003.6279194,
+    "seen": 1792188107.0827804,
     "ast_hash": "f8dbda6009b2311adfa0145e08853d72",
     "semantic_hash": ""
   },
@@ -138,14 +138,14 @@
     "semantic_hash": "3f1e100aa4fa64ec2242c8fd5b8d4275"
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1792163545.7326696,
-    "seen": 1792179646.8837981,
-    "ast_hash": "79c6aeca2b2836ce07e1d84efc177f1c",
+    "mtime": 1792187839.133952,
+    "seen": 1792188107.082795,
+    "ast_hash": "b9d8df27eeeaab8d8f735e54f221f771",
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1792186258.2330189,
-    "seen": 1792186883.7996593,
+    "mtime": 1792187003.629336,
+    "seen": 1792188107.0828001,
     "ast_hash": "6fc757b1ccac3ce24345fc31e23d0fef",
     "semantic_hash": ""
   },
@@ -342,9 +342,9 @@
     "semantic_hash": "15ef51d42b94cd3178b58fa8215f6db2"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1792184303.8769727,
-    "seen": 1792185795.8953667,
-    "ast_hash": "e7fa9ea1ee52fec46c4d351048fba380",
+    "mtime": 1792187817.0052693,
+    "seen": 1792188107.0830028,
+    "ast_hash": "12a4e4137b4fc652f29fc9da3b8aa879",
     "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
@@ -384,8 +384,8 @@
     "semantic_hash": "9b6a19ba063c627dd6795d924d743ea4"
   },
   "src/utils/antiRedirect.ts": {
-    "mtime": 1792186237.9536602,
-    "seen": 1792186883.7998412,
+    "mtime": 1792187003.6303363,
+    "seen": 1792188107.0830443,
     "ast_hash": "7a5db379400eabb4adf97ea948c3caf5",
     "semantic_hash": ""
   },
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "src/services/mercadoPago.ts": {
-    "mtime": 1792183373.774679,
-    "seen": 1792183670.2760456,
-    "ast_hash": "77e668b9a50d6c46d8a514c0f3c93a8e",
+    "mtime": 1792187702.4102595,
+    "seen": 1792188107.0830126,
+    "ast_hash": "c84d9183b725744fcb7fd279e0ef9447",
     "semantic_hash": ""
   },
   "android/app/src/main/res/drawable-xhdpi/banner.png": {

@@ -98,6 +98,12 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
         }
       })
 
+      hls.on(Hls.Events.FRAG_LOADED, () => {
+        if (!cancelled) {
+          setLoaded(true)
+        }
+      })
+
       hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
         if (cancelled) return
         const payload = data as { fatal?: boolean; type?: string }
@@ -132,13 +138,10 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
   }
 
   const selectSource = (index: number) => {
-    if (index === sourceIndex) {
-      reload()
-      return
-    }
     setSourceIndex(index)
     setLoaded(false)
     setError(false)
+    setStatusMessage(`Sintonizando Sinal ${index + 1}...`)
     setMountKey((k) => k + 1)
   }
 
