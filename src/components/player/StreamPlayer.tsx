@@ -690,10 +690,11 @@ const StreamPlayer = ({
 
         {/*
           SANDBOX (escudo anti-popup/anti-redirect):
-          Usamos `sandbox` COM `allow-same-origin`. Isso mantém a origem real do iframe
-          (não fica "opaca"), então os detectores de sandbox do MegaEmbed e do vidsrc/sbx.js
-          não disparam e o vídeo toca. Sem `allow-popups`/`allow-top-navigation`, a abertura
-          de abas de propaganda e o redirect da janela principal ficam bloqueados.
+          Os provedores externos (MegaEmbed, VidSrc, etc.) possuem scripts anti-sandbox
+          que recusam a reprodução com a mensagem "Sandboxing is not allowed!".
+          Por isso, `isMirrorSandboxed` retorna false para essas fontes (renderizando sem
+          o atributo `sandbox`), e o bloqueio de popups e redirects é garantido no CineBG
+          pelo escudo global (`antiRedirect.ts`) e pela política `referrerPolicy="no-referrer"`.
         */}
         {showIframe && (
           <iframe
