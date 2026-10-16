@@ -216,6 +216,8 @@ const Watch = () => {
               onNextEpisode={type !== 'movie' ? handleNextEpisode : undefined}
               startAt={resumeAt}
               onProgress={handleProgress}
+              seasons={showData?.seasons}
+              onSelectEpisode={handleEpisodeSelect}
             />
 
             {/* Download offline */}
