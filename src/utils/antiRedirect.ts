@@ -8,12 +8,11 @@ let shieldInitialized = false
 let shieldActive = false
 
 const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-  // Se um iframe tentar redirecionar a página principal para fora da aplicação
+  // Apenas cancela o evento se aplicável sem atribuir e.returnValue
+  // para evitar o modal nativo "Confirmar navegação / Sair desta página"
   if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
     console.warn('[CineBG Anti-Ad] Redirecionamento de iframe bloqueado!')
     e.preventDefault()
-    e.returnValue = ''
-    return ''
   }
 }
 

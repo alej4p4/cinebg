@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, UserRound, Download, List, Settings, Crown } from 'lucide-react'
+import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, UserRound, Download, List, Settings, Crown, LayoutGrid } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
@@ -18,11 +18,24 @@ const NAV_LINKS = [
   { to: '/live', label: 'TV', icon: Radio },
 ]
 
+const CATEGORIES_GRID = [
+  { to: '/', label: 'Início', icon: Home, emoji: '🏠' },
+  { to: '/movies', label: 'Filmes', icon: Film, emoji: '🎬' },
+  { to: '/series', label: 'Séries', icon: Tv, emoji: '📺' },
+  { to: '/live', label: 'TV Ao Vivo', icon: Radio, emoji: '📡' },
+  { to: '/anime', label: 'Anime', icon: Star, emoji: '🃏' },
+  { to: '/my-list', label: 'Minha Lista', icon: List, emoji: '📋' },
+  { to: '/favorites', label: 'Favoritos', icon: Heart, emoji: '❤️' },
+  { to: '/history', label: 'Histórico', icon: Clock, emoji: '🕒' },
+  { to: '/downloads', label: 'Downloads', icon: Download, emoji: '⬇️' },
+]
+
 const Navbar = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [gridMenuOpen, setGridMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -119,31 +132,62 @@ const Navbar = () => {
         {/* Spacer */}
         <div className="flex-1" />
 
+        {/* Mobile Grade Button */}
+        <button
+          type="button"
+          onClick={() => setGridMenuOpen(true)}
+          className="md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-400 hover:bg-white/10 text-xs font-bold transition-all active:scale-95 flex-shrink-0"
+          title="Grade de Categorias"
+        >
+          <LayoutGrid className="h-4 w-4 text-amber-400" />
+          <span className="text-white text-[11px] font-bold">Grade</span>
+        </button>
+
         {/* Search */}
-        <form onSubmit={handleSearch} className="relative">
-          <div
-            className={`flex items-center gap-2 rounded-full transition-all duration-300 border ${
-              searchFocused
-                ? 'bg-bg-card border-white/20 w-48 md:w-64'
-                : 'bg-white/5 border-white/10 w-9'
-            }`}
+        <div className="relative flex items-center">
+          {/* Botão de busca Mobile: navega diretamente para /search com teclado pronto */}
+          <button
+            type="button"
+            onClick={() => navigate('/search')}
+            className="md:hidden p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors"
+            title="Buscar filmes e séries"
           >
-            <button type="submit" className="p-2 flex-shrink-0 text-white/70 hover:text-white">
-              <Search className="h-4 w-4" />
-            </button>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-              placeholder="Buscar..."
-              className={`bg-transparent text-sm text-white placeholder:text-white/40 transition-all duration-300 pr-3 ${
-                searchFocused ? 'w-full' : 'w-0 opacity-0'
+            <Search className="h-4 w-4" />
+          </button>
+
+          {/* Busca Desktop expandível */}
+          <form onSubmit={handleSearch} className="hidden md:block relative">
+            <div
+              className={`flex items-center gap-2 rounded-full transition-all duration-300 border ${
+                searchFocused
+                  ? 'bg-bg-card border-white/20 w-48 md:w-64'
+                  : 'bg-white/5 border-white/10 w-9'
               }`}
-            />
-          </div>
-        </form>
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  if (!searchFocused) setSearchFocused(true)
+                  else handleSearch({ preventDefault: () => {} } as any)
+                }}
+                className="p-2 flex-shrink-0 text-white/70 hover:text-white"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                placeholder="Buscar..."
+                className={`bg-transparent text-sm text-white placeholder:text-white/40 transition-all duration-300 pr-3 ${
+                  searchFocused ? 'w-full' : 'w-0 opacity-0'
+                }`}
+              />
+            </div>
+          </form>
+        </div>
 
         {/* Favorites */}
         <Focusable
@@ -415,11 +459,40 @@ const Navbar = () => {
 
       {/* Mobile menu */}
         <button
-          className="md:hidden p-2 text-white"
-          onClick={() => setMenuOpen(!menuOpen)}
+          className="md:hidden p-2 text-white/80 hover:text-white"
+          onClick={() => setGridMenuOpen(true)}
+          title="Grade de Categorias"
         >
-          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          <LayoutGrid className="h-5 w-5 text-amber-400" />
         </button>
+      </div>
+
+      {/* Barra de Categorias Rápida no Mobile (Estilo YuCine) */}
+      <div className="flex md:hidden items-center gap-1.5 px-3 pb-2.5 overflow-x-auto scroll-hide">
+        <button
+          type="button"
+          onClick={() => setGridMenuOpen(true)}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500/25 to-orange-500/25 text-amber-300 border border-amber-400/40 flex-shrink-0 shadow-[0_0_8px_rgba(251,191,36,0.2)]"
+        >
+          <LayoutGrid className="h-3 w-3 text-amber-400" />
+          <span>Grade</span>
+        </button>
+        {NAV_LINKS.map(({ to, label }) => {
+          const active = location.pathname === to
+          return (
+            <Link
+              key={to}
+              to={to}
+              className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all flex-shrink-0 ${
+                active
+                  ? 'border border-amber-400 bg-amber-400/20 text-white shadow-[0_0_12px_rgba(251,191,36,0.3)] scale-[1.02]'
+                  : 'text-white/70 bg-white/5 border border-white/5 hover:text-white'
+              }`}
+            >
+              {label}
+            </Link>
+          )
+        })}
       </div>
 
       {/* Mobile Menu */}
@@ -497,6 +570,75 @@ const Navbar = () => {
               </div>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Grade de Categorias Mobile (Modal Estilo YuCine) */}
+      <AnimatePresence>
+        {gridMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-50"
+              onClick={() => setGridMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: -20 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="fixed inset-x-4 top-16 z-50 bg-[#12111a] border border-white/10 rounded-2xl p-5 shadow-2xl max-w-md mx-auto"
+            >
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-amber-400/20 border border-amber-400/40">
+                    <LayoutGrid className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-white uppercase tracking-wider">
+                      Grade de Conteúdos
+                    </h2>
+                    <p className="text-[11px] text-white/50">
+                      Navegue entre filmes, séries, TV ao vivo e mais
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setGridMenuOpen(false)}
+                  className="p-1.5 rounded-full bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2.5">
+                {CATEGORIES_GRID.map((cat) => {
+                  const active = location.pathname === cat.to
+                  return (
+                    <button
+                      key={cat.to}
+                      onClick={() => {
+                        navigate(cat.to)
+                        setGridMenuOpen(false)
+                      }}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all active:scale-95 ${
+                        active
+                          ? 'bg-amber-400/20 border-amber-400 text-amber-300 shadow-[0_0_14px_rgba(251,191,36,0.3)]'
+                          : 'bg-white/5 border-white/5 text-white/80 hover:bg-white/10 hover:border-white/15'
+                      }`}
+                    >
+                      <span className="text-2xl mb-1">{cat.emoji}</span>
+                      <span className="text-xs font-bold text-center leading-tight">
+                        {cat.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </header>
