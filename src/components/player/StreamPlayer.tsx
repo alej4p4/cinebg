@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   Maximize2,
   RefreshCw,
@@ -106,25 +106,24 @@ const StreamPlayer = ({
   // Original/Legendado, o HLS proxy do MegaEmbed (ambos nativos, sem iframe).
   const switchAudio = (opt: AudioOption) => {
     setAudioOption(opt)
-    setActiveMirror(getInitialMirrorForAudio(opt))
+    setActiveMirror('megaembed')
     setAllowIframe(false)
     setLoaded(false)
     setError(false)
     setDirectSrc(null)
     setDirectKind(null)
+    setFallbackAttempt(0)
     setKey((k) => k + 1)
   }
 
-  // Falha da transmissÃ£o nativa: mostra o aviso e deixa o iframe apenas sob
-  // demanda. NÃ£o troca mais de provedor silenciosamente (evitava abrir anÃºncios).
+  // Falha da transmissão nativa: mostra o aviso e deixa o iframe apenas sob
+  // demanda. Não troca mais de provedor silenciosamente (evitava abrir anúncios).
   const handleStreamFailure = () => {
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
     nativeActiveRef.current = false
-    // Use functional update to avoid stale closure on fallbackAttempt
     setFallbackAttempt((prev) => {
       const nextIndex = prev + 1
       if (nextIndex >= fallbackSequence.length) {
-        // Esgotou todas as fontes nativas -> tenta iframe
         setIsAutoFallback(false)
         setAllowIframe(true)
         return 0
@@ -147,7 +146,7 @@ const StreamPlayer = ({
     setDirectSrc(null)
     setDirectKind(null)
     setFallbackAttempt(0)
-    setActiveMirror(getInitialMirrorForAudio(audioOption))
+    setActiveMirror('megaembed')
     setKey((k) => k + 1)
   }
 
@@ -191,14 +190,26 @@ const StreamPlayer = ({
     resolveMegaEmbed(tmdbId, mediaType, season, episode)
       .then((resolved) => {
         if (cancelled) return
-        if (audioOption === 'dub' && resolved.dubbedMp4) {
-          nativeActiveRef.current = true
-          setDirectSrc(resolved.dubbedMp4)
-          setDirectKind('mp4')
-        } else if (audioOption !== 'dub' && resolved.hlsProxy) {
-          nativeActiveRef.current = true
-          setDirectSrc(resolved.hlsProxy)
-          setDirectKind('hls')
+        if (audioOption === 'dub') {
+          if (resolved.dubbedMp4) {
+            nativeActiveRef.current = true
+            setDirectSrc(resolved.dubbedMp4)
+            setDirectKind('mp4')
+          } else if (resolved.hlsProxy) {
+            nativeActiveRef.current = true
+            setDirectSrc(resolved.hlsProxy)
+            setDirectKind('hls')
+          }
+        } else {
+          if (resolved.hlsProxy) {
+            nativeActiveRef.current = true
+            setDirectSrc(resolved.hlsProxy)
+            setDirectKind('hls')
+          } else if (resolved.dubbedMp4) {
+            nativeActiveRef.current = true
+            setDirectSrc(resolved.dubbedMp4)
+            setDirectKind('mp4')
+          }
         }
       })
       .catch(() => {
@@ -493,9 +504,9 @@ const StreamPlayer = ({
   }
 
   const audioLabels = {
-    dub: 'ðŸ‡§ðŸ‡· Ãudio Dublado (PT-BR)',
-    sub: 'ðŸ“ Legendado (PT-BR)',
-    orig: 'ðŸ‡ºðŸ‡¸ Ãudio Original',
+    dub: '🇧🇷 Dublado (PT-BR)',
+    sub: 'Legendado (PT-BR)',
+    orig: '🇺🇸 Original',
   }
 
   const getMirrorLabel = (id: string) => {
@@ -503,26 +514,26 @@ const StreamPlayer = ({
     return mirror ? mirror.name : id
   }
 
-  // O iframe (provedor externo) sÃ³ entra em cena se o usuÃ¡rio pedir explicitamente.
+  // O iframe (provedor externo) só entra em cena se o usuário pedir explicitamente.
   const showIframe = allowIframe && !resolvingDirect
 
-  // Ativa/desativa o escudo anti-redirect conforme o iframe � exibido
+  // Ativa/desativa o escudo anti-redirect conforme o iframe é exibido
   useEffect(() => {
     setAntiRedirectShieldActive(showIframe)
   }, [showIframe])
 
   return (
     <div className="space-y-0">
-      {/* ====== SELETOR DE ÃUDIO NATIVO (Estilo YuCine - Sem Exibir Servidores TÃ©cnicos) ====== */}
+      {/* ====== SELETOR DE ÁUDIO NATIVO (Estilo YuCine - Sem Exibir Servidores Técnicos) ====== */}
       <div className="flex flex-wrap items-center justify-between bg-[#111118] border border-white/5 rounded-t-xl px-4 py-2.5 gap-2">
         <div className="flex items-center gap-2">
           <Volume2 className="h-4 w-4 text-accent-red" />
           <span className="text-white/60 text-xs font-semibold">
-            {audioOption === 'dub' ? 'ðŸ‡§ðŸ‡· Dublado' : 'ðŸ‡ºðŸ‡¸ Original / Legendado'}
+            {audioOption === 'dub' ? '🇧🇷 Dublado' : '🇺🇸 Original / Legendado'}
           </span>
         </div>
 
-        {/* SeleÃ§Ã£o Simplificada de Idioma */}
+        {/* Seleção Simplificada de Idioma */}
         <div className="flex items-center gap-1 bg-[#1c1c28] p-1 rounded-lg border border-white/5">
           <button
             onClick={() => switchAudio('dub')}
@@ -532,7 +543,7 @@ const StreamPlayer = ({
                 : 'text-white/40 hover:text-white/70'
             }`}
           >
-            <span className="text-sm leading-none">ðŸ‡§ðŸ‡·</span>
+            <span className="text-sm leading-none">🇧🇷</span>
             <span>Dublado</span>
           </button>
 
@@ -544,7 +555,7 @@ const StreamPlayer = ({
                 : 'text-white/40 hover:text-white/70'
             }`}
           >
-            <span className="text-sm leading-none">ðŸ‡ºðŸ‡¸</span>
+            <span className="text-sm leading-none">🇺🇸</span>
             <span>Original / Legendado</span>
           </button>
         </div>
@@ -583,7 +594,7 @@ const StreamPlayer = ({
               <p className="text-white/80 text-sm font-semibold">
                 {isAutoFallback
                   ? `Tentando ${getMirrorLabel(activeMirror)} (${fallbackAttempt + 1}/${fallbackSequence.length})...`
-                  : 'Carregando transmissÃ£o...'}
+                  : 'Carregando transmissão...'}
               </p>
               <p className="text-white/40 text-xs mt-0.5">{audioLabels[audioOption]}</p>
             </div>
@@ -595,9 +606,9 @@ const StreamPlayer = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-10 gap-4 p-6">
             <AlertCircle className="h-12 w-12 text-red-400" />
             <div className="text-center">
-              <p className="text-white font-bold text-lg">TransmissÃ£o indisponÃ­vel</p>
+              <p className="text-white font-bold text-lg">Transmissão indisponível</p>
               <p className="text-white/40 text-sm mt-1">
-                NÃ£o foi possÃ­vel conectar a esta fonte no momento. Tente novamente ou use outra fonte.
+                Não foi possível conectar a esta fonte no momento. Tente novamente ou use outra fonte.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -627,7 +638,7 @@ const StreamPlayer = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10]/95 z-20 gap-3">
             <RotateCcw className="h-10 w-10 text-accent-red animate-spin" />
             <div className="text-center">
-              <p className="text-white font-semibold text-lg">Tentando prÃ³xima fonte...</p>
+              <p className="text-white font-semibold text-lg">Tentando próxima fonte...</p>
               <p className="text-white/70 text-sm mt-1">
                 {getMirrorLabel(activeMirror)} ({fallbackAttempt + 1}/{fallbackSequence.length})
               </p>
@@ -725,7 +736,7 @@ const StreamPlayer = ({
                           : 'text-white/70 hover:bg-white/10'
                       }`}
                     >
-                      {option}Ã—
+                      {option}×
                     </button>
                   ))}
                 </div>
@@ -733,7 +744,7 @@ const StreamPlayer = ({
             </div>
           )}
 
-          {/* Legendas (sÃ³ aparece quando a fonte traz faixas) */}
+          {/* Legendas (só aparece quando a fonte traz faixas) */}
           {directSrc && tracks.length > 0 && (
             <div className="relative">
               <button
@@ -806,16 +817,16 @@ const StreamPlayer = ({
                 onNextEpisode()
               }}
               className="flex items-center gap-1.5 px-3 py-2 bg-accent-red hover:bg-red-600 rounded-lg text-white font-bold text-xs transition-colors backdrop-blur-sm shadow-lg shadow-red-900/40"
-              title="PrÃ³ximo EpisÃ³dio"
+              title="Próximo Episódio"
             >
               <SkipForward className="h-3.5 w-3.5" />
-              <span>PrÃ³ximo Ep</span>
+              <span>Próximo Ep</span>
             </button>
           )}
 
           {autoNextCountdown !== null && (
             <div className="flex items-center gap-2 bg-black/80 text-white px-3 py-1.5 rounded-lg text-xs font-mono backdrop-blur-sm border border-white/10">
-              <span>PrÃ³ximo em</span>
+              <span>Próximo em</span>
               <span className="bg-accent-red text-white px-2 py-0.5 rounded">{autoNextCountdown}s</span>
               <button
                 onClick={cancelAutoNext}
