@@ -4,7 +4,7 @@ import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog } from 'lucide-re
 import { useAppStore, type UserProfile } from '@/store/useAppStore'
 import {
   checkForNewEpisodes,
-  ensureNotificationPermission,
+  requestNotificationPermissionExplicit,
   isNativeNotificationsAvailable,
 } from '@/services/notifications'
 
@@ -49,7 +49,7 @@ const Profiles = () => {
       return
     }
     if (isNativeNotificationsAvailable()) {
-      const granted = await ensureNotificationPermission()
+      const granted = await requestNotificationPermissionExplicit()
       if (!granted) return
     }
     setNotificationsEnabled(true)

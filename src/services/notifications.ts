@@ -61,11 +61,22 @@ export const isNativeNotificationsAvailable = () => Capacitor.isNativePlatform()
 
 export const ensureNotificationPermission = async (): Promise<boolean> => {
   if (!Capacitor.isNativePlatform()) return false
-  let perm = await LocalNotifications.checkPermissions()
-  if (perm.display !== 'granted') {
-    perm = await LocalNotifications.requestPermissions()
+  try {
+    const perm = await LocalNotifications.checkPermissions()
+    return perm.display === 'granted'
+  } catch {
+    return false
   }
-  return perm.display === 'granted'
+}
+
+export const requestNotificationPermissionExplicit = async (): Promise<boolean> => {
+  if (!Capacitor.isNativePlatform()) return false
+  try {
+    const perm = await LocalNotifications.requestPermissions()
+    return perm.display === 'granted'
+  } catch {
+    return false
+  }
 }
 
 const scheduleNotification = async (
