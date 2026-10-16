@@ -1,9 +1,10 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import Navbar from '@/components/layout/Navbar'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import SplashScreen from '@/components/ui/SplashScreen'
 import { useEpisodeNotifications } from '@/hooks/useEpisodeNotifications'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
@@ -75,35 +76,43 @@ function App() {
   useOrientationFullscreen()
   const { update, dismiss } = useAppUpdate()
   const { isLicensed, isTrial, loading } = useLicense()
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white/10 border-t-accent-red rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  if (!isLicensed && !isTrial) {
-    return <LicenseGate />
-  }
+  const [showSplash, setShowSplash] = useState(true)
 
   return (
-    <BrowserRouter>
-      <ErrorBoundary>
-        <div className="min-h-screen bg-bg-primary text-text-primary">
-          <Navbar />
-          <main>
-            <AnimatedRoutes />
-          </main>
+    <>
+      <AnimatePresence>
+        {showSplash && (
+          <SplashScreen
+            version="1.2.0"
+            onComplete={() => setShowSplash(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {loading ? (
+        <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-white/10 border-t-accent-red rounded-full animate-spin" />
         </div>
-      </ErrorBoundary>
-      <UpdateModal
-        visible={!!update}
-        downloadUrl={update?.downloadUrl ?? ''}
-        onDismiss={dismiss}
-      />
-    </BrowserRouter>
+      ) : !isLicensed && !isTrial ? (
+        <LicenseGate />
+      ) : (
+        <BrowserRouter>
+          <ErrorBoundary>
+            <div className="min-h-screen bg-bg-primary text-text-primary">
+              <Navbar />
+              <main>
+                <AnimatedRoutes />
+              </main>
+            </div>
+          </ErrorBoundary>
+          <UpdateModal
+            visible={!!update}
+            downloadUrl={update?.downloadUrl ?? ''}
+            onDismiss={dismiss}
+          />
+        </BrowserRouter>
+      )}
+    </>
   )
 }
 
