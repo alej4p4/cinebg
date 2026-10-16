@@ -1,5 +1,5 @@
 // Mercado Pago API integration for CineBG VIP Subscriptions
-// Handles Pix payment generation, real-time status polling and fallback options
+// Handles Pix payment generation, real-time status polling, OAuth token auto-refresh, and fallback options
 
 export interface VipPlan {
   id: '30' | '60' | '90' | '365'
@@ -67,12 +67,15 @@ export const DEFAULT_PIX_KEY = '66996175239'
 const MP_STORAGE_TOKEN_KEY = 'cinebg_mp_access_token'
 
 export const getMercadoPagoToken = (): string => {
+  const local = localStorage.getItem(MP_STORAGE_TOKEN_KEY)
+  if (local && local.trim().length > 10) return local.trim()
+
   const envToken = import.meta.env.VITE_MERCADO_PAGO_ACCESS_TOKEN
   if (envToken && typeof envToken === 'string' && envToken.trim().length > 10) {
     return envToken.trim()
   }
-  const local = localStorage.getItem(MP_STORAGE_TOKEN_KEY)
-  return local ? local.trim() : ''
+
+  return 'APP_USR-4070043112593139-101616-f774f91a14373f21ea773250ed02767f-1195452908'
 }
 
 export const setMercadoPagoToken = (token: string): void => {
@@ -81,6 +84,40 @@ export const setMercadoPagoToken = (token: string): void => {
   } else {
     localStorage.removeItem(MP_STORAGE_TOKEN_KEY)
   }
+}
+
+/**
+ * Renova o Access Token do Mercado Pago automaticamente via OAuth 2.0
+ */
+export async function refreshMercadoPagoToken(): Promise<string> {
+  const clientId = import.meta.env.VITE_MERCADO_PAGO_CLIENT_ID || '4070043112593139'
+  const clientSecret = import.meta.env.VITE_MERCADO_PAGO_CLIENT_SECRET || 'SFtjWhm55MnXqPdyfRH0fNuiBLYHRPjR'
+
+  try {
+    const res = await fetch('https://api.mercadopago.com/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: String(clientId),
+        client_secret: String(clientSecret),
+      }).toString(),
+    })
+
+    if (res.ok) {
+      const data = await res.json()
+      if (data.access_token) {
+        setMercadoPagoToken(data.access_token)
+        return data.access_token
+      }
+    }
+  } catch (e) {
+    console.warn('Falha na renovação OAuth do Mercado Pago:', e)
+  }
+
+  return getMercadoPagoToken()
 }
 
 export interface CreatePixPaymentResult {
@@ -108,18 +145,17 @@ export async function createMercadoPagoPix(
   deviceId: string,
   payerEmail?: string
 ): Promise<CreatePixPaymentResult> {
-  const token = getMercadoPagoToken()
+  let token = getMercadoPagoToken()
 
-  // Se não houver token configurado, gera fallback Pix com chave padrão
   if (!token) {
-    return generateFallbackPix(plan, deviceId, 'Token Mercado Pago não configurado')
+    token = await refreshMercadoPagoToken()
   }
 
   const cleanDeviceId = deviceId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 24)
   const email =
     payerEmail && payerEmail.includes('@')
       ? payerEmail.trim()
-      : `cinebg_${cleanDeviceId || 'user'}@cinebg.app`
+      : `cliente_${cleanDeviceId || 'tv'}@cinebg.tv`
 
   const idempotencyKey = `cinebg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
 
@@ -140,7 +176,7 @@ export async function createMercadoPagoPix(
   }
 
   try {
-    const response = await fetch('https://api.mercadopago.com/v1/payments', {
+    let response = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -149,6 +185,20 @@ export async function createMercadoPagoPix(
       },
       body: JSON.stringify(payload),
     })
+
+    // Se o token expirou (401), renova e tenta mais uma vez
+    if (response.status === 401) {
+      token = await refreshMercadoPagoToken()
+      response = await fetch('https://api.mercadopago.com/v1/payments', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'X-Idempotency-Key': idempotencyKey + '_retry',
+        },
+        body: JSON.stringify(payload),
+      })
+    }
 
     if (!response.ok) {
       const errorJson = await response.json().catch(() => null)
@@ -228,7 +278,6 @@ function generateFallbackPix(
   deviceId: string,
   reason: string
 ): CreatePixPaymentResult {
-  // Código Pix Padrão BR Code formatado
   const pixKey = DEFAULT_PIX_KEY
   const fallbackCode = `00020126580014BR.GOV.BCB.PIX0136${pixKey}520400005303986540${plan.price.toFixed(2)}5802BR5906CINEBG6009SAO PAULO62170513${deviceId.slice(0, 13)}6304`
 
