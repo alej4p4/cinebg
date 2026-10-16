@@ -66,7 +66,7 @@ const Profiles = () => {
         <div className="py-6">
           <h1 className="font-display font-black text-3xl text-white">Perfis</h1>
           <p className="text-text-secondary text-sm mt-1">
-            Cada perfil tem seus prÃ³prios favoritos e histÃ³rico.
+            Cada perfil tem seus próprios favoritos e histórico.
           </p>
         </div>
 
@@ -160,15 +160,15 @@ const Profiles = () => {
         <div className="glass rounded-xl p-5 mt-8">
           <h2 className="font-bold text-white mb-2 flex items-center gap-2">
             <UserCog className="h-5 w-5 text-accent-red" />
-            PreferÃªncias do perfil
+            Preferências do perfil
           </h2>
           <p className="text-text-secondary text-sm mb-4">
-            Configure idioma, Ã¡udio e legendas para este perfil.
+            Configure idioma, áudio e legendas para este perfil.
           </p>
 
           <div className="space-y-4">
             <div>
-              <p className="text-white/60 text-xs font-semibold mb-2">ÿudio</p>
+              <p className="text-white/60 text-xs font-semibold mb-2">Áudio</p>
               <div className="flex flex-wrap gap-2">
                 {(['dub', 'sub', 'orig'] as const).map((opt) => (
                   <button
@@ -205,25 +205,16 @@ const Profiles = () => {
               </div>
             </div>
           </div>
-
-          <button
-            onClick={handleAdd}
-            disabled={!name.trim()}
-            className="w-full mt-6 flex items-center justify-center gap-2 bg-accent-red text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-red-900/40"
-          >
-            <Plus className="h-4 w-4" />
-            Adicionar perfil
-          </button>
         </div>
 
         <div className="glass rounded-xl p-5 mt-8">
           <h2 className="font-bold text-white mb-2 flex items-center gap-2">
             <Bell className="h-5 w-5 text-accent-red" />
-            NotificaÃ§Ãµes
+            Notificações
           </h2>
           <p className="text-text-secondary text-sm mb-4">
-            Receba avisos quando um episÃ³dio novo de uma sÃ©rie favorita for lanÃ§ado. Funciona no
-            aplicativo Android (requer permissÃ£o de notificaÃ§Ãµes).
+            Receba avisos quando um episódio novo de uma série favorita for lançado. Funciona no
+            aplicativo Android (requer permissão de notificações).
           </p>
           <button
             onClick={handleToggleNotifications}
@@ -234,7 +225,7 @@ const Profiles = () => {
             }`}
           >
             {notificationsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-            {notificationsEnabled ? 'NotificaÃ§Ãµes ativadas' : 'Ativar notificaÃ§Ãµes'}
+            {notificationsEnabled ? 'Notificações ativadas' : 'Ativar notificações'}
           </button>
         </div>
 
@@ -244,7 +235,7 @@ const Profiles = () => {
             Modo TV
           </h2>
           <p className="text-text-secondary text-sm mb-4">
-            Ativa a navegaÃ§Ã£o por controle remoto (D-pad) com foco espacial. Em TVs Android Ã©
+            Ativa a navegação por controle remoto (D-pad) com foco espacial. Em TVs Android é
             detectado automaticamente.
           </p>
           <button
