@@ -25,5 +25,17 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    proxy: {
+      '/api/mgeb': {
+        target: 'https://mgeb.site',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/mgeb/, ''),
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          'Referer': 'https://mgeb.site/',
+        },
+      },
+    },
   },
 })

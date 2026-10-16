@@ -110,38 +110,21 @@ const StreamPlayer = ({
   // Original/Legendado, o HLS proxy do MegaEmbed (ambos nativos, sem iframe).
   const switchAudio = (opt: AudioOption) => {
     setAudioOption(opt)
-    const nextMirror = getInitialMirrorForAudio(opt)
-    setActiveMirror(nextMirror)
-    setAllowIframe(nextMirror !== 'megaembed')
+    setActiveMirror('megaembed')
+    setAllowIframe(false)
     setLoaded(false)
     setError(false)
     setDirectSrc(null)
     setDirectKind(null)
+    setFallbackAttempt(0)
     setKey((k) => k + 1)
   }
 
-  // Falha da transmissão nativa: mostra o aviso e deixa o iframe apenas sob
-  // demanda. Não troca mais de provedor silenciosamente (evitava abrir anúncios).
+  // Falha da transmissão nativa: tenta a próxima fonte
   const handleStreamFailure = () => {
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
     nativeActiveRef.current = false
-    // Use functional update to avoid stale closure on fallbackAttempt
-    setFallbackAttempt((prev) => {
-      const nextIndex = prev + 1
-      if (nextIndex >= fallbackSequence.length) {
-        // Esgotou todas as fontes nativas -> tenta iframe
-        setIsAutoFallback(false)
-        setAllowIframe(true)
-        return 0
-      }
-      setActiveMirror(fallbackSequence[nextIndex])
-      setLoaded(false)
-      setError(false)
-      setDirectSrc(null)
-      setDirectKind(null)
-      setKey((k) => k + 1)
-      return nextIndex
-    })
+    tryNextSource()
   }
 
   const tryNextSource = useCallback(() => {
@@ -169,14 +152,13 @@ const StreamPlayer = ({
 
   const handleManualRefresh = () => {
     loadedRef.current = false
-    const initialMirror = getInitialMirrorForAudio(audioOption)
-    setAllowIframe(initialMirror !== 'megaembed')
+    setActiveMirror('megaembed')
+    setAllowIframe(false)
     setLoaded(false)
     setError(false)
     setDirectSrc(null)
     setDirectKind(null)
     setFallbackAttempt(0)
-    setActiveMirror(initialMirror)
     setKey((k) => k + 1)
   }
 
@@ -197,14 +179,13 @@ const StreamPlayer = ({
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout de segurança: se nada carregar em 12s, mostra o aviso. Ignoramos
-    // quando há uma fonte nativa tocando (o <video> tem onError próprio, então
-    // MP4s grandes não são abortados pelo timer).
+    // Timeout de segurança: se nada carregar em 15s, tenta a próxima fonte. Ignoramos
+    // quando há uma fonte nativa tocando (o <video> tem onError próprio).
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
       if (nativeActiveRef.current) return
       handleStreamFailure()
-    }, 12000)
+    }, 15000)
 
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
@@ -213,7 +194,7 @@ const StreamPlayer = ({
   }, [key, tmdbId, season, episode, audioOption, activeMirror])
 
   // Resolve a fonte nativa: MP4 dublado (PT) ou HLS proxy do MegaEmbed.
-  // Assim tocamos sem iframe -> sem abas de propaganda.
+  // Assim tocamos sem iframe -> sem abas de propaganda ou anúncios pre-roll.
   useEffect(() => {
     let cancelled = false
     nativeActiveRef.current = false
@@ -236,7 +217,20 @@ const StreamPlayer = ({
           setDirectSrc(resolved.hlsProxy)
           setDirectKind('hls')
           hasSource = true
+        } else if (resolved.dubbedMp4) {
+          // Fallback para MP4 nativo sem anúncios
+          nativeActiveRef.current = true
+          setDirectSrc(resolved.dubbedMp4)
+          setDirectKind('mp4')
+          hasSource = true
+        } else if (resolved.hlsProxy) {
+          // Fallback para HLS nativo sem anúncios
+          nativeActiveRef.current = true
+          setDirectSrc(resolved.hlsProxy)
+          setDirectKind('hls')
+          hasSource = true
         }
+
         if (!hasSource) {
           tryNextSource()
         }
