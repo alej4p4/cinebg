@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { to: '/series', label: 'Séries', icon: Tv },
   { to: '/anime', label: 'Anime', icon: Star },
   { to: '/my-list', label: 'Minha Lista', icon: List },
-  { to: '/live', label: 'TV ao Vivo', icon: Radio },
+  { to: '/live', label: 'TV', icon: Radio },
 ]
 
 const Navbar = () => {
@@ -60,17 +60,17 @@ const Navbar = () => {
           </Link>
         </Focusable>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1 ml-4">
+        {/* Desktop Nav Estilo YuCine */}
+        <nav className="hidden md:flex items-center gap-1.5 ml-4">
           {NAV_LINKS.map(({ to, label }) => {
             const active = location.pathname === to
             return (
               <Focusable key={to} onEnterPress={() => navigate(to)}>
                 <Link
                   to={to}
-                  className={`block px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`block px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
                     active
-                      ? 'bg-white/10 text-white'
+                      ? 'border border-amber-400 bg-amber-400/10 text-white shadow-[0_0_12px_rgba(251,191,36,0.3)] scale-[1.03]'
                       : 'text-white/70 hover:text-white hover:bg-white/5'
                   }`}
                 >

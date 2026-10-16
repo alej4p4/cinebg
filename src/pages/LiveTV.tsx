@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { LayoutGrid, List as ListIcon, Loader2, Play, Search as SearchIcon, Tv, X } from 'lucide-react'
+import { Tv, Search as SearchIcon, X, Loader2 } from 'lucide-react'
 import LivePlayer from '@/components/player/LivePlayer'
+import YuCineChannelCard from '@/components/tv/YuCineChannelCard'
 import {
   LIVE_CATEGORIES,
-  categoryEmoji,
   categoryLabel,
-  countryFlag,
   loadLiveChannels,
   type LiveChannel,
 } from '@/services/liveChannels'
@@ -17,58 +16,29 @@ import {
   toggleLiveFavorite,
 } from '@/services/liveFavorites'
 
-const ChannelLogo = ({ channel }: { channel: LiveChannel }) => {
-  const [failed, setFailed] = useState(false)
-  if (!channel.logo || failed) {
-    return (
-      <span className="text-3xl" aria-hidden>
-        {categoryEmoji(channel.category)}
-      </span>
-    )
-  }
-  return (
-    <img
-      src={channel.logo}
-      alt={channel.name}
-      loading="lazy"
-      decoding="async"
-      onError={() => setFailed(true)}
-      className="max-h-full max-w-full object-contain"
-    />
-  )
-}
-
 const LiveTV = () => {
   const [channels, setChannels] = useState<LiveChannel[]>([])
   const [loading, setLoading] = useState(true)
-  const [category, setCategory] = useState<string>('all')
-  const [genre, setGenre] = useState<string>('all')
+  const [category, setCategory] = useState<string>('todos')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<LiveChannel | null>(null)
   const [favorites, setFavorites] = useState<Set<string>>(() => loadLiveFavorites())
   const [lastChannelId, setLastChannelId] = useState<string | null>(() => loadLastLiveChannelId())
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() =>
-    typeof window !== 'undefined' && localStorage.getItem('cinebg:liveViewMode') === 'list' ? 'list' : 'grid',
-  )
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('cinebg:liveViewMode', viewMode)
-    } catch {
-      /* ignore */
-    }
-  }, [viewMode])
-
-  const resumeChannel = useMemo(
-    () => channels.find((c) => c.id === lastChannelId) ?? null,
-    [channels, lastChannelId],
-  )
 
   useEffect(() => {
     let alive = true
     loadLiveChannels()
       .then((list) => {
-        if (alive) setChannels(list)
+        if (alive) {
+          setChannels(list)
+          // Se tiver um canal salvo anteriormente, pode preparar
+          if (lastChannelId) {
+            const found = list.find((c) => c.id === lastChannelId)
+            if (found && !selected) {
+              // não seleciona automaticamente para não tocar áudio sem interação
+            }
+          }
+        }
       })
       .finally(() => {
         if (alive) setLoading(false)
@@ -76,7 +46,7 @@ const LiveTV = () => {
     return () => {
       alive = false
     }
-  }, [])
+  }, [lastChannelId, selected])
 
   useEffect(() => {
     if (selected) {
@@ -85,190 +55,128 @@ const LiveTV = () => {
     }
   }, [selected])
 
-  const availableCategories = useMemo(() => {
-    const present = new Set(channels.map((c) => c.category))
-    return LIVE_CATEGORIES.filter((c) => present.has(c.id))
-  }, [channels])
-
-  const availableGenres = useMemo(() => {
-    const present = new Set(channels.flatMap((c) => c.genres || []))
-    return Array.from(present).filter((g) => g && g !== 'Geral').sort((a, b) => a.localeCompare(b))
-  }, [channels])
-
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return channels.filter((c) => {
       if (category === 'favorites' && !favorites.has(c.id)) return false
-      if (category !== 'all' && category !== 'favorites' && c.category !== category) return false
-      if (genre !== 'all' && !(c.genres || []).includes(genre)) return false
+      if (category !== 'todos' && category !== 'favorites' && c.category !== category) return false
       if (q !== '' && !c.name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [channels, category, query, favorites, genre])
+  }, [channels, category, query, favorites])
 
   return (
     <motion.div
-      className="min-h-screen bg-bg-primary pt-20 page-enter"
+      className="min-h-screen bg-bg-primary pt-20 page-enter select-none"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
-        <div className="py-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="font-display font-black text-3xl text-white flex items-center gap-2">
-              <Tv className="h-7 w-7 text-accent-red" />
-              TV ao Vivo
-            </h1>
-            <p className="text-text-secondary text-sm mt-1">
-              Canais de streaming gratuitos 24/7, direto no player nativo.
-            </p>
+        {/* Cabeçalho da TV Estilo YuCine */}
+        <div className="py-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent-red/20 border border-accent-red/30 flex items-center justify-center">
+              <Tv className="h-6 w-6 text-accent-red" />
+            </div>
+            <div>
+              <h1 className="font-display font-black text-2xl md:text-3xl text-white tracking-tight">
+                TV
+              </h1>
+              <p className="text-white/40 text-xs">
+                Canais oficiais em alta definição estilo YuCine
+              </p>
+            </div>
           </div>
 
-          {resumeChannel && !selected && (
-            <button
-              onClick={() => {
-                setSelected(resumeChannel)
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-              }}
-              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold px-4 py-2.5 rounded-xl border border-white/8 transition-colors tv-focusable"
-            >
-              ▶ Retomar: {resumeChannel.name}
-            </button>
-          )}
-
-          <div className="flex items-center gap-2 bg-white/5 rounded-xl p-1 border border-white/8">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-colors tv-focusable ${
-                viewMode === 'grid' ? 'bg-accent-red text-white' : 'text-white/50 hover:text-white'
-              }`}
-              title="Grade"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-colors tv-focusable ${
-                viewMode === 'list' ? 'bg-accent-red text-white' : 'text-white/50 hover:text-white'
-              }`}
-              title="Lista"
-            >
-              <ListIcon className="h-4 w-4" />
-            </button>
-          </div>
-
+          {/* Busca Rápida de Canais */}
           <div className="relative w-full sm:w-72">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar canal..."
-              className="w-full bg-[#13131c] border border-white/8 text-white placeholder-white/30 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:border-accent-red/50 focus:ring-2 focus:ring-accent-red/20 transition-all outline-none"
+              className="w-full bg-[#13131c] border border-white/10 text-white placeholder-white/30 rounded-xl pl-10 pr-4 py-2 text-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all outline-none"
             />
           </div>
         </div>
 
-        {/* Player do canal selecionado */}
+        {/* Player do Canal Selecionado */}
         {selected && (
-          <div className="mb-6">
-            <div className="flex items-center justify-end gap-3 mb-2">
-              {selected && (
+          <div className="mb-8 bg-[#0a0a10] border border-white/10 rounded-2xl overflow-hidden p-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-white font-bold text-base md:text-lg">
+                  {selected.name}
+                </span>
+                <span className="px-2 py-0.5 rounded bg-white/10 text-white/70 text-xs font-semibold">
+                  {categoryLabel(selected.category)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setFavorites(toggleLiveFavorite(favorites, selected.id))}
-                  className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-colors"
                 >
-                  {favorites.has(selected.id) ? '❤️' : '🤍'}{' '}
-                  {favorites.has(selected.id) ? 'Favorito' : 'Favoritar'}
+                  {favorites.has(selected.id) ? '❤️ Favorito' : '🤍 Favoritar'}
                 </button>
-              )}
-              <button
-                onClick={() => setSelected(null)}
-                className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-bold transition-colors"
-              >
-                <X className="h-3.5 w-3.5" />
-                Fechar player
-              </button>
+                <button
+                  onClick={() => setSelected(null)}
+                  className="p-1.5 text-white/50 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                  title="Fechar player"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
+
             <LivePlayer channel={selected} />
           </div>
         )}
 
-        {/* Abas de categoria */}
+        {/* Categorias Estilo YuCine (Pílulas arredondadas com destaque em dourado/vermelho) */}
         {!loading && (
-          <div className="flex gap-2 overflow-x-auto pb-3 mb-2 -mx-1 px-1">
-            <button
-              onClick={() => setCategory('all')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors tv-focusable ${
-                category === 'all'
-                  ? 'bg-accent-red text-white'
-                  : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              📡 Todos
-              <span className="text-xs opacity-60">{channels.length}</span>
-            </button>
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-4 -mx-1 px-1 no-scrollbar">
+            {LIVE_CATEGORIES.map((cat) => {
+              const active = category === cat.id
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setCategory(cat.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-200 ${
+                    active
+                      ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/30 scale-105'
+                      : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
+                  }`}
+                >
+                  <span>{cat.emoji}</span>
+                  <span>{cat.label}</span>
+                </button>
+              )
+            })}
+
             {favorites.size > 0 && (
               <button
                 onClick={() => setCategory('favorites')}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors tv-focusable ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-200 ${
                   category === 'favorites'
-                    ? 'bg-accent-red text-white'
-                    : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                    ? 'bg-accent-red text-white shadow-lg shadow-red-900/40 scale-105'
+                    : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
                 }`}
               >
-                ❤️ Favoritos
-                <span className="text-xs opacity-60">{favorites.size}</span>
+                <span>❤️</span>
+                <span>Favoritos</span>
+                <span className="text-xs opacity-60">({favorites.size})</span>
               </button>
             )}
-            {availableCategories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setCategory(cat.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors tv-focusable ${
-                  category === cat.id
-                    ? 'bg-accent-red text-white'
-                    : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {cat.emoji} {cat.label}
-              </button>
-            ))}
           </div>
         )}
 
-        {!loading && availableGenres.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-3 mb-2 -mx-1 px-1">
-            <button
-              onClick={() => setGenre('all')}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors tv-focusable ${
-                genre === 'all'
-                  ? 'bg-accent-red text-white'
-                  : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              Todos os generos
-            </button>
-            {availableGenres.map((item) => (
-              <button
-                key={item}
-                onClick={() => setGenre(item)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors tv-focusable ${
-                  genre === item
-                    ? 'bg-accent-red text-white'
-                    : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Conteúdo */}
+        {/* Grade de Canais no Formato Exato da Imagem 2 do YuCine */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
-            <Loader2 className="h-8 w-8 text-accent-red animate-spin" />
-            <p className="text-white/50 text-sm">Carregando canais...</p>
+            <Loader2 className="h-8 w-8 text-amber-400 animate-spin" />
+            <p className="text-white/50 text-sm">Carregando canais YuCine...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center gap-2">
@@ -279,90 +187,21 @@ const LiveTV = () => {
             </p>
           </div>
         ) : (
-          <div
-            className={
-              viewMode === 'list'
-                ? 'flex flex-col gap-3 pb-16'
-                : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-16 auto-rows-[210px] items-stretch'
-            }
-          >
-            {filtered.map((channel, i) => (
-              <div className="relative" key={channel.id}>
-                <motion.button
-                type="button"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: Math.min(i * 0.02, 0.4) }}
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 pb-20">
+            {filtered.map((channel) => (
+              <YuCineChannelCard
+                key={channel.id}
+                channel={channel}
+                isSelected={selected?.id === channel.id}
+                isFavorite={favorites.has(channel.id)}
+                onToggleFavorite={() =>
+                  setFavorites(toggleLiveFavorite(favorites, channel.id))
+                }
                 onClick={() => {
                   setSelected(channel)
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
-                className={`group bg-bg-card border rounded-xl text-left transition-all tv-focusable ${
-                  viewMode === 'list' ? 'p-3 flex items-center gap-4' : 'p-4 h-full flex flex-col'
-                } ${
-                  selected?.id === channel.id
-                    ? 'border-accent-red/70 bg-white/5'
-                    : 'border-white/5 hover:border-accent-red/50 hover:bg-white/5'
-                }`}
-              >
-                <div
-                  className={
-                    viewMode === 'list'
-                      ? 'flex items-center justify-center h-12 w-12 flex-shrink-0'
-                      : 'flex items-center justify-center h-16 mb-3'
-                  }
-                >
-                  <ChannelLogo channel={channel} />
-                </div>
-                <div className={viewMode === 'list' ? 'min-w-0 flex-1' : ''}>
-                  <h3 className="text-sm font-bold text-white truncate group-hover:text-red-400 transition-colors">
-                    {channel.name}
-                  </h3>
-                  <div className="flex items-center justify-between mt-1 gap-2">
-                    <span className="text-[11px] text-white/50 bg-white/5 px-2 py-0.5 rounded truncate">
-                      {categoryLabel(channel.category)}
-                    </span>
-                    <span className="text-xs text-white/50 flex-shrink-0">
-                      {countryFlag(channel.country)}
-                    </span>
-                  </div>
-                </div>
-                <div
-                  className={
-                    viewMode === 'list'
-                      ? 'flex items-center gap-2 flex-shrink-0'
-                      : 'mt-auto pt-3 flex items-center justify-center w-7 h-7 rounded-full bg-accent-red/20 text-accent-red opacity-0 group-hover:opacity-100 transition-opacity'
-                  }
-                >
-                  <Play
-                    className={
-                      viewMode === 'list'
-                        ? 'h-4 w-4 text-accent-red'
-                        : 'h-3.5 w-3.5 fill-current'
-                    }
-                  />
-                </div>
-              </motion.button>
-                <span
-                  role="button"
-                  tabIndex={0}
-                  title={favorites.has(channel.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setFavorites(toggleLiveFavorite(favorites, channel.id))
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.stopPropagation()
-                      e.preventDefault()
-                      setFavorites(toggleLiveFavorite(favorites, channel.id))
-                    }
-                  }}
-                  className="absolute top-2 right-2 z-10 text-base bg-black/50 hover:bg-black/75 rounded-full h-7 w-7 flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  {favorites.has(channel.id) ? '❤️' : '🤍'}
-                </span>
-              </div>
+              />
             ))}
           </div>
         )}

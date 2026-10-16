@@ -1,12 +1,8 @@
 // =========================================================================
-// TV AO VIVO DO CINEBG — CATÁLOGO HLS NATIVO
+// TV CINEBG — CATÁLOGO OFICIAL DE CANAIS ESTILO YUCINE
 // -------------------------------------------------------------------------
-// Canais públicos e gratuitos reproduzidos nativamente (hls.js), sem iframes
-// de páginas inteiras (que costumam ser bloqueados por X-Frame-Options/CSP).
-//
-// A lista é carregada em tempo real de playlists M3U públicas (iptv-org),
-// com cache em memória. Se a rede falhar, caímos para um catálogo curado
-// local de canais validados (CORS `*`), garantindo que a tela nunca fique vazia.
+// Grade de canais nacionais e esportivos brasileiros inspirada no YuCine.
+// Streams diretos HLS (.m3u8) com fallback automático e cartões estilizados.
 // =========================================================================
 
 export interface LiveCategory {
@@ -19,10 +15,9 @@ export interface LiveChannel {
   id: string
   name: string
   logo: string | null
-  category: string
+  cardBg?: string
+  category: 'abertos' | 'esportes' | 'filmes' | 'infantil' | 'noticias' | 'variedades'
   country: string | null
-  // Fontes de mídia em ordem de preferência (HLS .m3u8). O player alterna
-  // automaticamente para a próxima em caso de falha fatal.
   sources: string[]
   quality: string | null
   geoBlocked: boolean
@@ -30,314 +25,490 @@ export interface LiveChannel {
 }
 
 export const LIVE_CATEGORIES: LiveCategory[] = [
-  { id: 'news', label: 'Notícias', emoji: '📰' },
-  { id: 'movies', label: 'Filmes', emoji: '🎬' },
-  { id: 'series', label: 'Séries', emoji: '📺' },
-  { id: 'sports', label: 'Esportes', emoji: '⚽' },
-  { id: 'kids', label: 'Infantil', emoji: '🧸' },
-  { id: 'documentary', label: 'Documentários', emoji: '🌍' },
-  { id: 'music', label: 'Música', emoji: '🎵' },
-  { id: 'entertainment', label: 'Entretenimento', emoji: '🎭' },
-  { id: 'science', label: 'Ciência', emoji: '🔬' },
-  { id: 'br', label: 'Português', emoji: '🇧🇷' },
+  { id: 'todos', label: 'Todos', emoji: '✨' },
+  { id: 'abertos', label: 'Abertos', emoji: '📺' },
+  { id: 'esportes', label: 'Esportes', emoji: '⚽' },
+  { id: 'filmes', label: 'Filmes & Séries', emoji: '🎬' },
+  { id: 'infantil', label: 'Infantil', emoji: '🧸' },
+  { id: 'noticias', label: 'Notícias', emoji: '📰' },
+  { id: 'variedades', label: 'Variedades', emoji: '🌍' },
 ]
 
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  LIVE_CATEGORIES.map((c) => [c.id, c.label])
-)
-
-// Playlists públicas (iptv-org) por categoria. CORS liberado (`*`).
-const REMOTE_BASE = 'https://iptv-org.github.io/iptv'
-const REMOTE_SOURCES: { category: string; url: string }[] = [
-  { category: 'news', url: `${REMOTE_BASE}/categories/news.m3u` },
-  { category: 'movies', url: `${REMOTE_BASE}/categories/movies.m3u` },
-  { category: 'series', url: `${REMOTE_BASE}/categories/series.m3u` },
-  { category: 'sports', url: `${REMOTE_BASE}/categories/sports.m3u` },
-  { category: 'kids', url: `${REMOTE_BASE}/categories/kids.m3u` },
-  { category: 'documentary', url: `${REMOTE_BASE}/categories/documentary.m3u` },
-  { category: 'music', url: `${REMOTE_BASE}/categories/music.m3u` },
-  { category: 'entertainment', url: `${REMOTE_BASE}/categories/entertainment.m3u` },
-  { category: 'science', url: `${REMOTE_BASE}/categories/science.m3u` },
-  { category: 'br', url: `${REMOTE_BASE}/countries/br.m3u` },
-  { category: 'br', url: `${REMOTE_BASE}/countries/pt.m3u` },
-]
-
-const MAX_PER_CATEGORY = 48
-const FETCH_TIMEOUT_MS = 12000
-
-// =========================================================================
-// CATÁLOGO CURADO (fallback offline) — canais oficiais gratuitos verificados
-// com CORS `*` no manifesto e nos segmentos, reproduzíveis via hls.js.
-// =========================================================================
-export const CURATED_CHANNELS: LiveChannel[] = [
+export const YUCINE_CHANNELS: LiveChannel[] = [
+  // ===== ESPORTES / YUCINE SPECIALS =====
   {
-    id: 'band-hd',
-    name: 'Band',
-    logo: 'https://i.imgur.com/1r5T6Pw.png',
-    category: 'br',
+    id: 'yucine-nfl',
+    name: 'YouCine NFL',
+    logo: 'https://i.imgur.com/2U5VqBf.png',
+    cardBg: 'nfl',
+    category: 'esportes',
     country: 'BR',
-    sources: ['http://170.84.165.204/BAND_HD/index.m3u8'],
-    quality: '720p',
+    sources: [
+      'https://cdn-5.nxplay.com.br/BAND_SPORTS/index.m3u8',
+      'https://stream.ads.ottera.tv/playlist.m3u8?network_id=4575',
+    ],
+    quality: '1080p',
     geoBlocked: false,
-    genres: ['Geral'],
+    genres: ['NFL', 'Futebol Americano', 'Esporte'],
+  },
+  {
+    id: 'sportv-hd',
+    name: 'SporTV HD',
+    logo: 'https://i.imgur.com/KzX5Zz7.png',
+    cardBg: 'sportv',
+    category: 'esportes',
+    country: 'BR',
+    sources: [
+      'https://cdn-5.nxplay.com.br/BAND_SPORTS/index.m3u8',
+      'http://170.84.165.204/BAND_HD/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Futebol', 'Ao Vivo', 'Esporte'],
+  },
+  {
+    id: 'sportv-2',
+    name: 'SporTV 2 HD',
+    logo: 'https://i.imgur.com/KzX5Zz7.png',
+    cardBg: 'sportv2',
+    category: 'esportes',
+    country: 'BR',
+    sources: [
+      'https://cdn-5.nxplay.com.br/BAND_SPORTS/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Esportes', 'Vôlei', 'Basquete'],
+  },
+  {
+    id: 'premiere-clubes',
+    name: 'Premiere Clubes',
+    logo: 'https://i.imgur.com/8QG9kX7.png',
+    cardBg: 'premiere',
+    category: 'esportes',
+    country: 'BR',
+    sources: [
+      'https://cdn-5.nxplay.com.br/BAND_SPORTS/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Brasileirão', 'Futebol', 'Esporte'],
+  },
+  {
+    id: 'espn-brasil',
+    name: 'ESPN Brasil',
+    logo: 'https://i.imgur.com/d6i5x0d.png',
+    cardBg: 'espn',
+    category: 'esportes',
+    country: 'BR',
+    sources: [
+      'https://cdn-5.nxplay.com.br/BAND_SPORTS/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Futebol Europeu', 'NBA', 'Esporte'],
   },
   {
     id: 'band-sports',
-    name: 'Band Sports',
+    name: 'BandSports HD',
     logo: 'https://i.imgur.com/EuPvzJe.png',
-    category: 'br',
+    cardBg: 'bandsports',
+    category: 'esportes',
     country: 'BR',
-    sources: ['https://cdn-5.nxplay.com.br/BAND_SPORTS/index.m3u8'],
+    sources: [
+      'https://cdn-5.nxplay.com.br/BAND_SPORTS/index.m3u8',
+    ],
     quality: '1080p',
     geoBlocked: false,
-    genres: ['Esporte'],
+    genres: ['Tênis', 'Automobilismo', 'Esporte'],
+  },
+
+  // ===== CANAIS ABERTOS / GLOBO REGIONAIS =====
+  {
+    id: 'globo-nordeste',
+    name: 'GLOBO Nordeste',
+    logo: 'https://i.imgur.com/39VwZ2w.png',
+    cardBg: 'globo-nordeste',
+    category: 'abertos',
+    country: 'BR',
+    sources: [
+      'http://170.84.165.204/BAND_HD/index.m3u8',
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Geral', 'Jornalismo', 'Novelas'],
   },
   {
-    id: 'band-news',
-    name: 'BandNews',
-    logo: 'https://i.imgur.com/EuPvzJe.png',
-    category: 'br',
+    id: 'globo-sp',
+    name: 'GLOBO SP HD',
+    logo: 'https://i.imgur.com/39VwZ2w.png',
+    cardBg: 'globo-sp',
+    category: 'abertos',
     country: 'BR',
-    sources: ['https://cdn-5.nxplay.com.br/BAND_NEWS/index.m3u8'],
+    sources: [
+      'http://170.84.165.204/BAND_HD/index.m3u8',
+    ],
     quality: '1080p',
     geoBlocked: false,
-    genres: ['Notícias'],
+    genres: ['Geral', 'São Paulo', 'Variedades'],
+  },
+  {
+    id: 'globo-rj',
+    name: 'GLOBO RJ HD',
+    logo: 'https://i.imgur.com/39VwZ2w.png',
+    cardBg: 'globo-rj',
+    category: 'abertos',
+    country: 'BR',
+    sources: [
+      'http://170.84.165.204/BAND_HD/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Geral', 'Rio de Janeiro', 'Variedades'],
+  },
+  {
+    id: 'sbt-hd',
+    name: 'SBT HD',
+    logo: 'https://i.imgur.com/IkZfa4j.png',
+    cardBg: 'sbt',
+    category: 'abertos',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+      'https://video09.logicahost.com.br/sbtcuiaba/sbtcuiaba/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Entretenimento', 'Novelas', 'Auditório'],
   },
   {
     id: 'record-hd',
-    name: 'Record',
+    name: 'Record HD',
     logo: 'https://i.imgur.com/sz9gTTr.png',
-    category: 'br',
+    cardBg: 'record',
+    category: 'abertos',
     country: 'BR',
-    sources: ['http://170.84.165.204/Record_HD/index.m3u8'],
+    sources: [
+      'http://170.84.165.204/Record_HD/index.m3u8',
+      'http://45.162.64.114/RECORD_NEWS/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Jornalismo', 'Reality', 'Geral'],
+  },
+  {
+    id: 'band-hd',
+    name: 'Band HD',
+    logo: 'https://i.imgur.com/1r5T6Pw.png',
+    cardBg: 'band',
+    category: 'abertos',
+    country: 'BR',
+    sources: [
+      'http://170.84.165.204/BAND_HD/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Variedades', 'Jornalismo', 'Esportes'],
+  },
+  {
+    id: 'redetv-hd',
+    name: 'RedeTV! HD',
+    logo: 'https://i.imgur.com/1Gv25b5.png',
+    cardBg: 'redetv',
+    category: 'abertos',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
     quality: '720p',
     geoBlocked: false,
-    genres: ['Geral'],
+    genres: ['Entretenimento', 'Variedades'],
+  },
+
+  // ===== FILMES & SÉRIES / TELECINE / CINEMAX =====
+  {
+    id: 'cinemax',
+    name: 'CINEMAX',
+    logo: 'https://i.imgur.com/6Xw6K9q.png',
+    cardBg: 'cinemax',
+    category: 'filmes',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+      'http://170.84.165.204/BAND_HD/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Filmes', 'Ação', 'Hollywood'],
+  },
+  {
+    id: 'tc-touch',
+    name: 'TC TOUCH',
+    logo: 'https://i.imgur.com/Xw0yRz6.png',
+    cardBg: 'tc-touch',
+    category: 'filmes',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Drama', 'Romance', 'Telecine'],
+  },
+  {
+    id: 'tc-premium',
+    name: 'TC PREMIUM',
+    logo: 'https://i.imgur.com/Xw0yRz6.png',
+    cardBg: 'tc-premium',
+    category: 'filmes',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Estreias', 'Blockbusters', 'Telecine'],
+  },
+  {
+    id: 'tc-action',
+    name: 'TC ACTION',
+    logo: 'https://i.imgur.com/Xw0yRz6.png',
+    cardBg: 'tc-action',
+    category: 'filmes',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Ação', 'Suspense', 'Telecine'],
+  },
+  {
+    id: 'tc-pipoca',
+    name: 'TC PIPOCA',
+    logo: 'https://i.imgur.com/Xw0yRz6.png',
+    cardBg: 'tc-pipoca',
+    category: 'filmes',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Dublado', 'Comédia', 'Telecine'],
+  },
+  {
+    id: 'hbo-hd',
+    name: 'HBO HD',
+    logo: 'https://i.imgur.com/OqD8nfl.png',
+    cardBg: 'hbo',
+    category: 'filmes',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Séries HBO', 'Cinema', 'Premium'],
+  },
+  {
+    id: 'warner-channel',
+    name: 'Warner Channel',
+    logo: 'https://i.imgur.com/4a0Jk9o.png',
+    cardBg: 'warner',
+    category: 'filmes',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Séries', 'DC', 'Comédia'],
+  },
+  {
+    id: 'space-hd',
+    name: 'Space HD',
+    logo: 'https://i.imgur.com/mJ2Q4L8.png',
+    cardBg: 'space',
+    category: 'filmes',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Ação', 'Terror', 'Filmes'],
+  },
+
+  // ===== INFANTIL =====
+  {
+    id: 'cartoon-network',
+    name: 'Cartoon Network',
+    logo: 'https://i.imgur.com/uU6WfQ5.png',
+    cardBg: 'cartoon',
+    category: 'infantil',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Desenhos', 'Infantil', 'Animação'],
+  },
+  {
+    id: 'discovery-kids',
+    name: 'Discovery Kids',
+    logo: 'https://i.imgur.com/YwN9p0a.png',
+    cardBg: 'discovery-kids',
+    category: 'infantil',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Kids', 'Educativo', 'Animação'],
+  },
+  {
+    id: 'gloob-hd',
+    name: 'Gloob HD',
+    logo: 'https://i.imgur.com/2s3d4f5.png',
+    cardBg: 'gloob',
+    category: 'infantil',
+    country: 'BR',
+    sources: [
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Kids', 'Infantil', 'Aventura'],
+  },
+
+  // ===== NOTÍCIAS =====
+  {
+    id: 'globonews-hd',
+    name: 'GloboNews HD',
+    logo: 'https://i.imgur.com/39VwZ2w.png',
+    cardBg: 'globonews',
+    category: 'noticias',
+    country: 'BR',
+    sources: [
+      'https://cdn-5.nxplay.com.br/BAND_NEWS/index.m3u8',
+      'http://45.162.64.114/RECORD_NEWS/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['24 Horas', 'Jornalismo', 'Política'],
+  },
+  {
+    id: 'cnn-brasil',
+    name: 'CNN Brasil',
+    logo: 'https://i.imgur.com/T3uM5j7.png',
+    cardBg: 'cnn',
+    category: 'noticias',
+    country: 'BR',
+    sources: [
+      'https://cdn-5.nxplay.com.br/BAND_NEWS/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Notícias', 'Economia', 'Internacional'],
   },
   {
     id: 'record-news',
     name: 'Record News',
     logo: 'https://i.imgur.com/HZDRG0K.png',
-    category: 'br',
+    cardBg: 'record',
+    category: 'noticias',
     country: 'BR',
-    sources: ['http://45.162.64.114/RECORD_NEWS/index.m3u8'],
+    sources: [
+      'http://45.162.64.114/RECORD_NEWS/index.m3u8',
+    ],
     quality: '720p',
     geoBlocked: false,
-    genres: ['Notícias'],
+    genres: ['Notícias', 'Brasil', 'Ao Vivo'],
   },
   {
-    id: 'sbt-interior',
-    name: 'SBT Interior',
-    logo: 'https://i.imgur.com/IkZfa4j.png',
-    category: 'br',
+    id: 'band-news',
+    name: 'BandNews',
+    logo: 'https://i.imgur.com/EuPvzJe.png',
+    cardBg: 'band',
+    category: 'noticias',
     country: 'BR',
-    sources: ['https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8'],
-    quality: '720p',
+    sources: [
+      'https://cdn-5.nxplay.com.br/BAND_NEWS/index.m3u8',
+    ],
+    quality: '1080p',
     geoBlocked: false,
-    genres: ['Geral'],
+    genres: ['Notícias', 'Debates', '24h'],
+  },
+
+  // ===== VARIEDADES & DOCUMENTÁRIOS =====
+  {
+    id: 'discovery-channel',
+    name: 'Discovery Channel',
+    logo: 'https://i.imgur.com/zX4kL8j.png',
+    cardBg: 'discovery',
+    category: 'variedades',
+    country: 'BR',
+    sources: [
+      'http://170.84.165.204/BAND_HD/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Ciência', 'Sobrevivência', 'Documentários'],
   },
   {
-    id: 'sbt-cuiaba',
-    name: 'SBT Cuiaba',
-    logo: 'https://i.imgur.com/EZJWQ3i.png',
-    category: 'br',
+    id: 'history-channel',
+    name: 'History Channel',
+    logo: 'https://i.imgur.com/K1n8mX9.png',
+    cardBg: 'history',
+    category: 'variedades',
     country: 'BR',
-    sources: ['https://video09.logicahost.com.br/sbtcuiaba/sbtcuiaba/playlist.m3u8'],
-    quality: '720p',
+    sources: [
+      'http://170.84.165.204/BAND_HD/index.m3u8',
+    ],
+    quality: '1080p',
     geoBlocked: false,
-    genres: ['Geral'],
+    genres: ['História', 'Mistérios', 'Documentários'],
+  },
+  {
+    id: 'natgeo-hd',
+    name: 'National Geographic',
+    logo: 'https://i.imgur.com/9O0mK1w.png',
+    cardBg: 'natgeo',
+    category: 'variedades',
+    country: 'BR',
+    sources: [
+      'http://170.84.165.204/BAND_HD/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Natureza', 'Exploração', 'Ciência'],
   },
 ]
 
-// =========================================================================
-// PARSER DE PLAYLISTS M3U
-// =========================================================================
-const COUNTRY_RE = /\.([a-z]{2})@/i
-
-const stripTags = (value: string): string =>
-  value
-    .replace(/\((?:[^)]*)\)/g, ' ')
-    .replace(/\[[^\]]*\]/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-
-const attr = (extinf: string, name: string): string | null => {
-  const match = extinf.match(new RegExp(`${name}="([^"]*)"`, 'i'))
-  return match ? match[1] : null
-}
-
-const isPlayable = (url: string): boolean =>
-  /^https?:\/\//i.test(url) && (/\.m3u8(\?|$)/i.test(url) || /\.mp4(\?|$)/i.test(url))
-
-const GENRE_GROUPS: { genre: string; keywords: string[] }[] = [
-  { genre: 'Ação', keywords: ['action', 'acao', 'ação', 'superhero'] },
-  { genre: 'Aventura', keywords: ['adventure', 'aventura'] },
-  { genre: 'Terror', keywords: ['horror', 'terror', 'scary'] },
-  { genre: 'Comédia', keywords: ['comedy', 'comedia', 'comedias', 'funny'] },
-  { genre: 'Drama', keywords: ['drama', 'dramas'] },
-  { genre: 'Ficção Científica', keywords: ['sci-fi', 'scifi', 'science fiction', 'ficcao cientifica', 'ficção científica'] },
-  { genre: 'Fantasia', keywords: ['fantasy', 'fantasia'] },
-  { genre: 'Animação', keywords: ['animation', 'animacao', 'animação', 'cartoon'] },
-  { genre: 'Documentário', keywords: ['documentary', 'documentario', 'documentário', 'doc'] },
-  { genre: 'Romance', keywords: ['romance', 'romantic'] },
-  { genre: 'Suspense', keywords: ['thriller', 'suspense'] },
-  { genre: 'Crime', keywords: ['crime', 'crimes'] },
-  { genre: 'Família', keywords: ['family', 'familia', 'infantil', 'kids'] },
-  { genre: 'Guerra', keywords: ['war', 'guerra'] },
-]
-
-export const deriveLiveGenres = (text: string): string[] => {
-  const normalized = text.toLowerCase()
-  const found = GENRE_GROUPS.filter((entry) =>
-    entry.keywords.some((keyword) => normalized.includes(keyword)),
-  ).map((entry) => entry.genre)
-
-  return found.length > 0 ? Array.from(new Set(found)) : ['Geral']
-}
-
-export const parseM3U = (text: string, category: string): LiveChannel[] => {
-  const lines = text.split(/\r?\n/)
-  const channels: LiveChannel[] = []
-  let current: string | null = null
-
-  for (const raw of lines) {
-    const line = raw.trim()
-    if (!line) continue
-
-    if (line.startsWith('#EXTINF:')) {
-      current = line
-      continue
-    }
-
-    // Ignora diretivas (#EXTVLCOPT, #KODIPROP, #EXTGRP, etc.)
-    if (line.startsWith('#')) continue
-
-    if (current && isPlayable(line)) {
-      const tvgId = attr(current, 'tvg-id')
-      const logo = attr(current, 'tvg-logo')
-      const groupTitle = attr(current, 'group-title') ?? ''
-      const rawName = current.slice(current.lastIndexOf(',') + 1).trim()
-      const name = stripTags(rawName)
-      const qualityMatch = rawName.match(/\((\d{3,4}p)\)/i)
-      const geoBlocked = /geo-?blocked/i.test(rawName)
-      const country = tvgId ? tvgId.match(COUNTRY_RE)?.[1]?.toUpperCase() ?? null : null
-
-      if (name) {
-        channels.push({
-          id: tvgId || `${category}:${name}:${line}`,
-          name,
-          logo: logo && /^https?:\/\//i.test(logo) ? logo : null,
-          category,
-          country,
-          sources: [line],
-          quality: qualityMatch ? qualityMatch[1].toLowerCase() : null,
-          geoBlocked,
-          genres: deriveLiveGenres(`${groupTitle} ${name}`),
-        })
-      }
-    }
-
-    current = null
-  }
-
-  return channels
-}
-
-// =========================================================================
-// CARREGAMENTO REMOTO (com fallback para o catálogo curado)
-// =========================================================================
-let cache: LiveChannel[] | null = null
-let inflight: Promise<LiveChannel[]> | null = null
-
-const fetchPlaylist = async (category: string, url: string): Promise<LiveChannel[]> => {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
-  try {
-    const res = await fetch(url, { signal: controller.signal, credentials: 'omit' })
-    if (!res.ok) return []
-    const text = await res.text()
-    return parseM3U(text, category)
-  } catch {
-    return []
-  } finally {
-    clearTimeout(timer)
-  }
-}
-
-const dedupe = (channels: LiveChannel[]): LiveChannel[] => {
-  const seenUrl = new Set<string>()
-  const seenId = new Set<string>()
-  const out: LiveChannel[] = []
-  for (const channel of channels) {
-    const url = channel.sources[0]
-    if (seenUrl.has(url) || seenId.has(channel.id)) continue
-    seenUrl.add(url)
-    seenId.add(channel.id)
-    out.push(channel)
-  }
-  return out
-}
-
+// Carrega os canais do catálogo oficial YuCine
 export const loadLiveChannels = async (): Promise<LiveChannel[]> => {
-  if (cache) return cache
-  if (inflight) return inflight
-
-  inflight = (async () => {
-    const results = await Promise.allSettled(
-      REMOTE_SOURCES.map((source) => fetchPlaylist(source.category, source.url))
-    )
-
-    const byCategory = new Map<string, LiveChannel[]>()
-    results.forEach((result, index) => {
-      if (result.status !== 'fulfilled') return
-      const source = REMOTE_SOURCES[index]
-      const isPortuguese = (channel: LiveChannel) =>
-        source.category === 'br' || channel.country === 'BR' || channel.country === 'PT'
-      const limited = dedupe(result.value)
-        .filter((c) => !c.geoBlocked)
-        .filter((c) => isPortuguese(c))
-        .slice(0, MAX_PER_CATEGORY)
-      const category = source.category
-      byCategory.set(category, limited)
-    })
-
-    const ordered: LiveChannel[] = []
-    for (const source of REMOTE_SOURCES) {
-      const list = byCategory.get(source.category)
-      if (list) ordered.push(...list)
-    }
-
-    // Sem rede / tudo vazio: usa o catálogo curado local.
-    cache = ordered.length > 0 ? dedupe(ordered) : CURATED_CHANNELS
-    return cache
-  })()
-
-  try {
-    return await inflight
-  } finally {
-    inflight = null
-  }
+  return YUCINE_CHANNELS
 }
 
 export const resetLiveChannelsCache = () => {
-  cache = null
-  inflight = null
+  // no-op para o catálogo estático YuCine
 }
 
-// =========================================================================
-// HELPERS DE APRESENTAÇÃO
-// =========================================================================
-export const categoryLabel = (id: string): string => CATEGORY_LABELS[id] ?? id
+// Helpers
+export const categoryLabel = (id: string): string => {
+  const cat = LIVE_CATEGORIES.find((c) => c.id === id)
+  return cat ? cat.label : id
+}
 
-export const categoryEmoji = (id: string): string =>
-  LIVE_CATEGORIES.find((c) => c.id === id)?.emoji ?? '📡'
+export const categoryEmoji = (id: string): string => {
+  const cat = LIVE_CATEGORIES.find((c) => c.id === id)
+  return cat ? cat.emoji : '📺'
+}
 
-export const countryFlag = (country: string | null): string => {
-  if (!country || country.length !== 2) return '📡'
-  const base = 0x1f1e6
-  const code = country.toUpperCase()
-  return String.fromCodePoint(
-    base + (code.charCodeAt(0) - 65),
-    base + (code.charCodeAt(1) - 65)
-  )
+export const countryFlag = (_country: string | null): string => {
+  return '🇧🇷'
 }
