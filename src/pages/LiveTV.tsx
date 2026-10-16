@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Tv, Search as SearchIcon, X, Loader2 } from 'lucide-react'
 import LivePlayer from '@/components/player/LivePlayer'
 import YuCineChannelCard from '@/components/tv/YuCineChannelCard'
+import Focusable from '@/components/tv/Focusable'
 import {
   LIVE_CATEGORIES,
   categoryLabel,
@@ -114,19 +115,23 @@ const LiveTV = () => {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setFavorites(toggleLiveFavorite(favorites, selected.id))}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-colors"
-                >
-                  {favorites.has(selected.id) ? '❤️ Favorito' : '🤍 Favoritar'}
-                </button>
-                <button
-                  onClick={() => setSelected(null)}
-                  className="p-1.5 text-white/50 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-                  title="Fechar player"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                <Focusable onEnterPress={() => setFavorites(toggleLiveFavorite(favorites, selected.id))}>
+                  <button
+                    onClick={() => setFavorites(toggleLiveFavorite(favorites, selected.id))}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-colors outline-none"
+                  >
+                    {favorites.has(selected.id) ? '❤️ Favorito' : '🤍 Favoritar'}
+                  </button>
+                </Focusable>
+                <Focusable onEnterPress={() => setSelected(null)}>
+                  <button
+                    onClick={() => setSelected(null)}
+                    className="p-1.5 text-white/50 hover:text-white rounded-lg hover:bg-white/10 transition-colors outline-none"
+                    title="Fechar player"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </Focusable>
               </div>
             </div>
 
@@ -134,40 +139,52 @@ const LiveTV = () => {
           </div>
         )}
 
-        {/* Categorias Estilo YuCine (Pílulas arredondadas com destaque em dourado/vermelho) */}
+        {/* Categorias Estilo YuCine (Pilulas arredondadas com destaque em dourado/vermelho) */}
         {!loading && (
           <div className="flex gap-2 overflow-x-auto pb-4 mb-4 -mx-1 px-1 no-scrollbar">
             {LIVE_CATEGORIES.map((cat) => {
               const active = category === cat.id
               return (
-                <button
+                <Focusable
                   key={cat.id}
-                  onClick={() => setCategory(cat.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-200 ${
-                    active
-                      ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/30 scale-105'
-                      : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
-                  }`}
+                  focusKey={`cat-${cat.id}`}
+                  onEnterPress={() => setCategory(cat.id)}
+                  className="rounded-full flex-shrink-0"
                 >
-                  <span>{cat.emoji}</span>
-                  <span>{cat.label}</span>
-                </button>
+                  <button
+                    onClick={() => setCategory(cat.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-200 outline-none ${
+                      active
+                        ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/30 scale-105'
+                        : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
+                    }`}
+                  >
+                    <span>{cat.emoji}</span>
+                    <span>{cat.label}</span>
+                  </button>
+                </Focusable>
               )
             })}
 
             {favorites.size > 0 && (
-              <button
-                onClick={() => setCategory('favorites')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-200 ${
-                  category === 'favorites'
-                    ? 'bg-accent-red text-white shadow-lg shadow-red-900/40 scale-105'
-                    : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
-                }`}
+              <Focusable
+                focusKey="cat-favorites"
+                onEnterPress={() => setCategory('favorites')}
+                className="rounded-full flex-shrink-0"
               >
-                <span>❤️</span>
-                <span>Favoritos</span>
-                <span className="text-xs opacity-60">({favorites.size})</span>
-              </button>
+                <button
+                  onClick={() => setCategory('favorites')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-200 outline-none ${
+                    category === 'favorites'
+                      ? 'bg-accent-red text-white shadow-lg shadow-red-900/40 scale-105'
+                      : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
+                  }`}
+                >
+                  <span>❤️</span>
+                  <span>Favoritos</span>
+                  <span className="text-xs opacity-60">({favorites.size})</span>
+                </button>
+              </Focusable>
             )}
           </div>
         )}

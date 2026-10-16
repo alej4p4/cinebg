@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
@@ -53,7 +53,26 @@ const MovieCard = ({ item, index = 0, progress, rank }: MovieCardProps) => {
     navigate(`/details/${item.type}/${item.id}`)
   }
 
-  const { ref, focused } = useFocusable({ onEnterPress: handleClick })
+  const { ref, focused } = useFocusable({
+    onEnterPress: handleClick,
+    onFocus: () => {
+      ref.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      })
+    },
+  })
+
+  useEffect(() => {
+    if (focused && ref.current) {
+      ref.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      })
+    }
+  }, [focused])
 
   const year = item.releaseDate ? new Date(item.releaseDate).getFullYear() : ''
   const posterUrl = getPosterUrl(item.posterPath)

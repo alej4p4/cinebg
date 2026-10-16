@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import GenreBadge from '@/components/ui/GenreBadge'
+import Focusable from '@/components/tv/Focusable'
 import {
   getMovieDetails, getShowDetails,
   getPosterUrl, getBackdropUrl, getProfileUrl
@@ -128,13 +129,19 @@ const Details = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-bg-primary/80 via-transparent to-transparent" />
 
         {/* Back button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-24 left-4 md:left-8 flex items-center gap-2 text-white/80 hover:text-white transition-colors z-10 bg-black/30 backdrop-blur-sm px-3 py-2 rounded-lg"
+        <Focusable
+          focusKey="details-back"
+          onEnterPress={() => navigate(-1)}
+          className="absolute top-24 left-4 md:left-8 z-10 rounded-lg"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/30 backdrop-blur-sm px-3 py-2 rounded-lg outline-none"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </button>
+        </Focusable>
       </div>
 
       {/* Main content */}
@@ -218,40 +225,58 @@ const Details = () => {
 
             {/* Action buttons */}
             <div className="flex flex-wrap gap-3 pt-2">
-              <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={handlePlay}
-                className="flex items-center gap-3 bg-accent-red hover:bg-red-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg glow-red transition-colors text-base"
+              <Focusable
+                focusKey="details-play"
+                onEnterPress={handlePlay}
+                className="rounded-xl"
               >
-                <Play className="h-5 w-5 fill-white" />
-                {isMovie ? 'Assistir Agora' : 'Assistir Episódio'}
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={handleToggleFav}
-                className={`flex items-center gap-2 font-semibold px-5 py-3.5 rounded-xl border transition-all ${
-                  favorite
-                    ? 'bg-red-500/20 border-red-400/40 text-red-400'
-                    : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10'
-                }`}
-              >
-                <Heart className={`h-5 w-5 ${favorite ? 'fill-current' : ''}`} />
-                {favorite ? 'Nos Favoritos' : 'Favoritar'}
-              </motion.button>
-
-              {trailer && (
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => setTrailerOpen(true)}
-                  className="flex items-center gap-2 font-semibold px-5 py-3.5 rounded-xl border bg-white/5 border-white/20 text-white/80 hover:bg-white/10 transition-all"
+                  onClick={handlePlay}
+                  className="flex items-center gap-3 bg-accent-red hover:bg-red-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg glow-red transition-colors text-base outline-none"
                 >
-                  <Play className="h-5 w-5" />
-                  Trailer
+                  <Play className="h-5 w-5 fill-white" />
+                  {isMovie ? 'Assistir Agora' : 'Assistir Episódio'}
                 </motion.button>
+              </Focusable>
+
+              <Focusable
+                focusKey="details-fav"
+                onEnterPress={handleToggleFav}
+                className="rounded-xl"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleToggleFav}
+                  className={`flex items-center gap-2 font-semibold px-5 py-3.5 rounded-xl border transition-all outline-none ${
+                    favorite
+                      ? 'bg-red-500/20 border-red-400/40 text-red-400'
+                      : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10'
+                  }`}
+                >
+                  <Heart className={`h-5 w-5 ${favorite ? 'fill-current' : ''}`} />
+                  {favorite ? 'Nos Favoritos' : 'Favoritar'}
+                </motion.button>
+              </Focusable>
+
+              {trailer && (
+                <Focusable
+                  focusKey="details-trailer"
+                  onEnterPress={() => setTrailerOpen(true)}
+                  className="rounded-xl"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => setTrailerOpen(true)}
+                    className="flex items-center gap-2 font-semibold px-5 py-3.5 rounded-xl border bg-white/5 border-white/20 text-white/80 hover:bg-white/10 transition-all outline-none"
+                  >
+                    <Play className="h-5 w-5" />
+                    Trailer
+                  </motion.button>
+                </Focusable>
               )}
             </div>
           </motion.div>
@@ -259,19 +284,25 @@ const Details = () => {
 
         {/* Tabs */}
         <div className="mt-10 border-b border-white/10">
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             {(['overview', 'cast', ...(isMovie ? [] : ['seasons'])] as const).map((tab) => (
-              <button
+              <Focusable
                 key={tab}
-                onClick={() => setActiveTab(tab as typeof activeTab)}
-                className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
-                  activeTab === tab
-                    ? 'border-accent-red text-white'
-                    : 'border-transparent text-white/50 hover:text-white/80'
-                }`}
+                focusKey={`details-tab-${tab}`}
+                onEnterPress={() => setActiveTab(tab as typeof activeTab)}
+                className="rounded-t-lg"
               >
-                {tab === 'overview' ? 'Sinopse' : tab === 'cast' ? 'Elenco' : 'Temporadas'}
-              </button>
+                <button
+                  onClick={() => setActiveTab(tab as typeof activeTab)}
+                  className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all outline-none ${
+                    activeTab === tab
+                      ? 'border-accent-red text-white'
+                      : 'border-transparent text-white/50 hover:text-white/80'
+                  }`}
+                >
+                  {tab === 'overview' ? 'Sinopse' : tab === 'cast' ? 'Elenco' : 'Temporadas'}
+                </button>
+              </Focusable>
             ))}
           </div>
         </div>
@@ -388,29 +419,35 @@ const Details = () => {
               {showData.seasons
                 .filter(s => s.season_number > 0)
                 .map((season) => (
-                  <motion.button
+                  <Focusable
                     key={season.id}
-                    whileHover={{ x: 4 }}
-                    onClick={() => navigate(`/watch/${type}/${id}?season=${season.season_number}`)}
-                    className="w-full flex items-center gap-4 glass rounded-xl p-4 text-left hover:border-accent-red/40 border border-transparent transition-all"
+                    focusKey={`season-${season.id}`}
+                    onEnterPress={() => navigate(`/watch/${type}/${id}?season=${season.season_number}`)}
+                    className="rounded-xl w-full"
                   >
-                    <div className="w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-bg-card">
-                      <img
-                        src={getPosterUrl(season.poster_path, 'w185')}
-                        alt={season.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-poster.svg' }}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-white font-semibold">{season.name}</h4>
-                      <p className="text-white/50 text-sm mt-0.5">{season.episode_count} episódios</p>
-                      {season.air_date && (
-                        <p className="text-white/40 text-xs mt-1">{new Date(season.air_date).getFullYear()}</p>
-                      )}
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-white/30 flex-shrink-0" />
-                  </motion.button>
+                    <motion.button
+                      whileHover={{ x: 4 }}
+                      onClick={() => navigate(`/watch/${type}/${id}?season=${season.season_number}`)}
+                      className="w-full flex items-center gap-4 glass rounded-xl p-4 text-left hover:border-accent-red/40 border border-transparent transition-all outline-none"
+                    >
+                      <div className="w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-bg-card">
+                        <img
+                          src={getPosterUrl(season.poster_path, 'w185')}
+                          alt={season.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-poster.svg' }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-white font-semibold">{season.name}</h4>
+                        <p className="text-white/50 text-sm mt-0.5">{season.episode_count} episódios</p>
+                        {season.air_date && (
+                          <p className="text-white/40 text-xs mt-1">{new Date(season.air_date).getFullYear()}</p>
+                        )}
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-white/30 flex-shrink-0" />
+                    </motion.button>
+                  </Focusable>
                 ))}
             </motion.div>
           )}
@@ -434,12 +471,18 @@ const Details = () => {
               exit={{ opacity: 0, scale: 0.9 }}
               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[90] w-[90vw] max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl"
             >
-              <button
-                onClick={() => setTrailerOpen(false)}
-                className="absolute top-3 right-3 z-10 p-2 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors"
+              <Focusable
+                focusKey="trailer-close"
+                onEnterPress={() => setTrailerOpen(false)}
+                className="absolute top-3 right-3 z-10 rounded-full"
               >
-                <X className="h-5 w-5" />
-              </button>
+                <button
+                  onClick={() => setTrailerOpen(false)}
+                  className="p-2 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors outline-none"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </Focusable>
               <iframe
                 src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0`}
                 title="Trailer"
