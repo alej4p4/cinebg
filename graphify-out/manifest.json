@@ -102,8 +102,8 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792179478.01809,
-    "seen": 1792179646.883778,
+    "mtime": 1792179697.4449275,
+    "seen": 1792180104.9578722,
     "ast_hash": "62850336dc17c8e96d61e693aaa100c7",
     "semantic_hash": ""
   },
@@ -114,9 +114,9 @@
     "semantic_hash": "8cbbe642bff0ba34f045ae149ace0df8"
   },
   "src/components/LicenseGate.tsx": {
-    "mtime": 1792179468.3973582,
-    "seen": 1792179646.8837848,
-    "ast_hash": "c155455fd9167d7064607bb8a2bad895",
+    "mtime": 1792180032.6363895,
+    "seen": 1792180104.9578867,
+    "ast_hash": "512022bf0ceaefeb1e6cef01f15094e3",
     "semantic_hash": ""
   },
   "src/components/UpdateModal.tsx": {
@@ -126,8 +126,8 @@
     "semantic_hash": "92b35a3a7883490af64616b3d72717aa"
   },
   "src/components/layout/Navbar.tsx": {
-    "mtime": 1792179531.8468142,
-    "seen": 1792179646.8837917,
+    "mtime": 1792179697.4469259,
+    "seen": 1792180104.957898,
     "ast_hash": "ec48a227a6a9a7b4981919e2e2b7b721",
     "semantic_hash": ""
   },
@@ -234,9 +234,9 @@
     "semantic_hash": "f8ce777d74d48884d4756a13f3dcdfbf"
   },
   "src/hooks/useLicense.ts": {
-    "mtime": 1792179432.805475,
-    "seen": 1792179646.8838658,
-    "ast_hash": "66466bf4b841a2e3a01c38655bb1f558",
+    "mtime": 1792179697.4569204,
+    "seen": 1792180104.9581351,
+    "ast_hash": "2d59034d268d21bfda1168bb887b806c",
     "semantic_hash": ""
   },
   "src/hooks/useOrientationFullscreen.ts": {
@@ -312,8 +312,8 @@
     "semantic_hash": "c51d4b130b2ce01bc263b4817a03d520"
   },
   "src/pages/Profiles.tsx": {
-    "mtime": 1792179559.9776468,
-    "seen": 1792179646.8839092,
+    "mtime": 1792179697.45792,
+    "seen": 1792180104.9582117,
     "ast_hash": "1c6560da13cb0d5c43b649e398024e82",
     "semantic_hash": ""
   },
@@ -372,8 +372,8 @@
     "semantic_hash": "f723986fd7ed9bc98a335bfc9b07adca"
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1792179448.6976597,
-    "seen": 1792179646.883944,
+    "mtime": 1792179697.4609177,
+    "seen": 1792180104.958275,
     "ast_hash": "16e54f2a5121e97469a15d0145963135",
     "semantic_hash": ""
   },
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "src/services/mercadoPago.ts": {
-    "mtime": 1792179422.3245387,
-    "seen": 1792179646.8839314,
-    "ast_hash": "d3ee6d33a9ac65690fa6c6383bee5396",
+    "mtime": 1792180022.16433,
+    "seen": 1792180104.9582517,
+    "ast_hash": "661ffd8be8896e04ac70e0a76d26e339",
     "semantic_hash": ""
   },
   "android/app/src/main/res/drawable-xhdpi/banner.png": {

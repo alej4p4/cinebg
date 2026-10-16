@@ -305,11 +305,16 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
 
                 <div className="pt-1">
                   <p className="text-white/70 text-xs font-semibold">{p.title}</p>
-                  <p className="text-white font-black text-xl sm:text-2xl mt-1 tracking-tight">
+                  {p.originalPriceLabel && (
+                    <p className="text-white/40 text-[11px] line-through mt-0.5">
+                      {p.originalPriceLabel}
+                    </p>
+                  )}
+                  <p className="text-white font-black text-xl sm:text-2xl mt-0.5 tracking-tight text-emerald-300">
                     {p.priceLabel}
                   </p>
                   {p.monthlyEquivalent && (
-                    <p className="text-amber-300 text-[11px] font-medium mt-0.5">
+                    <p className="text-amber-300 text-[11px] font-semibold mt-0.5">
                       {p.monthlyEquivalent}
                     </p>
                   )}
