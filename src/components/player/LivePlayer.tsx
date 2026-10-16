@@ -84,11 +84,29 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
         hls.loadSource(src)
         hls.attachMedia(video)
 
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          if (!cancelled) {
-            video.play().catch(() => {})
-            setLoaded(true)
+        let networkRetryCount = 0
+
+        const tryPlay = () => {
+          if (cancelled || !video) return
+          const p = video.play()
+          if (p !== undefined) {
+            p.then(() => {
+              if (!cancelled) setLoaded(true)
+            }).catch(() => {
+              // Se o navegador barrar o áudio por política de autoplay, silencia e reproduz o vídeo imediatamente
+              if (!cancelled && video) {
+                video.muted = true
+                setMuted(true)
+                video.play().then(() => {
+                  if (!cancelled) setLoaded(true)
+                }).catch(() => {})
+              }
+            })
           }
+        }
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          tryPlay()
         })
 
         hls.on(Hls.Events.FRAG_LOADED, () => {
@@ -99,7 +117,7 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
 
         hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
           if (cancelled) return
-          const payload = data as { fatal?: boolean; type?: string }
+          const payload = data as { fatal?: boolean; type?: string; details?: string }
           if (!payload.fatal) return
 
           if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
@@ -112,11 +130,15 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           }
 
           if (payload.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            try {
-              hls.startLoad()
+            // Limita a recuperação a no máximo 2 tentativas com intervalo, evitando loop infinito
+            if (networkRetryCount < 2) {
+              networkRetryCount++
+              setTimeout(() => {
+                if (!cancelled && hlsInstance) {
+                  hls.startLoad()
+                }
+              }, 1200)
               return
-            } catch {
-              /* prossegue para o próximo sinal se falhar recuperação de rede */
             }
           }
 
@@ -126,7 +148,11 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         // Safari / iOS reproduz HLS nativamente quando Hls.js não é suportado
         video.src = src
-        video.play().catch(() => {})
+        video.play().catch(() => {
+          video.muted = true
+          setMuted(true)
+          video.play().catch(() => {})
+        })
         const onErr = () => goNext()
         video.addEventListener('error', onErr)
       } else {
@@ -228,7 +254,7 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
         className="relative bg-black overflow-hidden rounded-b-xl aspect-video"
       >
         {!loaded && !error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-10 gap-3">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-10 gap-3 pointer-events-none">
             <div className="w-12 h-12 border-2 border-white/5 border-t-accent-red rounded-full animate-spin" />
             {channel.logo && (
               <img
@@ -287,9 +313,15 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           controls
           autoPlay
           playsInline
-          className="w-full h-full bg-black"
+          className="w-full h-full bg-black cursor-pointer"
           onLoadedData={() => setLoaded(true)}
           onPlaying={() => setLoaded(true)}
+          onClick={() => {
+            const v = videoRef.current
+            if (!v) return
+            if (v.paused) v.play().catch(() => {})
+            else v.pause()
+          }}
         />
 
         {/* Controles flutuantes */}
