@@ -10,6 +10,10 @@ import {
   PictureInPicture2,
   X,
   RotateCcw,
+  Lock,
+  Unlock,
+  Layers,
+  FastForward,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -21,6 +25,8 @@ import {
 } from '@/services/streams'
 import { useAppStore } from '@/store/useAppStore'
 import type { AudioOption } from '@/store/useAppStore'
+import type { TMDBSeason } from '@/types'
+import EpisodeSelector from './EpisodeSelector'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
 
 interface StreamPlayerProps {
@@ -32,6 +38,8 @@ interface StreamPlayerProps {
   onNextEpisode?: () => void
   startAt?: number
   onProgress?: (seconds: number, duration: number) => void
+  seasons?: TMDBSeason[]
+  onSelectEpisode?: (season: number, episode: number) => void
 }
 
 const StreamPlayer = ({
@@ -43,6 +51,8 @@ const StreamPlayer = ({
   onNextEpisode,
   startAt,
   onProgress,
+  seasons,
+  onSelectEpisode,
 }: StreamPlayerProps) => {
   const { audioOption, setAudioOption } = useAppStore()
   const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -89,6 +99,14 @@ const StreamPlayer = ({
   const [qualityOpen, setQualityOpen] = useState(false)
   const [availableQualities, _setAvailableQualities] = useState<{ label: string; url: string; type: 'hls' | 'mp4' }[]>([])
   const [currentQuality, setCurrentQuality] = useState<string | null>(null)
+
+  // ===== Aprimoramentos YuCine (Modo Lock, Pular Abertura, Gaveta de Episódios) =====
+  const [isLocked, setIsLocked] = useState(false)
+  const [showLockPrompt, setShowLockPrompt] = useState(false)
+  const [showSkipIntro, setShowSkipIntro] = useState(false)
+  const [episodesDrawerOpen, setEpisodesDrawerOpen] = useState(false)
+  const hasSkippedIntroRef = useRef(false)
+  const lockPromptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ===== Auto-fallback state =====
   const [fallbackAttempt, setFallbackAttempt] = useState(0)
@@ -271,7 +289,17 @@ const StreamPlayer = ({
         return
       }
 
-      const hls = new Hls({ enableWorker: true })
+      const hls = new Hls({
+        enableWorker: true,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        maxBufferSize: 60 * 1000 * 1000,
+        lowLatencyMode: false,
+        manifestLoadingTimeOut: 15000,
+        manifestLoadingMaxRetry: 4,
+        levelLoadingTimeOut: 15000,
+        fragLoadingTimeOut: 20000,
+      })
       hlsInstance = hls
       hls.subtitleDisplay = true
       hls.loadSource(directSrc)
@@ -280,8 +308,20 @@ const StreamPlayer = ({
       hls.on(Hls.Events.MANIFEST_PARSED, () => window.setTimeout(() => refreshTextTracks(), 300))
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (data.fatal) {
-          hls.destroy()
-          handleDirectMediaError()
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.warn('[StreamPlayer] Fatal network error, tentando recuperação automática...', data)
+              hls.startLoad()
+              break
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.warn('[StreamPlayer] Fatal media error, tentando recuperação automática...', data)
+              hls.recoverMediaError()
+              break
+            default:
+              hls.destroy()
+              handleDirectMediaError()
+              break
+          }
         }
       })
     })
@@ -299,16 +339,19 @@ const StreamPlayer = ({
     if (video) video.playbackRate = speed
   }, [speed, directSrc])
 
-  // Reseta o estado de legendas quando a fonte muda.
+  // Reseta o estado quando a fonte ou episódio muda.
   useEffect(() => {
     activeTrackRef.current = -1
     setActiveTrack(-1)
     setTracks([])
     resumedRef.current = false
     lastProgressRef.current = 0
-  }, [directSrc])
+    hasSkippedIntroRef.current = false
+    setShowSkipIntro(false)
+    setEpisodesDrawerOpen(false)
+  }, [directSrc, season, episode])
 
-  // Observa a entrada/saÃ­da do Picture-in-Picture (eventos nÃ£o tipados pelo React).
+  // Observa a entrada/saída do Picture-in-Picture (eventos não tipados pelo React).
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -322,14 +365,41 @@ const StreamPlayer = ({
     }
   }, [directSrc])
 
-  // Limpa o timer do feedback e auto-next ao desmontar.
+  // Limpa timers ao desmontar.
   useEffect(
     () => () => {
       if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
       if (autoNextTimerRef.current) clearInterval(autoNextTimerRef.current)
+      if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
     },
     []
   )
+
+  const handleLockTap = () => {
+    if (!isLocked) return
+    setShowLockPrompt(true)
+    if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
+    lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
+  }
+
+  const toggleLock = () => {
+    setIsLocked((prev) => {
+      const next = !prev
+      if (next) {
+        showFeedback('🔒 Tela Bloqueada')
+        setShowLockPrompt(false)
+      } else {
+        showFeedback('🔓 Tela Desbloqueada')
+      }
+      return next
+    })
+  }
+
+  const handleSkipIntro = () => {
+    hasSkippedIntroRef.current = true
+    setShowSkipIntro(false)
+    seekBy(85)
+  }
 
   const handleFullscreen = () => {
     if (containerRef.current) {
@@ -452,11 +522,22 @@ const StreamPlayer = ({
     resumedRef.current = true
   }
 
-  // Salva a posiÃ§Ã£o a cada ~5s de reproduÃ§Ã£o.
+  // Salva a posição a cada ~5s de reprodução e gerencia o botão Pular Abertura.
   const handleTimeUpdate = () => {
     const video = videoRef.current
-    if (!video || !onProgress) return
+    if (!video) return
     const current = video.currentTime
+
+    // Pular Abertura (+85s) durante os primeiros minutos de séries/animes
+    if (type !== 'movie') {
+      if (current >= 5 && current <= 110 && !hasSkippedIntroRef.current) {
+        setShowSkipIntro(true)
+      } else if (current > 115 || current < 5) {
+        setShowSkipIntro(false)
+      }
+    }
+
+    if (!onProgress) return
     if (Math.abs(current - lastProgressRef.current) >= 5) {
       lastProgressRef.current = current
       onProgress(current, Number.isFinite(video.duration) ? video.duration : 0)
@@ -467,6 +548,13 @@ const StreamPlayer = ({
     const target = e.target as HTMLElement
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
     if (!videoRef.current) return
+
+    // Se estiver bloqueado, qualquer tecla (exceto 'L' de desbloqueio) mostra aviso
+    if (isLocked && e.key.toLowerCase() !== 'l') {
+      handleLockTap()
+      return
+    }
+
     switch (e.key) {
       case 'ArrowRight':
         e.preventDefault()
@@ -476,8 +564,23 @@ const StreamPlayer = ({
         e.preventDefault()
         seekBy(-10)
         break
+      case 'ArrowUp':
+        e.preventDefault()
+        if (videoRef.current) {
+          videoRef.current.volume = Math.min(1, Number((videoRef.current.volume + 0.1).toFixed(2)))
+          showFeedback(`Vol ${Math.round(videoRef.current.volume * 100)}%`)
+        }
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        if (videoRef.current) {
+          videoRef.current.volume = Math.max(0, Number((videoRef.current.volume - 0.1).toFixed(2)))
+          showFeedback(`Vol ${Math.round(videoRef.current.volume * 100)}%`)
+        }
+        break
       case ' ':
       case 'k':
+      case 'Enter':
         e.preventDefault()
         togglePlay()
         break
@@ -489,12 +592,26 @@ const StreamPlayer = ({
       case 'M':
         toggleMute()
         break
+      case 'l':
+      case 'L':
+        e.preventDefault()
+        toggleLock()
+        break
+      case 'Escape':
+        if (episodesDrawerOpen) {
+          setEpisodesDrawerOpen(false)
+        }
+        break
       default:
         break
     }
   }
 
   const handleVideoDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isLocked) {
+      handleLockTap()
+      return
+    }
     setSpeedOpen(false)
     setSubsOpen(false)
     const rect = containerRef.current?.getBoundingClientRect()
@@ -580,10 +697,96 @@ const StreamPlayer = ({
         className="relative bg-black overflow-hidden rounded-b-xl aspect-video outline-none"
       >
         {feedback && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
             <span className="bg-black/70 text-white text-2xl font-bold px-5 py-3 rounded-full">
               {feedback}
             </span>
+          </div>
+        )}
+
+        {/* Botão de Bloqueio de Tela (Modo YuCine para Mobile / Tablet) */}
+        {directSrc && (
+          <div className="absolute top-3 left-3 z-40">
+            <button
+              onClick={toggleLock}
+              className={`p-2.5 rounded-full transition-all duration-200 backdrop-blur-md ${
+                isLocked
+                  ? 'bg-accent-red text-white shadow-lg shadow-red-900/60 scale-110'
+                  : 'bg-black/60 hover:bg-black/80 text-white/70 hover:text-white'
+              }`}
+              title={isLocked ? 'Desbloquear tela' : 'Bloquear tela'}
+            >
+              {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+            </button>
+          </div>
+        )}
+
+        {/* Overlay de Bloqueio de Tela */}
+        {isLocked && (
+          <div
+            onClick={handleLockTap}
+            className="absolute inset-0 z-30 cursor-pointer flex items-center justify-center bg-transparent select-none"
+          >
+            {showLockPrompt && (
+              <div className="bg-black/85 backdrop-blur-md border border-white/10 px-5 py-3 rounded-2xl flex items-center gap-3 animate-in fade-in zoom-in duration-200 shadow-2xl">
+                <Lock className="h-5 w-5 text-accent-red" />
+                <span className="text-white text-xs sm:text-sm font-semibold">
+                  Tela bloqueada. Toque no cadeado para liberar.
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleLock()
+                  }}
+                  className="px-3 py-1 bg-accent-red text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors shadow-md"
+                >
+                  Desbloquear
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Pular Abertura (+85s) Estilo YuCine */}
+        {showSkipIntro && directSrc && !isLocked && (
+          <div className="absolute bottom-16 right-4 z-30 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <button
+              onClick={handleSkipIntro}
+              className="flex items-center gap-2 px-4 py-2.5 bg-accent-red/90 hover:bg-accent-red text-white text-xs sm:text-sm font-bold rounded-xl shadow-xl shadow-red-900/40 backdrop-blur-md transition-all hover:scale-105 active:scale-95 border border-white/20"
+            >
+              <FastForward className="h-4 w-4" />
+              <span>Pular Abertura (+85s)</span>
+            </button>
+          </div>
+        )}
+
+        {/* Gaveta de Episódios In-Player (Estilo YuCine) */}
+        {episodesDrawerOpen && seasons && onSelectEpisode && !isLocked && (
+          <div className="absolute inset-y-0 right-0 w-full sm:w-96 bg-[#0e0e16]/95 backdrop-blur-md border-l border-white/10 z-40 flex flex-col p-4 shadow-2xl animate-in slide-in-from-right duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-accent-red" />
+                <span className="text-white font-bold text-sm">Episódios</span>
+              </div>
+              <button
+                onClick={() => setEpisodesDrawerOpen(false)}
+                className="p-1 text-white/50 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-1">
+              <EpisodeSelector
+                showId={tmdbId}
+                seasons={seasons}
+                currentSeason={season}
+                currentEpisode={episode}
+                onSelect={(s, e) => {
+                  onSelectEpisode(s, e)
+                  setEpisodesDrawerOpen(false)
+                }}
+              />
+            </div>
           </div>
         )}
         {/* Loading Overlay */}
@@ -707,7 +910,18 @@ const StreamPlayer = ({
         )}
 
         {/* Controles Flutuantes Nativos CineBG */}
-        <div className="absolute bottom-3 right-3 flex items-center gap-2 z-30">
+        <div className={`absolute bottom-3 right-3 flex items-center gap-2 z-30 transition-opacity duration-200 ${isLocked ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          {/* Gaveta de Episódios In-Player (Estilo YuCine) */}
+          {type !== 'movie' && seasons && seasons.length > 0 && onSelectEpisode && (
+            <button
+              onClick={() => setEpisodesDrawerOpen((prev) => !prev)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-black/70 hover:bg-black/90 rounded-lg text-white font-bold text-xs transition-colors backdrop-blur-sm border border-white/5"
+              title="Lista de Episódios"
+            >
+              <Layers className="h-4 w-4 text-accent-red" />
+              <span className="hidden sm:inline">Episódios</span>
+            </button>
+          )}
           {/* Velocidade de reproduÃ§Ã£o */}
           {directSrc && (
             <div className="relative">

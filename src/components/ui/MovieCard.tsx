@@ -45,6 +45,11 @@ const MovieCard = ({ item, index = 0, progress, rank }: MovieCardProps) => {
   }
 
   const handleClick = () => {
+    // Estilo YuCine: Se o item está em "Continuar Assistindo" com progresso salvo, vai direto ao player
+    if (typeof progress === 'number' && progress > 0) {
+      navigate(`/watch/${item.type}/${item.id}`)
+      return
+    }
     navigate(`/details/${item.type}/${item.id}`)
   }
 
