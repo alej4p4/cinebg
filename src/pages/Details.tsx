@@ -51,6 +51,15 @@ const Details = () => {
     fetch()
   }, [id, type, isMovie, mediaId])
 
+  useEffect(() => {
+    if (!trailerOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setTrailerOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [trailerOpen])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
@@ -462,35 +471,50 @@ const Details = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm"
+              className="fixed inset-0 z-[80] bg-black/85 backdrop-blur-md"
               onClick={() => setTrailerOpen(false)}
             />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[90] w-[90vw] max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl"
-            >
-              <Focusable
-                focusKey="trailer-close"
-                onEnterPress={() => setTrailerOpen(false)}
-                className="absolute top-3 right-3 z-10 rounded-full"
+            <div className="fixed inset-0 z-[90] flex items-center justify-center p-2 sm:p-4 md:p-6 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                transition={{ duration: 0.2 }}
+                className="pointer-events-auto relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-bg-card/95 border border-white/15 rounded-2xl overflow-hidden shadow-2xl"
               >
-                <button
-                  onClick={() => setTrailerOpen(false)}
-                  className="p-2 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors outline-none"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </Focusable>
-              <iframe
-                src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0`}
-                title="Trailer"
-                allow="autoplay; fullscreen; encrypted-media"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </motion.div>
+                {/* Header do Modal com título e botão de fechar acessível */}
+                <div className="flex items-center justify-between px-4 py-2.5 sm:py-3 bg-black/70 border-b border-white/10 flex-shrink-0">
+                  <div className="flex items-center gap-2 text-white font-medium text-xs sm:text-sm md:text-base truncate pr-2">
+                    <Play className="h-4 w-4 text-accent-red fill-accent-red flex-shrink-0" />
+                    <span className="truncate">{title} — Trailer Oficial</span>
+                  </div>
+                  <Focusable
+                    focusKey="trailer-close"
+                    onEnterPress={() => setTrailerOpen(false)}
+                    className="rounded-full flex-shrink-0"
+                  >
+                    <button
+                      onClick={() => setTrailerOpen(false)}
+                      className="p-1.5 sm:p-2 bg-white/10 hover:bg-white/25 active:bg-white/35 rounded-full text-white transition-colors outline-none flex items-center justify-center min-w-[36px] min-h-[36px]"
+                      aria-label="Fechar trailer"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </Focusable>
+                </div>
+
+                {/* Container responsivo do Iframe 16:9 */}
+                <div className="relative w-full aspect-video bg-black flex-1 min-h-0 overflow-hidden">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0&playsinline=1&modestbranding=1`}
+                    title={`Trailer de ${title}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full border-0"
+                  />
+                </div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>

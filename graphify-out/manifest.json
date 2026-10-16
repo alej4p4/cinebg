@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792182524.7593076,
-    "seen": 1792182725.4944136,
-    "ast_hash": "339f26d88061ea536b53203c4b986f90",
+    "mtime": 1792183115.4854345,
+    "seen": 1792183314.0599487,
+    "ast_hash": "e090a062fcc5ac26fda4f035b438c215",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792182609.0864935,
-    "seen": 1792182725.4944377,
+    "mtime": 1792183195.3986971,
+    "seen": 1792183314.0599623,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792182609.0857456,
-    "seen": 1792182725.4945192,
+    "mtime": 1792183195.3986971,
+    "seen": 1792183314.0599954,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -102,9 +102,9 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792182541.770692,
-    "seen": 1792182725.4945898,
-    "ast_hash": "9a387dd4e79b63e236658063acf1cc13",
+    "mtime": 1792183123.6582754,
+    "seen": 1792183314.0600553,
+    "ast_hash": "92b2925bede235d7adf28bc6837c941b",
     "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
@@ -264,9 +264,9 @@
     "semantic_hash": "691b79b7905b3b207f78f878c3299ad5"
   },
   "src/pages/Details.tsx": {
-    "mtime": 1792168432.944508,
-    "seen": 1792179646.8838828,
-    "ast_hash": "7ee227d160893ad79693849acc0afdd7",
+    "mtime": 1792183105.0058217,
+    "seen": 1792183314.0602338,
+    "ast_hash": "a5f02a22df5a408845d8de56fd474532",
     "semantic_hash": ""
   },
   "src/pages/Downloads.tsx": {
@@ -342,8 +342,8 @@
     "semantic_hash": "15ef51d42b94cd3178b58fa8215f6db2"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1792182515.0684865,
-    "seen": 1792182725.494881,
+    "mtime": 1792182766.0693955,
+    "seen": 1792183314.0603054,
     "ast_hash": "cb2ffa3c4c2d884cf03fa38fa21192f3",
     "semantic_hash": ""
   },
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "src/services/mercadoPago.ts": {
-    "mtime": 1792181679.66562,
-    "seen": 1792182725.4948974,
-    "ast_hash": "48dd250a64ca10d3a02c0c999e359793",
+    "mtime": 1792183064.215268,
+    "seen": 1792183314.0603156,
+    "ast_hash": "77e668b9a50d6c46d8a514c0f3c93a8e",
     "semantic_hash": ""
   },
   "android/app/src/main/res/drawable-xhdpi/banner.png": {
