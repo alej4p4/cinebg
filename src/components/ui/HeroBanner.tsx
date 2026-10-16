@@ -6,6 +6,8 @@ import { getBackdropUrl, getPosterUrl } from '@/services/tmdb'
 import type { MediaItem } from '@/types'
 import { SkeletonHero } from '@/components/ui/SkeletonCard'
 import { FLUID_EASE, SPRING_SNAPPY } from '@/utils/motion'
+import Focusable from '@/components/tv/Focusable'
+import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
 
 interface HeroBannerProps {
   items: MediaItem[]
@@ -129,26 +131,77 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                 </p>
 
                 <div className="flex gap-3 pt-1">
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
-                    transition={SPRING_SNAPPY}
-                    onClick={() => navigate(`/watch/${item.type}/${item.id}`)}
-                    className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-xl shadow-xl glow-red tv-focusable"
+                  <Focusable
+                    focusKey="hero-watch-btn"
+                    onFocus={() => {
+                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }}
+                    onEnterPress={() => navigate(`/watch/${item.type}/${item.id}`)}
+                    onArrowPress={(dir) => {
+                      if (dir === 'up') {
+                        setFocus('nav-item-0')
+                        return false
+                      }
+                      if (dir === 'right') {
+                        setFocus('hero-details-btn')
+                        return false
+                      }
+                      if (dir === 'down') {
+                        if (doesFocusableExist('card-0-0')) {
+                          setFocus('card-0-0')
+                          return false
+                        }
+                      }
+                      return true
+                    }}
                   >
-                    <Play className="h-5 w-5 fill-white" />
-                    Assistir
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
-                    transition={SPRING_SNAPPY}
-                    onClick={() => navigate(`/details/${item.type}/${item.id}`)}
-                    className="flex items-center gap-2 glass hover:bg-white/10 text-white font-medium px-5 py-3 rounded-xl transition-all tv-focusable"
+                    <motion.button
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.96 }}
+                      transition={SPRING_SNAPPY}
+                      onClick={() => navigate(`/watch/${item.type}/${item.id}`)}
+                      className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-xl shadow-xl glow-red"
+                    >
+                      <Play className="h-5 w-5 fill-white" />
+                      Assistir
+                    </motion.button>
+                  </Focusable>
+
+                  <Focusable
+                    focusKey="hero-details-btn"
+                    onFocus={() => {
+                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }}
+                    onEnterPress={() => navigate(`/details/${item.type}/${item.id}`)}
+                    onArrowPress={(dir) => {
+                      if (dir === 'up') {
+                        setFocus('nav-item-0')
+                        return false
+                      }
+                      if (dir === 'left') {
+                        setFocus('hero-watch-btn')
+                        return false
+                      }
+                      if (dir === 'down') {
+                        if (doesFocusableExist('card-0-0')) {
+                          setFocus('card-0-0')
+                          return false
+                        }
+                      }
+                      return true
+                    }}
                   >
-                    <Info className="h-4 w-4" />
-                    Detalhes
-                  </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.96 }}
+                      transition={SPRING_SNAPPY}
+                      onClick={() => navigate(`/details/${item.type}/${item.id}`)}
+                      className="flex items-center gap-2 glass hover:bg-white/10 text-white font-medium px-5 py-3 rounded-xl transition-all"
+                    >
+                      <Info className="h-4 w-4" />
+                      Detalhes
+                    </motion.button>
+                  </Focusable>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -157,24 +210,37 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
       </div>
 
       {/* Nav arrows */}
-      <motion.button
-        whileHover={{ scale: 1.1, x: -2 }}
-        whileTap={{ scale: 0.92 }}
-        transition={SPRING_SNAPPY}
-        onClick={prev}
-        className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/40 hover:bg-black/70 rounded-full text-white glass tv-focusable"
+      <Focusable
+        focusKey="hero-prev-btn"
+        onEnterPress={prev}
+        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 hidden md:block"
       >
-        <ChevronLeft className="h-5 w-5" />
-      </motion.button>
-      <motion.button
-        whileHover={{ scale: 1.1, x: 2 }}
-        whileTap={{ scale: 0.92 }}
-        transition={SPRING_SNAPPY}
-        onClick={next}
-        className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-black/40 hover:bg-black/70 rounded-full text-white glass tv-focusable"
+        <motion.button
+          whileHover={{ scale: 1.1, x: -2 }}
+          whileTap={{ scale: 0.92 }}
+          transition={SPRING_SNAPPY}
+          onClick={prev}
+          className="p-2.5 bg-black/40 hover:bg-black/70 rounded-full text-white glass"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </motion.button>
+      </Focusable>
+
+      <Focusable
+        focusKey="hero-next-btn"
+        onEnterPress={next}
+        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 hidden md:block"
       >
-        <ChevronRight className="h-5 w-5" />
-      </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.1, x: 2 }}
+          whileTap={{ scale: 0.92 }}
+          transition={SPRING_SNAPPY}
+          onClick={next}
+          className="p-2.5 bg-black/40 hover:bg-black/70 rounded-full text-white glass"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </motion.button>
+      </Focusable>
 
       {/* Progress dots */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2">

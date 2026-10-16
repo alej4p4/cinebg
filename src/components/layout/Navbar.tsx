@@ -5,6 +5,7 @@ import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, User
 import { useAppStore } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
+import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
 
 import CineBGLogo from '@/components/ui/CineBGLogo'
 
@@ -54,6 +55,22 @@ const Navbar = () => {
     }
   }
 
+  const handleNavDown = () => {
+    if (doesFocusableExist('hero-watch-btn')) {
+      setFocus('hero-watch-btn')
+      return false
+    }
+    if (doesFocusableExist('yucine-hero-banner')) {
+      setFocus('yucine-hero-banner')
+      return false
+    }
+    if (doesFocusableExist('card-0-0')) {
+      setFocus('card-0-0')
+      return false
+    }
+    return true
+  }
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -62,7 +79,12 @@ const Navbar = () => {
     >
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
         {/* Logo */}
-        <Focusable onEnterPress={() => navigate('/')} className="flex-shrink-0">
+        <Focusable
+          focusKey="nav-logo"
+          onEnterPress={() => navigate('/')}
+          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          className="flex-shrink-0"
+        >
           <Link to="/" className="flex items-center">
             <CineBGLogo size="sm" showSubtitle={false} />
           </Link>
@@ -70,10 +92,15 @@ const Navbar = () => {
 
         {/* Desktop Nav Estilo YuCine */}
         <nav className="hidden md:flex items-center gap-1.5 ml-4">
-          {NAV_LINKS.map(({ to, label }) => {
+          {NAV_LINKS.map(({ to, label }, index) => {
             const active = location.pathname === to
             return (
-              <Focusable key={to} onEnterPress={() => navigate(to)}>
+              <Focusable
+                key={to}
+                focusKey={`nav-item-${index}`}
+                onEnterPress={() => navigate(to)}
+                onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+              >
                 <Link
                   to={to}
                   className={`block px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
@@ -119,7 +146,12 @@ const Navbar = () => {
         </form>
 
         {/* Favorites */}
-        <Focusable onEnterPress={() => navigate('/favorites')} className="hidden sm:block">
+        <Focusable
+          focusKey="nav-fav"
+          onEnterPress={() => navigate('/favorites')}
+          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          className="hidden sm:block"
+        >
           <Link
             to="/favorites"
             className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex"
@@ -129,7 +161,12 @@ const Navbar = () => {
         </Focusable>
 
         {/* History */}
-        <Focusable onEnterPress={() => navigate('/history')} className="hidden sm:block">
+        <Focusable
+          focusKey="nav-history"
+          onEnterPress={() => navigate('/history')}
+          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          className="hidden sm:block"
+        >
           <Link
             to="/history"
             className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex"
@@ -139,7 +176,12 @@ const Navbar = () => {
         </Focusable>
 
         {/* Downloads */}
-        <Focusable onEnterPress={() => navigate('/downloads')} className="hidden sm:block">
+        <Focusable
+          focusKey="nav-downloads"
+          onEnterPress={() => navigate('/downloads')}
+          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          className="hidden sm:block"
+        >
           <Link
             to="/downloads"
             className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex"
@@ -149,7 +191,11 @@ const Navbar = () => {
         </Focusable>
 
         {/* Botão VIP */}
-        <Focusable onEnterPress={() => setVipModalOpen(true)}>
+        <Focusable
+          focusKey="nav-vip"
+          onEnterPress={() => setVipModalOpen(true)}
+          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+        >
           <button
             type="button"
             onClick={() => setVipModalOpen(true)}
@@ -174,7 +220,11 @@ const Navbar = () => {
 
         {/* Perfil ativo */}
         <div className="relative">
-          <Focusable onEnterPress={() => setProfileOpen((v) => !v)}>
+          <Focusable
+            focusKey="nav-profile"
+            onEnterPress={() => setProfileOpen((v) => !v)}
+            onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          >
             <button
               onClick={() => setProfileOpen((v) => !v)}
               className="flex items-center gap-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors pl-1 pr-2 py-1"

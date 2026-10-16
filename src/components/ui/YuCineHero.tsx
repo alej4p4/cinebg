@@ -82,6 +82,7 @@ const YuCineHero = ({
         <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-3">
           {/* Banner Grande em Destaque */}
           <Focusable
+            focusKey="yucine-hero-banner"
             onEnterPress={() => navigate(`/watch/${currentItem.type}/${currentItem.id}`)}
             className="w-full"
           >

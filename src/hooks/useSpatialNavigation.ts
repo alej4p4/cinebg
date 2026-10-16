@@ -26,11 +26,11 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
           shouldFocusDOMNode: true,
         })
         setKeyMap({
-          left: [37, 21], // ArrowLeft, KEYCODE_DPAD_LEFT (21)
-          right: [39, 22], // ArrowRight, KEYCODE_DPAD_RIGHT (22)
-          up: [38, 19], // ArrowUp, KEYCODE_DPAD_UP (19)
-          down: [40, 20], // ArrowDown, KEYCODE_DPAD_DOWN (20)
-          enter: [13, 23, 66], // Enter, KEYCODE_DPAD_CENTER (23), KEYCODE_ENTER (66)
+          left: [37, 21, 'ArrowLeft', 'Left'],
+          right: [39, 22, 'ArrowRight', 'Right'],
+          up: [38, 19, 'ArrowUp', 'Up'],
+          down: [40, 20, 'ArrowDown', 'Down'],
+          enter: [13, 23, 66, 'Enter', 'Select', 'OK', 'Space'],
         })
         setThrottle({ throttle: 120 })
         isInitialized = true

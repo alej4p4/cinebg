@@ -138,49 +138,57 @@ const Home = () => {
         <HeroBanner items={trending} loading={loading} />
 
         <div className="space-y-8 md:space-y-10 py-8 md:py-10">
-          <AnimatePresence>
-            {historyItems.length > 0 && (
-              <Carousel
-                title="Continuar Assistindo"
-                emoji="▶️"
-                items={historyItems}
-                getProgress={(item) => progressMap.get(`${item.type}-${item.id}`) ?? 0}
-              />
-            )}
-          </AnimatePresence>
+          {(() => {
+            let rowIdx = 0
+            return (
+              <>
+                <AnimatePresence>
+                  {historyItems.length > 0 && (
+                    <Carousel
+                      rowIndex={rowIdx++}
+                      title="Continuar Assistindo"
+                      emoji="▶️"
+                      items={historyItems}
+                      getProgress={(item) => progressMap.get(`${item.type}-${item.id}`) ?? 0}
+                    />
+                  )}
+                </AnimatePresence>
 
-          {loading ? (
-            <>
-              <SkeletonCarousel />
-              <SkeletonCarousel />
-              <SkeletonCarousel />
-            </>
-          ) : (
-            <>
-              {favoriteItems.length > 0 && (
-                <Carousel title="Lista" emoji="❤️" items={favoriteItems} />
-              )}
+                {loading ? (
+                  <>
+                    <SkeletonCarousel />
+                    <SkeletonCarousel />
+                    <SkeletonCarousel />
+                  </>
+                ) : (
+                  <>
+                    {favoriteItems.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Lista" emoji="❤️" items={favoriteItems} />
+                    )}
 
-              {top10.length > 0 && (
-                <Carousel title="Top 10 da Semana" emoji="🏆" items={top10} showRanking />
-              )}
+                    {top10.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Top 10 da Semana" emoji="🏆" items={top10} showRanking />
+                    )}
 
-              <Carousel title="Em Cartaz nos Cinemas" emoji="🎬" items={nowPlaying} />
-              <Carousel title="Novidades em Filmes" emoji="🆕" items={popularMovies} />
-              <Carousel title="Filmes Populares" emoji="🔥" items={popularMovies.slice(6)} />
-              <Carousel title="Filmes de Ação" emoji="💥" items={actionMovies} />
-              <Carousel title="Comédias" emoji="😂" items={comedyMovies} />
-              <Carousel title="Ficção Científica" emoji="👽" items={scifiMovies} />
-              <Carousel title="Mais Bem Avaliados" emoji="⭐" items={topMovies} />
-              <Carousel title="Em Breve" emoji="🎥" items={upcoming} />
-              <Carousel title="Séries Populares" emoji="📺" items={popularShows} />
-              <Carousel title="Ação e Aventura em Séries" emoji="⚔️" items={actionShows} />
-              <Carousel title="Comédia em Séries" emoji="😄" items={comedyShows} />
-              <Carousel title="Em Exibição Hoje" emoji="🔴" items={airingNow} />
-              <Carousel title="Top Séries" emoji="⭐" items={topShows} />
-              <Carousel title="Anime em Destaque" emoji="🃏" items={animeItems} />
-            </>
-          )}
+                    <Carousel rowIndex={rowIdx++} title="Em Cartaz nos Cinemas" emoji="🎬" items={nowPlaying} />
+                    <Carousel rowIndex={rowIdx++} title="Novidades em Filmes" emoji="🆕" items={popularMovies} />
+                    <Carousel rowIndex={rowIdx++} title="Filmes Populares" emoji="🔥" items={popularMovies.slice(6)} />
+                    <Carousel rowIndex={rowIdx++} title="Filmes de Ação" emoji="💥" items={actionMovies} />
+                    <Carousel rowIndex={rowIdx++} title="Comédias" emoji="😂" items={comedyMovies} />
+                    <Carousel rowIndex={rowIdx++} title="Ficção Científica" emoji="👽" items={scifiMovies} />
+                    <Carousel rowIndex={rowIdx++} title="Mais Bem Avaliados" emoji="⭐" items={topMovies} />
+                    <Carousel rowIndex={rowIdx++} title="Em Breve" emoji="🎥" items={upcoming} />
+                    <Carousel rowIndex={rowIdx++} title="Séries Populares" emoji="📺" items={popularShows} />
+                    <Carousel rowIndex={rowIdx++} title="Ação e Aventura em Séries" emoji="⚔️" items={actionShows} />
+                    <Carousel rowIndex={rowIdx++} title="Comédia em Séries" emoji="😄" items={comedyShows} />
+                    <Carousel rowIndex={rowIdx++} title="Em Exibição Hoje" emoji="🔴" items={airingNow} />
+                    <Carousel rowIndex={rowIdx++} title="Top Séries" emoji="⭐" items={topShows} />
+                    <Carousel rowIndex={rowIdx++} title="Anime em Destaque" emoji="🃏" items={animeItems} />
+                  </>
+                )}
+              </>
+            )
+          })()}
         </div>
       </motion.div>
     </>

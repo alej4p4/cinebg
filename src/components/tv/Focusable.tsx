@@ -4,6 +4,7 @@ import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
 interface FocusableProps {
   onEnterPress?: () => void
   onFocus?: () => void
+  onArrowPress?: (direction: string) => boolean | void
   className?: string
   focusKey?: string
   autoScroll?: boolean
@@ -17,6 +18,7 @@ interface FocusableProps {
 export const Focusable = ({
   onEnterPress,
   onFocus,
+  onArrowPress,
   className = '',
   focusKey,
   autoScroll = true,
@@ -27,6 +29,13 @@ export const Focusable = ({
     focusKey,
     onEnterPress: () => onEnterPress?.(),
     onFocus: () => onFocus?.(),
+    onArrowPress: (direction) => {
+      if (onArrowPress) {
+        const result = onArrowPress(direction)
+        if (result === false) return false
+      }
+      return true
+    },
   })
 
   useEffect(() => {
@@ -50,6 +59,8 @@ export const Focusable = ({
         if (node) {
           if (typeof ref === 'function') {
             (ref as any)(node)
+          } else if (ref && 'current' in (ref as any)) {
+            ;(ref as any).current = node
           }
           innerRef.current = node
         }
