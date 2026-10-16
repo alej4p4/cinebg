@@ -42,6 +42,8 @@ public class MainActivity extends BridgeActivity {
                 webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
                 if (webView.getSettings() != null) {
                     webView.getSettings().setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                    webView.getSettings().setSupportMultipleWindows(false);
+                    webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
                 }
             }
         } catch (Exception ignored) {}

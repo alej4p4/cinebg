@@ -891,12 +891,7 @@ const StreamPlayer = ({
             title={title}
             allowFullScreen
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-            className="w-full h-full border-0"
-            sandbox={
-              isMirrorSandboxed(activeMirror)
-                ? 'allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-orientation-lock allow-modals allow-downloads allow-encrypted-media'
-                : undefined
-            }
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-orientation-lock allow-downloads allow-encrypted-media"
             referrerPolicy="no-referrer"
             onLoad={handleIframeLoad}
             onError={handleStreamFailure}
