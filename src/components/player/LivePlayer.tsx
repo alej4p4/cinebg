@@ -63,12 +63,21 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
         const hls = new Hls({
           enableWorker: true,
           liveDurationInfinity: true,
-          manifestLoadingTimeOut: 10000,
-          manifestLoadingMaxRetry: 3,
-          levelLoadingTimeOut: 10000,
-          levelLoadingMaxRetry: 3,
-          fragLoadingTimeOut: 12000,
-          fragLoadingMaxRetry: 3,
+          lowLatencyMode: false,
+          backBufferLength: 30,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          maxBufferSize: 60 * 1000 * 1000,
+          liveSyncDurationCount: 5,
+          liveMaxLatencyDurationCount: 15,
+          manifestLoadingTimeOut: 15000,
+          manifestLoadingMaxRetry: 4,
+          levelLoadingTimeOut: 15000,
+          levelLoadingMaxRetry: 4,
+          fragLoadingTimeOut: 20000,
+          fragLoadingMaxRetry: 4,
+          nudgeOffset: 0.2,
+          nudgeMaxRetry: 5,
         })
 
         hlsInstance = hls
@@ -98,7 +107,16 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
               hls.recoverMediaError()
               return
             } catch {
-              /* prossegue para o próximo sinal */
+              /* prossegue para o próximo sinal se falhar recuperação de mídia */
+            }
+          }
+
+          if (payload.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            try {
+              hls.startLoad()
+              return
+            } catch {
+              /* prossegue para o próximo sinal se falhar recuperação de rede */
             }
           }
 

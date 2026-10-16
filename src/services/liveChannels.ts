@@ -184,8 +184,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a07u/index.m3u8',
       'http://45.162.64.114/TNT/index.m3u8',
+      'http://181.78.197.59:8000/play/a07u/index.m3u8',
       'http://181.78.197.59:8000/play/a085/index.m3u8',
     ],
     quality: '1080p',
@@ -280,8 +280,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a09e/index.m3u8',
       'http://45.162.64.114/SPACE/index.m3u8',
+      'http://181.78.197.59:8000/play/a09e/index.m3u8',
       'http://181.78.197.59:8000/play/a07r/index.m3u8',
     ],
     quality: '1080p',

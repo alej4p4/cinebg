@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792189724.99727,
-    "seen": 1792189960.4260259,
+    "mtime": 1792190027.3181744,
+    "seen": 1792191507.023165,
     "ast_hash": "0c918ff6c377578ea0c9e7ccd57bd784",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792189828.0809824,
-    "seen": 1792189960.4260414,
+    "mtime": 1792191385.2254555,
+    "seen": 1792191507.023178,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792189828.079984,
-    "seen": 1792189960.426075,
+    "mtime": 1792191385.2254555,
+    "seen": 1792191507.0232096,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -102,8 +102,8 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792189745.3387804,
-    "seen": 1792189960.4261358,
+    "mtime": 1792190027.3316832,
+    "seen": 1792191507.0232704,
     "ast_hash": "4fc896849284669e79bf716472026595",
     "semantic_hash": ""
   },
@@ -114,8 +114,8 @@
     "semantic_hash": "8cbbe642bff0ba34f045ae149ace0df8"
   },
   "src/components/LicenseGate.tsx": {
-    "mtime": 1792189685.2818363,
-    "seen": 1792189960.4261465,
+    "mtime": 1792190027.3326824,
+    "seen": 1792191507.0232813,
     "ast_hash": "afe7d522991c1171571997046f7b447e",
     "semantic_hash": ""
   },
@@ -138,9 +138,9 @@
     "semantic_hash": "3f1e100aa4fa64ec2242c8fd5b8d4275"
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1792189708.148058,
-    "seen": 1792189960.426168,
-    "ast_hash": "1414fd2db4e2e520b482e2e1d94ae716",
+    "mtime": 1792191293.437074,
+    "seen": 1792191507.0233033,
+    "ast_hash": "826dd18415841bfb759449e5e8229d50",
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
@@ -342,9 +342,9 @@
     "semantic_hash": "15ef51d42b94cd3178b58fa8215f6db2"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1792188164.738656,
-    "seen": 1792189960.4265969,
-    "ast_hash": "e0a1c0d890030f7de29de45951d4d64c",
+    "mtime": 1792191309.0183504,
+    "seen": 1792191507.0235329,
+    "ast_hash": "3ff3e542d7bad4eb13b1aa2ddb1f3094",
     "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
