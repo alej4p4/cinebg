@@ -41,9 +41,9 @@ export const CineBGLogo = ({
       >
         <defs>
           <linearGradient id="logoEmblemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#ff1744" />
-            <stop offset="50%" stop-color="#ff5252" />
-            <stop offset="100%" stop-color="#ffb300" />
+            <stop offset="0%" stopColor="#ff1744" />
+            <stop offset="50%" stopColor="#ff5252" />
+            <stop offset="100%" stopColor="#ffb300" />
           </linearGradient>
         </defs>
         {/* C curve */}
