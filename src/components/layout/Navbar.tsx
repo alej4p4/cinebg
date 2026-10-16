@@ -5,6 +5,8 @@ import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, User
 import { useAppStore } from '@/store/useAppStore'
 import Focusable from '@/components/tv/Focusable'
 
+import CineBGLogo from '@/components/ui/CineBGLogo'
+
 const NAV_LINKS = [
   { to: '/', label: 'Início', icon: Home },
   { to: '/movies', label: 'Filmes', icon: Film },
@@ -50,13 +52,8 @@ const Navbar = () => {
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
         {/* Logo */}
         <Focusable onEnterPress={() => navigate('/')} className="flex-shrink-0">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-accent-red flex items-center justify-center font-display font-black text-white text-sm">
-              C
-            </div>
-            <span className="font-display font-black text-xl text-white hidden sm:block">
-              Cine<span className="text-accent-red">BG</span>
-            </span>
+          <Link to="/" className="flex items-center">
+            <CineBGLogo size="sm" showSubtitle={false} />
           </Link>
         </Focusable>
 
