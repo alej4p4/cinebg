@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-16)
 
 ## Corpus Check
-- 84 files · ~77,645 words
+- 84 files · ~77,657 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 529 nodes · 1248 edges · 30 communities (18 shown, 12 thin omitted)
+- 530 nodes · 1249 edges · 30 communities (18 shown, 12 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 12 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0b60d2cd`
+- Built from commit: `4cf41858`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -71,32 +71,32 @@ Cohesion: 0.08
 Nodes (29): @capacitor/core, react-dom, AnimatedRoutes(), Anime, App(), Details, Downloads, Favorites (+21 more)
 
 ### Community 1 - "react"
-Cohesion: 0.11
-Nodes (48): Carousel(), ErrorState(), ErrorStateProps, MovieCard(), ProgressBar(), ProgressBarProps, HeroSkeleton(), SkeletonCard() (+40 more)
+Cohesion: 0.18
+Nodes (27): HeroBanner(), Home(), Movies(), buildCacheKey(), cachedGet(), discoverMovies(), discoverShows(), forKids() (+19 more)
 
 ### Community 2 - "index.ts"
 Cohesion: 0.06
-Nodes (69): @capacitor/filesystem, zustand, EpisodeSelector(), EpisodeSelectorProps, StreamPlayer(), StreamPlayerProps, GenreBadge(), GenreBadgeProps (+61 more)
+Nodes (71): @capacitor/filesystem, zustand, EpisodeSelector(), EpisodeSelectorProps, StreamPlayer(), StreamPlayerProps, GenreBadge(), GenreBadgeProps (+63 more)
 
 ### Community 3 - "LicenseGate.tsx"
-Cohesion: 0.11
-Nodes (29): @noriginmedia/norigin-spatial-navigation, NAV_LINKS, Navbar(), LicenseGate(), LicenseGateProps, Focusable(), FocusableProps, CineBGLogo() (+21 more)
+Cohesion: 0.15
+Nodes (21): NAV_LINKS, Navbar(), LicenseGate(), LicenseGateProps, Focusable(), FocusableProps, CineBGLogo(), CineBGLogoProps (+13 more)
 
 ### Community 4 - "package.json"
 Cohesion: 0.05
 Nodes (36): config, name, private, scripts, build, build:apk, cap:open, cap:sync (+28 more)
 
 ### Community 5 - "LiveTV.tsx"
-Cohesion: 0.17
-Nodes (17): LivePlayer(), LivePlayerProps, YuCineChannelCard(), YuCineChannelCardProps, LiveTV(), categoryLabel(), countryFlag(), LIVE_CATEGORIES (+9 more)
+Cohesion: 0.15
+Nodes (19): @noriginmedia/norigin-spatial-navigation, LivePlayer(), LivePlayerProps, YuCineChannelCard(), YuCineChannelCardProps, LiveTV(), categoryLabel(), countryFlag() (+11 more)
 
 ### Community 6 - "react"
-Cohesion: 0.14
-Nodes (27): framer-motion, lucide-react, react, react-router-dom, CarouselProps, HeroBanner(), HeroBannerProps, LazyImage() (+19 more)
+Cohesion: 0.10
+Nodes (48): framer-motion, lucide-react, react, react-router-dom, Carousel(), CarouselProps, ErrorState(), ErrorStateProps (+40 more)
 
 ### Community 7 - "notifications.ts"
-Cohesion: 0.16
-Nodes (20): useEpisodeNotifications(), COLORS, EMOJIS, ProfileCard(), Profiles(), checkForNewEpisodes(), daysAgoISO(), ensureNotificationChannel() (+12 more)
+Cohesion: 0.12
+Nodes (26): useEpisodeNotifications(), getDeviceId(), getFirstUse(), getStoredLicense(), License, LicenseResponse, TRIAL_DAYS, useLicense() (+18 more)
 
 ### Community 8 - "compilerOptions"
 Cohesion: 0.10
@@ -119,8 +119,8 @@ Cohesion: 0.06
 Nodes (27): 1. Criar ou Vincular a Issue, 2. Isolar em Branch de Trabalho, 3. Gerenciar Deploys estritamente por Pull Requests (PRs), 4. Critério de Aceite Técnico, graphify, 🤖 Instruções para Agentes de IA — CineBG, 🚨 PROTOCOLO MANDATÓRIO DE TRABALHO, 1. Classificação e Criação de Issues (+19 more)
 
 ### Community 25 - "EmptyState.tsx"
-Cohesion: 0.23
-Nodes (11): EmptyDownloads(), EmptyFavorites(), EmptyHistory(), EmptyLiveTV(), EmptyMyList(), EmptySearch(), EmptyState(), EmptyStateProps (+3 more)
+Cohesion: 0.26
+Nodes (10): EmptyDownloads(), EmptyFavorites(), EmptyHistory(), EmptyLiveTV(), EmptyMyList(), EmptySearch(), EmptyState(), EmptyStateProps (+2 more)
 
 ### Community 26 - "bug_fix.md"
 Cohesion: 0.33
@@ -140,7 +140,7 @@ Nodes (4): 📊 Benefícios Esperados, ✅ Critérios de Aceite, 💡 Oportunida
 
 ## Knowledge Gaps
 - **10 isolated node(s):** `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard`, `@types/react`, `@types/react-dom` (+5 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 199 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 200 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
@@ -153,10 +153,10 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `App.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.080338266384778 - nodes in this community are weakly interconnected._
 - **Why does `framer-motion` connect `react` to `App.tsx`, `react`, `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `notifications.ts`, `EmptyState.tsx`?**
-  _High betweenness centrality (0.077) - this node is a cross-community bridge._
-- **Should `react` be split into smaller, more focused modules?**
-  _Cohesion score 0.10765027322404372 - nodes in this community are weakly interconnected._
-- **Why does `lucide-react` connect `react` to `App.tsx`, `react`, `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `notifications.ts`, `EmptyState.tsx`?**
-  _High betweenness centrality (0.064) - this node is a cross-community bridge._
+  _High betweenness centrality (0.078) - this node is a cross-community bridge._
 - **Should `index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05847781369379959 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05658263305322129 - nodes in this community are weakly interconnected._
+- **Why does `lucide-react` connect `react` to `App.tsx`, `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `notifications.ts`, `EmptyState.tsx`?**
+  _High betweenness centrality (0.064) - this node is a cross-community bridge._
+- **Should `LicenseGate.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.14814814814814814 - nodes in this community are weakly interconnected._

@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792181393.4938707,
-    "seen": 1792181605.1417305,
-    "ast_hash": "06f46eb6ed5689acadcd756daef7912d",
+    "mtime": 1792182524.7593076,
+    "seen": 1792182725.4944136,
+    "ast_hash": "339f26d88061ea536b53203c4b986f90",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792181464.4752018,
-    "seen": 1792181605.1417463,
+    "mtime": 1792182609.0864935,
+    "seen": 1792182725.4944377,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792181464.4752018,
-    "seen": 1792181605.1417775,
+    "mtime": 1792182609.0857456,
+    "seen": 1792182725.4945192,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -102,9 +102,9 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792181401.8658893,
-    "seen": 1792181605.1418405,
-    "ast_hash": "b25e48b2e69dd4d42ebcfc8ea175a166",
+    "mtime": 1792182541.770692,
+    "seen": 1792182725.4945898,
+    "ast_hash": "9a387dd4e79b63e236658063acf1cc13",
     "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
@@ -342,9 +342,9 @@
     "semantic_hash": "15ef51d42b94cd3178b58fa8215f6db2"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1792177293.6030207,
-    "seen": 1792179646.8839254,
-    "ast_hash": "b1781521429f75e68be786576a5de6fb",
+    "mtime": 1792182515.0684865,
+    "seen": 1792182725.494881,
+    "ast_hash": "cb2ffa3c4c2d884cf03fa38fa21192f3",
     "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "src/services/mercadoPago.ts": {
-    "mtime": 1792181360.9609225,
-    "seen": 1792181605.1421404,
-    "ast_hash": "5c9795cbb397a5411fb0d9e061d0e22c",
+    "mtime": 1792181679.66562,
+    "seen": 1792182725.4948974,
+    "ast_hash": "48dd250a64ca10d3a02c0c999e359793",
     "semantic_hash": ""
   },
   "android/app/src/main/res/drawable-xhdpi/banner.png": {
