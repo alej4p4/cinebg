@@ -85,7 +85,6 @@ export const SplashScreen = ({
 
         {/* Camada de Gradiente Abstrato / Efeito Vignette Cinematográfico leve */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#08070d] via-[#08070d]/85 to-[#08070d]/75" />
-        <div className="absolute inset-0 bg-radial from-red-600/15 via-amber-500/10 to-transparent" />
       </div>
 
       {/* Espaçador Superior */}
@@ -93,9 +92,6 @@ export const SplashScreen = ({
 
       {/* Centro: Logo Oficial CineBG estilo YuCine */}
       <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-md w-full">
-        {/* Brilho estático leve (sem animar blur em tempo real para não engasgar a GPU) */}
-        <div className="absolute -top-12 w-64 h-64 bg-gradient-to-tr from-accent-red/20 via-amber-500/15 to-transparent rounded-full opacity-60 pointer-events-none" />
-
         <div className="mb-6 drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]" style={{ transform: 'translateZ(0)' }}>
           <CineBGLogo size="xl" showSubtitle={true} />
         </div>

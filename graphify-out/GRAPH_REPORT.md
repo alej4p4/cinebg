@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-16)
 
 ## Corpus Check
-- 84 files · ~78,070 words
+- 84 files · ~67,762 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 530 nodes · 1249 edges · 30 communities (18 shown, 12 thin omitted)
+- 530 nodes · 1255 edges · 30 communities (18 shown, 12 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 12 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `87961f23`
+- Built from commit: `184f3b35`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -79,16 +79,16 @@ Cohesion: 0.06
 Nodes (71): @capacitor/filesystem, zustand, EpisodeSelector(), EpisodeSelectorProps, StreamPlayer(), StreamPlayerProps, GenreBadge(), GenreBadgeProps (+63 more)
 
 ### Community 3 - "LicenseGate.tsx"
-Cohesion: 0.15
-Nodes (21): NAV_LINKS, Navbar(), LicenseGate(), LicenseGateProps, Focusable(), FocusableProps, CineBGLogo(), CineBGLogoProps (+13 more)
+Cohesion: 0.14
+Nodes (22): @noriginmedia/norigin-spatial-navigation, NAV_LINKS, Navbar(), LicenseGate(), LicenseGateProps, Focusable(), FocusableProps, CineBGLogo() (+14 more)
 
 ### Community 4 - "package.json"
 Cohesion: 0.05
 Nodes (36): config, name, private, scripts, build, build:apk, cap:open, cap:sync (+28 more)
 
 ### Community 5 - "LiveTV.tsx"
-Cohesion: 0.15
-Nodes (19): @noriginmedia/norigin-spatial-navigation, LivePlayer(), LivePlayerProps, YuCineChannelCard(), YuCineChannelCardProps, LiveTV(), categoryLabel(), countryFlag() (+11 more)
+Cohesion: 0.16
+Nodes (18): LivePlayer(), LivePlayerProps, YuCineChannelCard(), YuCineChannelCardProps, LiveTV(), categoryLabel(), countryFlag(), LIVE_CATEGORIES (+10 more)
 
 ### Community 6 - "react"
 Cohesion: 0.10
@@ -147,16 +147,16 @@ Nodes (4): 📊 Benefícios Esperados, ✅ Critérios de Aceite, 💡 Oportunida
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `App.tsx`, `react`, `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `notifications.ts`?**
-  _High betweenness centrality (0.083) - this node is a cross-community bridge._
+  _High betweenness centrality (0.082) - this node is a cross-community bridge._
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _10 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.080338266384778 - nodes in this community are weakly interconnected._
 - **Why does `framer-motion` connect `react` to `App.tsx`, `react`, `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `notifications.ts`, `EmptyState.tsx`?**
-  _High betweenness centrality (0.078) - this node is a cross-community bridge._
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
 - **Should `index.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.05658263305322129 - nodes in this community are weakly interconnected._
 - **Why does `lucide-react` connect `react` to `App.tsx`, `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `notifications.ts`, `EmptyState.tsx`?**
-  _High betweenness centrality (0.064) - this node is a cross-community bridge._
+  _High betweenness centrality (0.063) - this node is a cross-community bridge._
 - **Should `LicenseGate.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.14814814814814814 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._

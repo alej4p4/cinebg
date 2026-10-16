@@ -14,9 +14,11 @@ interface MovieCardProps {
   index?: number
   progress?: number
   rank?: number
+  focusKey?: string
+  onArrowPress?: (direction: string) => boolean | void
 }
 
-const MovieCard = ({ item, index = 0, progress, rank }: MovieCardProps) => {
+const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: MovieCardProps) => {
   const navigate = useNavigate()
   const { addFavorite, removeFavorite, isFavorite } = useAppStore()
   const [isHovered, setIsHovered] = useState(false)
@@ -54,7 +56,15 @@ const MovieCard = ({ item, index = 0, progress, rank }: MovieCardProps) => {
   }
 
   const { ref, focused } = useFocusable({
+    focusKey,
     onEnterPress: handleClick,
+    onArrowPress: (direction) => {
+      if (onArrowPress) {
+        const res = onArrowPress(direction)
+        if (res === false) return false
+      }
+      return true
+    },
     onFocus: () => {
       ref.current?.scrollIntoView({
         behavior: 'smooth',
