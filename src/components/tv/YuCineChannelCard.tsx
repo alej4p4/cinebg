@@ -280,6 +280,33 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
           </div>
         )
 
+      case 'paramount':
+        return (
+          <div className="w-full h-full bg-gradient-to-b from-[#003478] via-[#002253] to-[#00102b] flex flex-col items-center justify-center p-3 text-center relative overflow-hidden">
+            <span className="font-display font-black text-2xl tracking-tight text-white uppercase drop-shadow">
+              Paramount<span className="text-[#0064ff] font-black">+</span>
+            </span>
+            <span className="text-[10px] font-bold text-blue-200/90 tracking-widest uppercase mt-0.5">
+              {channel.name}
+            </span>
+          </div>
+        )
+
+      case 'premiere':
+        return (
+          <div className="w-full h-full bg-gradient-to-br from-[#0c4a28] via-[#08301a] to-[#03150b] flex flex-col items-center justify-center p-3 text-center relative overflow-hidden border border-emerald-500/20">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-display font-black text-xl tracking-wider text-white uppercase">
+                PREMIERE
+              </span>
+            </div>
+            <span className="text-[10px] font-black text-[#facc15] tracking-widest uppercase mt-0.5">
+              {channel.name.replace(/premiere/i, '').trim() || 'FUTEBOL'}
+            </span>
+          </div>
+        )
+
       case 'bandsports':
         return (
           <div className="w-full h-full bg-gradient-to-r from-[#005a36] to-[#003822] flex flex-col items-center justify-center p-3 text-center relative">
