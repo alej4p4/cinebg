@@ -25,6 +25,8 @@ export interface LiveChannel {
   genres: string[]
 }
 
+export const VAPTY_BASE = 'http://vapty.top/live/413523167559/966299388745'
+
 export const LIVE_CATEGORIES: LiveCategory[] = [
   { id: 'todos', label: 'Todos', emoji: '✨' },
   { id: 'abertos', label: 'Abertos', emoji: '📺' },
@@ -45,6 +47,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260618.m3u8`,
       'https://dai.google.com/linear/hls/event/1XSOdtQ0SH2G8OEmEfGgjQ/master.m3u8',
       'https://cdn.live.br1.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/chunklist.m3u8',
       'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
@@ -61,6 +64,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260754.m3u8`,
       'https://cdn-sp2.satlabscloud.com.br/RBS_HD/index.m3u8?token=Mw3YKkujzIi9hYQJ6kAQjQvly2VdBNuGPjHOq',
       'https://live.mediapro.com.br/hls/bh-globo/index.m3u8',
     ],
@@ -76,6 +80,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260750.m3u8`,
       'https://live.mediapro.com.br/hls/bh-globo/index.m3u8',
       'https://cdn-sp2.satlabscloud.com.br/RBS_HD/index.m3u8?token=Mw3YKkujzIi9hYQJ6kAQjQvly2VdBNuGPjHOq',
     ],
@@ -91,6 +96,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260754.m3u8`,
       'https://cdn-sp2.satlabscloud.com.br/RBS_HD/index.m3u8?token=Mw3YKkujzIi9hYQJ6kAQjQvly2VdBNuGPjHOq',
       'https://live.mediapro.com.br/hls/bh-globo/index.m3u8',
     ],
@@ -106,6 +112,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/6268081.m3u8`,
       'http://45.162.64.114/RECORD_NEWS/index.m3u8',
       'https://rnw-rn.otteravision.com/rnw/rn/rnw_rn.m3u8',
       'https://cdn.live.br1.jmvstream.com/w/LVW-10842/LVW10842_513N26MDBL/chunklist.m3u8',
@@ -137,6 +144,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5311748.m3u8`,
       'http://45.162.64.114/REDE_TV/index.m3u8',
       'https://tv01.zas.media:1936/redetvparana/redetvparana/playlist.m3u8',
     ],
@@ -185,9 +193,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260416.m3u8`,
       'http://45.162.64.114/TNT/index.m3u8',
-      'http://45.162.64.114/TNT_NOVELAS/index.m3u8',
-      'http://45.162.64.114/SPACE/index.m3u8',
+      `${VAPTY_BASE}/5260424.m3u8`,
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -201,8 +209,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260426.m3u8`,
       'http://45.162.64.114/TNT_NOVELAS/index.m3u8',
-      'http://45.162.64.114/TNT/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -216,9 +224,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a07a/index.m3u8',
-      'http://181.78.197.59:8000/play/a07n/index.m3u8',
-      'http://45.162.64.114/SPACE/index.m3u8',
+      `${VAPTY_BASE}/5260514.m3u8`,
+      `${VAPTY_BASE}/5260518.m3u8`,
+      `${VAPTY_BASE}/5260516.m3u8`,
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -232,9 +240,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a07c/index.m3u8',
-      'http://45.162.64.114/TNT/index.m3u8',
-      'http://181.78.197.59:8000/play/a07a/index.m3u8',
+      `${VAPTY_BASE}/5259613.m3u8`,
+      `${VAPTY_BASE}/5259614.m3u8`,
+      `${VAPTY_BASE}/5259615.m3u8`,
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -248,8 +256,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260413.m3u8`,
       'http://45.162.64.114/SPACE/index.m3u8',
-      'http://45.162.64.114/TNT/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -263,8 +271,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a07d/index.m3u8',
-      'http://45.162.64.114/TNT/index.m3u8',
+      `${VAPTY_BASE}/5260445.m3u8`,
+      `${VAPTY_BASE}/5260446.m3u8`,
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -278,8 +286,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260393.m3u8`,
       'http://45.162.64.114/SPACE/index.m3u8',
-      'http://45.162.64.114/TNT/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -293,8 +301,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260610.m3u8`,
       'http://45.162.64.114/TNT/index.m3u8',
-      'http://181.78.197.59:8000/play/a07e/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -308,8 +316,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260594.m3u8`,
       'http://45.162.64.114/SPACE/index.m3u8',
-      'http://181.78.197.59:8000/play/a07f/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -323,8 +331,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260606.m3u8`,
       'http://45.162.64.114/TNT/index.m3u8',
-      'http://45.162.64.114/TNT_NOVELAS/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -338,8 +346,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260614.m3u8`,
       'http://45.162.64.114/TNT_NOVELAS/index.m3u8',
-      'http://45.162.64.114/TNT/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -355,8 +363,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'esportes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5259545.m3u8`,
       'http://45.162.64.114/BAND_SPORTS/index.m3u8',
-      'http://181.78.197.59:8000/play/a07z/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -370,9 +378,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'esportes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260075.m3u8`,
       'http://45.162.64.114/ESPN_BRASIL/index.m3u8',
-      'http://45.162.64.114/ESPN_4/index.m3u8',
-      'http://181.78.197.59:8000/play/a07z/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -386,9 +393,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'esportes',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260090.m3u8`,
       'http://45.162.64.114/ESPN_4/index.m3u8',
-      'http://45.162.64.114/ESPN_EXTRA/index.m3u8',
-      'http://45.162.64.114/ESPN_BRASIL/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -402,9 +408,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'esportes',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a07z/index.m3u8',
-      'http://181.78.197.59:8000/play/a07n/index.m3u8',
-      'https://cdn-sp2.satlabscloud.com.br/RBS_HD/index.m3u8?token=Mw3YKkujzIi9hYQJ6kAQjQvly2VdBNuGPjHOq',
+      `${VAPTY_BASE}/5260125.m3u8`,
+      `${VAPTY_BASE}/5260126.m3u8`,
+      `${VAPTY_BASE}/5260122.m3u8`,
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -418,8 +424,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'esportes',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a07n/index.m3u8',
-      'http://181.78.197.59:8000/play/a07z/index.m3u8',
+      `${VAPTY_BASE}/5260132.m3u8`,
+      `${VAPTY_BASE}/5260129.m3u8`,
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -433,9 +439,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'esportes',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a07z/index.m3u8',
-      'http://181.78.197.59:8000/play/a07n/index.m3u8',
-      'https://cdn-sp2.satlabscloud.com.br/RBS_HD/index.m3u8?token=Mw3YKkujzIi9hYQJ6kAQjQvly2VdBNuGPjHOq',
+      `${VAPTY_BASE}/5311791.m3u8`,
+      `${VAPTY_BASE}/5311760.m3u8`,
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -466,6 +471,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'infantil',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5260147.m3u8`,
       'http://45.162.64.114/CARTOON_NETWORK/index.m3u8',
       'https://cdn.live.br1.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/chunklist.m3u8',
     ],
@@ -575,6 +581,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'variedades',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5259454.m3u8`,
       'http://45.162.64.114/DISCOVERY_CHANNEL/index.m3u8',
       'http://45.162.64.114/DISCOVERY_WORLD/index.m3u8',
     ],
@@ -590,6 +597,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'variedades',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5259470.m3u8`,
       'http://45.162.64.114/DISCOVERY_TURBO/index.m3u8',
       'http://45.162.64.114/DISCOVERY_CHANNEL/index.m3u8',
     ],
@@ -605,6 +613,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'variedades',
     country: 'BR',
     sources: [
+      `${VAPTY_BASE}/5259450.m3u8`,
       'http://45.162.64.114/ANIMAL_PLANET/index.m3u8',
       'http://45.162.64.114/DISCOVERY_CHANNEL/index.m3u8',
     ],
