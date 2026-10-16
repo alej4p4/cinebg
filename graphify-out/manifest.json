@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792032407.9574406,
-    "seen": 1792158340.1034057,
-    "ast_hash": "400a89d2feb31b47d311adae18d35ed2",
-    "semantic_hash": "400a89d2feb31b47d311adae18d35ed2"
+    "mtime": 1792178521.7686152,
+    "seen": 1792179646.8837066,
+    "ast_hash": "9d78411c3dc434bf7fc5a77f2c34630c",
+    "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792160426.760962,
-    "seen": 1792161677.1200883,
+    "mtime": 1792178298.8996327,
+    "seen": 1792179646.8837154,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -18,9 +18,9 @@
     "semantic_hash": "c777a4127ae7213f7da22c4105bdfeab"
   },
   "android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java": {
-    "mtime": 1792160615.9670608,
-    "seen": 1792161677.1201026,
-    "ast_hash": "00c07c38e137c8b4cb41388c77d8d60e",
+    "mtime": 1792177293.601022,
+    "seen": 1792179646.8837254,
+    "ast_hash": "acd81e35cdee97abe93bcbac801c7d3e",
     "semantic_hash": ""
   },
   "android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java": {
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792160426.759963,
-    "seen": 1792161677.1201203,
+    "mtime": 1792178298.8996327,
+    "seen": 1792179646.8837378,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -102,10 +102,10 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792081995.470353,
-    "seen": 1792158340.103456,
-    "ast_hash": "8701faf47e31be2bc42fa0545b11ba85",
-    "semantic_hash": "8701faf47e31be2bc42fa0545b11ba85"
+    "mtime": 1792179478.01809,
+    "seen": 1792179646.883778,
+    "ast_hash": "62850336dc17c8e96d61e693aaa100c7",
+    "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
     "mtime": 1792022620.2490396,
@@ -114,10 +114,10 @@
     "semantic_hash": "8cbbe642bff0ba34f045ae149ace0df8"
   },
   "src/components/LicenseGate.tsx": {
-    "mtime": 1792081995.4814992,
-    "seen": 1792158340.1034613,
-    "ast_hash": "5e49b564acb0edea8eab2c7ee08bb895",
-    "semantic_hash": "5e49b564acb0edea8eab2c7ee08bb895"
+    "mtime": 1792179468.3973582,
+    "seen": 1792179646.8837848,
+    "ast_hash": "c155455fd9167d7064607bb8a2bad895",
+    "semantic_hash": ""
   },
   "src/components/UpdateModal.tsx": {
     "mtime": 1792081995.4914494,
@@ -126,9 +126,9 @@
     "semantic_hash": "92b35a3a7883490af64616b3d72717aa"
   },
   "src/components/layout/Navbar.tsx": {
-    "mtime": 1792161472.9525323,
-    "seen": 1792161677.1202211,
-    "ast_hash": "8561ddfedc75574ab5968060cd86c6ef",
+    "mtime": 1792179531.8468142,
+    "seen": 1792179646.8837917,
+    "ast_hash": "ec48a227a6a9a7b4981919e2e2b7b721",
     "semantic_hash": ""
   },
   "src/components/player/EpisodeSelector.tsx": {
@@ -138,10 +138,10 @@
     "semantic_hash": "3f1e100aa4fa64ec2242c8fd5b8d4275"
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1792030183.1336162,
-    "seen": 1792158340.1034722,
-    "ast_hash": "0dd5e04f5b8a9022ac360cf553032546",
-    "semantic_hash": "0dd5e04f5b8a9022ac360cf553032546"
+    "mtime": 1792163545.7326696,
+    "seen": 1792179646.8837981,
+    "ast_hash": "79c6aeca2b2836ce07e1d84efc177f1c",
+    "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
     "mtime": 1792160615.9910512,
@@ -150,16 +150,16 @@
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
-    "mtime": 1792022620.2490396,
-    "seen": 1792158340.103477,
-    "ast_hash": "40650c099e83175bd2ef8ffe69056b4c",
-    "semantic_hash": "40650c099e83175bd2ef8ffe69056b4c"
+    "mtime": 1792168432.936454,
+    "seen": 1792179646.8838043,
+    "ast_hash": "dd54e3f7c2099daccae3da1f14ac2675",
+    "semantic_hash": ""
   },
   "src/components/ui/Carousel.tsx": {
-    "mtime": 1792071522.6355937,
-    "seen": 1792158340.1034799,
-    "ast_hash": "15d5c4901c1fc69e55df6d7f1020654e",
-    "semantic_hash": "15d5c4901c1fc69e55df6d7f1020654e"
+    "mtime": 1792174834.7527986,
+    "seen": 1792179646.883811,
+    "ast_hash": "76676e1271b6d7e52ffbaa54836c3c41",
+    "semantic_hash": ""
   },
   "src/components/ui/EmptyState.tsx": {
     "mtime": 1792086739.3025568,
@@ -186,10 +186,10 @@
     "semantic_hash": "ad837bfed6479ac967259f4d384202b0"
   },
   "src/components/ui/LazyImage.tsx": {
-    "mtime": 1792022620.2490396,
-    "seen": 1792158340.103492,
-    "ast_hash": "69a50250c622742d7fd0c1c4b241c7f8",
-    "semantic_hash": "69a50250c622742d7fd0c1c4b241c7f8"
+    "mtime": 1792174834.7543142,
+    "seen": 1792179646.883831,
+    "ast_hash": "7265612ddcf20945b85c5820afcfdf40",
+    "semantic_hash": ""
   },
   "src/components/ui/LoadingSpinner.tsx": {
     "mtime": 1792022620.2490396,
@@ -198,9 +198,9 @@
     "semantic_hash": "5475e3fb0fdec69554ca4b3fa2816e4e"
   },
   "src/components/ui/MovieCard.tsx": {
-    "mtime": 1792159279.0802822,
-    "seen": 1792160406.7824275,
-    "ast_hash": "c5d62664c23e117f6de21972859b5314",
+    "mtime": 1792174834.7548282,
+    "seen": 1792179646.883838,
+    "ast_hash": "a1a1df891c80010932fc5122d2e2086e",
     "semantic_hash": ""
   },
   "src/components/ui/ProgressBar.tsx": {
@@ -234,10 +234,10 @@
     "semantic_hash": "f8ce777d74d48884d4756a13f3dcdfbf"
   },
   "src/hooks/useLicense.ts": {
-    "mtime": 1792081995.5061302,
-    "seen": 1792158340.1035128,
-    "ast_hash": "3f6c4ae87a8515c1b1b56bd76b3c33cf",
-    "semantic_hash": "3f6c4ae87a8515c1b1b56bd76b3c33cf"
+    "mtime": 1792179432.805475,
+    "seen": 1792179646.8838658,
+    "ast_hash": "66466bf4b841a2e3a01c38655bb1f558",
+    "semantic_hash": ""
   },
   "src/hooks/useOrientationFullscreen.ts": {
     "mtime": 1792092245.4843774,
@@ -246,10 +246,10 @@
     "semantic_hash": "42b2597d65b2ebfa88e72c1a4a95a747"
   },
   "src/hooks/useSpatialNavigation.ts": {
-    "mtime": 1792022620.2490396,
-    "seen": 1792158340.103518,
-    "ast_hash": "762287891987594d2da10b7f046d35d4",
-    "semantic_hash": "762287891987594d2da10b7f046d35d4"
+    "mtime": 1792168432.9414513,
+    "seen": 1792179646.8838725,
+    "ast_hash": "4eeeac22a2995ba1dcc610ef74b4c9f9",
+    "semantic_hash": ""
   },
   "src/main.tsx": {
     "mtime": 1790891556.5374658,
@@ -264,10 +264,10 @@
     "semantic_hash": "691b79b7905b3b207f78f878c3299ad5"
   },
   "src/pages/Details.tsx": {
-    "mtime": 1792083671.996538,
-    "seen": 1792158340.1035264,
-    "ast_hash": "9c744a54fb5163c37414e5ec90b9f7b3",
-    "semantic_hash": "9c744a54fb5163c37414e5ec90b9f7b3"
+    "mtime": 1792168432.944508,
+    "seen": 1792179646.8838828,
+    "ast_hash": "7ee227d160893ad79693849acc0afdd7",
+    "semantic_hash": ""
   },
   "src/pages/Downloads.tsx": {
     "mtime": 1792022620.2490396,
@@ -294,15 +294,15 @@
     "semantic_hash": "d7fa5df24de4287d00c54fc84d7a638a"
   },
   "src/pages/LiveTV.tsx": {
-    "mtime": 1792161342.740363,
-    "seen": 1792161677.1203928,
-    "ast_hash": "3e32557032e01a0c6ab8c5606237e400",
+    "mtime": 1792168432.9455135,
+    "seen": 1792179646.8838997,
+    "ast_hash": "c5a445714c0784fd383485830de3ae3a",
     "semantic_hash": ""
   },
   "src/pages/Movies.tsx": {
-    "mtime": 1792161542.4064775,
-    "seen": 1792161677.1203973,
-    "ast_hash": "a23d7427464bc7a3f8d9796a1afbf90c",
+    "mtime": 1792161997.6279058,
+    "seen": 1792179646.8839025,
+    "ast_hash": "8c56b2b6d2ff24a681c461e81fa94fe4",
     "semantic_hash": ""
   },
   "src/pages/MyList.tsx": {
@@ -312,10 +312,10 @@
     "semantic_hash": "c51d4b130b2ce01bc263b4817a03d520"
   },
   "src/pages/Profiles.tsx": {
-    "mtime": 1792151231.7184687,
-    "seen": 1792158340.1035469,
-    "ast_hash": "0644a789a6aa51093c774909798c551a",
-    "semantic_hash": "0644a789a6aa51093c774909798c551a"
+    "mtime": 1792179559.9776468,
+    "seen": 1792179646.8839092,
+    "ast_hash": "1c6560da13cb0d5c43b649e398024e82",
+    "semantic_hash": ""
   },
   "src/pages/Search.tsx": {
     "mtime": 1792086739.3055556,
@@ -324,9 +324,9 @@
     "semantic_hash": "2e3a6922fc31d7ae59bab45a01b035a2"
   },
   "src/pages/Series.tsx": {
-    "mtime": 1792161557.4227698,
-    "seen": 1792161677.1204205,
-    "ast_hash": "f923e38201fca08228d3c0bb34a963e5",
+    "mtime": 1792161997.6299055,
+    "seen": 1792179646.8839157,
+    "ast_hash": "c9cc2bda64b8ad5817d46a132c23ffb9",
     "semantic_hash": ""
   },
   "src/pages/Watch.tsx": {
@@ -342,9 +342,9 @@
     "semantic_hash": "15ef51d42b94cd3178b58fa8215f6db2"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1792161267.894546,
-    "seen": 1792161677.1204371,
-    "ast_hash": "afe21f7e5a605e864fed4c8660d34946",
+    "mtime": 1792177293.6030207,
+    "seen": 1792179646.8839254,
+    "ast_hash": "b1781521429f75e68be786576a5de6fb",
     "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
@@ -354,10 +354,10 @@
     "semantic_hash": "f64a2ad0545cade11d3839e6f5b84981"
   },
   "src/services/notifications.ts": {
-    "mtime": 1792022620.2490396,
-    "seen": 1792158340.1035643,
-    "ast_hash": "d28a585599c5dc41e9eec6f7d16c71d3",
-    "semantic_hash": "d28a585599c5dc41e9eec6f7d16c71d3"
+    "mtime": 1792164567.2763307,
+    "seen": 1792179646.8839343,
+    "ast_hash": "27e1bf530e52dcd82ee0258c533d5eb6",
+    "semantic_hash": ""
   },
   "src/services/streams.ts": {
     "mtime": 1792158103.461686,
@@ -372,10 +372,10 @@
     "semantic_hash": "f723986fd7ed9bc98a335bfc9b07adca"
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1792088887.4028418,
-    "seen": 1792158340.1035717,
-    "ast_hash": "1df1abf8ac7fc72a058cdd90feb09c40",
-    "semantic_hash": "1df1abf8ac7fc72a058cdd90feb09c40"
+    "mtime": 1792179448.6976597,
+    "seen": 1792179646.883944,
+    "ast_hash": "16e54f2a5121e97469a15d0145963135",
+    "semantic_hash": ""
   },
   "src/types/index.ts": {
     "mtime": 1792083671.9975371,
@@ -396,10 +396,10 @@
     "semantic_hash": "daf39070d68a6d84e543ed362e3ef333"
   },
   "src/utils/tv.ts": {
-    "mtime": 1792022620.2646708,
-    "seen": 1792158340.1035814,
-    "ast_hash": "88361a1ce321b57b5aaa69b7954df73b",
-    "semantic_hash": "88361a1ce321b57b5aaa69b7954df73b"
+    "mtime": 1792168432.9455135,
+    "seen": 1792179646.8839571,
+    "ast_hash": "3926aaeeb86188ad6edf2d3e73ab1c01",
+    "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
     "mtime": 1791405071.341496,
@@ -546,99 +546,99 @@
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-hdpi/ic_launcher.png": {
-    "mtime": 1792032287.7489662,
-    "seen": 1792159236.2625704,
-    "ast_hash": "7f7c47319fdf05ca58b7a2cfdbcc0c72",
+    "mtime": 1792166613.8192441,
+    "seen": 1792179646.8840556,
+    "ast_hash": "2c999f62fe72112bd86dbaf13df3ede2",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png": {
-    "mtime": 1792032287.7493365,
-    "seen": 1792159236.2625732,
-    "ast_hash": "52019fb53f673736220a1f361a61aebd",
+    "mtime": 1792166613.8192441,
+    "seen": 1792179646.8840587,
+    "ast_hash": "492cefdbcc9cad044d16cb064d3b53b5",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.2625763,
-    "ast_hash": "7f7c47319fdf05ca58b7a2cfdbcc0c72",
+    "mtime": 1792166613.8202484,
+    "seen": 1792179646.8840618,
+    "ast_hash": "04187bfb8d29cfcf4ec907a5885201d4",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-mdpi/ic_launcher.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.2625797,
-    "ast_hash": "0d8ba90ed7b87eb42e7414e063f80b3f",
+    "mtime": 1792166613.8212478,
+    "seen": 1792179646.8840644,
+    "ast_hash": "abfe8aa955a21cc96855b813a67c52da",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.2625828,
-    "ast_hash": "07d16e156c0b2f624a8ada4d53de5507",
+    "mtime": 1792166613.8212478,
+    "seen": 1792179646.8840675,
+    "ast_hash": "cc383e67e0a25847255b59509efd8db5",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.2625859,
-    "ast_hash": "0d8ba90ed7b87eb42e7414e063f80b3f",
+    "mtime": 1792166613.8222473,
+    "seen": 1792179646.8840704,
+    "ast_hash": "23ae03f143b038f6f72fc30d6e4517a8",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.262589,
-    "ast_hash": "cd694322b5af40cd98279cd85ef62de5",
+    "mtime": 1792166613.8232472,
+    "seen": 1792179646.8840733,
+    "ast_hash": "0e457f44349b4151de6c656eb6062e4e",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.2625918,
-    "ast_hash": "ff8cfc3fa5e69033728074beff920ec4",
+    "mtime": 1792166613.8232472,
+    "seen": 1792179646.8840764,
+    "ast_hash": "22d9d3da378e306412d51b0520ae5d1e",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.2625947,
-    "ast_hash": "cd694322b5af40cd98279cd85ef62de5",
+    "mtime": 1792166613.824246,
+    "seen": 1792179646.8840792,
+    "ast_hash": "685b7b8ab09e36748064ab6ccd92ce78",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.2625978,
-    "ast_hash": "7f393d64a8d447e6a448f2caf40797e9",
+    "mtime": 1792166613.830871,
+    "seen": 1792179646.8840818,
+    "ast_hash": "5d270571f359f10ceb238fbd1a571246",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.262601,
-    "ast_hash": "3fb6c09f70db82ef1e984542485b8230",
+    "mtime": 1792166613.8318777,
+    "seen": 1792179646.884085,
+    "ast_hash": "73e9976d8615987eff78f2865b8d2099",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.262604,
-    "ast_hash": "7f393d64a8d447e6a448f2caf40797e9",
+    "mtime": 1792166613.8328767,
+    "seen": 1792179646.8840883,
+    "ast_hash": "b4727b730e653ca28bf30f07a2ea1ab9",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.262607,
-    "ast_hash": "3c0eb0a226e6a58966db1496bb5961f1",
+    "mtime": 1792166613.8348756,
+    "seen": 1792179646.8840911,
+    "ast_hash": "3e01afdf265657aeaba4a9f0de760897",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.2626123,
-    "ast_hash": "f0b27b529cdc459a6993d39ce594d265",
+    "mtime": 1792166613.8357635,
+    "seen": 1792179646.884094,
+    "ast_hash": "91b4c72734e5e991f693b54ae07b0050",
     "semantic_hash": ""
   },
   "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png": {
-    "mtime": 1792032287.750365,
-    "seen": 1792159236.2626176,
-    "ast_hash": "3c0eb0a226e6a58966db1496bb5961f1",
+    "mtime": 1792166613.8367684,
+    "seen": 1792179646.8840969,
+    "ast_hash": "4da8ea710debe23111888413f566914b",
     "semantic_hash": ""
   },
   "public/icon.svg": {
-    "mtime": 1792022620.240033,
-    "seen": 1792159236.2626245,
-    "ast_hash": "8eca406e125be2dc5afa3476efe4dee5",
+    "mtime": 1792164137.864414,
+    "seen": 1792179646.8841078,
+    "ast_hash": "6e9f06f9eeef758144ea684ae9d0ba09",
     "semantic_hash": ""
   },
   "public/placeholder-avatar.svg": {
@@ -659,28 +659,82 @@
     "ast_hash": "beb85c306288570878deed99370e93b7",
     "semantic_hash": ""
   },
-  "assets/domain_test.json": {
-    "mtime": 347169662.0,
-    "seen": 1792161677.1201432,
-    "ast_hash": "c73513df8f08bf2a25a9c75346e417e2",
-    "semantic_hash": ""
-  },
-  "find_yucine_urls.js": {
-    "mtime": 1792160882.995734,
-    "seen": 1792161677.12016,
-    "ast_hash": "388ae677028a971c460a2794ddfa595b",
-    "semantic_hash": ""
-  },
   "src/components/tv/YuCineChannelCard.tsx": {
-    "mtime": 1792161323.368492,
-    "seen": 1792161677.1202486,
-    "ast_hash": "dabc5bb829ee3ad674fbdf44173d66e8",
+    "mtime": 1792177293.602021,
+    "seen": 1792179646.8838077,
+    "ast_hash": "65bae9b37faf02aa5d88c5b3b4c3e342",
     "semantic_hash": ""
   },
   "src/components/ui/YuCineHero.tsx": {
-    "mtime": 1792161526.9003541,
-    "seen": 1792161677.1203187,
-    "ast_hash": "9c4076c3d3f07396809c7745d70b270f",
+    "mtime": 1792174834.7548282,
+    "seen": 1792179646.8838553,
+    "ast_hash": "e248740bcb2a4ffd634a52c3a0c8ef7d",
+    "semantic_hash": ""
+  },
+  "src/components/ui/CineBGLogo.tsx": {
+    "mtime": 1792176027.3919032,
+    "seen": 1792179646.8838139,
+    "ast_hash": "c9b50ea5a058206957eabdde51dc7434",
+    "semantic_hash": ""
+  },
+  "src/components/ui/SplashScreen.tsx": {
+    "mtime": 1792178521.7706192,
+    "seen": 1792179646.883852,
+    "ast_hash": "6988c8d4705bacf6b05f67a65cbcf4f8",
+    "semantic_hash": ""
+  },
+  "src/services/mercadoPago.ts": {
+    "mtime": 1792179422.3245387,
+    "seen": 1792179646.8839314,
+    "ast_hash": "d3ee6d33a9ac65690fa6c6383bee5396",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/res/drawable-xhdpi/banner.png": {
+    "mtime": 1792174834.7491171,
+    "seen": 1792179646.8840432,
+    "ast_hash": "735f1dda3ffed296811716b4470add52",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/res/drawable-xxhdpi/banner.png": {
+    "mtime": 1792174834.7507954,
+    "seen": 1792179646.884046,
+    "ast_hash": "2d2a2c57a6756b4961de2e1508ae90de",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/res/drawable/banner.png": {
+    "mtime": 1792174834.7517993,
+    "seen": 1792179646.884049,
+    "ast_hash": "735f1dda3ffed296811716b4470add52",
+    "semantic_hash": ""
+  },
+  "public/banner.png": {
+    "mtime": 1792174834.7527986,
+    "seen": 1792179646.8840995,
+    "ast_hash": "2d2a2c57a6756b4961de2e1508ae90de",
+    "semantic_hash": ""
+  },
+  "public/favicon.png": {
+    "mtime": 1792166613.8367684,
+    "seen": 1792179646.884102,
+    "ast_hash": "3e01afdf265657aeaba4a9f0de760897",
+    "semantic_hash": ""
+  },
+  "public/icon.png": {
+    "mtime": 1792166613.8387668,
+    "seen": 1792179646.884105,
+    "ast_hash": "9bc6ce6666d7d75b512849c865e3e7c3",
+    "semantic_hash": ""
+  },
+  "public/logo.svg": {
+    "mtime": 1792164137.864414,
+    "seen": 1792179646.8841105,
+    "ast_hash": "abafc28cf125c91249817d097d41b4af",
+    "semantic_hash": ""
+  },
+  "public/splash-bg.png": {
+    "mtime": 1792164137.8667858,
+    "seen": 1792179646.8841243,
+    "ast_hash": "27cc7d1c2150472c05ffca3d000d2d40",
     "semantic_hash": ""
   }
 }
