@@ -212,21 +212,28 @@ body {
   border-radius: 8px;
 }
 
-/* Anel de foco controlado pelo norigin (navegação espacial) */
+/* Anel de foco controlado pelo norigin (navegacao espacial / controle remoto TV) */
 .tv-focused {
-  outline: 3px solid var(--accent-red);
-  outline-offset: 4px;
-  border-radius: 12px;
+  outline: none !important;
+  box-shadow: 0 0 0 3px #fbbf24, 0 0 24px rgba(251, 191, 36, 0.65) !important;
+  border-radius: 14px;
+  transform: scale(1.04) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+  z-index: 40 !important;
+  position: relative;
 }
 
-/* ===== MODO TV (LEANBACK) ===== */
-.tv-mode * {
-  scrollbar-width: none;
+/* Modo TV (Leanback / D-Pad ativo) */
+.tv-mode *,
+.tv-remote-active * {
+  scrollbar-width: none !important;
 }
 
 .tv-mode::-webkit-scrollbar,
-.tv-mode *::-webkit-scrollbar {
-  display: none;
+.tv-mode *::-webkit-scrollbar,
+.tv-remote-active::-webkit-scrollbar,
+.tv-remote-active *::-webkit-scrollbar {
+  display: none !important;
 }
 
 /* ===== SCROLLABLE CAROUSEL ===== */

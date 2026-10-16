@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
 import type { LiveChannel } from '@/services/liveChannels'
 
 interface YuCineChannelCardProps {
@@ -17,6 +18,27 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
   isFavorite,
   onToggleFavorite,
 }) => {
+  const { ref, focused } = useFocusable({
+    focusKey: `channel-${channel.id}`,
+    onEnterPress: onClick,
+    onFocus: () => {
+      ref.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      })
+    },
+  })
+
+  useEffect(() => {
+    if (focused && ref.current) {
+      ref.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      })
+    }
+  }, [focused])
   // Renderiza o corpo do card no padrão visual idêntico ao YuCine (Imagem 2)
   const renderCardContent = () => {
     switch (channel.cardBg) {
@@ -214,15 +236,20 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
   }
 
   return (
-    <div className="flex flex-col group cursor-pointer select-none">
+    <div
+      ref={ref}
+      onClick={onClick}
+      className={`flex flex-col group cursor-pointer select-none rounded-xl transition-all duration-200 outline-none ${
+        focused ? 'tv-focused scale-[1.04]' : ''
+      }`}
+    >
       {/* Container 16:9 Landscape Card */}
       <motion.div
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.98 }}
-        onClick={onClick}
         className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all duration-200 shadow-lg ${
-          isSelected
-            ? 'border-amber-400 ring-4 ring-amber-400/40 shadow-[0_0_25px_rgba(251,191,36,0.6)] scale-[1.03]'
+          isSelected || focused
+            ? 'border-amber-400 ring-4 ring-amber-400/40 shadow-[0_0_25px_rgba(251,191,36,0.6)] scale-[1.02]'
             : 'border-transparent hover:border-amber-400 hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] group-focus:border-amber-400'
         }`}
       >

@@ -14,6 +14,13 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupImmersiveMode();
+        setupTvFocus();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        setupTvFocus();
     }
 
     @Override
@@ -21,7 +28,19 @@ public class MainActivity extends BridgeActivity {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
             setupImmersiveMode();
+            setupTvFocus();
         }
+    }
+
+    private void setupTvFocus() {
+        try {
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                android.webkit.WebView webView = getBridge().getWebView();
+                webView.setFocusable(true);
+                webView.setFocusableInTouchMode(true);
+                webView.requestFocus();
+            }
+        } catch (Exception ignored) {}
     }
 
     private void setupImmersiveMode() {

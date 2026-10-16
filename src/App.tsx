@@ -1,5 +1,5 @@
-import { lazy, Suspense, useState } from 'react'
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { lazy, Suspense, useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import Navbar from '@/components/layout/Navbar'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -37,8 +37,47 @@ const PageFallback = () => (
 
 const AnimatedRoutes = () => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { tvMode } = useAppStore()
   useSpatialNavigation(tvMode || isTVDevice(), location.pathname)
+
+  // Tratamento universal do botao Voltar do controle remoto e do Android
+  useEffect(() => {
+    let removeListener: (() => void) | null = null
+    import('@capacitor/app')
+      .then(({ App: CapApp }) => {
+        const handle = CapApp.addListener('backButton', ({ canGoBack }) => {
+          if (location.pathname === '/') {
+            CapApp.exitApp()
+          } else if (canGoBack) {
+            navigate(-1)
+          } else {
+            navigate('/')
+          }
+        })
+        handle.then((h) => {
+          removeListener = () => h.remove()
+        })
+      })
+      .catch(() => {})
+
+    const handleWebBackKey = (e: KeyboardEvent) => {
+      // Teclas Voltar / Escape de controle remoto ou teclado
+      if (e.key === 'Escape' || e.key === 'GoBack' || e.keyCode === 27 || e.keyCode === 4) {
+        if (location.pathname !== '/') {
+          e.preventDefault()
+          navigate(-1)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleWebBackKey)
+
+    return () => {
+      removeListener?.()
+      window.removeEventListener('keydown', handleWebBackKey)
+    }
+  }, [location.pathname, navigate])
+
   return (
     <Suspense fallback={<PageFallback />}>
       <AnimatePresence mode="wait">
