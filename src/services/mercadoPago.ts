@@ -6,6 +6,7 @@ export interface VipPlan {
   days: number
   price: number
   priceLabel: string
+  originalPriceLabel?: string
   title: string
   popular?: boolean
   badge?: string
@@ -19,40 +20,45 @@ export const VIP_PLANS: VipPlan[] = [
     days: 30,
     price: 11.0,
     priceLabel: 'R$ 11,00',
+    originalPriceLabel: 'R$ 18,90',
     title: '30 Dias (1 Mês)',
+    badge: 'Mais em Conta',
     description: 'Acesso completo a filmes, séries e todos os canais de TV ao vivo',
     monthlyEquivalent: 'R$ 11,00/mês',
   },
   {
     id: '60',
     days: 60,
-    price: 20.0,
-    priceLabel: 'R$ 20,00',
+    price: 19.9,
+    priceLabel: 'R$ 19,90',
+    originalPriceLabel: 'R$ 34,90',
     title: '60 Dias (2 Meses)',
-    badge: 'Economia',
-    description: 'Dois meses de entretenimento sem interrupções com economia',
-    monthlyEquivalent: 'R$ 10,00/mês',
+    badge: 'Super Oferta',
+    description: 'Dois meses de entretenimento sem travamentos com economia real',
+    monthlyEquivalent: 'R$ 9,95/mês',
   },
   {
     id: '90',
     days: 90,
-    price: 29.9,
-    priceLabel: 'R$ 29,90',
+    price: 27.9,
+    priceLabel: 'R$ 27,90',
+    originalPriceLabel: 'R$ 49,90',
     title: '90 Dias (3 Meses)',
     popular: true,
-    badge: 'Mais Popular',
+    badge: 'Mais Vendido',
     description: 'Três meses de maratona para toda a família em altíssima resolução',
-    monthlyEquivalent: 'R$ 9,96/mês',
+    monthlyEquivalent: 'R$ 9,30/mês',
   },
   {
     id: '365',
     days: 365,
-    price: 99.0,
-    priceLabel: 'R$ 99,00',
+    price: 89.0,
+    priceLabel: 'R$ 89,00',
+    originalPriceLabel: 'R$ 149,90',
     title: '1 Ano (12 Meses)',
-    badge: 'Super Desconto',
-    description: 'O melhor custo-benefício anual do mercado!',
-    monthlyEquivalent: 'R$ 8,25/mês',
+    badge: 'Melhor Valor',
+    description: 'O melhor plano do Brasil: menos de R$ 7,42 por mês!',
+    monthlyEquivalent: 'R$ 7,41/mês',
   },
 ]
 
