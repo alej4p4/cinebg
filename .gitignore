@@ -42,3 +42,4 @@ android/cinebg-release.jks
 
 # Local scratch files
 resultado.txt
+*.apk
