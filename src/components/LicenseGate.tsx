@@ -13,7 +13,6 @@ import {
   Tv,
   CheckCircle2,
   ExternalLink,
-  Settings,
   Flame,
 } from 'lucide-react'
 import { useLicense } from '@/hooks/useLicense'
@@ -23,8 +22,6 @@ import {
   DEFAULT_PIX_KEY,
   createMercadoPagoPix,
   checkMercadoPagoStatus,
-  getMercadoPagoToken,
-  setMercadoPagoToken,
   CreatePixPaymentResult,
 } from '@/services/mercadoPago'
 import Focusable from '@/components/tv/Focusable'
@@ -52,9 +49,6 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
   const [manualCode, setManualCode] = useState('')
   const [activated, setActivated] = useState(false)
   const [checkingStatus, setCheckingStatus] = useState(false)
-  const [showConfig, setShowConfig] = useState(false)
-  const [tokenInput, setTokenInput] = useState('')
-  const [tokenSaved, setTokenSaved] = useState(false)
   const [showManualSection, setShowManualSection] = useState(false)
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
@@ -67,11 +61,6 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
       if (pollingRef.current) clearInterval(pollingRef.current)
     }
   }, [])
-
-  // Inicializa o valor do token atual nas configs
-  useEffect(() => {
-    setTokenInput(getMercadoPagoToken())
-  }, [showConfig])
 
   // Polling automático no Mercado Pago
   const startPolling = useCallback(
@@ -156,15 +145,6 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
     setTimeout(() => {
       if (onClose) onClose()
     }, 2500)
-  }
-
-  const handleSaveToken = () => {
-    setMercadoPagoToken(tokenInput)
-    setTokenSaved(true)
-    setTimeout(() => {
-      setTokenSaved(false)
-      setShowConfig(false)
-    }, 1500)
   }
 
   if (activated) {
@@ -345,49 +325,7 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
               </p>
             </div>
           </div>
-
-          <button
-            onClick={() => setShowConfig(!showConfig)}
-            title="Configurações de Pagamento"
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
         </div>
-
-        {/* Painel Configuração Mercado Pago (Opcional para o dono/admin) */}
-        <AnimatePresence>
-          {showConfig && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="bg-black/40 border border-white/10 rounded-xl p-3.5 mb-4 text-xs overflow-hidden"
-            >
-              <p className="text-amber-300 font-semibold mb-1">
-                ⚙️ Configurar Access Token do Mercado Pago
-              </p>
-              <p className="text-white/50 mb-2">
-                Insira o token de produção do Mercado Pago (<code>APP_USR-...</code>) para gerar Pix dinâmico com auto-liberação.
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value)}
-                  placeholder="APP_USR-0000000000000000-000000-..."
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-amber-400/50"
-                />
-                <button
-                  onClick={handleSaveToken}
-                  className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-lg transition-colors"
-                >
-                  {tokenSaved ? 'Salvo!' : 'Salvar'}
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {!pixData ? (
           <div className="text-center py-4">

@@ -75,7 +75,7 @@ export const getMercadoPagoToken = (): string => {
     return envToken.trim()
   }
 
-  return 'APP_USR-4070043112593139-101616-f774f91a14373f21ea773250ed02767f-1195452908'
+  return 'APP_USR-863f7d8e-e6a8-4e19-8fe6-1f7aff0d9a9d'
 }
 
 export const setMercadoPagoToken = (token: string): void => {
