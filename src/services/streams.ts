@@ -1,4 +1,4 @@
-import type { Language, AudioOption } from '@/store/useAppStore'
+﻿import type { Language, AudioOption } from '@/store/useAppStore'
 
 // =========================================================================
 // MOTOR DE STREAMING NATIVO CINEBG (ESTILO YUCINE - ZERO PARKLOGIC / ZERO ADS)
@@ -122,15 +122,15 @@ export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'd
   return sequence[currentIndex + 1]
 }
 
-// O espelho inicial sempre começa no MegaEmbed para extração direta de fontes nativas (MP4/HLS) sem anúncios.
-export const getInitialMirrorForAudio = (_audio: AudioOption = 'dub'): string => {
-  return 'megaembed'
+// O espelho inicial respeita o áudio: Dublado -> MegaEmbed (PT); senão -> VidSrc (legenda PT).
+export const getInitialMirrorForAudio = (audio: AudioOption = 'dub'): string => {
+  return audio === 'dub' ? 'megaembed' : 'vidsrc-sh'
 }
 
 // Indica se o espelho deve ser renderizado dentro de um iframe com `sandbox`.
 export const isMirrorSandboxed = (mirrorId: string): boolean => {
   const mirror = MIRRORS.find((m) => m.id === mirrorId)
-  return mirror ? mirror.sandboxed : false
+  return mirror ? mirror.sandboxed : true
 }
 
 export const buildMovieUrl = (
@@ -185,60 +185,35 @@ export const buildMegaEmbedUrl = (
     ? `${MEGAEMBED_EMBED_BASE}/${tmdbId}`
     : `${MEGAEMBED_EMBED_BASE}/${tmdbId}/${season}/${episode}`
 
-// Devolve as fontes diretas do MegaEmbed, utilizando proxy local no dev para evitar bloqueios de CORS/adblock
+// Devolve a URL do MP4 dublado em PT-BR do MegaEmbed, ou null se não houver.
 const fetchMegaEmbedSources = async (
   tmdbId: number,
   mediaType: 'movie' | 'tv',
   season = 1,
   episode = 1
 ): Promise<MegaEmbedSource[]> => {
-  const targetPath =
-    mediaType === 'movie' ? `${tmdbId}` : `${tmdbId}/${season}/${episode}`
+  try {
+    const res = await fetch(buildMegaEmbedUrl(tmdbId, mediaType, season, episode), {
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+    })
+    if (!res.ok) return []
 
-  const urlsToTry = [
-    typeof window !== 'undefined' && window.location.hostname === 'localhost'
-      ? `/api/mgeb/embed/${targetPath}`
-      : null,
-    `https://mgeb.site/embed/${targetPath}`,
-  ].filter(Boolean) as string[]
+    const html = await res.text()
+    const match = html.match(/var sources = (\[[\s\S]*?\]);/)
+    if (!match) return []
 
-  for (const url of urlsToTry) {
-    try {
-      const res = await fetch(url, {
-        credentials: 'omit',
-        referrerPolicy: 'no-referrer',
-      })
-      if (!res.ok) continue
-
-      const html = await res.text()
-      const match = html.match(/var sources = (\[[\s\S]*?\]);/)
-      if (!match) continue
-
-      const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed
-      }
-    } catch {
-      // Tenta a próxima URL disponível
-    }
+    return JSON.parse(match[1]) as MegaEmbedSource[]
+  } catch {
+    return []
   }
-
-  return []
-}
-
-// Normaliza URLs de CDN para HTTPS e remove portas desnecessárias
-const formatDirectStreamUrl = (url: string | null): string | null => {
-  if (!url) return null
-  if (url.startsWith('http://www-fontedecanais-live.')) {
-    return url.replace('http://', 'https://').replace(':80/', '/')
-  }
-  return url
 }
 
 export interface MegaEmbedResolved {
   // MP4 dublado em PT-BR (CDN fontedecanais-live).
   dubbedMp4: string | null
-  // Stream HLS (.m3u8) nativo compatível com hls.js.
+  // HLS proxyado pelo mgeb.site/includes/hls.php, com CORS `*` no master,
+  // na variante e em cada segmento, então toca nativamente com hls.js.
   hlsProxy: string | null
 }
 
@@ -254,19 +229,14 @@ export const resolveMegaEmbed = async (
     (source) =>
       typeof source.file === 'string' && source.file.includes(DUBBED_SOURCE_HOST_HINT)
   )
-
-  // Encontra o melhor stream HLS (.m3u8) disponível para reprodução nativa
-  const hls = sources.find(
+  const proxied = sources.find(
     (source) =>
-      typeof source.file === 'string' &&
-      (source.file.includes('.m3u8') ||
-       source.file.includes('/includes/hls.php') ||
-       source.type === 'hls')
+      typeof source.file === 'string' && source.file.includes('/includes/hls.php')
   )
 
   return {
-    dubbedMp4: formatDirectStreamUrl(dubbed?.file ?? null),
-    hlsProxy: hls?.file ?? null,
+    dubbedMp4: dubbed?.file ?? null,
+    hlsProxy: proxied?.file ?? null,
   }
 }
 
