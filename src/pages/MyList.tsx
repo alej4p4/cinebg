@@ -19,7 +19,7 @@ const MyList = () => {
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
         <div className="flex items-center gap-3 mb-8">
           <List className="h-7 w-7 text-accent-red" />
-          <h1 className="font-display font-black text-2xl md:text-3xl text-white">Minha Lista</h1>
+          <h1 className="font-display font-black text-2xl md:text-3xl text-white">Lista</h1>
           {favorites.length > 0 && (
             <span className="ml-1 text-sm text-white/40 font-medium">
               {favorites.length} {favorites.length === 1 ? 'título' : 'títulos'}

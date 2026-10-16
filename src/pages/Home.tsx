@@ -158,7 +158,7 @@ const Home = () => {
           ) : (
             <>
               {favoriteItems.length > 0 && (
-                <Carousel title="Minha Lista" emoji="❤️" items={favoriteItems} />
+                <Carousel title="Lista" emoji="❤️" items={favoriteItems} />
               )}
 
               {top10.length > 0 && (
