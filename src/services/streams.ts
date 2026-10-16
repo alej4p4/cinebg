@@ -37,7 +37,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🇧🇷',
     quality: 'FHD 1080p',
     type: 'dubbed_br',
-    sandboxed: true,
+    sandboxed: false,
     getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://mgeb.site/embed/${tmdbId}/${season}/${episode}`,
@@ -48,7 +48,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '⚡',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: true,
+    sandboxed: false,
     getMovieUrl: (tmdbId) => `https://vidsrc.sh/embed/movie?tmdb=${tmdbId}&ds_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://vidsrc.sh/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}&ds_lang=pt`,
@@ -59,7 +59,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🌐',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: true,
+    sandboxed: false,
     getMovieUrl: (tmdbId) => `https://vidsrc.io/embed/movie/${tmdbId}?ds_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://vidsrc.io/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
@@ -70,7 +70,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🍿',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: true,
+    sandboxed: false,
     getMovieUrl: (tmdbId) => `https://vsembed.ru/embed/movie/${tmdbId}?ds_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://vsembed.ru/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
@@ -81,7 +81,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🚀',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: true,
+    sandboxed: false,
     getMovieUrl: (tmdbId, audioInput) => {
       const audio = normalizeAudio(audioInput)
       const base = `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981`
@@ -99,7 +99,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🇧🇷',
     quality: 'FHD 1080p',
     type: 'dubbed_br',
-    sandboxed: true,
+    sandboxed: false,
     getMovieUrl: (tmdbId) => `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`,
@@ -130,7 +130,7 @@ export const getInitialMirrorForAudio = (audio: AudioOption = 'dub'): string => 
 // Indica se o espelho deve ser renderizado dentro de um iframe com `sandbox`.
 export const isMirrorSandboxed = (mirrorId: string): boolean => {
   const mirror = MIRRORS.find((m) => m.id === mirrorId)
-  return mirror ? mirror.sandboxed : true
+  return mirror ? mirror.sandboxed : false
 }
 
 export const buildMovieUrl = (
