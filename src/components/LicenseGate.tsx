@@ -265,7 +265,7 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
                   setSelectedPlanIndex(i)
                   setPixData(null)
                 }}
-                className={`w-full relative p-3.5 rounded-2xl border text-center transition-all duration-200 flex flex-col justify-between ${
+                className={`w-full relative pt-5 pb-3 px-2 sm:px-3 rounded-2xl border text-center transition-all duration-200 flex flex-col justify-between ${
                   isSelected
                     ? 'bg-gradient-to-b from-amber-500/20 to-red-500/20 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.3)] scale-[1.02]'
                     : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
@@ -273,18 +273,18 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
               >
                 {p.badge && (
                   <span
-                    className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    className={`absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider whitespace-nowrap shadow-md z-10 ${
                       p.popular
-                        ? 'bg-amber-400 text-black shadow-md'
-                        : 'bg-emerald-500 text-white'
+                        ? 'bg-amber-400 text-black shadow-amber-500/30'
+                        : 'bg-emerald-500 text-white shadow-emerald-500/30'
                     }`}
                   >
                     {p.badge}
                   </span>
                 )}
 
-                <div className="pt-1">
-                  <p className="text-white/70 text-xs font-semibold">{p.title}</p>
+                <div className="pt-1.5">
+                  <p className="text-white/80 text-xs font-semibold leading-tight">{p.title}</p>
                   {p.originalPriceLabel && (
                     <p className="text-white/40 text-[11px] line-through mt-0.5">
                       {p.originalPriceLabel}

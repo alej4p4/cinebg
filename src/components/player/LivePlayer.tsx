@@ -55,72 +55,65 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
       }
     }
 
-    // Safari / iOS reproduz HLS nativamente.
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = src
-      video.play().catch(() => {})
-      const onErr = () => goNext()
-      video.addEventListener('error', onErr)
-      return () => {
-        cancelled = true
-        video.removeEventListener('error', onErr)
-        video.removeAttribute('src')
-      }
-    }
-
     void import('hls.js').then((mod) => {
       if (cancelled) return
       const Hls = mod.default
-      if (!Hls.isSupported()) {
-        setError(true)
-        return
-      }
 
-      const hls = new Hls({
-        enableWorker: true,
-        liveDurationInfinity: true,
-        manifestLoadingTimeOut: 8000,
-        manifestLoadingMaxRetry: 2,
-        levelLoadingTimeOut: 8000,
-        levelLoadingMaxRetry: 2,
-        fragLoadingTimeOut: 10000,
-        fragLoadingMaxRetry: 2,
-      })
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          liveDurationInfinity: true,
+          manifestLoadingTimeOut: 10000,
+          manifestLoadingMaxRetry: 3,
+          levelLoadingTimeOut: 10000,
+          levelLoadingMaxRetry: 3,
+          fragLoadingTimeOut: 12000,
+          fragLoadingMaxRetry: 3,
+        })
 
-      hlsInstance = hls
-      hls.loadSource(src)
-      hls.attachMedia(video)
+        hlsInstance = hls
+        hls.loadSource(src)
+        hls.attachMedia(video)
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        if (!cancelled) {
-          video.play().catch(() => {})
-          setLoaded(true)
-        }
-      })
-
-      hls.on(Hls.Events.FRAG_LOADED, () => {
-        if (!cancelled) {
-          setLoaded(true)
-        }
-      })
-
-      hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
-        if (cancelled) return
-        const payload = data as { fatal?: boolean; type?: string }
-        if (!payload.fatal) return
-
-        if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
-          try {
-            hls.recoverMediaError()
-            return
-          } catch {
-            /* prossegue para o próximo sinal */
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (!cancelled) {
+            video.play().catch(() => {})
+            setLoaded(true)
           }
-        }
+        })
 
-        hls.destroy()
-        goNext()
-      })
+        hls.on(Hls.Events.FRAG_LOADED, () => {
+          if (!cancelled) {
+            setLoaded(true)
+          }
+        })
+
+        hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
+          if (cancelled) return
+          const payload = data as { fatal?: boolean; type?: string }
+          if (!payload.fatal) return
+
+          if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            try {
+              hls.recoverMediaError()
+              return
+            } catch {
+              /* prossegue para o próximo sinal */
+            }
+          }
+
+          hls.destroy()
+          goNext()
+        })
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Safari / iOS reproduz HLS nativamente quando Hls.js não é suportado
+        video.src = src
+        video.play().catch(() => {})
+        const onErr = () => goNext()
+        video.addEventListener('error', onErr)
+      } else {
+        setError(true)
+      }
     })
 
     return () => {
