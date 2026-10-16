@@ -14,6 +14,7 @@ import {
   Unlock,
   Layers,
   FastForward,
+  Expand,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -105,6 +106,7 @@ const StreamPlayer = ({
   const [showLockPrompt, setShowLockPrompt] = useState(false)
   const [showSkipIntro, setShowSkipIntro] = useState(false)
   const [episodesDrawerOpen, setEpisodesDrawerOpen] = useState(false)
+  const [fitMode, setFitMode] = useState<'contain' | 'cover'>('cover')
   const hasSkippedIntroRef = useRef(false)
   const lockPromptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -411,6 +413,14 @@ const StreamPlayer = ({
     }
   }
 
+  const toggleFitMode = () => {
+    setFitMode((prev) => {
+      const next = prev === 'contain' ? 'cover' : 'contain'
+      showFeedback(next === 'cover' ? 'Preencher Tela' : 'Ajustar (Original)')
+      return next
+    })
+  }
+
   const showFeedback = (text: string) => {
     setFeedback(text)
     if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
@@ -597,6 +607,11 @@ const StreamPlayer = ({
         e.preventDefault()
         toggleLock()
         break
+      case 'a':
+      case 'A':
+        e.preventDefault()
+        toggleFitMode()
+        break
       case 'Escape':
         if (episodesDrawerOpen) {
           setEpisodesDrawerOpen(false)
@@ -694,7 +709,7 @@ const StreamPlayer = ({
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onDoubleClick={handleVideoDoubleClick}
-        className="relative bg-black overflow-hidden rounded-b-xl aspect-video outline-none"
+        className="relative bg-black overflow-hidden rounded-b-xl aspect-video [&:fullscreen]:aspect-auto [&:fullscreen]:w-screen [&:fullscreen]:h-screen [&:fullscreen]:rounded-none outline-none"
       >
         {feedback && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
@@ -899,7 +914,7 @@ const StreamPlayer = ({
             controls
             autoPlay
             playsInline
-            className="w-full h-full bg-black"
+            className={`w-full h-full bg-black transition-all duration-200 ${fitMode === 'cover' ? 'object-cover' : 'object-contain'}`}
             onLoadedData={handleDirectMediaReady}
             onLoadedMetadata={handleLoadedMetadata}
             onCanPlay={handleDirectMediaReady}
@@ -922,7 +937,21 @@ const StreamPlayer = ({
               <span className="hidden sm:inline">Episódios</span>
             </button>
           )}
-          {/* Velocidade de reproduÃ§Ã£o */}
+          {/* Alternar Preenchimento de Tela (Estilo YuCine: Ajustar vs Preencher) */}
+          {directSrc && (
+            <button
+              onClick={toggleFitMode}
+              className={`p-2 rounded-lg text-xs font-bold transition-colors backdrop-blur-sm ${
+                fitMode === 'cover'
+                  ? 'bg-accent-red text-white shadow-md shadow-red-900/40'
+                  : 'bg-black/70 hover:bg-black/90 text-white/70 hover:text-white'
+              }`}
+              title={fitMode === 'cover' ? 'Ajustar para proporção original' : 'Preencher tela inteira'}
+            >
+              <Expand className="h-4 w-4" />
+            </button>
+          )}
+          {/* Velocidade de reprodução */}
           {directSrc && (
             <div className="relative">
               <button
@@ -931,9 +960,9 @@ const StreamPlayer = ({
                   setSubsOpen(false)
                 }}
                 className="px-2.5 py-2 bg-black/70 hover:bg-black/90 rounded-lg text-white text-xs font-bold transition-colors backdrop-blur-sm"
-                title="Velocidade de reproduÃ§Ã£o"
+                title="Velocidade de reprodução"
               >
-                {speed}Ã—
+                {speed}x
               </button>
               {speedOpen && (
                 <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 flex flex-col min-w-[72px]">
