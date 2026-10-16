@@ -127,7 +127,7 @@ function App() {
       <AnimatePresence>
         {showSplash && (
           <SplashScreen
-            version="1.2.3"
+            version="1.2.4"
             onComplete={handleSplashComplete}
           />
         )}
