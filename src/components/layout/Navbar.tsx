@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { to: '/movies', label: 'Filmes', icon: Film },
   { to: '/series', label: 'Séries', icon: Tv },
   { to: '/anime', label: 'Anime', icon: Star },
-  { to: '/my-list', label: 'Minha Lista', icon: List },
+  { to: '/my-list', label: 'Lista', icon: List },
   { to: '/live', label: 'TV', icon: Radio },
 ]
 
