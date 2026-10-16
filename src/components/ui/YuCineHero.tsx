@@ -46,6 +46,17 @@ const YuCineHero = ({
     return () => clearInterval(timer)
   }, [carouselItems.length])
 
+  // Preload do próximo slide em background para transição instantânea sem engasgos na TV
+  useEffect(() => {
+    if (carouselItems.length <= 1) return
+    const nextIdx = (currentIndex + 1) % carouselItems.length
+    const nextItem = carouselItems[nextIdx]
+    if (nextItem?.backdropPath) {
+      const img = new Image()
+      img.src = getBackdropUrl(nextItem.backdropPath, 'w1280')
+    }
+  }, [currentIndex, carouselItems])
+
   if (loading || !currentItem) {
     return (
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8 pt-20 pb-4">
@@ -60,9 +71,9 @@ const YuCineHero = ({
     )
   }
 
-  const backdropUrl = getBackdropUrl(currentItem.backdropPath, 'original')
-  const side1Poster = getPosterUrl(sideItem1?.posterPath, 'w780')
-  const side2Poster = getPosterUrl(sideItem2?.posterPath, 'w780')
+  const backdropUrl = getBackdropUrl(currentItem.backdropPath, 'w1280')
+  const side1Poster = getPosterUrl(sideItem1?.posterPath, 'w500')
+  const side2Poster = getPosterUrl(sideItem2?.posterPath, 'w500')
 
   return (
     <section className="max-w-screen-2xl mx-auto px-4 md:px-8 pt-20 pb-4 select-none">
@@ -83,11 +94,12 @@ const YuCineHero = ({
                   key={currentItem.id}
                   src={backdropUrl}
                   alt={currentItem.title}
-                  initial={{ opacity: 0.2, scale: 1.03 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0.2 }}
-                  transition={{ duration: 0.6 }}
+                  initial={{ opacity: 0.35 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0.35 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
                   className="w-full h-full object-cover"
+                  style={{ transform: 'translateZ(0)' }}
                 />
               </AnimatePresence>
 

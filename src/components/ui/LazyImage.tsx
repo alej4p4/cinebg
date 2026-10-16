@@ -54,25 +54,18 @@ export const LazyImage = ({
         )}
       </AnimatePresence>
 
-      {/* Imagem com desfoque progressivo (Blur-up) e transição fluida */}
-      <motion.img
+      {/* Imagem com transição fluida acelerada por GPU sem filtro de desfoque pesado */}
+      <img
         src={src}
         alt={alt}
         loading="lazy"
         decoding="async"
         onLoad={() => setIsLoaded(true)}
         onError={() => setHasError(true)}
-        initial={{ opacity: 0, filter: 'blur(8px)', scale: 1.03 }}
-        animate={{
-          opacity: isLoaded ? 1 : 0,
-          filter: isLoaded ? 'blur(0px)' : 'blur(8px)',
-          scale: isLoaded ? 1 : 1.03,
-        }}
-        transition={{
-          duration: 0.38,
-          ease: FLUID_EASE,
-        }}
-        className={`w-full h-full object-cover select-none ${className}`}
+        className={`w-full h-full object-cover select-none transition-opacity duration-250 ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        } ${className}`}
+        style={{ transform: 'translateZ(0)' }}
       />
     </div>
   )

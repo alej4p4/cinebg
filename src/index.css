@@ -236,14 +236,17 @@ body {
   display: none !important;
 }
 
-/* ===== SCROLLABLE CAROUSEL ===== */
+/* ===== SCROLLABLE CAROUSEL (GPU ACCELERATED) ===== */
 .carousel-container {
   display: flex;
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  will-change: scroll-position;
+  contain: content;
 }
 
 .carousel-container > * {

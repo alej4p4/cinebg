@@ -69,17 +69,10 @@ const Carousel = ({ title, items, loading, emoji, showRanking, getProgress }: Ca
         {loading ? (
           Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
-          <motion.div
-            variants={STAGGER_CONTAINER}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-            className="flex gap-3"
-          >
+          <div className="flex gap-3" style={{ transform: 'translateZ(0)' }}>
             {items.map((item, i) => (
-              <motion.div
+              <div
                 key={item.id}
-                variants={STAGGER_ITEM}
                 className="w-40 md:w-44 flex-shrink-0"
               >
                 <MovieCard
@@ -88,9 +81,9 @@ const Carousel = ({ title, items, loading, emoji, showRanking, getProgress }: Ca
                   progress={getProgress?.(item)}
                   rank={showRanking ? i + 1 : undefined}
                 />
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
     </motion.section>

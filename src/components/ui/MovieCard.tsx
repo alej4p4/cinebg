@@ -79,22 +79,17 @@ const MovieCard = ({ item, index = 0, progress, rank }: MovieCardProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        duration: 0.32,
-        delay: Math.min(index * 0.035, 0.4),
-        ease: FLUID_EASE,
-      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
       whileHover={{
-        y: -6,
-        scale: 1.035,
-        transition: SPRING_SNAPPY,
+        y: -4,
+        scale: 1.025,
       }}
       whileTap={{
-        scale: 0.97,
-        transition: { duration: 0.1 },
+        scale: 0.98,
       }}
+      style={{ transform: 'translateZ(0)' }}
       ref={ref}
       className={`group cursor-pointer relative select-none ${
         focused ? 'tv-focused' : ''
