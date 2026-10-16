@@ -39,6 +39,7 @@ public class MainActivity extends BridgeActivity {
                 webView.setFocusable(true);
                 webView.setFocusableInTouchMode(true);
                 webView.requestFocus();
+                webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             }
         } catch (Exception ignored) {}
     }
