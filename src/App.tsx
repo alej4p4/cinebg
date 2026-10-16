@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from 'react'
+import { lazy, Suspense, useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import Navbar from '@/components/layout/Navbar'
@@ -117,18 +117,22 @@ function App() {
   const { isLicensed, isTrial, loading } = useLicense()
   const [showSplash, setShowSplash] = useState(true)
 
+  const handleSplashComplete = useCallback(() => {
+    setShowSplash(false)
+  }, [])
+
   return (
     <>
       <AnimatePresence>
         {showSplash && (
           <SplashScreen
             version="1.2.0"
-            onComplete={() => setShowSplash(false)}
+            onComplete={handleSplashComplete}
           />
         )}
       </AnimatePresence>
 
-      {loading ? (
+      {loading && showSplash ? null : loading ? (
         <div className="min-h-screen bg-bg-primary flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-white/10 border-t-accent-red rounded-full animate-spin" />
         </div>
