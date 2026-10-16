@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertCircle, Maximize2, RefreshCw, Volume2, VolumeX } from 'lucide-react'
+import { AlertCircle, Maximize2, RefreshCw, Volume2, VolumeX, Radio } from 'lucide-react'
 import type { LiveChannel } from '@/services/liveChannels'
 import { categoryLabel, countryFlag } from '@/services/liveChannels'
 
@@ -15,6 +15,7 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
   const [muted, setMuted] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<string>('Sintonizando sinal...')
 
   // Reinicia o player quando o canal muda.
   useEffect(() => {
@@ -22,10 +23,10 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
     setMountKey(0)
     setLoaded(false)
     setError(false)
+    setStatusMessage('Sintonizando sinal...')
   }, [channel.id])
 
-  // Anexa o stream HLS atual. Em falha fatal, alterna silenciosamente para a
-  // próxima fonte do canal; se a lista esgotar, exibe o aviso de erro.
+  // Anexa o stream HLS atual com fallback automático e auto-recuperação.
   useEffect(() => {
     const video = videoRef.current
     const src = channel.sources[sourceIndex]
@@ -36,6 +37,11 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
 
     setLoaded(false)
     setError(false)
+    setStatusMessage(
+      channel.sources.length > 1 && sourceIndex > 0
+        ? `Alternando para Sinal ${sourceIndex + 1}...`
+        : 'Sintonizando sinal...'
+    )
 
     let cancelled = false
     let hlsInstance: { destroy: () => void } | null = null
@@ -49,7 +55,7 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
       }
     }
 
-    // Safari/iOS reproduz HLS nativamente.
+    // Safari / iOS reproduz HLS nativamente.
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = src
       video.play().catch(() => {})
@@ -70,25 +76,42 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
         return
       }
 
-      const hls = new Hls({ enableWorker: true, liveDurationInfinity: true })
+      const hls = new Hls({
+        enableWorker: true,
+        liveDurationInfinity: true,
+        manifestLoadingTimeOut: 8000,
+        manifestLoadingMaxRetry: 2,
+        levelLoadingTimeOut: 8000,
+        levelLoadingMaxRetry: 2,
+        fragLoadingTimeOut: 10000,
+        fragLoadingMaxRetry: 2,
+      })
+
       hlsInstance = hls
       hls.loadSource(src)
       hls.attachMedia(video)
+
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        if (!cancelled) video.play().catch(() => {})
+        if (!cancelled) {
+          video.play().catch(() => {})
+          setLoaded(true)
+        }
       })
+
       hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
         if (cancelled) return
         const payload = data as { fatal?: boolean; type?: string }
         if (!payload.fatal) return
+
         if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
           try {
             hls.recoverMediaError()
             return
           } catch {
-            /* segue para a proxima fonte */
+            /* prossegue para o próximo sinal */
           }
         }
+
         hls.destroy()
         goNext()
       })
@@ -98,11 +121,22 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
       cancelled = true
       if (hlsInstance) hlsInstance.destroy()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channel.id, sourceIndex, mountKey])
+  }, [channel.id, channel.sources, sourceIndex, mountKey])
 
   const reload = () => {
     setSourceIndex(0)
+    setLoaded(false)
+    setError(false)
+    setStatusMessage('Sintonizando sinal...')
+    setMountKey((k) => k + 1)
+  }
+
+  const selectSource = (index: number) => {
+    if (index === sourceIndex) {
+      reload()
+      return
+    }
+    setSourceIndex(index)
     setLoaded(false)
     setError(false)
     setMountKey((k) => k + 1)
@@ -142,13 +176,36 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
             </p>
           </div>
         </div>
-        <button
-          onClick={reload}
-          className="p-1.5 text-white/40 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex-shrink-0"
-          title="Recarregar canal"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </button>
+
+        {/* Seleção de sinais / recarga */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {channel.sources.length > 1 && (
+            <div className="flex items-center gap-1 mr-1">
+              <Radio className="h-3.5 w-3.5 text-white/30 hidden sm:inline" />
+              {channel.sources.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => selectSource(idx)}
+                  className={`px-2 py-0.5 text-[11px] font-semibold rounded-md transition-colors ${
+                    sourceIndex === idx
+                      ? 'bg-accent-red text-white'
+                      : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                  }`}
+                  title={`Alternar para Sinal ${idx + 1}`}
+                >
+                  Sinal {idx + 1}
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={reload}
+            className="p-1.5 text-white/40 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex-shrink-0"
+            title="Recarregar canal"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Container do player */}
@@ -166,10 +223,10 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
                 className="h-12 max-w-[140px] object-contain opacity-60"
               />
             )}
-            <p className="text-white/70 text-sm font-semibold">Sintonizando canal...</p>
-            {channel.sources.length > 1 && sourceIndex > 0 && (
+            <p className="text-white/70 text-sm font-semibold">{statusMessage}</p>
+            {channel.sources.length > 1 && (
               <p className="text-white/30 text-xs">
-                Fonte alternativa {sourceIndex + 1}/{channel.sources.length}
+                Sinal {sourceIndex + 1} de {channel.sources.length}
               </p>
             )}
           </div>
@@ -181,10 +238,24 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
             <div>
               <p className="text-white font-bold text-lg">Canal indisponível</p>
               <p className="text-white/40 text-sm mt-1 max-w-sm">
-                Não foi possível sintonizar este canal agora. Ele pode estar fora do ar ou
-                bloqueado na sua região.
+                Não foi possível conectar a transmissão ao vivo agora. Experimente alternar para outro sinal ou tentar novamente.
               </p>
             </div>
+            
+            {channel.sources.length > 1 && (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {channel.sources.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => selectSource(idx)}
+                    className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold transition-colors"
+                  >
+                    Testar Sinal {idx + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <button
               onClick={reload}
               className="flex items-center gap-2 bg-accent-red text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-900/40"
