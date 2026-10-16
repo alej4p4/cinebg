@@ -115,6 +115,7 @@ function App() {
   useOrientationFullscreen()
   const { update, dismiss } = useAppUpdate()
   const { isLicensed, isTrial, loading } = useLicense()
+  const { vipModalOpen, setVipModalOpen } = useAppStore()
   const [showSplash, setShowSplash] = useState(true)
 
   const handleSplashComplete = useCallback(() => {
@@ -153,6 +154,9 @@ function App() {
             downloadUrl={update?.downloadUrl ?? ''}
             onDismiss={dismiss}
           />
+          {vipModalOpen && (
+            <LicenseGate isModal={true} onClose={() => setVipModalOpen(false)} />
+          )}
         </BrowserRouter>
       )}
     </>

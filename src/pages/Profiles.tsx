@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog } from 'lucide-react'
+import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode } from 'lucide-react'
 import { useAppStore, type UserProfile } from '@/store/useAppStore'
+import { useLicense } from '@/hooks/useLicense'
 import {
   checkForNewEpisodes,
   requestNotificationPermissionExplicit,
@@ -26,7 +27,10 @@ const Profiles = () => {
     setAudioOption,
     subtitleOption,
     setSubtitleOption,
+    setVipModalOpen,
   } = useAppStore()
+
+  const { isLicensed, isTrial, trialDaysLeft, licenseDaysLeft, license } = useLicense()
 
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState(EMOJIS[0])
@@ -81,6 +85,47 @@ const Profiles = () => {
               onRemove={() => removeProfile(profile.id)}
             />
           ))}
+        </div>
+
+        {/* Assinatura & Planos VIP */}
+        <div className="glass border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-red-500/5 to-transparent rounded-2xl p-5 mt-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 flex-shrink-0 shadow-lg shadow-amber-500/20">
+                <Crown className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-black text-white text-lg">Assinatura & Planos VIP</h2>
+                  <Sparkles className="h-4 w-4 text-amber-400" />
+                </div>
+                <p className="text-white/60 text-xs mt-0.5">
+                  {isLicensed ? (
+                    <span className="text-emerald-300 font-semibold">
+                      💎 Membro VIP Ativo ({licenseDaysLeft} {licenseDaysLeft === 1 ? 'dia restante' : 'dias restantes'}) • {license?.planName}
+                    </span>
+                  ) : isTrial ? (
+                    <span className="text-amber-300 font-semibold">
+                      ⚡ Período de Teste Grátis: {trialDaysLeft} {trialDaysLeft === 1 ? 'dia restante' : 'dias restantes'} (de 3 dias)
+                    </span>
+                  ) : (
+                    <span className="text-red-300 font-semibold">
+                      ⏳ Período Gratuito Encerrado. Assine para continuar.
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setVipModalOpen(true)}
+              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 self-stretch sm:self-auto justify-center"
+            >
+              <QrCode className="h-4 w-4" />
+              <span>{isLicensed ? 'Renovar / Estender VIP' : 'Ver Planos & Pagar via Pix'}</span>
+            </button>
+          </div>
         </div>
 
         <div className="glass rounded-xl p-5 mt-8">

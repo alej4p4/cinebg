@@ -2,7 +2,7 @@
   "0": "App.tsx",
   "1": "react",
   "2": "index.ts",
-  "3": "tmdb.ts",
+  "3": "LicenseGate.tsx",
   "4": "package.json",
   "5": "LiveTV.tsx",
   "6": "StreamPlayer.tsx",
@@ -29,5 +29,8 @@
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
   "29": "improvement.md",
-  "30": "find_yucine_urls.js"
+  "30": "scripts",
+  "31": "eslint.config.js",
+  "32": "vite.config.ts",
+  "33": "capacitor.config.ts"
 }

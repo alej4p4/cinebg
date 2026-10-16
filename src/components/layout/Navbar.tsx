@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, UserRound, Download, List, Settings } from 'lucide-react'
+import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, UserRound, Download, List, Settings, Crown } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
+import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
 
 import CineBGLogo from '@/components/ui/CineBGLogo'
@@ -24,7 +25,17 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const { profiles, activeProfileId, setActiveProfile, language, audioOption, setLanguage, setAudioOption } = useAppStore()
+  const {
+    profiles,
+    activeProfileId,
+    setActiveProfile,
+    language,
+    audioOption,
+    setLanguage,
+    setAudioOption,
+    setVipModalOpen,
+  } = useAppStore()
+  const { isTrial, isLicensed, trialDaysLeft, licenseDaysLeft } = useLicense()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? profiles[0]
 
@@ -137,6 +148,30 @@ const Navbar = () => {
           </Link>
         </Focusable>
 
+        {/* Botão VIP */}
+        <Focusable onEnterPress={() => setVipModalOpen(true)}>
+          <button
+            type="button"
+            onClick={() => setVipModalOpen(true)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+              isLicensed
+                ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-400/50 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.25)] hover:bg-amber-500/30'
+                : isTrial
+                ? 'bg-gradient-to-r from-amber-500/20 to-red-500/20 border border-amber-400/40 text-amber-200 hover:border-amber-400'
+                : 'bg-accent-red text-white hover:bg-red-600 shadow-md shadow-red-900/40'
+            }`}
+            title="Planos VIP CineBG"
+          >
+            <Crown className="h-3.5 w-3.5 text-amber-400" />
+            <span className="hidden sm:inline">
+              {isLicensed ? `VIP (${licenseDaysLeft}d)` : isTrial ? `Teste (${trialDaysLeft}d)` : 'Seja VIP'}
+            </span>
+            <span className="sm:hidden">
+              {isLicensed ? 'VIP' : 'Planos'}
+            </span>
+          </button>
+        </Focusable>
+
         {/* Perfil ativo */}
         <div className="relative">
           <Focusable onEnterPress={() => setProfileOpen((v) => !v)}>
@@ -202,6 +237,28 @@ const Navbar = () => {
                       </button>
                     </Focusable>
                   ))}
+
+                  {/* Assinatura VIP no menu de perfil */}
+                  <Focusable
+                    onEnterPress={() => {
+                      setProfileOpen(false)
+                      setVipModalOpen(true)
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        setProfileOpen(false)
+                        setVipModalOpen(true)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/20 transition-colors text-left my-1"
+                    >
+                      <Crown className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                      <span className="text-amber-300 text-xs font-bold truncate">
+                        {isLicensed ? `VIP Ativo (${licenseDaysLeft}d)` : isTrial ? `Teste Grátis (${trialDaysLeft}d)` : 'Seja Membro VIP'}
+                      </span>
+                    </button>
+                  </Focusable>
+
                   <Focusable
                     onEnterPress={() => {
                       setSettingsOpen(true)
@@ -325,6 +382,24 @@ const Navbar = () => {
             className="md:hidden navbar-blur border-t border-white/5"
           >
             <div className="px-4 py-3 flex flex-col gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false)
+                  setVipModalOpen(true)
+                }}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500/20 to-red-500/20 text-amber-300 border border-amber-400/30 mb-1"
+              >
+                <Crown className="h-4 w-4 text-amber-400" />
+                <span>
+                  {isLicensed
+                    ? `Membro VIP (${licenseDaysLeft} dias restantes)`
+                    : isTrial
+                    ? `Teste Grátis (${trialDaysLeft} dias restantes)`
+                    : 'Assinar Plano VIP (Mercado Pago Pix)'}
+                </span>
+              </button>
+
               {NAV_LINKS.map(({ to, label, icon: Icon }) => (
                 <Link
                   key={to}

@@ -98,6 +98,10 @@ interface AppState {
   addDownload: (item: DownloadItem) => void
   removeDownload: (id: number, season?: number, episode?: number) => void
   isDownloaded: (id: number, season?: number, episode?: number) => boolean
+
+  // VIP / Assinatura
+  vipModalOpen: boolean
+  setVipModalOpen: (open: boolean) => void
 }
 
 const dataFor = (state: Pick<AppState, 'dataByProfile' | 'activeProfileId'>): ProfileData =>
@@ -117,6 +121,9 @@ export const useAppStore = create<AppState>()(
       notificationsEnabled: false,
       tvMode: false,
       downloads: [],
+      vipModalOpen: false,
+
+      setVipModalOpen: (open) => set({ vipModalOpen: open }),
 
       setActiveProfile: (id) => {
         const state = get()
