@@ -1,4 +1,4 @@
-﻿import { motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import MovieCard from '@/components/ui/MovieCard'
 import { useAppStore } from '@/store/useAppStore'
@@ -36,7 +36,7 @@ const Favorites = () => {
           <h1 className="font-display font-black text-2xl md:text-3xl text-white">Favoritos</h1>
           {items.length > 0 && (
             <span className="ml-1 text-sm text-white/40 font-medium">
-              {items.length} {items.length === 1 ? 'tÃ­tulo' : 'tÃ­tulos'}
+              {items.length} {items.length === 1 ? 'título' : 'títulos'}
             </span>
           )}
         </div>        {items.length === 0 ? (
