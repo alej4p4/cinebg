@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792178521.7686152,
-    "seen": 1792179646.8837066,
-    "ast_hash": "9d78411c3dc434bf7fc5a77f2c34630c",
+    "mtime": 1792181393.4938707,
+    "seen": 1792181605.1417305,
+    "ast_hash": "06f46eb6ed5689acadcd756daef7912d",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792178298.8996327,
-    "seen": 1792179646.8837154,
+    "mtime": 1792181464.4752018,
+    "seen": 1792181605.1417463,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792178298.8996327,
-    "seen": 1792179646.8837378,
+    "mtime": 1792181464.4752018,
+    "seen": 1792181605.1417775,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -102,9 +102,9 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792179697.4449275,
-    "seen": 1792180104.9578722,
-    "ast_hash": "62850336dc17c8e96d61e693aaa100c7",
+    "mtime": 1792181401.8658893,
+    "seen": 1792181605.1418405,
+    "ast_hash": "b25e48b2e69dd4d42ebcfc8ea175a166",
     "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
@@ -114,8 +114,8 @@
     "semantic_hash": "8cbbe642bff0ba34f045ae149ace0df8"
   },
   "src/components/LicenseGate.tsx": {
-    "mtime": 1792180032.6363895,
-    "seen": 1792180104.9578867,
+    "mtime": 1792180155.5533185,
+    "seen": 1792181605.1418517,
     "ast_hash": "512022bf0ceaefeb1e6cef01f15094e3",
     "semantic_hash": ""
   },
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "src/services/mercadoPago.ts": {
-    "mtime": 1792180022.16433,
-    "seen": 1792180104.9582517,
-    "ast_hash": "661ffd8be8896e04ac70e0a76d26e339",
+    "mtime": 1792181360.9609225,
+    "seen": 1792181605.1421404,
+    "ast_hash": "5c9795cbb397a5411fb0d9e061d0e22c",
     "semantic_hash": ""
   },
   "android/app/src/main/res/drawable-xhdpi/banner.png": {

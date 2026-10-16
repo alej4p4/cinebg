@@ -5,7 +5,7 @@
   "3": "LicenseGate.tsx",
   "4": "package.json",
   "5": "LiveTV.tsx",
-  "6": "StreamPlayer.tsx",
+  "6": "react",
   "7": "notifications.ts",
   "8": "compilerOptions",
   "9": "dependencies",
@@ -28,9 +28,5 @@
   "26": "bug_fix.md",
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
-  "29": "improvement.md",
-  "30": "scripts",
-  "31": "eslint.config.js",
-  "32": "vite.config.ts",
-  "33": "capacitor.config.ts"
+  "29": "improvement.md"
 }
