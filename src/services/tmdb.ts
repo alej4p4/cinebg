@@ -172,6 +172,8 @@ export const discoverMovies = async (params: {
   year?: number
   sort?: string
   minRating?: number
+  withNetworks?: string | number
+  withWatchProviders?: string | number
 }): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/discover/movie', {
     page: params.page || 1,
@@ -179,6 +181,8 @@ export const discoverMovies = async (params: {
     primary_release_year: params.year,
     sort_by: params.sort || 'popularity.desc',
     'vote_average.gte': params.minRating,
+    with_watch_providers: params.withWatchProviders,
+    watch_region: params.withWatchProviders ? 'BR' : undefined,
   })
   return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
@@ -206,6 +210,8 @@ export const discoverShows = async (params: {
   sort?: string
   minRating?: number
   isAnime?: boolean
+  withNetworks?: string | number
+  withWatchProviders?: string | number
 }): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
     page: params.page || 1,
@@ -213,6 +219,9 @@ export const discoverShows = async (params: {
     first_air_date_year: params.year,
     sort_by: params.sort || 'popularity.desc',
     'vote_average.gte': params.minRating,
+    with_networks: params.withNetworks,
+    with_watch_providers: params.withWatchProviders,
+    watch_region: params.withWatchProviders ? 'BR' : undefined,
     with_keywords: params.isAnime ? '210024|287501' : undefined,
     with_original_language: params.isAnime ? 'ja' : undefined,
   })

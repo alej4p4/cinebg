@@ -693,6 +693,23 @@ const StreamPlayer = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {directSrc && (
+            <button
+              onClick={() => {
+                const next = fitMode === 'cover' ? 'contain' : 'cover'
+                setFitMode(next)
+                showFeedback(next === 'cover' ? 'Preencher Tela' : 'Ajustar (Original)')
+              }}
+              className={`p-1.5 transition-colors rounded-lg ${
+                fitMode === 'cover'
+                  ? 'text-accent-red bg-accent-red/10'
+                  : 'text-white/40 hover:text-white hover:bg-white/5'
+              }`}
+              title={fitMode === 'cover' ? 'Ajustar para proporção original' : 'Preencher tela inteira'}
+            >
+              <Expand className="h-4 w-4" />
+            </button>
+          )}
           <button
             onClick={handleManualRefresh}
             className="p-1.5 text-white/30 hover:text-white transition-colors rounded-lg hover:bg-white/5"

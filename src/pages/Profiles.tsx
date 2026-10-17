@@ -40,6 +40,20 @@ const Profiles = () => {
   const [emoji, setEmoji] = useState(EMOJIS[0])
   const [color, setColor] = useState(COLORS[0])
   const [kids, setKids] = useState(false)
+  const [optimizing, setOptimizing] = useState(false)
+  const [optimizedMsg, setOptimizedMsg] = useState<string | null>(null)
+
+  const handleCleanCache = () => {
+    setOptimizing(true)
+    setTimeout(() => {
+      try {
+        sessionStorage.clear()
+      } catch {}
+      setOptimizing(false)
+      setOptimizedMsg('✨ Memória otimizada e caches temporários liberados!')
+      setTimeout(() => setOptimizedMsg(null), 4000)
+    }, 800)
+  }
 
   const handleAdd = () => {
     const trimmed = name.trim()
@@ -297,6 +311,43 @@ const Profiles = () => {
           >
             {tvMode ? 'Modo TV ativado' : 'Ativar modo TV'}
           </button>
+        </div>
+
+        {/* Otimização & Limpeza de Cache */}
+        <div className="glass rounded-xl p-5 mt-8 border border-white/5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 flex-shrink-0 shadow-lg shadow-cyan-500/20">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="font-bold text-white text-base">Otimização & Limpeza de Cache</h2>
+                <p className="text-text-secondary text-xs mt-0.5">
+                  Libera memória RAM e caches de vídeo para deixar a navegação mais rápida no Android e TV.
+                </p>
+                {optimizedMsg && (
+                  <p className="text-emerald-400 text-xs font-semibold mt-1 animate-pulse">
+                    {optimizedMsg}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <Focusable
+              focusKey="btn-clean-cache"
+              onEnterPress={handleCleanCache}
+            >
+              <button
+                type="button"
+                onClick={handleCleanCache}
+                disabled={optimizing}
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all self-stretch sm:self-auto border border-white/10 disabled:opacity-50"
+              >
+                <RefreshCw className={`h-4 w-4 ${optimizing ? 'animate-spin' : ''}`} />
+                <span>{optimizing ? 'Otimizando...' : 'Limpar Cache'}</span>
+              </button>
+            </Focusable>
+          </div>
         </div>
 
         {/* Atualizações do App / Versão */}

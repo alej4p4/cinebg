@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search as SearchIcon, X, SlidersHorizontal } from 'lucide-react'
+import { Search as SearchIcon, X, SlidersHorizontal, Sparkles } from 'lucide-react'
 import MovieCard from '@/components/ui/MovieCard'
 import { SkeletonGrid } from '@/components/ui/SkeletonCard'
 import ErrorState from '@/components/ui/ErrorState'
@@ -10,6 +10,17 @@ import { MOVIE_GENRES, TV_GENRES, type MediaItem } from '@/types'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
 
 const ALL_GENRES = { ...MOVIE_GENRES, ...TV_GENRES }
+
+const POPULAR_SEARCH_TAGS = [
+  { label: '🔥 Em Alta Hoje', query: '2026' },
+  { label: '🎬 Ação & Aventura', query: 'Ação' },
+  { label: '🍿 Comédias', query: 'Comédia' },
+  { label: '👻 Terror', query: 'Terror' },
+  { label: '🦸 Heróis', query: 'Vingadores' },
+  { label: '🚀 Ficção Científica', query: 'Ficção' },
+  { label: '🃏 Animes', query: 'Anime' },
+  { label: '⭐ Clássicos', query: 'Clássico' },
+]
 
 const Search = () => {
   const [query, setQuery] = useState('')
@@ -175,11 +186,30 @@ const Search = () => {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            className="text-center py-24 text-white/30"
+            transition={{ duration: 0.3 }}
+            className="py-10 max-w-2xl mx-auto"
           >
-            <SearchIcon className="h-16 w-16 mx-auto mb-4 opacity-15" />
-            <p className="text-base font-medium">Digite para buscar conteúdo</p>
+            <div className="flex items-center gap-2 mb-4 text-white/80 font-bold text-sm">
+              <Sparkles className="h-4 w-4 text-amber-400" />
+              <span>Buscas Populares no CineBG</span>
+            </div>
+
+            <div className="flex flex-wrap gap-2.5">
+              {POPULAR_SEARCH_TAGS.map((tag) => (
+                <button
+                  key={tag.label}
+                  onClick={() => setQuery(tag.query)}
+                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white text-xs sm:text-sm font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                >
+                  <span>{tag.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-12 text-center text-white/20">
+              <SearchIcon className="h-12 w-12 mx-auto mb-2 opacity-20" />
+              <p className="text-xs">Digite o nome de qualquer filme, série, ator ou gênero</p>
+            </div>
           </motion.div>
         )}
       </div>

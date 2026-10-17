@@ -29,6 +29,14 @@ const SERIES_GENRES = [
   { id: 10768, name: 'Guerra & Política' },
 ]
 
+const STREAMING_PLATFORMS = [
+  { id: 'netflix', name: 'Netflix', providerId: 8, networkId: 213, emoji: '🔴' },
+  { id: 'hbo', name: 'Max (HBO)', providerId: 384, networkId: 49, emoji: '🟣' },
+  { id: 'disney', name: 'Disney+', providerId: 337, networkId: 2739, emoji: '🔵' },
+  { id: 'prime', name: 'Prime Video', providerId: 119, networkId: 1024, emoji: '🟡' },
+  { id: 'apple', name: 'Apple TV+', providerId: 350, networkId: 2552, emoji: '🍏' },
+]
+
 const Series = () => {
   const [popular, setPopular] = useState<MediaItem[]>([])
   const [topRated, setTopRated] = useState<MediaItem[]>([])
@@ -65,6 +73,28 @@ const Series = () => {
     }
     load()
   }, [reloadKey])
+
+  // Filtro por Plataforma (Netflix, HBO, Disney, Prime, Apple)
+  const handleFilterPlatform = async (platform: typeof STREAMING_PLATFORMS[0]) => {
+    const filterKey = `platform-${platform.id}`
+    if (activeFilter === filterKey) {
+      handleFilterAll()
+      return
+    }
+    setActiveFilter(filterKey)
+    setFilterTitle(`Séries ${platform.name}`)
+    setShowGenreBar(false)
+    setSelectedGenreId(null)
+    setFilterLoading(true)
+    try {
+      const res = await discoverShows({ withNetworks: platform.networkId, withWatchProviders: platform.providerId })
+      setFilteredList(res.items)
+    } catch {
+      setFilteredList([])
+    } finally {
+      setFilterLoading(false)
+    }
+  }
 
   // Filtro por Ano (2026)
   const handleFilterYear = async (year: number) => {
@@ -142,6 +172,32 @@ const Series = () => {
           onFilterSpecial={handleFilterSpecial}
           onFilterAll={handleFilterAll}
         />
+
+        {/* Barra de Plataformas Populares (Netflix, Max, Disney+, Prime, Apple) */}
+        <div className="max-w-screen-2xl mx-auto px-4 md:px-8 mt-2 mb-4">
+          <div className="flex items-center gap-2 overflow-x-auto scroll-hide pb-2">
+            <span className="text-white/40 text-xs font-bold uppercase tracking-wider flex-shrink-0 flex items-center gap-1.5 mr-1">
+              <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Plataformas:
+            </span>
+            {STREAMING_PLATFORMS.map((platform) => {
+              const active = activeFilter === `platform-${platform.id}`
+              return (
+                <button
+                  key={platform.id}
+                  onClick={() => handleFilterPlatform(platform)}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex-shrink-0 border ${
+                    active
+                      ? 'bg-white text-black border-white shadow-lg shadow-white/20 scale-105'
+                      : 'bg-white/5 text-white/80 hover:bg-white/10 border-white/10 hover:border-white/20'
+                  }`}
+                >
+                  <span>{platform.emoji}</span>
+                  <span>{platform.name}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
         {/* Barra de Gêneros Desdobrável quando "Gênero" é clicado */}
         <AnimatePresence>

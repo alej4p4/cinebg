@@ -6,8 +6,8 @@
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792254171.783983,
-    "seen": 1792254184.3904555,
+    "mtime": 1792256584.8186302,
+    "seen": 1792256599.09118,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792254171.782984,
-    "seen": 1792254184.3904715,
+    "mtime": 1792256584.8186302,
+    "seen": 1792256599.0911958,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -72,8 +72,8 @@
     "semantic_hash": "e6a5711fca159c8793e07440a22147be"
   },
   "package.json": {
-    "mtime": 1792253970.258307,
-    "seen": 1792254184.3904846,
+    "mtime": 1792254208.2657876,
+    "seen": 1792256599.0912082,
     "ast_hash": "6b104edd1a010e54fb12aab299ec9656",
     "semantic_hash": ""
   },
@@ -90,8 +90,8 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1792253975.977982,
-    "seen": 1792254184.3904905,
+    "mtime": 1792254208.2677867,
+    "seen": 1792256599.0912147,
     "ast_hash": "d466245e587b58a9badf000425922cd2",
     "semantic_hash": ""
   },
@@ -102,8 +102,8 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792254026.5772915,
-    "seen": 1792254184.3904948,
+    "mtime": 1792254208.2677867,
+    "seen": 1792256599.091219,
     "ast_hash": "99c4ddf16023b4331fd9c79280abade6",
     "semantic_hash": ""
   },
@@ -120,14 +120,14 @@
     "semantic_hash": ""
   },
   "src/components/UpdateModal.tsx": {
-    "mtime": 1792254010.8819501,
-    "seen": 1792254184.390501,
+    "mtime": 1792254208.2687857,
+    "seen": 1792256599.091225,
     "ast_hash": "7d199b5e451ab8faa4bdc1d02157bc2b",
     "semantic_hash": ""
   },
   "src/components/layout/Navbar.tsx": {
-    "mtime": 1792254113.6090763,
-    "seen": 1792254184.3905032,
+    "mtime": 1792254208.2697856,
+    "seen": 1792256599.0912266,
     "ast_hash": "4c0e90621c9659fba96901ad500b66c6",
     "semantic_hash": ""
   },
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1792187003.629336,
-    "seen": 1792188107.0828001,
-    "ast_hash": "6fc757b1ccac3ce24345fc31e23d0fef",
+    "mtime": 1792256534.6075196,
+    "seen": 1792256599.0912325,
+    "ast_hash": "0f05585362abe30d8f8f5b73ca68ef45",
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
@@ -222,8 +222,8 @@
     "semantic_hash": "ccafdfbf436b0dcabc812bbaa8fa3c79"
   },
   "src/hooks/useAppUpdate.ts": {
-    "mtime": 1792253991.3407419,
-    "seen": 1792254184.3905485,
+    "mtime": 1792254208.2707841,
+    "seen": 1792256599.0912685,
     "ast_hash": "a384c2ba435dc98905e2275c076bf2dc",
     "semantic_hash": ""
   },
@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "src/pages/Movies.tsx": {
-    "mtime": 1792161997.6279058,
-    "seen": 1792179646.8839025,
-    "ast_hash": "8c56b2b6d2ff24a681c461e81fa94fe4",
+    "mtime": 1792256407.9353611,
+    "seen": 1792256599.0912924,
+    "ast_hash": "f1846bad582f0a7904c88d3ec150247f",
     "semantic_hash": ""
   },
   "src/pages/MyList.tsx": {
@@ -312,21 +312,21 @@
     "semantic_hash": ""
   },
   "src/pages/Profiles.tsx": {
-    "mtime": 1792254055.5388837,
-    "seen": 1792254184.3906655,
-    "ast_hash": "acec8309ffceaec839c237e2d1fa04f8",
+    "mtime": 1792256509.3185775,
+    "seen": 1792256599.0912957,
+    "ast_hash": "afac694a4f5ea1e5533623b0d9fd5a62",
     "semantic_hash": ""
   },
   "src/pages/Search.tsx": {
-    "mtime": 1792086739.3055556,
-    "seen": 1792158340.1035495,
-    "ast_hash": "2e3a6922fc31d7ae59bab45a01b035a2",
-    "semantic_hash": "2e3a6922fc31d7ae59bab45a01b035a2"
+    "mtime": 1792256488.6070514,
+    "seen": 1792256599.0912976,
+    "ast_hash": "685126f1a377068f76196aa14ba50043",
+    "semantic_hash": ""
   },
   "src/pages/Series.tsx": {
-    "mtime": 1792161997.6299055,
-    "seen": 1792179646.8839157,
-    "ast_hash": "c9cc2bda64b8ad5817d46a132c23ffb9",
+    "mtime": 1792256464.2989511,
+    "seen": 1792256599.0912993,
+    "ast_hash": "fd46afc1ff8eee6a90d0f701f03c2790",
     "semantic_hash": ""
   },
   "src/pages/Watch.tsx": {
@@ -366,14 +366,14 @@
     "semantic_hash": "eb6565af31a05c312143e746a29093a0"
   },
   "src/services/tmdb.ts": {
-    "mtime": 1792022620.2646708,
-    "seen": 1792158340.1035693,
-    "ast_hash": "f723986fd7ed9bc98a335bfc9b07adca",
-    "semantic_hash": "f723986fd7ed9bc98a335bfc9b07adca"
+    "mtime": 1792256351.6944418,
+    "seen": 1792256599.0913155,
+    "ast_hash": "4a3ffd43c20dc2d0b2fd6747bfa6d93b",
+    "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1792253984.1950617,
-    "seen": 1792254184.3907216,
+    "mtime": 1792254208.2717838,
+    "seen": 1792256599.0913172,
     "ast_hash": "922837d49a3b44d0798caea4330e0e2e",
     "semantic_hash": ""
   },
