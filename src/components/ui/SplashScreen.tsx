@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import CineBGLogo from './CineBGLogo'
+import splashBg from '@/assets/splash-bg.png'
 
 interface SplashScreenProps {
   onComplete: () => void
@@ -74,17 +75,18 @@ export const SplashScreen = ({
       className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-[#08070d] text-white overflow-hidden select-none"
       style={{ transform: 'translateZ(0)' }}
     >
-      {/* Imagem de Fundo Abstrata (Cristo Redentor / Barra do Garças) */}
+      {/* Imagem de Fundo (Cristo Redentor / Barra do Garças) */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img
-          src="/splash-bg.png"
-          alt="Barra do Garças"
-          className="w-full h-full object-cover object-center opacity-55 scale-105"
+          src={splashBg}
+          alt="Cristo Redentor - Barra do Garças"
+          className="w-full h-full object-cover object-[center_35%] opacity-90 scale-100"
           style={{ transform: 'translateZ(0)' }}
         />
 
-        {/* Camada de Gradiente Abstrato / Efeito Vignette Cinematográfico leve */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#08070d] via-[#08070d]/85 to-[#08070d]/75" />
+        {/* Camada de Gradiente Cinematográfico suave destacando o Cristo no centro */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#08070d]/80 via-transparent to-[#08070d]/90" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,#08070d_100%)] opacity-70" />
       </div>
 
       {/* Espaçador Superior */}
