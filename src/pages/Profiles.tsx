@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode } from 'lucide-react'
+import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode, Download, RefreshCw } from 'lucide-react'
 import { useAppStore, type UserProfile } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
+import Focusable from '@/components/tv/Focusable'
 import {
   checkForNewEpisodes,
   requestNotificationPermissionExplicit,
@@ -28,6 +29,9 @@ const Profiles = () => {
     subtitleOption,
     setSubtitleOption,
     setVipModalOpen,
+    checkForUpdates,
+    isCheckingUpdate,
+    updateInfo,
   } = useAppStore()
 
   const { isLicensed, isTrial, trialDaysLeft, licenseDaysLeft, license } = useLicense()
@@ -293,6 +297,45 @@ const Profiles = () => {
           >
             {tvMode ? 'Modo TV ativado' : 'Ativar modo TV'}
           </button>
+        </div>
+
+        {/* Atualizações do App / Versão */}
+        <div className="glass rounded-xl p-5 mt-8 border border-white/10 bg-gradient-to-r from-white/5 to-transparent">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-accent-red/20 border border-accent-red/40 flex items-center justify-center text-accent-red flex-shrink-0 shadow-lg shadow-red-900/30">
+                <Download className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-black text-white text-lg">Versão & Atualizações</h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/80 border border-white/10">
+                    v{updateInfo.currentVersion}
+                  </span>
+                </div>
+                <p className="text-text-secondary text-xs mt-0.5">
+                  CineBG para Android & Smart TV • Mantenha seu aplicativo sempre atualizado.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-stretch sm:self-auto">
+              <Focusable
+                focusKey="btn-check-update"
+                onEnterPress={() => checkForUpdates(true)}
+              >
+                <button
+                  type="button"
+                  onClick={() => checkForUpdates(true)}
+                  disabled={isCheckingUpdate}
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-accent-red to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-red-900/40 disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+                  <span>{isCheckingUpdate ? 'Verificando...' : 'Atualizar Versão'}</span>
+                </button>
+              </Focusable>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>

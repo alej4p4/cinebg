@@ -10,7 +10,6 @@ import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
 import { useAppStore } from '@/store/useAppStore'
 import { isTVDevice } from '@/utils/tv'
-import { useAppUpdate } from '@/hooks/useAppUpdate'
 import UpdateModal from '@/components/UpdateModal'
 import { useLicense } from '@/hooks/useLicense'
 import LicenseGate from '@/components/LicenseGate'
@@ -113,10 +112,21 @@ const AnimatedRoutes = () => {
 function App() {
   useEpisodeNotifications()
   useOrientationFullscreen()
-  const { update, dismiss } = useAppUpdate()
   const { isLicensed, isTrial, loading } = useLicense()
-  const { vipModalOpen, setVipModalOpen } = useAppStore()
+  const {
+    vipModalOpen,
+    setVipModalOpen,
+    updateModalOpen,
+    setUpdateModalOpen,
+    updateInfo,
+    isCheckingUpdate,
+    checkForUpdates,
+  } = useAppStore()
   const [showSplash, setShowSplash] = useState(true)
+
+  useEffect(() => {
+    checkForUpdates(false).catch(() => {})
+  }, [checkForUpdates])
 
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false)
@@ -150,9 +160,14 @@ function App() {
             </div>
           </ErrorBoundary>
           <UpdateModal
-            visible={!!update}
-            downloadUrl={update?.downloadUrl ?? ''}
-            onDismiss={dismiss}
+            visible={updateModalOpen}
+            downloadUrl={updateInfo.downloadUrl}
+            currentVersion={updateInfo.currentVersion}
+            latestVersion={updateInfo.latestVersion}
+            hasUpdate={updateInfo.hasUpdate}
+            isChecking={isCheckingUpdate}
+            onDismiss={() => setUpdateModalOpen(false)}
+            onCheckAgain={() => checkForUpdates(true)}
           />
           {vipModalOpen && (
             <LicenseGate isModal={true} onClose={() => setVipModalOpen(false)} />

@@ -48,6 +48,8 @@ const Navbar = () => {
     setLanguage,
     setAudioOption,
     setVipModalOpen,
+    checkForUpdates,
+    updateInfo,
   } = useAppStore()
   const { isTrial, isLicensed, trialDaysLeft, licenseDaysLeft } = useLicense()
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -370,6 +372,30 @@ const Navbar = () => {
                       <span className="text-white text-sm">Configurações</span>
                     </button>
                   </Focusable>
+
+                  <Focusable
+                    onEnterPress={() => {
+                      setProfileOpen(false)
+                      checkForUpdates(true)
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        setProfileOpen(false)
+                        checkForUpdates(true)
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Download className="h-4 w-4 text-accent-red flex-shrink-0" />
+                        <span className="text-white text-sm">Atualizar Versão</span>
+                      </div>
+                      <span className="text-[10px] text-white/50 font-mono bg-white/5 px-1.5 py-0.5 rounded">
+                        v{updateInfo.currentVersion}
+                      </span>
+                    </button>
+                  </Focusable>
+
                   <Focusable
                     onEnterPress={() => {
                       navigate('/profiles')
@@ -442,6 +468,27 @@ const Navbar = () => {
                         {label}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Versão do Aplicativo</p>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+                    <div>
+                      <p className="text-white text-sm font-bold">CineBG v{updateInfo.currentVersion}</p>
+                      <p className="text-white/40 text-xs">Compilação Oficial APK</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSettingsOpen(false)
+                        checkForUpdates(true)
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-red hover:bg-red-600 text-white text-xs font-bold transition-colors shadow-md shadow-red-900/40"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Atualizar
+                    </button>
                   </div>
                 </div>
               </div>
@@ -520,6 +567,23 @@ const Navbar = () => {
                     : isTrial
                     ? `Teste Grátis (${trialDaysLeft} dias restantes)`
                     : 'Assinar Plano VIP (Mercado Pago Pix)'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false)
+                  checkForUpdates(true)
+                }}
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold bg-white/5 hover:bg-white/10 text-white border border-white/10 mb-2 transition-all"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Download className="h-4 w-4 text-accent-red" />
+                  <span>Atualizar Versão</span>
+                </div>
+                <span className="text-[11px] text-white/50 font-mono bg-white/10 px-2 py-0.5 rounded-full">
+                  v{updateInfo.currentVersion}
                 </span>
               </button>
 
@@ -636,6 +700,23 @@ const Navbar = () => {
                     </button>
                   )
                 })}
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                <span className="text-[11px] text-white/40 font-mono">
+                  CineBG v{updateInfo.currentVersion}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGridMenuOpen(false)
+                    checkForUpdates(true)
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-accent-red/20 hover:bg-accent-red/30 border border-accent-red/40 text-red-200 text-xs font-bold transition-colors"
+                >
+                  <Download className="h-3 w-3 text-accent-red" />
+                  <span>Atualizar Versão</span>
+                </button>
               </div>
             </motion.div>
           </>

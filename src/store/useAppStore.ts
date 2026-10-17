@@ -102,6 +102,22 @@ interface AppState {
   // VIP / Assinatura
   vipModalOpen: boolean
   setVipModalOpen: (open: boolean) => void
+
+  // Atualização do App
+  updateModalOpen: boolean
+  setUpdateModalOpen: (open: boolean) => void
+  updateInfo: AppUpdateInfo
+  isCheckingUpdate: boolean
+  checkForUpdates: (manual?: boolean) => Promise<void>
+}
+
+export interface AppUpdateInfo {
+  currentVersion: string
+  latestVersion: string
+  hasUpdate: boolean
+  downloadUrl: string
+  mandatory: boolean
+  lastChecked?: number
 }
 
 const dataFor = (state: Pick<AppState, 'dataByProfile' | 'activeProfileId'>): ProfileData =>
@@ -122,6 +138,59 @@ export const useAppStore = create<AppState>()(
       tvMode: false,
       downloads: [],
       vipModalOpen: false,
+
+      // Atualização do App
+      updateModalOpen: false,
+      setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
+      isCheckingUpdate: false,
+      updateInfo: {
+        currentVersion: '1.2.10',
+        latestVersion: '1.2.10',
+        hasUpdate: false,
+        downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest',
+        mandatory: false,
+      },
+      checkForUpdates: async (manual = false) => {
+        if (manual) {
+          set({ isCheckingUpdate: true, updateModalOpen: true })
+        }
+        try {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 6000)
+          const res = await fetch(`/update.json?t=${Date.now()}`, { signal: controller.signal })
+          clearTimeout(timeoutId)
+          if (res.ok) {
+            const data = await res.json()
+            const currentVersion = '1.2.10'
+            const remoteVersion = data.version || currentVersion
+            const downloadUrl = data.downloadUrl || 'https://github.com/alej4p4/cinebg/releases/latest'
+            const hasUpdate = remoteVersion !== currentVersion
+            set({
+              updateInfo: {
+                currentVersion,
+                latestVersion: remoteVersion,
+                hasUpdate,
+                downloadUrl,
+                mandatory: !!data.mandatory,
+                lastChecked: Date.now(),
+              },
+              isCheckingUpdate: false,
+              updateModalOpen: manual ? true : hasUpdate,
+            })
+            return
+          }
+        } catch {
+          // ignore network error
+        }
+        set((state) => ({
+          isCheckingUpdate: false,
+          updateModalOpen: manual ? true : state.updateModalOpen,
+          updateInfo: {
+            ...state.updateInfo,
+            lastChecked: Date.now(),
+          },
+        }))
+      },
 
       setVipModalOpen: (open) => set({ vipModalOpen: open }),
 

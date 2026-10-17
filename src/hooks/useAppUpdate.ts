@@ -1,28 +1,28 @@
-import { useState, useEffect } from 'react'
-
-const LOCAL_VERSION = '1.0.0'
-const UPDATE_URL = '/update.json'
-
-interface UpdateInfo {
-  version: string
-  downloadUrl: string
-  mandatory: boolean
-}
+import { useEffect } from 'react'
+import { useAppStore, type AppUpdateInfo } from '@/store/useAppStore'
 
 export const useAppUpdate = () => {
-  const [update, setUpdate] = useState<UpdateInfo | null>(null)
-  const [dismissed, setDismissed] = useState(false)
+  const {
+    updateModalOpen,
+    setUpdateModalOpen,
+    updateInfo,
+    isCheckingUpdate,
+    checkForUpdates,
+  } = useAppStore()
 
   useEffect(() => {
-    fetch(`${UPDATE_URL}?t=${Date.now()}`)
-      .then((r) => r.json())
-      .then((data: UpdateInfo) => {
-        if (data.version !== LOCAL_VERSION) setUpdate(data)
-      })
-      .catch(() => {})
-  }, [])
+    checkForUpdates(false).catch(() => {})
+  }, [checkForUpdates])
 
-  const visible = update && !dismissed
-
-  return { update: visible ? update : null, dismiss: () => setDismissed(true) }
+  return {
+    update: updateInfo.hasUpdate ? updateInfo : null,
+    updateInfo,
+    visible: updateModalOpen,
+    isChecking: isCheckingUpdate,
+    openModal: () => setUpdateModalOpen(true),
+    dismiss: () => setUpdateModalOpen(false),
+    checkForUpdate: () => checkForUpdates(true),
+  }
 }
+
+export type { AppUpdateInfo }
