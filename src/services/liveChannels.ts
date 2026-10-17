@@ -39,7 +39,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'sbt-hd',
     name: 'SBT HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/SBT_logo.svg/960px-SBT_logo.svg.png',
+    logo: 'https://i.imgur.com/tc1ALuu.png',
     cardBg: 'sbt',
     category: 'abertos',
     country: 'BR',
@@ -55,7 +55,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'globo-sp',
     name: 'GLOBO SP HD',
-    logo: 'https://i.imgur.com/39VwZ2w.png',
+    logo: 'https://i.imgur.com/OoSUg78.png',
     cardBg: 'globo-sp',
     category: 'abertos',
     country: 'BR',
@@ -70,7 +70,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'globo-rj',
     name: 'GLOBO RJ HD',
-    logo: 'https://i.imgur.com/39VwZ2w.png',
+    logo: 'https://i.imgur.com/OoSUg78.png',
     cardBg: 'globo-rj',
     category: 'abertos',
     country: 'BR',
@@ -85,7 +85,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'globo-nordeste',
     name: 'GLOBO Nordeste',
-    logo: 'https://i.imgur.com/39VwZ2w.png',
+    logo: 'https://i.imgur.com/OoSUg78.png',
     cardBg: 'globo-nordeste',
     category: 'abertos',
     country: 'BR',
@@ -100,14 +100,14 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'record-hd',
     name: 'Record HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/pt/thumb/1/10/Logotipo_da_Record.png/960px-Logotipo_da_Record.png',
+    logo: 'https://i.imgur.com/sz9gTTr.png',
     cardBg: 'record',
     category: 'abertos',
     country: 'BR',
     sources: [
       'http://45.162.64.114/RECORD_NEWS/index.m3u8',
       'https://rnw-rn.otteravision.com/rnw/rn/rnw_rn.m3u8',
-      'https://cdn.live.br1.jmvstream.com/w/LVW-10842/LVW10842_513N26MDBL/chunklist.m3u8',
+      'http://45.162.64.114/REDE_TV/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -122,7 +122,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'http://45.162.64.114/BAND_NEWS/index.m3u8',
-      'https://cdn.live.br1.jmvstream.com/w/LVW-15748/LVW15748_Yed7yzLuRC/chunklist.m3u8',
+      'http://181.78.197.59:8000/play/a08c/index.m3u8',
+      'http://45.162.64.114/BAND_SPORTS/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -131,7 +132,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'redetv-hd',
     name: 'RedeTV! HD',
-    logo: 'https://i.imgur.com/1Gv25b5.png',
+    logo: 'https://i.imgur.com/ZJgD38F.png',
     cardBg: 'redetv',
     category: 'abertos',
     country: 'BR',
@@ -146,7 +147,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'tv-cultura',
     name: 'TV Cultura HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/8/82/Cultura_logo_2013.svg',
+    logo: 'https://i.ibb.co/nm0jXMM/cultura-3x.png',
     cardBg: 'cultura',
     category: 'abertos',
     country: 'BR',
@@ -162,7 +163,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'rede-brasil',
     name: 'Rede Brasil HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d1/Marca_rede_brasil_rgb-color.png',
+    logo: 'https://i.imgur.com/TXJKwzZ.png',
     cardBg: 'redebrasil',
     category: 'abertos',
     country: 'BR',
@@ -179,7 +180,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'tnt-hd',
     name: 'TNT HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/TNT_Logo_2016.svg/960px-TNT_Logo_2016.svg.png',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/TNT_Logo_2016.svg/500px-TNT_Logo_2016.svg.png',
     cardBg: 'tnt',
     category: 'filmes',
     country: 'BR',
@@ -195,7 +196,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'tnt-novelas',
     name: 'TNT Novelas',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/TNT_Novelas_2025.svg/1920px-TNT_Novelas_2025.svg.png',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/TNT_Novelas_2025.svg/500px-TNT_Novelas_2025.svg.png',
     cardBg: 'tnt-novelas',
     category: 'filmes',
     country: 'BR',
@@ -211,7 +212,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'hbo-hd',
     name: 'HBO HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/HBO_logo.svg/960px-HBO_logo.svg.png',
+    logo: 'https://i.imgur.com/2pD6eN6.png',
     cardBg: 'hbo',
     category: 'filmes',
     country: 'BR',
@@ -227,7 +228,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'max-hd',
     name: 'MAX HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Max_logo.svg/1024px-Max_logo.svg.png',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Max_logo.svg/500px-Max_logo.svg.png',
     cardBg: 'max',
     category: 'filmes',
     country: 'BR',
@@ -243,7 +244,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'paramount-plus',
     name: 'Paramount+ 01',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Paramount_Plus.svg/1024px-Paramount_Plus.svg.png',
+    logo: 'https://i.imgur.com/XrJw9eQ.png',
     cardBg: 'paramount',
     category: 'filmes',
     country: 'BR',
@@ -259,7 +260,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'paramount-plus-2',
     name: 'Paramount+ 02',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Paramount_Plus.svg/1024px-Paramount_Plus.svg.png',
+    logo: 'https://i.imgur.com/XrJw9eQ.png',
     cardBg: 'paramount',
     category: 'filmes',
     country: 'BR',
@@ -275,7 +276,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'space-hd',
     name: 'Space HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Space_logo_2023.svg/960px-Space_logo_2023.svg.png',
+    logo: 'https://i.imgur.com/zofc9UJ.png',
     cardBg: 'space',
     category: 'filmes',
     country: 'BR',
@@ -291,7 +292,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'warner-channel',
     name: 'Warner Channel',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Warner_Channel_2019.svg/960px-Warner_Channel_2019.svg.png',
+    logo: 'https://i.imgur.com/QtGQR0c.png',
     cardBg: 'warner',
     category: 'filmes',
     country: 'BR',
@@ -307,7 +308,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'cinemax',
     name: 'CINEMAX',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Cinemax_2016_logo.svg/960px-Cinemax_2016_logo.svg.png',
+    logo: 'https://i.imgur.com/cZWoJWD.png',
     cardBg: 'cinemax',
     category: 'filmes',
     country: 'BR',
@@ -339,7 +340,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'tc-action',
     name: 'TC ACTION',
-    logo: 'https://i.imgur.com/Xw0yRz6.png',
+    logo: 'https://i.imgur.com/BHYWG0h.png',
     cardBg: 'tc-action',
     category: 'filmes',
     country: 'BR',
@@ -405,7 +406,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'espn-brasil',
     name: 'ESPN Brasil',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/ESPN_wordmark.svg/1024px-ESPN_wordmark.svg.png',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/ESPN_wordmark.svg/500px-ESPN_wordmark.svg.png',
     cardBg: 'espn',
     category: 'esportes',
     country: 'BR',
@@ -421,7 +422,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'espn-4',
     name: 'ESPN 4 HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/ESPN_wordmark.svg/1024px-ESPN_wordmark.svg.png',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ESPN_4_logo.svg/500px-ESPN_4_logo.svg.png',
     cardBg: 'espn',
     category: 'esportes',
     country: 'BR',
@@ -437,7 +438,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'sportv-hd',
     name: 'SporTV HD',
-    logo: 'https://i.imgur.com/KzX5Zz7.png',
+    logo: 'https://i.postimg.cc/gr9x3z71/Spor-TV-2021.png',
     cardBg: 'sportv',
     category: 'esportes',
     country: 'BR',
@@ -453,7 +454,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'sportv-2',
     name: 'SporTV 2 HD',
-    logo: 'https://i.imgur.com/KzX5Zz7.png',
+    logo: 'https://i.imgur.com/pBiUnb2.png',
     cardBg: 'sportv2',
     category: 'esportes',
     country: 'BR',
@@ -567,7 +568,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'cartoon-network',
     name: 'Cartoon Network',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Cartoon_Network_2010_logo.svg/960px-Cartoon_Network_2010_logo.svg.png',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Cartoon_Network_2010_logo.svg/500px-Cartoon_Network_2010_logo.svg.png',
     cardBg: 'cartoon',
     category: 'infantil',
     country: 'BR',
@@ -599,7 +600,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'gloob-hd',
     name: 'Gloob HD',
-    logo: 'https://i.imgur.com/2s3d4f5.png',
+    logo: 'https://i.imgur.com/N1BUULh.png',
     cardBg: 'gloob',
     category: 'infantil',
     country: 'BR',
@@ -617,7 +618,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'band-news',
     name: 'BandNews',
-    logo: 'https://i.imgur.com/EuPvzJe.png',
+    logo: 'https://i.ibb.co/0jVZBFp/u8ya-iw-R-400x400.jpg',
     cardBg: 'band',
     category: 'noticias',
     country: 'BR',
@@ -647,7 +648,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'globonews-hd',
     name: 'GloboNews HD',
-    logo: 'https://i.imgur.com/39VwZ2w.png',
+    logo: 'https://i.imgur.com/3yZyaCm.png',
     cardBg: 'globonews',
     category: 'noticias',
     country: 'BR',
@@ -695,7 +696,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'discovery-turbo',
     name: 'Discovery Turbo',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Discovery_Turbo_logo.svg/960px-Discovery_Turbo_logo.svg.png',
+    logo: 'https://i.imgur.com/osCVMop.png',
     cardBg: 'discovery',
     category: 'variedades',
     country: 'BR',
@@ -711,7 +712,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'animal-planet',
     name: 'Animal Planet',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Animal_Planet_logo_2018.svg/960px-Animal_Planet_logo_2018.svg.png',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/2018_Animal_Planet_logo.svg/500px-2018_Animal_Planet_logo.svg.png',
     cardBg: 'discovery',
     category: 'variedades',
     country: 'BR',
