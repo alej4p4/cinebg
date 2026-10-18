@@ -1194,7 +1194,9 @@ const StreamPlayer = ({
             <div className="w-12 h-12 border-4 border-white/10 border-t-yellow-400 rounded-full animate-spin" />
             <div className="text-center">
               <p className="text-white font-black text-lg">
-                {candidates[candidateIndex]?.label
+                {resolvingDirect
+                  ? 'Localizando transmissão direta dublada...'
+                  : candidates[candidateIndex]?.label
                   ? `Conectando: ${candidates[candidateIndex]?.label}`
                   : isAutoFallback
                   ? `Tentando ${getMirrorLabel(activeMirror)}...`
@@ -1279,7 +1281,7 @@ const StreamPlayer = ({
             className="w-full h-full border-0"
             allowFullScreen
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+            sandbox={activeMirror === 'megaembed' ? undefined : "allow-scripts allow-same-origin allow-forms allow-presentation"}
             referrerPolicy="no-referrer"
             onLoad={handleIframeLoad}
             onError={handleStreamFailure}
