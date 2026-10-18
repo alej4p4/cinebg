@@ -1,32 +1,93 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { isTVDevice, isTvRemoteKey } from '@/utils/tv'
-import { MousePointer2, Move, Navigation } from 'lucide-react'
+import { isTVDevice, isTvRemoteKey, markTvModeActive } from '@/utils/tv'
+import { useAppStore } from '@/store/useAppStore'
+import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
+import { MousePointer2, Navigation, Move } from 'lucide-react'
 
 type NavigationMode = 'focus' | 'cursor'
+type Direction = 'up' | 'down' | 'left' | 'right'
+
+const getDirectionFromEvent = (e: KeyboardEvent): Direction | null => {
+  const code = e.keyCode || e.which
+  const key = (e.key || '').toLowerCase()
+  if (code === 38 || code === 19 || key === 'arrowup' || key === 'up') return 'up'
+  if (code === 40 || code === 20 || key === 'arrowdown' || key === 'down') return 'down'
+  if (code === 37 || code === 21 || key === 'arrowleft' || key === 'left') return 'left'
+  if (code === 39 || code === 22 || key === 'arrowright' || key === 'right') return 'right'
+  return null
+}
+
+const isEnterEvent = (e: KeyboardEvent): boolean => {
+  const code = e.keyCode || e.which
+  const key = (e.key || '').toLowerCase()
+  return (
+    code === 13 || // Enter
+    code === 23 || // KEYCODE_DPAD_CENTER
+    code === 66 || // KEYCODE_ENTER (Android)
+    code === 160 || // NUMPAD_ENTER
+    code === 96 || // BUTTON_A
+    key === 'enter' ||
+    key === 'select' ||
+    key === 'ok' ||
+    key === ' '
+  )
+}
+
+const isToggleModeEvent = (e: KeyboardEvent): boolean => {
+  const code = e.keyCode || e.which
+  const key = (e.key || '').toLowerCase()
+  return (
+    code === 82 || // KEYCODE_MENU
+    code === 165 || // KEYCODE_INFO
+    code === 172 || // KEYCODE_GUIDE
+    code === 109 || // KEYCODE_BUTTON_SELECT
+    key === 'contextmenu' ||
+    key === 'menu' ||
+    key === 'info' ||
+    key === 'guide' ||
+    key === 'c' || // Atalho tecla C (Cursor)
+    key === 'm' // Atalho tecla M (Mouse)
+  )
+}
 
 export const TvCursorOverlay: React.FC = () => {
-  const [isTv, setIsTv] = useState(false)
-  const [navMode, setNavMode] = useState<NavigationMode>('focus')
+  const { tvMode, virtualCursor, setVirtualCursor } = useAppStore()
+  const [isTvActive, setIsTvActive] = useState(false)
+  const [navMode, setNavMode] = useState<NavigationMode>(() => (virtualCursor ? 'cursor' : 'focus'))
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
   const [isClicking, setIsClicking] = useState(false)
   const [showBadge, setShowBadge] = useState(true)
 
   const posRef = useRef({ x: 0, y: 0 })
-  const speedRef = useRef(24) // Pixels por pulso de tecla
-  const keysDownRef = useRef<Set<string>>(new Set())
+  const speedRef = useRef(18) // Velocidade base do cursor (pixels por frame)
+  const activeDirectionsRef = useRef<Set<Direction>>(new Set())
   const animationFrameRef = useRef<number | null>(null)
   const hideBadgeTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Detecta se esta em TV
+  // Sincroniza o modo inicial com a preferencia salva na Store
+  useEffect(() => {
+    if (virtualCursor) {
+      setNavMode('cursor')
+      setIsTvActive(true)
+    }
+  }, [virtualCursor])
+
+  // Detecta dispositivo de TV ou ativacao por controle remoto
   useEffect(() => {
     const checkTv = () => {
-      if (isTVDevice() || document.body.classList.contains('tv-remote-active')) {
-        setIsTv(true)
+      if (
+        isTVDevice() ||
+        tvMode ||
+        virtualCursor ||
+        document.body.classList.contains('tv-remote-active') ||
+        document.body.classList.contains('tv-mode')
+      ) {
+        setIsTvActive(true)
       }
     }
     checkTv()
 
-    // Centraliza o cursor virtual na tela
+    // Centraliza o cursor virtual na tela inicialmente
     if (typeof window !== 'undefined') {
       const initialPos = {
         x: Math.round(window.innerWidth / 2),
@@ -36,23 +97,30 @@ export const TvCursorOverlay: React.FC = () => {
       setCursorPos(initialPos)
     }
 
-    const handleAnyKey = (e: KeyboardEvent) => {
+    const handleGlobalKey = (e: KeyboardEvent) => {
       if (isTvRemoteKey(e)) {
-        setIsTv(true)
-        // Alternancia rapida com a tecla Menu / ContextMenu / CC
-        if (e.key === 'ContextMenu' || e.key === 'Menu' || e.keyCode === 82) {
+        setIsTvActive(true)
+        markTvModeActive()
+
+        // Alternancia rapida com atalhos de controle remoto (Menu, Info, Guide, C, M)
+        if (isToggleModeEvent(e)) {
           e.preventDefault()
-          setNavMode((prev) => (prev === 'focus' ? 'cursor' : 'focus'))
+          e.stopPropagation()
+          setNavMode((prev) => {
+            const next = prev === 'focus' ? 'cursor' : 'focus'
+            setVirtualCursor(next === 'cursor')
+            return next
+          })
           setShowBadge(true)
         }
       }
     }
 
-    window.addEventListener('keydown', handleAnyKey)
-    return () => window.removeEventListener('keydown', handleAnyKey)
-  }, [])
+    window.addEventListener('keydown', handleGlobalKey, { passive: false })
+    return () => window.removeEventListener('keydown', handleGlobalKey)
+  }, [tvMode, virtualCursor, setVirtualCursor])
 
-  // Atualiza temporizador para esconder badge discretamente apos inatividade
+  // Temporizador para esconder badge discretamente apos 6 segundos
   const refreshBadgeVisibility = useCallback(() => {
     setShowBadge(true)
     if (hideBadgeTimerRef.current) clearTimeout(hideBadgeTimerRef.current)
@@ -61,48 +129,66 @@ export const TvCursorOverlay: React.FC = () => {
     }, 6000)
   }, [])
 
-  // Loop de movimentacao suave do cursor virtual
+  // Gerencia o congelamento/reativacao da navegacao espacial do Norigin
   useEffect(() => {
-    if (!isTv || navMode !== 'cursor') {
+    try {
+      if (navMode === 'cursor') {
+        SpatialNavigation.pause()
+      } else {
+        SpatialNavigation.resume()
+      }
+    } catch {}
+  }, [navMode])
+
+  // Loop de movimentacao suave com aceleracao continua no modo cursor
+  useEffect(() => {
+    if (!isTvActive || navMode !== 'cursor') {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
         animationFrameRef.current = null
       }
+      activeDirectionsRef.current.clear()
       return
     }
 
     const moveLoop = () => {
-      const keys = keysDownRef.current
-      if (keys.size > 0) {
+      const dirs = activeDirectionsRef.current
+      if (dirs.size > 0) {
         let dx = 0
         let dy = 0
 
-        if (keys.has('ArrowLeft')) dx -= 1
-        if (keys.has('ArrowRight')) dx += 1
-        if (keys.has('ArrowUp')) dy -= 1
-        if (keys.has('ArrowDown')) dy += 1
+        if (dirs.has('left')) dx -= 1
+        if (dirs.has('right')) dx += 1
+        if (dirs.has('up')) dy -= 1
+        if (dirs.has('down')) dy += 1
 
         if (dx !== 0 || dy !== 0) {
           refreshBadgeVisibility()
-          // Aceleracao suave ao segurar tecla
-          speedRef.current = Math.min(speedRef.current + 1.2, 50)
+          // Aceleracao suave e dinamica ao segurar a tecla (de 18px ate 44px)
+          speedRef.current = Math.min(speedRef.current + 1.1, 44)
 
-          const newX = Math.max(10, Math.min(window.innerWidth - 10, posRef.current.x + dx * speedRef.current))
-          const newY = Math.max(10, Math.min(window.innerHeight - 10, posRef.current.y + dy * speedRef.current))
+          const newX = Math.max(
+            8,
+            Math.min(window.innerWidth - 8, posRef.current.x + dx * speedRef.current)
+          )
+          const newY = Math.max(
+            8,
+            Math.min(window.innerHeight - 8, posRef.current.y + dy * speedRef.current)
+          )
 
           posRef.current = { x: newX, y: newY }
           setCursorPos({ x: newX, y: newY })
 
-          // Auto-scroll da tela quando o cursor atinge as bordas
-          const edgeThreshold = 80
-          if (newY < edgeThreshold) {
-            window.scrollBy({ top: -speedRef.current * 1.5, behavior: 'auto' })
-          } else if (newY > window.innerHeight - edgeThreshold) {
-            window.scrollBy({ top: speedRef.current * 1.5, behavior: 'auto' })
+          // Rolagem automatica de pagina ao atingir as bordas superior/inferior
+          const edgeMargin = 75
+          if (newY < edgeMargin) {
+            window.scrollBy({ top: -speedRef.current * 1.6, behavior: 'auto' })
+          } else if (newY > window.innerHeight - edgeMargin) {
+            window.scrollBy({ top: speedRef.current * 1.6, behavior: 'auto' })
           }
         }
       } else {
-        speedRef.current = 24
+        speedRef.current = 18
       }
 
       animationFrameRef.current = requestAnimationFrame(moveLoop)
@@ -110,96 +196,124 @@ export const TvCursorOverlay: React.FC = () => {
 
     animationFrameRef.current = requestAnimationFrame(moveLoop)
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    const handleCursorKeyDown = (e: KeyboardEvent) => {
+      const dir = getDirectionFromEvent(e)
+      if (dir) {
         e.preventDefault()
         e.stopPropagation()
-        keysDownRef.current.add(e.key)
-      } else if (e.key === 'Enter' || e.key === 'Select' || e.key === 'OK' || e.keyCode === 13 || e.keyCode === 23) {
-        e.preventDefault()
-        e.stopPropagation()
-        // Executa clique no elemento sob o cursor
-        setIsClicking(true)
-        setTimeout(() => setIsClicking(false), 200)
+        activeDirectionsRef.current.add(dir)
+        return
+      }
 
-        const el = document.elementFromPoint(posRef.current.x, posRef.current.y) as HTMLElement | null
-        if (el) {
-          el.focus()
-          // Dispara clique no elemento ou no seu ancestral clicavel
-          const clickable = el.closest('button, a, [role="button"], .cursor-pointer, input') as HTMLElement | null
-          if (clickable) {
-            clickable.click()
-          } else {
-            el.click()
-          }
+      if (isEnterEvent(e)) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        setIsClicking(true)
+        setTimeout(() => setIsClicking(false), 220)
+
+        // Localiza e clica no elemento na posicao exata do cursor virtual
+        const target = document.elementFromPoint(
+          posRef.current.x,
+          posRef.current.y
+        ) as HTMLElement | null
+
+        if (target) {
+          const clickable = target.closest(
+            'button, a, [role="button"], input, select, textarea, [tabindex], .cursor-pointer'
+          ) as HTMLElement | null
+
+          const elementToClick = clickable || target
+          try {
+            elementToClick.focus?.()
+            elementToClick.click?.()
+
+            // Dispara tambem eventos de mouse nativos com coordenadas reais para players e controles
+            const mouseOpts = {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+              clientX: posRef.current.x,
+              clientY: posRef.current.y,
+            }
+            elementToClick.dispatchEvent(new MouseEvent('mousedown', mouseOpts))
+            elementToClick.dispatchEvent(new MouseEvent('mouseup', mouseOpts))
+          } catch {}
         }
       }
     }
 
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        keysDownRef.current.delete(e.key)
+    const handleCursorKeyUp = (e: KeyboardEvent) => {
+      const dir = getDirectionFromEvent(e)
+      if (dir) {
+        activeDirectionsRef.current.delete(dir)
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown, { capture: true })
-    window.addEventListener('keyup', handleKeyUp, { capture: true })
+    window.addEventListener('keydown', handleCursorKeyDown, { capture: true })
+    window.addEventListener('keyup', handleCursorKeyUp, { capture: true })
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown, { capture: true })
-      window.removeEventListener('keyup', handleKeyUp, { capture: true })
+      window.removeEventListener('keydown', handleCursorKeyDown, { capture: true })
+      window.removeEventListener('keyup', handleCursorKeyUp, { capture: true })
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
     }
-  }, [isTv, navMode, refreshBadgeVisibility])
+  }, [isTvActive, navMode, refreshBadgeVisibility])
 
-  if (!isTv) return null
+  if (!isTvActive) return null
 
   return (
     <>
-      {/* Badge de Indicador do Modo de Navegacao TV (topo direito discreto) */}
+      {/* Botao Flutuante e Indicador do Modo TV (canto superior direito) */}
       <div
         className={`fixed top-4 right-4 z-[9999] transition-all duration-300 pointer-events-auto ${
-          showBadge ? 'opacity-90 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+          showBadge ? 'opacity-95 translate-y-0' : 'opacity-20 hover:opacity-100 translate-y-0'
         }`}
       >
         <button
+          type="button"
           onClick={() => {
-            setNavMode((m) => (m === 'focus' ? 'cursor' : 'focus'))
+            const next = navMode === 'focus' ? 'cursor' : 'focus'
+            setNavMode(next)
+            setVirtualCursor(next === 'cursor')
             refreshBadgeVisibility()
           }}
-          className="flex items-center gap-2 bg-[#08070d]/90 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-full text-xs font-semibold text-white shadow-2xl hover:border-amber-400 transition-colors"
-          title="Clique para alternar entre Foco por Setas e Cursor Virtual de Mouse"
+          className="flex items-center gap-2 bg-[#0c0d14]/95 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-full text-xs font-semibold text-white shadow-2xl hover:border-amber-400 transition-all hover:scale-105"
+          title="Clique para alternar entre Foco por Setas (D-Pad) e Cursor Virtual de Mouse"
         >
           {navMode === 'focus' ? (
             <>
               <Navigation className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
               <span>Modo Foco D-Pad</span>
-              <span className="text-[10px] text-white/50 bg-white/10 px-1.5 py-0.5 rounded">Menu = Cursor</span>
+              <span className="text-[10px] text-white/60 bg-white/10 px-1.5 py-0.5 rounded font-mono">
+                Menu = Mouse
+              </span>
             </>
           ) : (
             <>
               <MousePointer2 className="w-3.5 h-3.5 text-accent-red animate-pulse" />
-              <span>Modo Cursor Virtual</span>
-              <span className="text-[10px] text-white/50 bg-white/10 px-1.5 py-0.5 rounded">Menu = Foco</span>
+              <span className="font-bold text-amber-300">Cursor Virtual Ativo</span>
+              <span className="text-[10px] text-white/60 bg-white/10 px-1.5 py-0.5 rounded font-mono">
+                Menu = Foco
+              </span>
             </>
           )}
         </button>
       </div>
 
-      {/* Cursor Virtual Visivel na Tela */}
+      {/* Ponteiro do Cursor Virtual na Tela */}
       {navMode === 'cursor' && (
         <div
           className="fixed pointer-events-none z-[100000] transition-transform duration-75 ease-out"
           style={{
             left: `${cursorPos.x}px`,
             top: `${cursorPos.y}px`,
-            transform: `translate(-2px, -2px) scale(${isClicking ? 0.85 : 1})`,
+            transform: `translate(-2px, -2px) scale(${isClicking ? 0.82 : 1})`,
           }}
         >
-          {/* Efeito de brilho pulsante no ponteiro */}
           <div className="relative">
             <svg
-              className="w-8 h-8 drop-shadow-[0_4px_12px_rgba(229,9,20,0.8)] filter"
+              className="w-8 h-8 drop-shadow-[0_4px_14px_rgba(229,9,20,0.9)] filter"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -208,12 +322,12 @@ export const TvCursorOverlay: React.FC = () => {
                 d="M3 3L10.5 21L13.5 13.5L21 10.5L3 3Z"
                 fill="#e50914"
                 stroke="#ffffff"
-                strokeWidth="2"
+                strokeWidth="2.2"
                 strokeLinejoin="round"
               />
             </svg>
             {isClicking && (
-              <div className="absolute -inset-2 rounded-full border-2 border-amber-400 animate-ping pointer-events-none" />
+              <div className="absolute -inset-3 rounded-full border-2 border-amber-400 animate-ping pointer-events-none" />
             )}
           </div>
         </div>

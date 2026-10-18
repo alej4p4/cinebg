@@ -20,12 +20,18 @@
   "18": "capacitor.build.gradle",
   "19": "android/build.gradle",
   "20": "capacitor.settings.gradle",
+  "21": "StreamPlayer.tsx",
   "22": "variables.gradle",
   "23": "postcss.config.js",
   "24": "vite-env.d.ts",
+  "25": "UpdateModal.tsx",
   "26": "bug_fix.md",
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
   "29": "improvement.md",
-  "30": "index.ts"
+  "30": "index.ts",
+  "31": "scripts",
+  "32": "eslint.config.js",
+  "33": "vite.config.ts",
+  "34": "capacitor.config.ts"
 }
