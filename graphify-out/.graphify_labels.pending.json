@@ -1,7 +1,7 @@
 {
   "0": "App.tsx",
   "1": "index.ts",
-  "2": "index.ts",
+  "2": "EmptyState.tsx",
   "3": "LicenseGate.tsx",
   "4": "package.json",
   "5": "LiveTV.tsx",
@@ -20,16 +20,12 @@
   "18": "capacitor.build.gradle",
   "19": "android/build.gradle",
   "20": "capacitor.settings.gradle",
-  "21": "scripts",
   "22": "variables.gradle",
   "23": "postcss.config.js",
   "24": "vite-env.d.ts",
-  "25": "eslint.config.js",
   "26": "bug_fix.md",
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
   "29": "improvement.md",
-  "30": "index.ts",
-  "31": "vite.config.ts",
-  "32": "capacitor.config.ts"
+  "30": "index.ts"
 }
