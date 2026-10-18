@@ -90,6 +90,11 @@ const Navbar = () => {
     return true
   }
 
+  // No modo de reprodução de filme/série (/watch), oculta a navbar para tela cheia imersiva estilo YuCine
+  if (location.pathname.startsWith('/watch')) {
+    return null
+  }
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
