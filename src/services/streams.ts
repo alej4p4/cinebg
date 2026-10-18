@@ -100,8 +100,8 @@ export const MIRRORS: StreamMirror[] = [
 export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'dub'): string => {
   const sequence =
     audio === 'dub'
-      ? ['megaembed', 'vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed']
-      : ['vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'megaembed']
+      ? ['megaembed', 'multiembed', 'vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed']
+      : ['vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'multiembed', 'megaembed']
 
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
@@ -195,10 +195,7 @@ const resolvedSourcesCache = new Map<string, MegaEmbedResolved>()
 // Normaliza URLs de CDN para HTTPS e remove portas obsoletas
 export const formatDirectStreamUrl = (url: string | null): string | null => {
   if (!url) return null
-  if (url.startsWith('http://www-fontedecanais-live.')) {
-    return url.replace('http://', 'https://').replace(':80/', '/')
-  }
-  return url
+  return url.trim()
 }
 
 // Devolve as fontes diretas do MegaEmbed com suporte a CapacitorHttp nativo e retry
@@ -303,11 +300,6 @@ export const resolveMegaEmbed = async (
       if (!cleanUrl) continue
 
       const isFontedecanais = cleanUrl.includes(DUBBED_SOURCE_HOST_HINT)
-      const isDubbed =
-        isFontedecanais ||
-        cleanUrl.toLowerCase().includes('dublado') ||
-        cleanUrl.toLowerCase().includes('pt-br')
-
       const isHls =
         s.type === 'hls' ||
         cleanUrl.includes('.m3u8') ||
@@ -317,8 +309,8 @@ export const resolveMegaEmbed = async (
       candidates.push({
         url: cleanUrl,
         kind: isHls ? 'hls' : 'mp4',
-        label: s.label || (isFontedecanais ? `Opção Dublada ${i + 1}` : `Servidor ${i + 1}`),
-        isDubbedHint: isDubbed,
+        label: s.label || (isFontedecanais ? `Opção Dublada ${i + 1}` : `Opção ${i + 1}`),
+        isDubbedHint: true,
       })
     }
 

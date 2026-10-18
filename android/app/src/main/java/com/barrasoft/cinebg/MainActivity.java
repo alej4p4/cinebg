@@ -133,7 +133,10 @@ public class MainActivity extends BridgeActivity {
         "banner", "adclick", "clickserver", "adtracker", "affiliate", "landing",
         "popmyads", "plugrush", "yllix", "admaven", "admob", "startapp", "unityads",
         "applovin", "ironsource", "fyber", "chartboost", "vungle", "tapjoy", "mintegral",
-        "pangle", "yandex", "anonymizer", "coinhive", "coinimp", "crypto-loot"
+        "pangle", "yandex", "anonymizer", "coinhive", "coinimp", "crypto-loot",
+        "adkeep", "pemsrv", "adtng", "ad-score", "adtarget", "adfactor", "adnuntius",
+        "outstream", "vidoomy", "in-page-push", "pushnotification", "adserver",
+        "videoshare", "streamshield", "clck"
     };
 
     private static boolean isAdUrl(String url) {
