@@ -26,56 +26,12 @@ const normalizeAudio = (audio: AudioOption | Language): AudioOption => {
 
 export const MIRRORS: StreamMirror[] = [
   {
-    id: 'megaembed',
-    name: 'CineBG Dublado (MegaEmbed)',
-    flagEmoji: '🇧🇷',
-    quality: 'FHD 1080p',
-    type: 'dubbed_br',
-    sandboxed: true,
-    getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://mgeb.site/embed/${tmdbId}/${season}/${episode}`,
-  },
-  {
-    id: 'vidsrc-sh',
-    name: 'CineBG Prime (VidSrc)',
-    flagEmoji: '⚡',
-    quality: 'FHD 1080p',
-    type: 'multi_sub',
-    sandboxed: true,
-    getMovieUrl: (tmdbId) => `https://vidsrc.sh/embed/movie?tmdb=${tmdbId}&ds_lang=pt`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://vidsrc.sh/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}&ds_lang=pt`,
-  },
-  {
-    id: 'vidsrc-io',
-    name: 'CineBG Cloud (VidSrc IO)',
-    flagEmoji: '🌐',
-    quality: 'FHD 1080p',
-    type: 'multi_sub',
-    sandboxed: true,
-    getMovieUrl: (tmdbId) => `https://vidsrc.io/embed/movie/${tmdbId}?ds_lang=pt`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://vidsrc.io/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
-  },
-  {
-    id: 'vsembed',
-    name: 'CineBG Express (VsEmbed)',
-    flagEmoji: '🍿',
-    quality: 'FHD 1080p',
-    type: 'multi_sub',
-    sandboxed: true,
-    getMovieUrl: (tmdbId) => `https://vsembed.ru/embed/movie/${tmdbId}?ds_lang=pt`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://vsembed.ru/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
-  },
-  {
     id: 'vidlink',
     name: 'CineBG Ultra (VidLink Pro)',
     flagEmoji: '🚀',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: true,
+    sandboxed: false,
     getMovieUrl: (tmdbId, audioInput) => {
       const audio = normalizeAudio(audioInput)
       const base = `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981`
@@ -88,12 +44,56 @@ export const MIRRORS: StreamMirror[] = [
     },
   },
   {
+    id: 'vidsrc-sh',
+    name: 'CineBG Prime (VidSrc)',
+    flagEmoji: '⚡',
+    quality: 'FHD 1080p',
+    type: 'multi_sub',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://vidsrc.sh/embed/movie?tmdb=${tmdbId}&ds_lang=pt`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://vidsrc.sh/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}&ds_lang=pt`,
+  },
+  {
+    id: 'megaembed',
+    name: 'CineBG Dublado (MegaEmbed)',
+    flagEmoji: '🇧🇷',
+    quality: 'FHD 1080p',
+    type: 'dubbed_br',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://mgeb.site/embed/${tmdbId}/${season}/${episode}`,
+  },
+  {
+    id: 'vidsrc-io',
+    name: 'CineBG Cloud (VidSrc IO)',
+    flagEmoji: '🌐',
+    quality: 'FHD 1080p',
+    type: 'multi_sub',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://vidsrc.io/embed/movie/${tmdbId}?ds_lang=pt`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://vidsrc.io/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
+  },
+  {
+    id: 'vsembed',
+    name: 'CineBG Express (VsEmbed)',
+    flagEmoji: '🍿',
+    quality: 'FHD 1080p',
+    type: 'multi_sub',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://vsembed.ru/embed/movie/${tmdbId}?ds_lang=pt`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://vsembed.ru/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
+  },
+  {
     id: 'multiembed',
     name: 'CineBG Nativo (Multi-Áudio Dublado)',
     flagEmoji: '🇧🇷',
     quality: 'FHD 1080p',
     type: 'dubbed_br',
-    sandboxed: true,
+    sandboxed: false,
     getMovieUrl: (tmdbId) => `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`,

@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-18)
 
 ## Corpus Check
-- 86 files · ~449,486 words
+- 86 files · ~449,471 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 566 nodes · 1331 edges · 33 communities (21 shown, 12 thin omitted)
+- 566 nodes · 1330 edges · 33 communities (21 shown, 12 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ed2e278d`
+- Built from commit: `9f0d86f0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -79,8 +79,8 @@ Cohesion: 0.07
 Nodes (59): framer-motion, lucide-react, Carousel(), CarouselProps, EmptyDownloads(), EmptyFavorites(), EmptyHistory(), EmptyLiveTV() (+51 more)
 
 ### Community 2 - "index.ts"
-Cohesion: 0.12
-Nodes (29): EpisodeSelector(), EpisodeSelectorProps, StreamPlayer(), StreamPlayerProps, SkeletonEpisodeList(), buildMovieUrl(), buildShowUrl(), DirectCandidate (+21 more)
+Cohesion: 0.11
+Nodes (30): hls.js, EpisodeSelector(), EpisodeSelectorProps, StreamPlayer(), StreamPlayerProps, SkeletonEpisodeList(), buildMovieUrl(), buildShowUrl() (+22 more)
 
 ### Community 3 - "LicenseGate.tsx"
 Cohesion: 0.17
@@ -88,7 +88,7 @@ Nodes (20): LicenseGate(), LicenseGateProps, getDeviceId(), getFirstUse(), getSt
 
 ### Community 4 - "package.json"
 Cohesion: 0.11
-Nodes (18): name, private, type, version, autoprefixer, axios, @capacitor/android, @capacitor/filesystem (+10 more)
+Nodes (17): name, private, type, version, autoprefixer, axios, @capacitor/android, @capacitor/filesystem (+9 more)
 
 ### Community 5 - "LiveTV.tsx"
 Cohesion: 0.17
@@ -163,7 +163,7 @@ Nodes (37): zustand, GenreBadge(), GenreBadgeProps, LoadingSpinner(), useAppUpda
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `App.tsx` to `index.ts`, `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `tmdb.ts`, `notifications.ts`, `index.ts`?**
-  _High betweenness centrality (0.075) - this node is a cross-community bridge._
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _10 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App.tsx` be split into smaller, more focused modules?**
@@ -173,6 +173,6 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `index.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.0735930735930736 - nodes in this community are weakly interconnected._
 - **Why does `lucide-react` connect `index.ts` to `App.tsx`, `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `notifications.ts`, `index.ts`?**
-  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+  _High betweenness centrality (0.058) - this node is a cross-community bridge._
 - **Should `index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.11596638655462185 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10952380952380952 - nodes in this community are weakly interconnected._
