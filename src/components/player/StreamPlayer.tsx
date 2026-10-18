@@ -16,6 +16,7 @@ import {
   FastForward,
   Expand,
   Server,
+  Check,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -129,14 +130,23 @@ const StreamPlayer = ({
   // Alternância de áudio inteligente sem anúncios
   const switchAudio = (opt: AudioOption) => {
     setAudioOption(opt)
-    setActiveMirror('megaembed')
-    setAllowIframe(false)
+    if (opt === 'orig') {
+      setActiveMirror('vidsrc-sh')
+      setAllowIframe(true)
+      setDirectSrc(null)
+      setDirectKind(null)
+      setCandidates([])
+      setCandidateIndex(0)
+    } else {
+      setActiveMirror('megaembed')
+      setAllowIframe(false)
+      setDirectSrc(null)
+      setDirectKind(null)
+      setCandidates([])
+      setCandidateIndex(0)
+    }
     setLoaded(false)
     setError(false)
-    setDirectSrc(null)
-    setDirectKind(null)
-    setCandidates([])
-    setCandidateIndex(0)
     setFallbackAttempt(0)
     setKey((k) => k + 1)
   }
@@ -211,6 +221,14 @@ const StreamPlayer = ({
 
   // Resolve fontes nativas sem anúncios (MP4 / HLS direto via Capacitor/Fetch)
   useEffect(() => {
+    if (audioOption === 'orig') {
+      nativeActiveRef.current = false
+      setResolvingDirect(false)
+      setDirectSrc(null)
+      setDirectKind(null)
+      return
+    }
+
     let cancelled = false
     nativeActiveRef.current = false
     setDirectSrc(null)
@@ -1021,8 +1039,8 @@ const StreamPlayer = ({
             </div>
           )}
 
-          {/* Legendas (só aparece quando a fonte traz faixas) */}
-          {directSrc && tracks.length > 0 && (
+          {/* Legendas (Sempre visível para o usuário gerenciar legendas / áudio) */}
+          {directSrc && (
             <div className="relative">
               <button
                 onClick={() => {
@@ -1030,43 +1048,62 @@ const StreamPlayer = ({
                   setSpeedOpen(false)
                 }}
                 className={`p-2 rounded-lg transition-colors backdrop-blur-sm ${
-                  activeTrack >= 0
+                  activeTrack >= 0 || audioOption === 'orig'
                     ? 'bg-accent-red text-white'
                     : 'bg-black/70 hover:bg-black/90 text-white/60 hover:text-white'
                 }`}
-                title="Legendas"
+                title="Opções de Legenda"
               >
-                {activeTrack >= 0 ? (
+                {activeTrack >= 0 || audioOption === 'orig' ? (
                   <Captions className="h-4 w-4" />
                 ) : (
                   <CaptionsOff className="h-4 w-4" />
                 )}
               </button>
               {subsOpen && (
-                <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 flex flex-col min-w-[150px] max-h-56 overflow-y-auto">
+                <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1.5 flex flex-col min-w-[190px] max-h-60 overflow-y-auto shadow-2xl z-50">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-2 py-1">
+                    Legendas
+                  </div>
                   <button
                     onClick={() => applySubtitle(-1)}
-                    className={`px-3 py-1.5 text-xs rounded text-left transition-colors ${
+                    className={`px-3 py-1.5 text-xs rounded text-left transition-colors flex items-center justify-between ${
                       activeTrack === -1
                         ? 'bg-accent-red text-white font-bold'
                         : 'text-white/70 hover:bg-white/10'
                     }`}
                   >
-                    Desativada
+                    <span>Desativada</span>
+                    {activeTrack === -1 && <Check className="h-3 w-3" />}
                   </button>
                   {tracks.map((t) => (
                     <button
                       key={t.index}
                       onClick={() => applySubtitle(t.index)}
-                      className={`px-3 py-1.5 text-xs rounded text-left transition-colors truncate ${
+                      className={`px-3 py-1.5 text-xs rounded text-left transition-colors truncate flex items-center justify-between ${
                         activeTrack === t.index
                           ? 'bg-accent-red text-white font-bold'
                           : 'text-white/70 hover:bg-white/10'
                       }`}
                     >
-                      {t.label}
+                      <span className="truncate">{t.label}</span>
+                      {activeTrack === t.index && <Check className="h-3 w-3" />}
                     </button>
                   ))}
+                  <div className="my-1 border-t border-white/10" />
+                  <button
+                    onClick={() => {
+                      setSubsOpen(false)
+                      switchAudio('orig')
+                    }}
+                    className="px-2.5 py-1.5 text-xs rounded text-left transition-colors hover:bg-white/10 text-white/80 flex items-center gap-2"
+                  >
+                    <span className="text-sm">🇧🇷</span>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-[11px] text-white">Ativar Legendado (PT-BR)</span>
+                      <span className="text-[9px] text-white/50">Carregar player legendado</span>
+                    </div>
+                  </button>
                 </div>
               )}
             </div>
