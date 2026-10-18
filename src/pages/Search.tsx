@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search as SearchIcon, X, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { Search as SearchIcon, X, SlidersHorizontal, Sparkles, Mic, MicOff, Radio } from 'lucide-react'
+import useSpeechRecognition from '@/hooks/useSpeechRecognition'
 import MovieCard from '@/components/ui/MovieCard'
 import { SkeletonGrid } from '@/components/ui/SkeletonCard'
 import ErrorState from '@/components/ui/ErrorState'
@@ -31,7 +32,23 @@ const Search = () => {
   const [selectedGenre, setSelectedGenre] = useState<number | null>(null)
   const [selectedYear, setSelectedYear] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [voiceToast, setVoiceToast] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleVoiceResult = (spokenText: string) => {
+    setQuery(spokenText)
+    setVoiceToast(`🎙️ "${spokenText}"`)
+    setTimeout(() => setVoiceToast(null), 4000)
+  }
+
+  const {
+    isListening,
+    transcript: liveTranscript,
+    isSupported: voiceSupported,
+    error: voiceError,
+    startListening,
+    stopListening,
+  } = useSpeechRecognition(handleVoiceResult)
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -72,7 +89,7 @@ const Search = () => {
     >
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
         {/* Search bar */}
-        <div className="relative mb-8 max-w-2xl mx-auto">
+        <div className="relative mb-6 max-w-2xl mx-auto">
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/30 pointer-events-none" />
           <input
             ref={inputRef}
@@ -80,23 +97,125 @@ const Search = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar filmes, séries, anime..."
-            className="w-full bg-[#13131c] border border-white/8 text-white placeholder-white/30 rounded-2xl pl-12 pr-12 py-4 text-base focus:border-accent-red/50 focus:ring-2 focus:ring-accent-red/20 transition-all outline-none"
+            className={`w-full bg-[#13131c] border border-white/8 text-white placeholder-white/30 rounded-2xl pl-12 ${
+              query ? 'pr-24' : 'pr-14'
+            } py-4 text-base focus:border-accent-red/50 focus:ring-2 focus:ring-accent-red/20 transition-all outline-none`}
           />
-          <AnimatePresence>
-            {query && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.15 }}
-                onClick={() => setQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </motion.button>
-            )}
-          </AnimatePresence>
+
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            {/* Botão de Limpar Busca */}
+            <AnimatePresence>
+              {query && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={() => setQuery('')}
+                  className="p-1.5 text-white/40 hover:text-white transition-colors"
+                  title="Limpar pesquisa"
+                >
+                  <X className="h-4 w-4" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* Botão de Busca por Voz */}
+            <button
+              type="button"
+              onClick={isListening ? stopListening : startListening}
+              className={`p-2 rounded-xl transition-all relative ${
+                isListening
+                  ? 'bg-accent-red text-white shadow-lg shadow-red-900/50 scale-110 animate-pulse'
+                  : 'text-white/50 hover:text-white hover:bg-white/10'
+              }`}
+              title={
+                voiceSupported
+                  ? isListening
+                    ? 'Ouvindo... Clique para cancelar'
+                    : 'Pesquisar por Voz (Microfone)'
+                  : 'Reconhecimento de voz não suportado neste aparelho'
+              }
+            >
+              <Mic className={`h-4 w-4 ${isListening ? 'animate-bounce' : ''}`} />
+              {isListening && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping" />
+              )}
+            </button>
+          </div>
         </div>
+
+        {/* Modal / Overlay Flutuante de Escuta por Voz */}
+        <AnimatePresence>
+          {isListening && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              className="max-w-2xl mx-auto mb-6 p-4 rounded-2xl bg-gradient-to-r from-red-950/80 via-[#18101a] to-amber-950/60 border border-accent-red/40 backdrop-blur-md shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-xl bg-accent-red flex items-center justify-center text-white shadow-lg shadow-red-900/60 relative">
+                  <Mic className="h-6 w-6 animate-pulse" />
+                  <span className="absolute -inset-1 rounded-xl border border-accent-red/60 animate-ping pointer-events-none" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white text-sm">Ouvindo sua voz...</span>
+                    <span className="flex gap-1 items-center">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent-red animate-bounce" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent-red animate-bounce [animation-delay:0.15s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent-red animate-bounce [animation-delay:0.3s]" />
+                    </span>
+                  </div>
+                  <p className="text-white/70 text-xs mt-0.5">
+                    {liveTranscript ? (
+                      <span className="text-amber-300 font-semibold italic">"{liveTranscript}"</span>
+                    ) : (
+                      'Fale o nome do filme, série ou anime (ex: "Avatar", "Stranger Things")...'
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={stopListening}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors self-stretch sm:self-auto text-center"
+              >
+                Cancelar
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Feedback de Voz Transcrito ou Erro */}
+        <AnimatePresence>
+          {voiceToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="max-w-2xl mx-auto mb-6 px-4 py-2 rounded-xl bg-accent-red/20 border border-accent-red/40 text-white text-xs font-semibold flex items-center justify-between"
+            >
+              <span>{voiceToast}</span>
+              <button onClick={() => setVoiceToast(null)} className="text-white/50 hover:text-white">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </motion.div>
+          )}
+
+          {voiceError && !isListening && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="max-w-2xl mx-auto mb-6 px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-medium"
+            >
+              {voiceError}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Filters */}
         <div className="mb-6">
