@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowLeft, Star, Calendar, Clock, Film, Tv, Download, Check, Loader2 } from 'lucide-react'
+import { Capacitor } from '@capacitor/core'
 import StreamPlayer from '@/components/player/StreamPlayer'
-import EpisodeSelector from '@/components/player/EpisodeSelector'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import GenreBadge from '@/components/ui/GenreBadge'
-import { getMovieDetails, getShowDetails, getPosterUrl } from '@/services/tmdb'
+import { getMovieDetails, getShowDetails } from '@/services/tmdb'
 import { resolveMegaEmbed } from '@/services/streams'
 import { buildFileName, downloadVideo, downloadsSupported } from '@/services/downloads'
 import { useAppStore } from '@/store/useAppStore'
@@ -28,7 +25,34 @@ const Watch = () => {
   const [episode, setEpisode] = useState(1)
   const [resumeAt, setResumeAt] = useState<number | undefined>(undefined)
   const [downloading, setDownloading] = useState(false)
-  const [downloadProgress, setDownloadProgress] = useState(0)
+  const [_downloadProgress, setDownloadProgress] = useState(0)
+
+  // Ao dar o Play e entrar na rota /watch, entra em tela cheia imediata (estilo YuCine)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor/status-bar')
+        .then(({ StatusBar }) => {
+          StatusBar.hide().catch(() => {})
+        })
+        .catch(() => {})
+    }
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {})
+    }
+
+    return () => {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {})
+      }
+      if (Capacitor.isNativePlatform()) {
+        import('@capacitor/status-bar')
+          .then(({ StatusBar }) => {
+            StatusBar.show().catch(() => {})
+          })
+          .catch(() => {})
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!id || !type) return
@@ -194,201 +218,22 @@ const Watch = () => {
   )
 
   return (
-    <motion.div
-      className="min-h-screen bg-bg-primary pt-20 pb-10 page-enter"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
-        {/* Top Nav */}
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white/70 hover:text-white mb-4 transition-colors w-fit px-3 py-1.5 rounded-lg focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:text-yellow-400 font-bold"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </button>
-
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          {/* Main Content (Player) */}
-          <div className="flex-1 space-y-6">
-            <StreamPlayer
-              tmdbId={Number(id)}
-              type={type as 'movie' | 'tv' | 'anime'}
-              season={season}
-              episode={episode}
-              title={title || ''}
-              onNextEpisode={type !== 'movie' ? handleNextEpisode : undefined}
-              startAt={resumeAt}
-              onProgress={handleProgress}
-              seasons={showData?.seasons}
-              onSelectEpisode={handleEpisodeSelect}
-            />
-
-            {/* Seletor Horizontal de Temporadas e Episódios (Estilo TV YuCine - Imagem 1) */}
-            {!isMovie && showData && showData.seasons && (
-              <div className="glass rounded-2xl p-4 md:p-5 space-y-3 border border-white/10">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-display font-black text-white text-base sm:text-lg">
-                      Temporada {season}
-                    </span>
-                    <span className="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-full font-bold">
-                      1-{currentSeasonEpisodeCount}
-                    </span>
-                  </div>
-
-                  {/* Abas de Temporada */}
-                  {showData.seasons.filter((s) => s.season_number > 0).length > 1 && (
-                    <div className="flex items-center gap-1.5 overflow-x-auto scroll-hide">
-                      {showData.seasons
-                        .filter((s) => s.season_number > 0)
-                        .map((s) => (
-                          <button
-                            key={s.id}
-                            onClick={() => handleEpisodeSelect(s.season_number, 1)}
-                            className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all ${
-                              season === s.season_number
-                                ? 'bg-yellow-400 text-black border-yellow-400 shadow-md shadow-yellow-400/30'
-                                : 'bg-white/5 text-white/70 border-white/10 hover:text-white'
-                            } focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105`}
-                          >
-                            T{s.season_number}
-                          </button>
-                        ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Lista Horizontal de Episódios com Borda Amarela no Foco */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {Array.from({ length: currentSeasonEpisodeCount }, (_, i) => i + 1).map((epNum) => {
-                    const isCurrent = episode === epNum
-                    return (
-                      <button
-                        key={epNum}
-                        onClick={() => handleEpisodeSelect(season, epNum)}
-                        className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-sm font-black border transition-all ${
-                          isCurrent
-                            ? 'bg-yellow-400 text-black border-yellow-400 shadow-lg shadow-yellow-400/40 scale-105'
-                            : 'bg-[#1b1c28] hover:bg-[#25273a] text-white border-white/10'
-                        } focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-110`}
-                      >
-                        {epNum}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Download offline */}
-            <div className="flex flex-wrap items-center gap-3 glass rounded-xl px-4 py-3">
-              {alreadyDownloaded ? (
-                <span className="flex items-center gap-2 text-sm font-semibold text-green-400">
-                  <Check className="h-4 w-4" />
-                  Baixado — disponível em Downloads
-                </span>
-              ) : (
-                <>
-                  <span className="text-sm text-white/70 flex-1 min-w-[200px]">
-                    Baixe e assista offline, sem precisar de internet.
-                  </span>
-                  <button
-                    id="watch-download-btn"
-                    onClick={handleDownload}
-                    disabled={downloading}
-                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400"
-                  >
-                    {downloading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                    {downloading
-                      ? `Baixando ${Math.round(downloadProgress * 100)}%`
-                      : 'Baixar'}
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Details below player on mobile, hide on desktop if space is tight */}
-            <div className="glass rounded-xl p-6">
-              <h1 className="font-display font-black text-2xl md:text-3xl text-white mb-3">
-                {title} {type !== 'movie' && <span className="text-accent-red text-xl ml-2">S{season}E{episode}</span>}
-              </h1>
-              
-              <div className="flex flex-wrap items-center gap-4 text-sm text-white/70 mb-4">
-                {rating && (
-                  <span className="flex items-center gap-1 text-accent-gold font-bold">
-                    <Star className="h-4 w-4 fill-current" />
-                    {rating.toFixed(1)}
-                  </span>
-                )}
-                {year && (
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    {year}
-                  </span>
-                )}
-                {runtime && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {runtime} min
-                  </span>
-                )}
-                <span className="flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded text-white">
-                  <Film className="h-3 w-3" />
-                  {type === 'movie' ? 'FILME' : type === 'anime' ? 'ANIME' : 'SÉRIE'}
-                </span>
-              </div>
-
-              {genres && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {genres.map(g => (
-                    <GenreBadge key={g.id} name={g.name} />
-                  ))}
-                </div>
-              )}
-
-              <p className="text-white/80 leading-relaxed text-sm md:text-base">
-                {overview || 'Sem descrição disponível para este título.'}
-              </p>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 space-y-6">
-            {/* Poster (Desktop) */}
-            <div className="hidden lg:block glass rounded-xl p-4">
-              <img
-                src={getPosterUrl(posterPath)}
-                alt={title}
-                className="w-full rounded-lg shadow-lg"
-              />
-            </div>
-
-            {/* Episode Selector (TV/Anime) */}
-            {!isMovie && showData && (
-              <div className="glass rounded-xl p-5 sticky top-24">
-                <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                  <Tv className="h-5 w-5 text-accent-red" />
-                  Temporadas e Episódios
-                </h3>
-                <EpisodeSelector
-                  showId={showData.id}
-                  seasons={showData.seasons}
-                  currentSeason={season}
-                  currentEpisode={episode}
-                  onSelect={handleEpisodeSelect}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </motion.div>
+    <div className="fixed inset-0 z-50 w-screen h-screen bg-black overflow-hidden select-none">
+      <StreamPlayer
+        tmdbId={Number(id)}
+        type={type as 'movie' | 'tv' | 'anime'}
+        season={season}
+        episode={episode}
+        title={title || ''}
+        onNextEpisode={type !== 'movie' ? handleNextEpisode : undefined}
+        startAt={resumeAt}
+        onProgress={handleProgress}
+        seasons={showData?.seasons}
+        onSelectEpisode={handleEpisodeSelect}
+        onBack={() => navigate(-1)}
+        onDownload={handleDownload}
+      />
+    </div>
   )
 }
 

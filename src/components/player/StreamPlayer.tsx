@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import {
   Maximize2,
   RefreshCw,
@@ -18,8 +18,10 @@ import {
   Server,
   Check,
   Play,
+  Pause,
   Star,
   Download,
+  ArrowLeft,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -53,6 +55,8 @@ interface StreamPlayerProps {
   onProgress?: (seconds: number, duration: number) => void
   seasons?: TMDBSeason[]
   onSelectEpisode?: (season: number, episode: number) => void
+  onBack?: () => void
+  onDownload?: () => void
 }
 
 const StreamPlayer = ({
@@ -66,6 +70,8 @@ const StreamPlayer = ({
   onProgress,
   seasons,
   onSelectEpisode,
+  onBack,
+  onDownload,
 }: StreamPlayerProps) => {
   const { audioOption, subtitleOption, setAudioOption, favorites, addFavorite, removeFavorite } = useAppStore()
   const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -261,6 +267,58 @@ const StreamPlayer = ({
   const [resumeToast, setResumeToast] = useState<{ seconds: number } | null>(null)
   const hasSkippedIntroRef = useRef(false)
   const lockPromptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ===== Estado do HUD / Controles Imersivos Estilo YuCine =====
+  const [showHud, setShowHud] = useState(true)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(true)
+  const hudTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const resetHudTimer = useCallback(() => {
+    setShowHud(true)
+    if (hudTimerRef.current) clearTimeout(hudTimerRef.current)
+    hudTimerRef.current = setTimeout(() => {
+      if (
+        videoRef.current &&
+        !videoRef.current.paused &&
+        !settingsModalOpen &&
+        !episodesDrawerOpen &&
+        !speedOpen &&
+        !subsOpen &&
+        !qualityOpen
+      ) {
+        setShowHud(false)
+      }
+    }, 4500)
+  }, [settingsModalOpen, episodesDrawerOpen, speedOpen, subsOpen, qualityOpen])
+
+  useEffect(() => {
+    resetHudTimer()
+    return () => {
+      if (hudTimerRef.current) clearTimeout(hudTimerRef.current)
+    }
+  }, [resetHudTimer])
+
+  const formatTime = (secs: number) => {
+    if (!Number.isFinite(secs) || secs < 0) return '00:00'
+    const h = Math.floor(secs / 3600)
+    const m = Math.floor((secs % 3600) / 60)
+    const s = Math.floor(secs % 60)
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+
+  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value)
+    if (videoRef.current) {
+      videoRef.current.currentTime = val
+      setCurrentTime(val)
+    }
+    resetHudTimer()
+  }
 
   // ===== Auto-fallback state =====
   const [fallbackAttempt, setFallbackAttempt] = useState(0)
@@ -865,6 +923,10 @@ const StreamPlayer = ({
     const video = videoRef.current
     if (!video) return
     const current = video.currentTime
+    setCurrentTime(current)
+    const dur = Number.isFinite(video.duration) ? video.duration : 0
+    setDuration(dur)
+    setIsPlaying(!video.paused)
 
     // Pular Abertura (+85s) durante os primeiros minutos de séries/animes
     if (type !== 'movie') {
@@ -883,6 +945,7 @@ const StreamPlayer = ({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    resetHudTimer()
     const target = e.target as HTMLElement
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
     if (!videoRef.current) return
@@ -941,8 +1004,13 @@ const StreamPlayer = ({
         toggleFitMode()
         break
       case 'Escape':
-        if (episodesDrawerOpen) {
+      case 'GoBack':
+        if (settingsModalOpen) {
+          setSettingsModalOpen(false)
+        } else if (episodesDrawerOpen) {
           setEpisodesDrawerOpen(false)
+        } else if (onBack) {
+          onBack()
         }
         break
       default:
@@ -983,53 +1051,50 @@ const StreamPlayer = ({
   }, [showIframe])
 
   return (
-    <div className="space-y-0">
-      {/* ====== SELETOR DE ÁUDIO NATIVO (Estilo YuCine - Sem Exibir Servidores Técnicos) ====== */}
-      <div className="flex flex-wrap items-center justify-between bg-[#111118] border border-white/5 rounded-t-xl px-4 py-2.5 gap-2">
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onMouseMove={resetHudTimer}
+      onTouchStart={resetHudTimer}
+      style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+      className="player-container relative w-full h-full min-h-screen bg-black overflow-hidden flex flex-col justify-between outline-none ring-0 border-0 select-none"
+    >
+      {/* ====== BARRA SUPERIOR HUD (Estilo YuCine TV) ====== */}
+      <div
+        className={`absolute top-0 left-0 right-0 z-40 p-4 sm:p-6 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between transition-opacity duration-300 ${
+          showHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={onBack ? onBack : () => window.history.back()}
+            className="flex items-center gap-2 bg-black/60 hover:bg-black/90 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold backdrop-blur-md border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-lg"
+            title="Voltar"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Voltar</span>
+          </button>
+
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-white font-extrabold text-sm sm:text-base md:text-lg truncate drop-shadow-md">
+              {title}
+            </h1>
+            {type !== 'movie' && season && episode && (
+              <span className="text-yellow-400 text-xs font-bold">
+                Temporada {season} · Episódio {episode}
+              </span>
+            )}
+          </div>
+        </div>
+
         <div className="flex items-center gap-2">
-          <Volume2 className="h-4 w-4 text-accent-red" />
-          <span className="text-white/60 text-xs font-semibold">
-            {audioOption === 'dub' ? '🇧🇷 Dublado' : '🇺🇸 Original / Legendado'}
+          <span className="bg-black/60 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white/90 backdrop-blur-md">
+            {audioOption === 'dub' ? '🇧🇷 Dublado' : '🇺🇸 Legendado'}
           </span>
         </div>
-
-        {/* Seleção Simplificada de Idioma */}
-        <div className="flex items-center gap-1 bg-[#1c1c28] p-1 rounded-lg border border-white/5">
-          <button
-            onClick={() => switchAudio('dub')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-all duration-200 ${
-              audioOption === 'dub'
-                ? 'bg-accent-red text-white shadow-lg shadow-red-900/40'
-                : 'text-white/40 hover:text-white/70'
-            }`}
-          >
-            <span className="text-sm leading-none">🇧🇷</span>
-            <span>Dublado</span>
-          </button>
-
-          <button
-            onClick={() => switchAudio('orig')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-all duration-200 ${
-              audioOption === 'orig'
-                ? 'bg-accent-red text-white shadow-lg shadow-red-900/40'
-                : 'text-white/40 hover:text-white/70'
-            }`}
-          >
-            <span className="text-sm leading-none">🇺🇸</span>
-            <span>Original / Legendado</span>
-          </button>
-        </div>
       </div>
-
-      {/* ====== CONTAINER DO PLAYER ====== */}
-      <div
-        ref={containerRef}
-        tabIndex={0}
-        onKeyDown={handleKeyDown}
-        onDoubleClick={handleVideoDoubleClick}
-        style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
-        className="player-container relative bg-black overflow-hidden rounded-b-xl aspect-video [&:fullscreen]:aspect-auto [&:fullscreen]:w-screen [&:fullscreen]:h-screen [&:fullscreen]:rounded-none outline-none ring-0 border-0 focus:outline-none focus:ring-0 focus:border-0 focus-visible:outline-none focus-visible:ring-0 [outline:none!important] [border:none!important] [box-shadow:none!important]"
-      >
         {feedback && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
             <span className="bg-black/70 text-white text-2xl font-bold px-5 py-3 rounded-full">
@@ -1229,18 +1294,17 @@ const StreamPlayer = ({
             ref={videoRef}
             {...(directKind === 'mp4' ? { src: directSrc } : {})}
             title={title}
-            controls
             autoPlay
             playsInline
             crossOrigin="anonymous"
-            className={`h-full bg-black transition-all duration-200 ${
+            className={`w-full h-full bg-black transition-all duration-200 ${
               fitMode === 'cover'
-                ? 'w-full object-cover'
+                ? 'object-cover'
                 : fitMode === 'fill'
-                ? 'w-full [object-fit:fill]'
+                ? '[object-fit:fill]'
                 : fitMode === 'classic'
                 ? 'w-auto max-w-full aspect-[4/3] object-contain mx-auto'
-                : 'w-full object-contain'
+                : 'object-contain'
             }`}
             onLoadedData={handleDirectMediaReady}
             onLoadedMetadata={handleLoadedMetadata}
@@ -1250,6 +1314,8 @@ const StreamPlayer = ({
             onStalled={handleStall}
             onError={handleDirectMediaError}
             onEnded={handleEnded}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
           >
             {externalSubs.map((sub) => (
               <track
@@ -1262,6 +1328,18 @@ const StreamPlayer = ({
               />
             ))}
           </video>
+        )}
+
+        {/* Indicador Central de Play / Pause */}
+        {!isPlaying && directSrc && !error && (
+          <div
+            onClick={togglePlay}
+            className="absolute inset-0 flex items-center justify-center z-30 cursor-pointer bg-black/35 backdrop-blur-[2px]"
+          >
+            <div className="w-20 h-20 rounded-full bg-yellow-400 text-black flex items-center justify-center shadow-2xl shadow-yellow-400/50 transform transition-transform hover:scale-110 active:scale-95">
+              <Play className="w-10 h-10 fill-black ml-1" />
+            </div>
+          </div>
         )}
 
         {/* Toast Flutuante de Retomada Inteligente */}
@@ -1290,438 +1368,186 @@ const StreamPlayer = ({
           </div>
         )}
 
-        {/* Controles Flutuantes Nativos CineBG */}
-        <div className={`absolute bottom-3 right-3 flex items-center gap-2 z-30 transition-opacity duration-200 ${isLocked ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          {/* Gaveta de Episódios In-Player (Estilo YuCine) */}
-          {type !== 'movie' && seasons && seasons.length > 0 && onSelectEpisode && (
-            <button
-              onClick={() => setEpisodesDrawerOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-black/70 hover:bg-black/90 rounded-lg text-white font-bold text-xs transition-colors backdrop-blur-sm border border-white/5"
-              title="Lista de Episódios"
-            >
-              <Layers className="h-4 w-4 text-accent-red" />
-              <span className="hidden sm:inline">Episódios</span>
-            </button>
-          )}
-          {/* Alternar Preenchimento de Tela (Estilo YuCine: Ajustar vs Preencher) */}
-          {directSrc && (
-            <button
-              onClick={toggleFitMode}
-              className={`p-2 rounded-lg text-xs font-bold transition-colors backdrop-blur-sm ${
-                fitMode === 'cover'
-                  ? 'bg-accent-red text-white shadow-md shadow-red-900/40'
-                  : 'bg-black/70 hover:bg-black/90 text-white/70 hover:text-white'
-              }`}
-              title={fitMode === 'cover' ? 'Ajustar para proporção original' : 'Preencher tela inteira'}
-            >
-              <Expand className="h-4 w-4" />
-            </button>
-          )}
-          {/* Velocidade de reprodução */}
-          {directSrc && (
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setSpeedOpen((v) => !v)
-                  setSubsOpen(false)
-                }}
-                className="px-2.5 py-2 bg-black/70 hover:bg-black/90 rounded-lg text-white text-xs font-bold transition-colors backdrop-blur-sm"
-                title="Velocidade de reprodução"
-              >
-                {speed}x
-              </button>
-              {speedOpen && (
-                <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 flex flex-col min-w-[72px]">
-                  {SPEED_OPTIONS.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => {
-                        setSpeed(option)
-                        setSpeedOpen(false)
-                      }}
-                      className={`px-3 py-1.5 text-xs rounded text-left transition-colors ${
-                        speed === option
-                          ? 'bg-accent-red text-white font-bold'
-                          : 'text-white/70 hover:bg-white/10'
-                      }`}
-                    >
-                      {option}×
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Legendas (Sempre visível para o usuário gerenciar legendas / áudio) */}
-          {directSrc && (
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setSubsOpen((v) => !v)
-                  setSpeedOpen(false)
-                }}
-                className={`p-2 rounded-lg transition-colors backdrop-blur-sm ${
-                  activeTrack >= 0
-                    ? 'bg-accent-red text-white'
-                    : 'bg-black/70 hover:bg-black/90 text-white/60 hover:text-white'
-                }`}
-                title="Opções de Legenda"
-              >
-                {activeTrack >= 0 ? (
-                  <Captions className="h-4 w-4" />
-                ) : (
-                  <CaptionsOff className="h-4 w-4" />
-                )}
-              </button>
-              {subsOpen && (
-                <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1.5 flex flex-col min-w-[210px] max-h-64 overflow-y-auto shadow-2xl z-50">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-2 py-1">
-                    Legendas (PT-BR)
-                  </div>
-                  <button
-                    onClick={() => applySubtitle(-1)}
-                    className={`px-3 py-1.5 text-xs rounded text-left transition-colors flex items-center justify-between ${
-                      activeTrack === -1
-                        ? 'bg-accent-red text-white font-bold'
-                        : 'text-white/70 hover:bg-white/10'
-                    }`}
-                  >
-                    <span>Desativada</span>
-                    {activeTrack === -1 && <Check className="h-3 w-3" />}
-                  </button>
-                  {tracks.map((t) => (
-                    <button
-                      key={t.index}
-                      onClick={() => applySubtitle(t.index)}
-                      className={`px-3 py-1.5 text-xs rounded text-left transition-colors flex items-center justify-between gap-2 ${
-                        activeTrack === t.index
-                          ? 'bg-accent-red text-white font-bold'
-                          : 'text-white/70 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="flex flex-col min-w-0 pr-1">
-                        <span className="truncate">{t.label}</span>
-                        {t.isForced && (
-                          <span className="text-[10px] text-yellow-400 font-normal leading-tight">
-                            Traduz falas em outro idioma
-                          </span>
-                        )}
-                      </div>
-                      {activeTrack === t.index && <Check className="h-3 w-3 flex-shrink-0" />}
-                    </button>
-                  ))}
-                  {tracks.length === 0 && (
-                    <div className="px-3 py-1.5 text-[11px] text-white/40 italic">
-                      Buscando legendas...
-                    </div>
-                  )}
-                  {/* Configurações visuais de Legenda */}
-                  <div className="my-1.5 border-t border-white/10" />
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-2 py-0.5">
-                    Aparência da Legenda
-                  </div>
-
-                  {/* Pré-visualização em tempo real */}
-                  <div className="mx-2 my-1.5 p-2 rounded-lg bg-black/70 border border-white/10 text-center flex items-center justify-center overflow-hidden min-h-[36px]">
-                    <span
-                      style={{
-                        fontSize:
-                          subSize === 'sm'
-                            ? '12px'
-                            : subSize === 'md'
-                            ? '14px'
-                            : subSize === 'lg'
-                            ? '16px'
-                            : '18px',
-                        color:
-                          subColor === 'yellow'
-                            ? '#fde047'
-                            : subColor === 'white'
-                            ? '#ffffff'
-                            : subColor === 'cyan'
-                            ? '#38bdf8'
-                            : '#4ade80',
-                        backgroundColor:
-                          subBg === 'solid'
-                            ? 'rgba(0, 0, 0, 0.92)'
-                            : subBg === 'box'
-                            ? 'rgba(0, 0, 0, 0.65)'
-                            : 'transparent',
-                        textShadow:
-                          subBg === 'transparent'
-                            ? '-1px -1px 0 #000, 1px 1px 0 #000'
-                            : '0px 1px 3px rgba(0,0,0,0.9)',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Exemplo de Legenda (AaBb)
-                    </span>
-                  </div>
-
-                  {/* Tamanho da Fonte */}
-                  <div className="flex items-center justify-between px-2 py-1 text-xs">
-                    <span className="text-white/60 text-[11px]">Tamanho:</span>
-                    <div className="flex items-center gap-1">
-                      {[
-                        { id: 'sm', label: 'P' },
-                        { id: 'md', label: 'M' },
-                        { id: 'lg', label: 'G' },
-                        { id: 'xl', label: 'XG' },
-                      ].map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => updateSubSize(s.id as any)}
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
-                            subSize === s.id
-                              ? 'bg-accent-red text-white shadow'
-                              : 'bg-white/10 text-white/60 hover:text-white'
-                          }`}
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Cor do Texto */}
-                  <div className="flex items-center justify-between px-2 py-1 text-xs">
-                    <span className="text-white/60 text-[11px]">Cor:</span>
-                    <div className="flex items-center gap-1">
-                      {[
-                        { id: 'yellow', label: 'Amarelo', dot: '#facc15' },
-                        { id: 'white', label: 'Branco', dot: '#ffffff' },
-                        { id: 'cyan', label: 'Ciano', dot: '#38bdf8' },
-                        { id: 'green', label: 'Verde', dot: '#4ade80' },
-                      ].map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => updateSubColor(c.id as any)}
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${
-                            subColor === c.id
-                              ? 'bg-white/20 text-white border border-white/40 shadow-sm'
-                              : 'bg-white/5 text-white/60 hover:text-white'
-                          }`}
-                        >
-                          <span
-                            className="w-2 h-2 rounded-full border border-black/40"
-                            style={{ backgroundColor: c.dot }}
-                          />
-                          <span>{c.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Fundo / Contraste */}
-                  <div className="flex items-center justify-between px-2 py-1 text-xs mb-1">
-                    <span className="text-white/60 text-[11px]">Fundo:</span>
-                    <div className="flex items-center gap-1">
-                      {[
-                        { id: 'solid', label: 'Sólido' },
-                        { id: 'box', label: 'Translúcido' },
-                        { id: 'transparent', label: 'Sem Fundo' },
-                      ].map((b) => (
-                        <button
-                          key={b.id}
-                          onClick={() => updateSubBg(b.id as any)}
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
-                            subBg === b.id
-                              ? 'bg-amber-400 text-black shadow'
-                              : 'bg-white/10 text-white/60 hover:text-white'
-                          }`}
-                        >
-                          {b.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="my-1 border-t border-white/10" />
-                  <button
-                    onClick={() => {
-                      setSubsOpen(false)
-                      switchAudio('orig')
-                    }}
-                    className="px-2.5 py-1.5 text-xs rounded text-left transition-colors hover:bg-white/10 text-white/80 flex items-center gap-2"
-                  >
-                    <span className="text-sm">🇧🇷</span>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-[11px] text-white">Ativar Legendado (PT-BR)</span>
-                      <span className="text-[9px] text-white/50">Carregar player legendado</span>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Picture-in-Picture */}
-          {directSrc && typeof document !== 'undefined' && document.pictureInPictureEnabled && (
-            <button
-              onClick={handlePip}
-              className={`p-2 rounded-lg transition-colors backdrop-blur-sm ${
-                pipActive
-                  ? 'bg-accent-red text-white'
-                  : 'bg-black/70 hover:bg-black/90 text-white/60 hover:text-white'
-              }`}
-              title="Picture-in-Picture"
-            >
-              <PictureInPicture2 className="h-4 w-4" />
-            </button>
-          )}
-
-          {onNextEpisode && type !== 'movie' && (
-            <button
-              onClick={() => {
-                cancelAutoNext()
-                onNextEpisode()
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 bg-accent-red hover:bg-red-600 rounded-lg text-white font-bold text-xs transition-colors backdrop-blur-sm shadow-lg shadow-red-900/40"
-              title="Próximo Episódio"
-            >
-              <SkipForward className="h-3.5 w-3.5" />
-              <span>Próximo Ep</span>
-            </button>
-          )}
-
-          {autoNextCountdown !== null && (
-            <div className="flex items-center gap-2 bg-black/80 text-white px-3 py-1.5 rounded-lg text-xs font-mono backdrop-blur-sm border border-white/10">
-              <span>Próximo em</span>
-              <span className="bg-accent-red text-white px-2 py-0.5 rounded">{autoNextCountdown}s</span>
-              <button
-                onClick={cancelAutoNext}
-                className="ml-1 p-1 hover:bg-white/10 rounded"
-                title="Cancelar"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          )}
-
-          {directSrc && availableQualities.length > 1 && (
-            <div className="relative">
-              <button
-                onClick={() => setQualityOpen(!qualityOpen)}
-                className="px-2.5 py-2 bg-black/70 hover:bg-black/90 rounded-lg text-white text-xs font-bold transition-colors backdrop-blur-sm"
-                title="Qualidade"
-              >
-                {currentQuality || 'Auto'}
-              </button>
-              {qualityOpen && (
-                <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 flex flex-col min-w-[80px]">
-                  <button
-                    onClick={() => {
-                      setCurrentQuality(null)
-                      setQualityOpen(false)
-                    }}
-                    className={`px-3 py-1.5 text-xs rounded text-left transition-colors ${!currentQuality ? 'bg-accent-red text-white font-bold' : 'text-white/70 hover:bg-white/10'}`}
-                  >
-                    Auto
-                  </button>
-                  {availableQualities.map((q) => (
-                    <button
-                      key={q.label}
-                      onClick={() => {
-                        setCurrentQuality(q.label)
-                        setQualityOpen(false)
-                      }}
-                      className={`px-3 py-1.5 text-xs rounded text-left transition-colors ${currentQuality === q.label ? 'bg-accent-red text-white font-bold' : 'text-white/70 hover:bg-white/10'}`}
-                    >
-                      {q.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          <button
-            onClick={handleManualRefresh}
-            className="p-2 bg-black/70 hover:bg-black/90 rounded-lg text-white/60 hover:text-white transition-colors backdrop-blur-sm"
-            title="Recarregar"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
-          <button
-            onClick={handleFullscreen}
-            className="p-2 bg-black/70 hover:bg-black/90 rounded-lg text-white/60 hover:text-white transition-colors backdrop-blur-sm"
-            title="Tela cheia"
-          >
-            <Maximize2 className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* ====== BARRA DE BOTÕES ESTILO YUCINE PARA TV (Imagem 1) ====== */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mt-3 pt-3 border-t border-white/10">
-        {/* 1. Tela cheia */}
-        <button
-          type="button"
-          onClick={handleFullscreen}
-          className="flex items-center justify-center gap-2 bg-[#171824] hover:bg-[#232538] text-white px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
-        >
-          <Expand className="w-4 h-4 text-yellow-400" />
-          <span>Tela cheia</span>
-        </button>
-
-        {/* 2. Idioma (Abre o modal Configurações de Reprodução - Imagem 2) */}
-        <button
-          type="button"
-          onClick={() => setSettingsModalOpen(true)}
-          className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
-            settingsModalOpen
-              ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
-              : 'bg-[#171824] hover:bg-[#232538] text-white border-white/10'
+        {/* Barra Inferior HUD Integrada (Linha do Tempo + Ações Estilo YuCine) */}
+        <div
+          className={`absolute bottom-0 inset-x-0 z-40 bg-gradient-to-t from-black/95 via-black/80 to-transparent pt-12 pb-6 px-4 sm:px-8 transition-opacity duration-300 pointer-events-auto ${
+            showHud || !isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
-        >
-          <Captions className="w-4 h-4 text-yellow-400" />
-          <span>Idioma</span>
-        </button>
-
-        {/* 3. Resolução / Opção de Servidor */}
-        <button
-          type="button"
-          onClick={handleDirectMediaError}
-          className="flex items-center justify-center gap-2 bg-[#171824] hover:bg-[#232538] text-white px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
-          title="Alternar servidor ou resolução"
-        >
-          <Server className="w-4 h-4 text-yellow-400" />
-          <span>
-            {candidates.length > 0 ? `Opção ${candidateIndex + 1}` : 'Resolução'}
-          </span>
-        </button>
-
-        {/* 4. Favorito */}
-        <button
-          type="button"
-          onClick={handleToggleFavorite}
-          className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
-            isFavorite
-              ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
-              : 'bg-[#171824] hover:bg-[#232538] text-white border-white/10'
-          }`}
-        >
-          <Star className={`w-4 h-4 ${isFavorite ? 'text-black fill-black' : 'text-yellow-400'}`} />
-          <span>{isFavorite ? 'Favorito' : 'Favoritar'}</span>
-        </button>
-
-        {/* 5. Baixar / Upload */}
-        <button
-          type="button"
-          onClick={() => {
-            const btn = document.getElementById('watch-download-btn')
-            if (btn) btn.click()
-            else showFeedback('Preparando download...')
+          onClick={(e) => {
+            e.stopPropagation()
+            resetHudTimer()
           }}
-          className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 bg-[#171824] hover:bg-[#232538] text-white px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
         >
-          <Download className="w-4 h-4 text-yellow-400" />
-          <span>Baixar</span>
-        </button>
-      </div>
+          {/* Linha do Tempo / Scrubber */}
+          {directSrc && duration > 0 && (
+            <div className="flex items-center gap-3 sm:gap-4 mb-4">
+              <button
+                type="button"
+                onClick={togglePlay}
+                className="p-2 sm:p-2.5 bg-yellow-400 hover:bg-yellow-300 text-black rounded-full font-bold transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                title={isPlaying ? 'Pausar' : 'Reproduzir'}
+              >
+                {isPlaying ? <Pause className="w-5 h-5 fill-black" /> : <Play className="w-5 h-5 fill-black ml-0.5" />}
+              </button>
+              
+              <span className="text-xs sm:text-sm font-mono text-white/90 min-w-[45px] select-none">
+                {formatTime(currentTime)}
+              </span>
+
+              <div className="relative flex-1 flex items-center group py-2">
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 100}
+                  step={1}
+                  value={currentTime}
+                  onChange={handleSeekChange}
+                  className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              <span className="text-xs sm:text-sm font-mono text-white/60 min-w-[45px] select-none text-right">
+                {formatTime(duration)}
+              </span>
+            </div>
+          )}
+
+          {/* Barra de Ações Estilo YuCine (Otimizada para D-Pad / Controle Remoto da TV) */}
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* 1. Tela cheia */}
+              <button
+                type="button"
+                onClick={handleFullscreen}
+                className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+              >
+                <Expand className="w-4 h-4 text-yellow-400 group-focus:text-black" />
+                <span>Tela cheia</span>
+              </button>
+
+              {/* 2. Idioma (Abre o modal Configurações de Reprodução) */}
+              <button
+                type="button"
+                onClick={() => setSettingsModalOpen(true)}
+                className={`flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
+                  settingsModalOpen
+                    ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
+                    : 'bg-[#171824]/90 hover:bg-[#232538] text-white border-white/10'
+                }`}
+              >
+                <Captions className="w-4 h-4 text-yellow-400" />
+                <span>Idioma ({audioOption === 'dub' ? 'Dublado' : 'Original'})</span>
+              </button>
+
+              {/* 3. Resolução / Opção de Servidor */}
+              <button
+                type="button"
+                onClick={handleDirectMediaError}
+                className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+                title="Alternar servidor ou resolução"
+              >
+                <Server className="w-4 h-4 text-yellow-400" />
+                <span>{candidates.length > 0 ? `Opção ${candidateIndex + 1}` : 'Resolução'}</span>
+              </button>
+
+              {/* 4. Episódios (Para Séries) */}
+              {type !== 'movie' && seasons && seasons.length > 0 && onSelectEpisode && (
+                <button
+                  type="button"
+                  onClick={() => setEpisodesDrawerOpen((prev) => !prev)}
+                  className={`flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
+                    episodesDrawerOpen
+                      ? 'bg-yellow-400 text-black border-yellow-400'
+                      : 'bg-[#171824]/90 hover:bg-[#232538] text-white border-white/10'
+                  }`}
+                  title="Lista de Episódios"
+                >
+                  <Layers className="w-4 h-4 text-yellow-400" />
+                  <span>Episódios</span>
+                </button>
+              )}
+
+              {/* 5. Favorito */}
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                className={`flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
+                  isFavorite
+                    ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
+                    : 'bg-[#171824]/90 hover:bg-[#232538] text-white border-white/10'
+                }`}
+              >
+                <Star className={`w-4 h-4 ${isFavorite ? 'text-black fill-black' : 'text-yellow-400'}`} />
+                <span>{isFavorite ? 'Favorito' : 'Favoritar'}</span>
+              </button>
+
+              {/* 6. Baixar */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDownload) {
+                    onDownload()
+                  } else {
+                    const btn = document.getElementById('watch-download-btn')
+                    if (btn) btn.click()
+                    else showFeedback('Preparando download...')
+                  }
+                }}
+                className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+              >
+                <Download className="w-4 h-4 text-yellow-400" />
+                <span>Baixar</span>
+              </button>
+            </div>
+
+            {/* Ações Secundárias (Ajuste de Tela, Recarregar, Próximo Ep) */}
+            <div className="flex items-center gap-2">
+              {/* Ajustar / Preencher tela (Estilo YuCine) */}
+              {directSrc && (
+                <button
+                  type="button"
+                  onClick={toggleFitMode}
+                  className={`p-2.5 rounded-xl text-xs font-bold transition-all border border-white/10 focus:outline-none focus:ring-4 focus:ring-yellow-400 ${
+                    fitMode === 'cover'
+                      ? 'bg-yellow-400 text-black font-extrabold'
+                      : 'bg-[#171824]/90 hover:bg-[#232538] text-white/80 hover:text-white'
+                  }`}
+                  title={fitMode === 'cover' ? 'Ajustar para proporção original' : 'Preencher tela inteira'}
+                >
+                  <Expand className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Recarregar Stream */}
+              <button
+                type="button"
+                onClick={handleManualRefresh}
+                className="p-2.5 bg-[#171824]/90 hover:bg-[#232538] rounded-xl text-white/80 hover:text-white transition-all border border-white/10 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                title="Recarregar"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+
+              {/* Próximo Episódio */}
+              {onNextEpisode && type !== 'movie' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    cancelAutoNext()
+                    onNextEpisode()
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2.5 bg-yellow-400 hover:bg-yellow-300 rounded-xl text-black font-bold text-xs transition-transform hover:scale-105 shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                  title="Próximo Episódio"
+                >
+                  <SkipForward className="h-4 w-4 fill-black" />
+                  <span>Próximo</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+
 
       {/* Modal de Configurações de Reprodução (Imagem 2) */}
       <PlaybackSettingsModal

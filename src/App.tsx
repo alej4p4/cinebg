@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect, useCallback } from 'react'
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import Navbar from '@/components/layout/Navbar'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -95,6 +95,13 @@ const AnimatedRoutes = () => {
           <Route path="/downloads" element={<Downloads />} />
           <Route path="/watch/:type/:id" element={<Watch />} />
           <Route path="/details/:type/:id" element={<Details />} />
+
+          {/* Rotas canônicas e atalhos estilo YuCine */}
+          <Route path="/movie" element={<Navigate to="/movies" replace />} />
+          <Route path="/filmes" element={<Navigate to="/movies" replace />} />
+          <Route path="/filme" element={<Navigate to="/movies" replace />} />
+          <Route path="/serie" element={<Navigate to="/series" replace />} />
+          <Route path="/player/:type/:id" element={<Navigate to="/watch/:type/:id" replace />} />
           <Route
             path="*"
             element={
