@@ -12,6 +12,7 @@ import {
   getTopRatedMovies,
   getNowPlayingMovies,
   getUpcomingMovies,
+  getClassicMovies,
   discoverMovies,
 } from '@/services/tmdb'
 import type { MediaItem } from '@/types'
@@ -45,6 +46,7 @@ const Movies = () => {
   const [topRated, setTopRated] = useState<MediaItem[]>([])
   const [nowPlaying, setNowPlaying] = useState<MediaItem[]>([])
   const [upcoming, setUpcoming] = useState<MediaItem[]>([])
+  const [classics, setClassics] = useState<MediaItem[]>([])
   const [filteredList, setFilteredList] = useState<MediaItem[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [filterTitle, setFilterTitle] = useState<string>('')
@@ -61,16 +63,18 @@ const Movies = () => {
     setError(false)
     const load = async () => {
       try {
-        const [popularResult, topResult, nowResult, upcomingResult] = await Promise.all([
+        const [popularResult, topResult, nowResult, upcomingResult, classicsResult] = await Promise.all([
           getPopularMovies(),
           getTopRatedMovies(),
           getNowPlayingMovies(),
           getUpcomingMovies(),
+          getClassicMovies(),
         ])
         setPopular(popularResult.items)
         setTopRated(topResult.items)
         setNowPlaying(nowResult.items)
         setUpcoming(upcomingResult.items)
+        setClassics(classicsResult.items)
       } catch {
         setError(true)
       } finally {
@@ -128,6 +132,15 @@ const Movies = () => {
     setFilteredList(nowPlaying)
   }
 
+  // Filtro "Clássicos"
+  const handleFilterClassics = () => {
+    setActiveFilter('classics')
+    setFilterTitle('Obras-Primas e Clássicos do Cinema')
+    setShowGenreBar(false)
+    setSelectedGenreId(null)
+    setFilteredList(classics)
+  }
+
   // Filtro "Gênero"
   const handleToggleGenreBar = () => {
     setShowGenreBar((prev) => !prev)
@@ -175,6 +188,7 @@ const Movies = () => {
           activeFilter={activeFilter}
           onFilterGenre={handleToggleGenreBar}
           onFilterYear={handleFilterYear}
+          onFilterClassics={handleFilterClassics}
           onFilterSpecial={handleFilterSpecial}
           onFilterAll={handleFilterAll}
         />
@@ -299,6 +313,7 @@ const Movies = () => {
                 <>
                   <Carousel title="Em Cartaz nos Cinemas" emoji="🎬" items={nowPlaying} />
                   <Carousel title="Filmes Populares" emoji="🔥" items={popular} />
+                  <Carousel title="🏛️ Clássicos Inesquecíveis do Cinema" emoji="👑" items={classics} />
                   <Carousel title="Mais Bem Avaliados" emoji="⭐" items={topRated} />
                   <Carousel title="Em Breve nos Cinemas" emoji="🎥" items={upcoming} />
                 </>

@@ -13,6 +13,8 @@ import {
   getPopularShows,
   getNowPlayingMovies,
   getUpcomingMovies,
+  getClassicMovies,
+  getClassicShows,
   discoverMovies,
   discoverShows,
 } from '@/services/tmdb'
@@ -26,6 +28,8 @@ const Home = () => {
   const [topMovies, setTopMovies] = useState<MediaItem[]>([])
   const [nowPlaying, setNowPlaying] = useState<MediaItem[]>([])
   const [upcoming, setUpcoming] = useState<MediaItem[]>([])
+  const [classicMovies, setClassicMovies] = useState<MediaItem[]>([])
+  const [classicShows, setClassicShows] = useState<MediaItem[]>([])
   const [popularShows, setPopularShows] = useState<MediaItem[]>([])
   const [topShows, setTopShows] = useState<MediaItem[]>([])
   const [airingNow, setAiringNow] = useState<MediaItem[]>([])
@@ -44,7 +48,7 @@ const Home = () => {
       try {
         const [
           t,
-          pm, tom, np, up, ps, ts, a, anime,
+          pm, tom, np, up, cm, cs, ps, ts, a, anime,
           actionM, comedyM, scifiM,
           actionS, comedyS,
         ] = await Promise.all([
@@ -53,6 +57,8 @@ const Home = () => {
           getTopRatedMovies(),
           getNowPlayingMovies(),
           getUpcomingMovies(),
+          getClassicMovies(),
+          getClassicShows(),
           getPopularShows(),
           getTopRatedShows(),
           getAiringToday(),
@@ -69,6 +75,8 @@ const Home = () => {
         setTopMovies(tom.items)
         setNowPlaying(np.items)
         setUpcoming(up.items)
+        setClassicMovies(cm.items)
+        setClassicShows(cs.items)
         setPopularShows(ps.items)
         setTopShows(ts.items)
         setAiringNow(a.items)
@@ -172,6 +180,7 @@ const Home = () => {
 
                     <Carousel rowIndex={rowIdx++} title="Em Cartaz nos Cinemas" emoji="🎬" items={nowPlaying} />
                     <Carousel rowIndex={rowIdx++} title="Novidades em Filmes" emoji="🆕" items={popularMovies} />
+                    <Carousel rowIndex={rowIdx++} title="🏛️ Clássicos Inesquecíveis do Cinema" emoji="👑" items={classicMovies} />
                     <Carousel rowIndex={rowIdx++} title="Filmes Populares" emoji="🔥" items={popularMovies.slice(6)} />
                     <Carousel rowIndex={rowIdx++} title="Filmes de Ação" emoji="💥" items={actionMovies} />
                     <Carousel rowIndex={rowIdx++} title="Comédias" emoji="😂" items={comedyMovies} />
@@ -179,6 +188,7 @@ const Home = () => {
                     <Carousel rowIndex={rowIdx++} title="Mais Bem Avaliados" emoji="⭐" items={topMovies} />
                     <Carousel rowIndex={rowIdx++} title="Em Breve" emoji="🎥" items={upcoming} />
                     <Carousel rowIndex={rowIdx++} title="Séries Populares" emoji="📺" items={popularShows} />
+                    <Carousel rowIndex={rowIdx++} title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classicShows} />
                     <Carousel rowIndex={rowIdx++} title="Ação e Aventura em Séries" emoji="⚔️" items={actionShows} />
                     <Carousel rowIndex={rowIdx++} title="Comédia em Séries" emoji="😄" items={comedyShows} />
                     <Carousel rowIndex={rowIdx++} title="Em Exibição Hoje" emoji="🔴" items={airingNow} />

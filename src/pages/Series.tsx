@@ -11,6 +11,7 @@ import {
   getPopularShows,
   getTopRatedShows,
   getAiringToday,
+  getClassicShows,
   discoverShows,
 } from '@/services/tmdb'
 import type { MediaItem } from '@/types'
@@ -41,6 +42,7 @@ const Series = () => {
   const [popular, setPopular] = useState<MediaItem[]>([])
   const [topRated, setTopRated] = useState<MediaItem[]>([])
   const [airingToday, setAiringToday] = useState<MediaItem[]>([])
+  const [classics, setClassics] = useState<MediaItem[]>([])
   const [filteredList, setFilteredList] = useState<MediaItem[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [filterTitle, setFilterTitle] = useState<string>('')
@@ -57,14 +59,16 @@ const Series = () => {
     setError(false)
     const load = async () => {
       try {
-        const [popularResult, topResult, airingResult] = await Promise.all([
+        const [popularResult, topResult, airingResult, classicsResult] = await Promise.all([
           getPopularShows(),
           getTopRatedShows(),
           getAiringToday(),
+          getClassicShows(),
         ])
         setPopular(popularResult.items)
         setTopRated(topResult.items)
         setAiringToday(airingResult.items)
+        setClassics(classicsResult.items)
       } catch {
         setError(true)
       } finally {
@@ -122,6 +126,15 @@ const Series = () => {
     setFilteredList(airingToday)
   }
 
+  // Filtro "Clássicos"
+  const handleFilterClassics = () => {
+    setActiveFilter('classics')
+    setFilterTitle('Séries Clássicas & Nostalgia')
+    setShowGenreBar(false)
+    setSelectedGenreId(null)
+    setFilteredList(classics)
+  }
+
   // Filtro "Gênero"
   const handleToggleGenreBar = () => {
     setShowGenreBar((prev) => !prev)
@@ -169,6 +182,7 @@ const Series = () => {
           activeFilter={activeFilter}
           onFilterGenre={handleToggleGenreBar}
           onFilterYear={handleFilterYear}
+          onFilterClassics={handleFilterClassics}
           onFilterSpecial={handleFilterSpecial}
           onFilterAll={handleFilterAll}
         />
@@ -292,6 +306,7 @@ const Series = () => {
               ) : (
                 <>
                   <Carousel title="Séries Populares" emoji="📺" items={popular} />
+                  <Carousel title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classics} />
                   <Carousel title="Em Exibição Hoje" emoji="🔴" items={airingToday} />
                   <Carousel title="Top Séries de Todos os Tempos" emoji="⭐" items={topRated} />
                 </>

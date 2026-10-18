@@ -187,6 +187,17 @@ export const discoverMovies = async (params: {
   return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
+// Filmes Clássicos Inesquecíveis (Obras-primas consagradas pré-2002)
+export const getClassicMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/discover/movie', {
+    page,
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': 2500,
+    'primary_release_date.lte': '2002-12-31',
+  })
+  return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
+}
+
 // TV Shows
 export const getPopularShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/popular', { page })
@@ -195,6 +206,16 @@ export const getPopularShows = async (page = 1): Promise<{ items: MediaItem[]; t
 
 export const getTopRatedShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/top_rated', { page })
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
+}
+
+// Séries Clássicas e Nostalgia (Séries lendárias consagradas pré-2010)
+export const getClassicShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
+    page,
+    sort_by: 'vote_count.desc',
+    'first_air_date.lte': '2010-12-31',
+  })
   return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 
