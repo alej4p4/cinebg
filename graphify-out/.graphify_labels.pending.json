@@ -1,6 +1,6 @@
 {
   "0": "App.tsx",
-  "1": "react",
+  "1": "index.ts",
   "2": "index.ts",
   "3": "LicenseGate.tsx",
   "4": "package.json",
@@ -10,7 +10,7 @@
   "8": "compilerOptions",
   "9": "dependencies",
   "10": "devDependencies",
-  "11": "ExampleInstrumentedTest.java",
+  "11": "AppInstallerPlugin.java",
   "12": "compilerOptions",
   "13": "main",
   "14": "gradlew",
@@ -20,14 +20,16 @@
   "18": "capacitor.build.gradle",
   "19": "android/build.gradle",
   "20": "capacitor.settings.gradle",
-  "21": "settings.gradle",
+  "21": "scripts",
   "22": "variables.gradle",
   "23": "postcss.config.js",
   "24": "vite-env.d.ts",
-  "25": "Favorites.tsx",
+  "25": "eslint.config.js",
   "26": "bug_fix.md",
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
   "29": "improvement.md",
-  "30": "index.ts"
+  "30": "index.ts",
+  "31": "vite.config.ts",
+  "32": "capacitor.config.ts"
 }
