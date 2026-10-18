@@ -10,6 +10,9 @@ interface LivePlayerProps {
 const LivePlayer = ({ channel }: LivePlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const loadedRef = useRef(false)
+  const playingRef = useRef(false)
+  const watchdogRef = useRef<NodeJS.Timeout | null>(null)
 
   // Recupera o último sinal funcional salvo para este canal ou inicia em 0
   const getInitialSignal = () => {
@@ -33,6 +36,12 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
   // Reinicia o player quando o canal muda.
   useEffect(() => {
     const initIdx = getInitialSignal()
+    loadedRef.current = false
+    playingRef.current = false
+    if (watchdogRef.current) {
+      clearTimeout(watchdogRef.current)
+      watchdogRef.current = null
+    }
     setSourceIndex(initIdx)
     setMountKey(0)
     setLoaded(false)
@@ -49,6 +58,13 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
       return
     }
 
+    loadedRef.current = false
+    playingRef.current = false
+    if (watchdogRef.current) {
+      clearTimeout(watchdogRef.current)
+      watchdogRef.current = null
+    }
+
     setLoaded(false)
     setError(false)
     setStatusMessage(
@@ -58,10 +74,14 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
     )
 
     let cancelled = false
-    let hlsInstance: { destroy: () => void } | null = null
+    let hlsInstance: { destroy: () => void; loadSource: (u: string) => void; startLoad: () => void } | null = null
 
     const goNext = () => {
       if (cancelled) return
+      if (watchdogRef.current) {
+        clearTimeout(watchdogRef.current)
+        watchdogRef.current = null
+      }
       if (sourceIndex < channel.sources.length - 1) {
         setSourceIndex((i) => i + 1)
       } else {
@@ -69,14 +89,32 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
       }
     }
 
-    // Watchdog de segurança: se o sinal não reproduzir em até 8.5s e houver outro sinal, avança automaticamente
-    const stallWatchdog = setTimeout(() => {
-      if (!cancelled && !loaded) {
-        if (sourceIndex < channel.sources.length - 1) {
-          goNext()
-        }
+    const markPlaying = () => {
+      if (cancelled) return
+      loadedRef.current = true
+      playingRef.current = true
+      setLoaded(true)
+      setError(false)
+      if (watchdogRef.current) {
+        clearTimeout(watchdogRef.current)
+        watchdogRef.current = null
       }
-    }, 8500)
+      try {
+        sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
+      } catch {}
+    }
+
+    // Watchdog de segurança seguro usando refs: se não reproduzir após 12s, tenta o próximo sinal
+    watchdogRef.current = setTimeout(() => {
+      if (cancelled) return
+      if (loadedRef.current || playingRef.current) return
+      const v = videoRef.current
+      if (v && !v.paused && v.currentTime > 0) {
+        markPlaying()
+        return
+      }
+      goNext()
+    }, 12000)
 
     void import('hls.js').then((mod) => {
       if (cancelled) return
@@ -84,21 +122,21 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
 
       if (Hls.isSupported()) {
         const hls = new Hls({
-          enableWorker: false, // Desativa worker para evitar engasgos de thread em Android TV / WebViews
+          enableWorker: false, // Desativa worker para evitar engasgos em Android TV / WebViews
           liveDurationInfinity: true,
           lowLatencyMode: false,
-          backBufferLength: 15,
-          maxBufferLength: 15, // Buffer equilibrado (não tenta puxar além da janela do servidor)
-          maxMaxBufferLength: 30,
+          backBufferLength: 10,
+          maxBufferLength: 10,
+          maxMaxBufferLength: 20,
           maxBufferSize: 30 * 1000 * 1000,
-          liveSyncDurationCount: 3, // Ótimo para IPTV com janelas de 3-4 segmentos (evita travamento contínuo)
-          liveMaxLatencyDurationCount: 10,
-          manifestLoadingTimeOut: 6500, // Timeout ágil de 6.5s
-          manifestLoadingMaxRetry: 2,
-          levelLoadingTimeOut: 6500,
-          levelLoadingMaxRetry: 2,
+          liveSyncDurationCount: 2, // 2 segmentos (6s) atrás do topo ao vivo. Perfeito e anti-travamento para IPTV!
+          liveMaxLatencyDurationCount: 8,
+          manifestLoadingTimeOut: 8000,
+          manifestLoadingMaxRetry: 3,
+          levelLoadingTimeOut: 8000,
+          levelLoadingMaxRetry: 3,
           fragLoadingTimeOut: 12000,
-          fragLoadingMaxRetry: 3,
+          fragLoadingMaxRetry: 4,
           nudgeOffset: 0.1,
           nudgeMaxRetry: 5,
           maxFragLookUpTolerance: 0.25,
@@ -116,24 +154,14 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           const p = video.play()
           if (p !== undefined) {
             p.then(() => {
-              if (!cancelled) {
-                setLoaded(true)
-                try {
-                  sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
-                } catch {}
-              }
+              markPlaying()
             }).catch(() => {
-              // Se o navegador barrar o áudio por política de autoplay, silencia e reproduz o vídeo imediatamente
+              // Se o navegador barrar o áudio por política de autoplay, silencia e reproduz imediatamente
               if (!cancelled && video) {
                 video.muted = true
                 setMuted(true)
                 video.play().then(() => {
-                  if (!cancelled) {
-                    setLoaded(true)
-                    try {
-                      sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
-                    } catch {}
-                  }
+                  markPlaying()
                 }).catch(() => {})
               }
             })
@@ -166,17 +194,15 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           tryPlay()
         })
 
-        hls.on(Hls.Events.FRAG_LOADED, () => {
-          if (!cancelled) {
-            setLoaded(true)
-          }
-        })
+        hls.on(Hls.Events.FRAG_LOADED, markPlaying)
+        hls.on(Hls.Events.FRAG_PARSED, markPlaying)
+        hls.on(Hls.Events.FRAG_BUFFERED, markPlaying)
 
         hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
           if (cancelled) return
           const payload = data as { fatal?: boolean; type?: string; details?: string }
 
-          // Recuperação automática de pequenos saltos de timestamp / buraco no buffer IPTV
+          // Se houver um buraco de buffer temporário (bufferStalledError), avança suavemente 0.1s
           if (!payload.fatal) {
             if (
               payload.details === 'bufferStalledError' ||
@@ -191,6 +217,15 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
             return
           }
 
+          // Se o sub-manifesto temporário expirar, recarrega o master para obter o novo token dinâmico
+          if (payload.details === 'levelLoadError' || payload.details === 'levelLoadTimeOut') {
+            try {
+              hls.loadSource(src)
+              hls.startLoad()
+              return
+            } catch {}
+          }
+
           if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
             try {
               hls.recoverMediaError()
@@ -201,7 +236,6 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           }
 
           if (payload.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            // Tenta 1 recuperação rápida de rede antes de alternar sinal
             if (networkRetryCount < 1) {
               networkRetryCount++
               setTimeout(() => {
@@ -233,7 +267,10 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
 
     return () => {
       cancelled = true
-      clearTimeout(stallWatchdog)
+      if (watchdogRef.current) {
+        clearTimeout(watchdogRef.current)
+        watchdogRef.current = null
+      }
       if (hlsInstance) hlsInstance.destroy()
     }
   }, [channel.id, channel.sources, sourceIndex, mountKey])
@@ -390,16 +427,42 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           playsInline
           className="w-full h-full bg-black cursor-pointer"
           onLoadedData={() => {
+            loadedRef.current = true
             setLoaded(true)
+            if (watchdogRef.current) {
+              clearTimeout(watchdogRef.current)
+              watchdogRef.current = null
+            }
             try {
               sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
             } catch {}
           }}
           onPlaying={() => {
+            loadedRef.current = true
+            playingRef.current = true
             setLoaded(true)
+            if (watchdogRef.current) {
+              clearTimeout(watchdogRef.current)
+              watchdogRef.current = null
+            }
             try {
               sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
             } catch {}
+          }}
+          onTimeUpdate={() => {
+            const v = videoRef.current
+            if (v && v.currentTime > 0 && !loadedRef.current) {
+              loadedRef.current = true
+              playingRef.current = true
+              setLoaded(true)
+              if (watchdogRef.current) {
+                clearTimeout(watchdogRef.current)
+                watchdogRef.current = null
+              }
+              try {
+                sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
+              } catch {}
+            }
           }}
           onClick={() => {
             const v = videoRef.current
