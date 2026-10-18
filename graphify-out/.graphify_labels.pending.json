@@ -1,10 +1,11 @@
 {
   "0": "App.tsx",
   "1": "index.ts",
-  "2": "index.ts",
+  "2": "framer-motion",
   "3": "react",
   "4": "package.json",
   "5": "LiveTV.tsx",
+  "6": "scripts",
   "7": "notifications.ts",
   "8": "compilerOptions",
   "9": "dependencies",
@@ -19,7 +20,7 @@
   "18": "capacitor.build.gradle",
   "19": "android/build.gradle",
   "20": "capacitor.settings.gradle",
-  "21": "StreamPlayer.tsx",
+  "21": "index.ts",
   "22": "variables.gradle",
   "23": "postcss.config.js",
   "24": "vite-env.d.ts",
@@ -28,5 +29,7 @@
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
   "29": "improvement.md",
-  "30": "Watch.tsx"
+  "30": "eslint.config.js",
+  "31": "vite.config.ts",
+  "32": "capacitor.config.ts"
 }
