@@ -100,6 +100,57 @@ const StreamPlayer = ({
   const resumedRef = useRef(false)
   const lastProgressRef = useRef(0)
 
+  // Customização de aparência das legendas
+  const [subSize, setSubSize] = useState<'sm' | 'md' | 'lg'>(() => {
+    try {
+      return (localStorage.getItem('cinebg_subs_size') as 'sm' | 'md' | 'lg') || 'md'
+    } catch {
+      return 'md'
+    }
+  })
+  const [subColor, setSubColor] = useState<'white' | 'yellow'>(() => {
+    try {
+      return (localStorage.getItem('cinebg_subs_color') as 'white' | 'yellow') || 'yellow'
+    } catch {
+      return 'yellow'
+    }
+  })
+
+  const updateSubSize = (size: 'sm' | 'md' | 'lg') => {
+    setSubSize(size)
+    try {
+      localStorage.setItem('cinebg_subs_size', size)
+    } catch {}
+  }
+
+  const updateSubColor = (color: 'white' | 'yellow') => {
+    setSubColor(color)
+    try {
+      localStorage.setItem('cinebg_subs_color', color)
+    } catch {}
+  }
+
+  useEffect(() => {
+    const fontSize = subSize === 'sm' ? '18px' : subSize === 'lg' ? '30px' : '23px'
+    const color = subColor === 'yellow' ? '#fde047' : '#ffffff'
+    const styleId = 'cinebg-custom-sub-style'
+    let el = document.getElementById(styleId) as HTMLStyleElement | null
+    if (!el) {
+      el = document.createElement('style')
+      el.id = styleId
+      document.head.appendChild(el)
+    }
+    el.textContent = `
+      video::cue {
+        font-size: ${fontSize} !important;
+        color: ${color} !important;
+        background-color: rgba(0, 0, 0, 0.78) !important;
+        text-shadow: 0px 2px 4px rgba(0,0,0,0.95) !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      }
+    `
+  }, [subSize, subColor])
+
   const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2]
   const AUTO_NEXT_DELAY = 10 // seconds
 
@@ -1124,6 +1175,57 @@ const StreamPlayer = ({
                       {activeTrack === t.index && <Check className="h-3 w-3" />}
                     </button>
                   ))}
+                  {/* Configurações visuais de Legenda */}
+                  <div className="my-1.5 border-t border-white/10" />
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-2 py-0.5">
+                    Aparência da Legenda
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1 text-xs">
+                    <span className="text-white/60 text-[11px]">Tamanho:</span>
+                    <div className="flex items-center gap-1">
+                      {(['sm', 'md', 'lg'] as const).map((sz) => (
+                        <button
+                          key={sz}
+                          onClick={() => updateSubSize(sz)}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                            subSize === sz
+                              ? 'bg-accent-red text-white'
+                              : 'bg-white/10 text-white/60 hover:text-white'
+                          }`}
+                        >
+                          {sz === 'sm' ? 'P' : sz === 'md' ? 'M' : 'G'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1 text-xs mb-1">
+                    <span className="text-white/60 text-[11px]">Cor:</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => updateSubColor('yellow')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${
+                          subColor === 'yellow'
+                            ? 'bg-amber-400 text-black'
+                            : 'bg-white/10 text-white/60 hover:text-white'
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 border border-black/30" />
+                        Amarelo
+                      </button>
+                      <button
+                        onClick={() => updateSubColor('white')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${
+                          subColor === 'white'
+                            ? 'bg-white text-black'
+                            : 'bg-white/10 text-white/60 hover:text-white'
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-white border border-black/30" />
+                        Branco
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="my-1 border-t border-white/10" />
                   <button
                     onClick={() => {

@@ -66,6 +66,18 @@ const LiveTV = () => {
     })
   }, [channels, category, query, favorites])
 
+  const currentIndex = selected ? filtered.findIndex((c) => c.id === selected.id) : -1
+  const handleNextChannel = () => {
+    if (filtered.length === 0) return
+    const nextIdx = (currentIndex + 1) % filtered.length
+    setSelected(filtered[nextIdx])
+  }
+  const handlePrevChannel = () => {
+    if (filtered.length === 0) return
+    const prevIdx = (currentIndex - 1 + filtered.length) % filtered.length
+    setSelected(filtered[prevIdx])
+  }
+
   return (
     <motion.div
       className="min-h-screen bg-bg-primary pt-20 page-enter select-none"
@@ -135,7 +147,11 @@ const LiveTV = () => {
               </div>
             </div>
 
-            <LivePlayer channel={selected} />
+            <LivePlayer
+              channel={selected}
+              onNextChannel={handleNextChannel}
+              onPrevChannel={handlePrevChannel}
+            />
           </div>
         )}
 

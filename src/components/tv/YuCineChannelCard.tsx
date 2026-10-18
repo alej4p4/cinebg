@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
 import type { LiveChannel } from '@/services/liveChannels'
+import { getLiveChannelEPG } from '@/services/epg'
 
 interface YuCineChannelCardProps {
   channel: LiveChannel
@@ -19,6 +20,7 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
   onToggleFavorite,
 }) => {
   const [logoError, setLogoError] = useState(false)
+  const epg = getLiveChannelEPG(channel.id, channel.category, channel.name)
   const { ref, focused } = useFocusable({
     focusKey: `channel-${channel.id}`,
     onEnterPress: onClick,
@@ -452,12 +454,26 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
         <div className="absolute bottom-2 left-2 z-10 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[10px] font-bold text-white/80">
           HD
         </div>
+
+        {/* Barra de Progresso do Programa Atual (EPG) */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/60 z-20 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-amber-500 to-accent-red"
+            style={{ width: `${epg.progress}%` }}
+          />
+        </div>
       </motion.div>
 
       {/* Rótulo do Canal Centralizado Abaixo do Card (Estilo YuCine) */}
-      <span className="text-white/80 font-medium text-xs sm:text-sm text-center mt-2 group-hover:text-white group-focus:text-amber-300 transition-colors truncate px-1">
+      <span className="text-white/90 font-bold text-xs sm:text-sm text-center mt-2 group-hover:text-white group-focus:text-amber-300 transition-colors truncate px-1">
         {channel.name}
       </span>
+
+      {/* Programa no Ar Agora (EPG) */}
+      <div className="flex items-center justify-center gap-1.5 mt-0.5 px-1 text-[11px] text-white/50 truncate">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+        <span className="truncate">{epg.title}</span>
+      </div>
     </div>
   )
 }
