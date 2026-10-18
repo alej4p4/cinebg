@@ -209,21 +209,22 @@ const fetchMegaEmbedSources = async (
     mediaType === 'movie' ? `${tmdbId}` : `${tmdbId}/${season}/${episode}`
   const targetUrl = `https://mgeb.site/embed/${targetPath}`
 
-  // 1. No app nativo Android (Capacitor), usa CapacitorHttp com timeout seguro de 4.5s
+  // 1. No app nativo Android (Capacitor), usa CapacitorHttp com timeout seguro de 12s
   if (Capacitor.isNativePlatform()) {
     try {
       const httpPromise = CapacitorHttp.get({
         url: targetUrl,
         headers: {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
           'User-Agent':
-            'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         },
-        connectTimeout: 4500,
-        readTimeout: 4500,
+        connectTimeout: 12000,
+        readTimeout: 12000,
       })
       const timeoutPromise = new Promise<null>((resolve) =>
-        setTimeout(() => resolve(null), 4500)
+        setTimeout(() => resolve(null), 12000)
       )
       const resp = await Promise.race([httpPromise, timeoutPromise])
 
@@ -348,7 +349,7 @@ export const resolveMegaEmbed = async (
     return result
   }
 
-  // Timeout geral de 5.5s para não prender o player em redes lentas de TV
+  // Timeout geral de 14s para conexões lentas de TV com carregamento em background
   const fallbackEmpty: MegaEmbedResolved = {
     dubbedMp4: null,
     hlsProxy: null,
@@ -356,7 +357,7 @@ export const resolveMegaEmbed = async (
   }
 
   const timeoutPromise = new Promise<MegaEmbedResolved>((resolve) =>
-    setTimeout(() => resolve(fallbackEmpty), 5500)
+    setTimeout(() => resolve(fallbackEmpty), 14000)
   )
 
   return Promise.race([resolveLogic(), timeoutPromise])

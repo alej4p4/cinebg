@@ -142,6 +142,16 @@ public class MainActivity extends BridgeActivity {
     private static boolean isAdUrl(String url) {
         if (url == null) return false;
         String lower = url.toLowerCase();
+
+        // NUNCA bloquear provedores de streaming, CDNs ou scripts de players legítimos
+        if (lower.contains("mgeb.site") || lower.contains("megaembed") ||
+            lower.contains("fontedecanais") || lower.contains("dramasfree") ||
+            lower.contains("vidlink") || lower.contains("vidsrc") ||
+            lower.contains("vsembed") || lower.contains("multiembed") ||
+            lower.contains("megatube")) {
+            return false;
+        }
+
         for (String keyword : AD_HOST_KEYWORDS) {
             if (lower.contains(keyword)) {
                 return true;
@@ -150,8 +160,7 @@ public class MainActivity extends BridgeActivity {
         if (lower.contains("/pop.") || lower.contains("/popunder") || lower.contains("/popup") ||
             lower.contains("ad.js") || lower.contains("ads.js") || lower.contains("ads.min.js") ||
             lower.contains("banner.js") || lower.contains("tracking.js") || lower.contains("tracker.js") ||
-            lower.contains("advert") || lower.contains("vast.xml") || lower.contains("vpaid.js") ||
-            lower.contains("adsbygoogle")) {
+            lower.contains("advert") || lower.contains("vast.xml") || lower.contains("vpaid.js")) {
             return true;
         }
         return false;
@@ -171,6 +180,10 @@ public class MainActivity extends BridgeActivity {
                     webView.getSettings().setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
                     webView.getSettings().setSupportMultipleWindows(false);
                     webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
+                    webView.getSettings().setDomStorageEnabled(true);
+                    webView.getSettings().setDatabaseEnabled(true);
+                    // Disfarça User-Agent para Chrome completo sem "Version/4.0" nem "; wv;", impedindo detecção de WebView
+                    webView.getSettings().setUserAgentString("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
                 }
 
                 if (!adBlockerInstalled) {
@@ -242,6 +255,10 @@ public class MainActivity extends BridgeActivity {
                                     }
                                 }
 
+                                if (url.contains("sandbox.php") || url.contains("bloqueio")) {
+                                    return true; // Bloqueia tentativa de redirecionar para tela de bloqueio de app
+                                }
+
                                 if (isAdUrl(url) || url.contains("bet") || url.contains("pop")) {
                                     return true;
                                 }
@@ -252,6 +269,9 @@ public class MainActivity extends BridgeActivity {
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView view, String url) {
                             if (url != null) {
+                                if (url.contains("sandbox.php") || url.contains("bloqueio")) {
+                                    return true;
+                                }
                                 if (url.startsWith("intent:") || url.startsWith("market:") || isAdUrl(url)) {
                                     return true;
                                 }
@@ -265,15 +285,6 @@ public class MainActivity extends BridgeActivity {
                         @Override
                         public void onPageFinished(WebView view, String url) {
                             super.onPageFinished(view, url);
-                            try {
-                                String antiPopupJs =
-                                    "(function() {" +
-                                    "  try {" +
-                                    "    window.open = function() { return null; };" +
-                                    "  } catch(e) {}" +
-                                    "})();";
-                                view.evaluateJavascript(antiPopupJs, null);
-                            } catch (Exception ignored) {}
                         }
                     });
                 }
