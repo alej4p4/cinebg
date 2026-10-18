@@ -1,5 +1,6 @@
 {
   "0": "App.tsx",
+  "1": "react",
   "2": "index.ts",
   "3": "LicenseGate.tsx",
   "4": "package.json",
@@ -23,7 +24,7 @@
   "22": "variables.gradle",
   "23": "postcss.config.js",
   "24": "vite-env.d.ts",
-  "25": "Search.tsx",
+  "25": "Favorites.tsx",
   "26": "bug_fix.md",
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",

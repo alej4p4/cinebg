@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Filter, Sparkles, Clapperboard, Layers, Star, Play } from 'lucide-react'
+import { Filter, Sparkles, Clapperboard, Layers, Star, Play, Award } from 'lucide-react'
 import type { MediaItem } from '@/types'
 import { getBackdropUrl, getPosterUrl } from '@/services/tmdb'
 import Focusable from '@/components/tv/Focusable'
@@ -13,6 +13,7 @@ interface YuCineHeroProps {
   onFilterGenre?: () => void
   onFilterYear?: (year: number) => void
   onFilterSpecial?: () => void
+  onFilterClassics?: () => void
   onFilterAll?: () => void
   activeFilter?: string | null
 }
@@ -24,6 +25,7 @@ const YuCineHero = ({
   onFilterGenre,
   onFilterYear,
   onFilterSpecial,
+  onFilterClassics,
   onFilterAll,
   activeFilter,
 }: YuCineHeroProps) => {
@@ -172,8 +174,8 @@ const YuCineHero = ({
             </div>
           </Focusable>
 
-          {/* 4 Botões Coloridos de Filtro Rápido (Estilo YuCine) */}
-          <div className="grid grid-cols-4 gap-2 md:gap-3">
+          {/* 5 Botões Coloridos de Filtro Rápido (Estilo YuCine + Clássicos) */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 md:gap-3">
             {/* 1. Rosa: Gênero */}
             <Focusable onEnterPress={() => onFilterGenre && onFilterGenre()}>
               <button
@@ -204,7 +206,22 @@ const YuCineHero = ({
               </button>
             </Focusable>
 
-            {/* 3. Verde: No Cinema / Em Alta */}
+            {/* 3. Âmbar/Dourado: Clássicos */}
+            <Focusable onEnterPress={() => onFilterClassics && onFilterClassics()}>
+              <button
+                onClick={onFilterClassics}
+                className={`w-full py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-md ${
+                  activeFilter === 'classics'
+                    ? 'ring-2 ring-white scale-[1.03]'
+                    : 'hover:scale-[1.02] active:scale-[0.98]'
+                } bg-gradient-to-r from-[#ff9800] to-[#f57c00]`}
+              >
+                <Award className="h-4 w-4" />
+                <span className="truncate">Clássicos</span>
+              </button>
+            </Focusable>
+
+            {/* 4. Verde: No Cinema / Em Alta */}
             <Focusable onEnterPress={() => onFilterSpecial && onFilterSpecial()}>
               <button
                 onClick={onFilterSpecial}
@@ -219,8 +236,8 @@ const YuCineHero = ({
               </button>
             </Focusable>
 
-            {/* 4. Amarelo: Todos / Todas */}
-            <Focusable onEnterPress={() => onFilterAll && onFilterAll()}>
+            {/* 5. Amarelo: Todos / Todas */}
+            <Focusable onEnterPress={() => onFilterAll && onFilterAll()} className="col-span-2 sm:col-span-1">
               <button
                 onClick={onFilterAll}
                 className={`w-full py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-black font-extrabold text-xs sm:text-sm transition-all duration-200 shadow-md ${
