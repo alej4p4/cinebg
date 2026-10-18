@@ -1,9 +1,10 @@
+import { Capacitor, CapacitorHttp } from '@capacitor/core'
 import type { Language, AudioOption } from '@/store/useAppStore'
 
 // =========================================================================
-// MOTOR DE STREAMING NATIVO CINEBG (ESTILO YUCINE - ZERO PARKLOGIC / ZERO ADS)
-// Fontes 100% ativas e verificadas com suporte a Multi-Áudio e Dublagem PT-BR.
-// Fallback silencioso automático sem exigir seleção técnica do usuário.
+// MOTOR DE STREAMING NATIVO CINEBG (ESTILO YUCINE - ZERO PROPAGANDAS / ZERO ADS)
+// Prioridade absoluta para extração e reprodução nativa de fontes diretas MP4 e HLS.
+// Sandboxing estrito ativado em todos os mirrors externos para erradicar anúncios e pop-ups.
 // =========================================================================
 
 export interface StreamMirror {
@@ -12,8 +13,6 @@ export interface StreamMirror {
   flagEmoji: string
   quality: string
   type: 'dubbed_br' | 'multi_sub'
-  // true  = provedor TOLERA o atributo `sandbox` (apply sandbox -> bloqueia redirect/popup)
-  // false = provedor DETECTA o sandbox e recusa reproduzir (renderiza sem sandbox)
   sandboxed: boolean
   getMovieUrl: (tmdbId: number, audio: AudioOption | Language) => string
   getShowUrl: (tmdbId: number, season: number, episode: number, audio: AudioOption | Language) => string
@@ -25,11 +24,6 @@ const normalizeAudio = (audio: AudioOption | Language): AudioOption => {
   return audio
 }
 
-// PROVEDORES VALIDADOS EM TESTE REAL COM O USUÁRIO:
-//   - Dublado PT-BR: mgeb.site (MegaEmbed) -> áudio dublado em português (padrão do servidor).
-//   - Original + legenda PT: vidsrc.sh / vidsrc.io / vsembed.ru (mesmo player) com ds_lang=pt.
-//   - vidlink.pro e multiembed.mov NÃO reproduzem aqui ("We couldn't find this content").
-// `sandboxed: false` = renderiza sem o atributo (os provedores detectam o sandbox e recusam).
 export const MIRRORS: StreamMirror[] = [
   {
     id: 'megaembed',
@@ -37,7 +31,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🇧🇷',
     quality: 'FHD 1080p',
     type: 'dubbed_br',
-    sandboxed: false,
+    sandboxed: true,
     getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://mgeb.site/embed/${tmdbId}/${season}/${episode}`,
@@ -48,7 +42,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '⚡',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: false,
+    sandboxed: true,
     getMovieUrl: (tmdbId) => `https://vidsrc.sh/embed/movie?tmdb=${tmdbId}&ds_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://vidsrc.sh/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}&ds_lang=pt`,
@@ -59,7 +53,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🌐',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: false,
+    sandboxed: true,
     getMovieUrl: (tmdbId) => `https://vidsrc.io/embed/movie/${tmdbId}?ds_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://vidsrc.io/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
@@ -70,7 +64,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🍿',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: false,
+    sandboxed: true,
     getMovieUrl: (tmdbId) => `https://vsembed.ru/embed/movie/${tmdbId}?ds_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://vsembed.ru/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
@@ -81,7 +75,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🚀',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: false,
+    sandboxed: true,
     getMovieUrl: (tmdbId, audioInput) => {
       const audio = normalizeAudio(audioInput)
       const base = `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981`
@@ -99,7 +93,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🇧🇷',
     quality: 'FHD 1080p',
     type: 'dubbed_br',
-    sandboxed: false,
+    sandboxed: true,
     getMovieUrl: (tmdbId) => `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`,
@@ -185,6 +179,22 @@ export const buildMegaEmbedUrl = (
     ? `${MEGAEMBED_EMBED_BASE}/${tmdbId}`
     : `${MEGAEMBED_EMBED_BASE}/${tmdbId}/${season}/${episode}`
 
+export interface DirectCandidate {
+  url: string
+  kind: 'mp4' | 'hls'
+  label: string
+  isDubbedHint: boolean
+}
+
+export interface MegaEmbedResolved {
+  // Principal fonte dublada recomendada (MP4 ou HLS)
+  dubbedMp4: string | null
+  // Principal stream HLS (.m3u8) nativo compatível com hls.js
+  hlsProxy: string | null
+  // Lista ordenada de todas as fontes diretas limpas (sem anúncios)
+  candidates: DirectCandidate[]
+}
+
 // Cache em memória de fontes resolvidas para carregamento instantâneo (estilo YuCine)
 const resolvedSourcesCache = new Map<string, MegaEmbedResolved>()
 
@@ -197,7 +207,7 @@ export const formatDirectStreamUrl = (url: string | null): string | null => {
   return url
 }
 
-// Devolve as fontes diretas do MegaEmbed com retry automático resiliente (inspirado na estratégia do YuCine)
+// Devolve as fontes diretas do MegaEmbed com suporte a CapacitorHttp nativo e retry
 const fetchMegaEmbedSources = async (
   tmdbId: number,
   mediaType: 'movie' | 'tv',
@@ -206,16 +216,39 @@ const fetchMegaEmbedSources = async (
 ): Promise<MegaEmbedSource[]> => {
   const targetPath =
     mediaType === 'movie' ? `${tmdbId}` : `${tmdbId}/${season}/${episode}`
+  const targetUrl = `https://mgeb.site/embed/${targetPath}`
 
+  // 1. No app nativo Android (Capacitor), usa CapacitorHttp para contornar qualquer restrição de CORS e localhost
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const resp = await CapacitorHttp.get({
+        url: targetUrl,
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+        },
+      })
+      if (resp.status >= 200 && resp.status < 300 && typeof resp.data === 'string') {
+        const match = resp.data.match(/var sources = (\[[\s\S]*?\]);/)
+        if (match) {
+          const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed
+        }
+      }
+    } catch (e) {
+      console.warn('[fetchMegaEmbedSources] CapacitorHttp erro, tentando fallback:', e)
+    }
+  }
+
+  // 2. Ambiente Web (Vite dev proxy ou fetch direto)
   const endpoints = [
-    typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    typeof window !== 'undefined' && window.location.port === '5173'
       ? `/api/mgeb/embed/${targetPath}`
       : null,
-    `https://mgeb.site/embed/${targetPath}`,
+    targetUrl,
   ].filter(Boolean) as string[]
 
   for (const url of endpoints) {
-    // Tenta até 2 vezes com pequeno intervalo antes de passar para o próximo endpoint
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetch(url, {
@@ -233,22 +266,14 @@ const fetchMegaEmbedSources = async (
           return parsed
         }
       } catch {
-        // Aguarda 800ms antes da próxima tentativa
         if (attempt === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 800))
+          await new Promise((resolve) => setTimeout(resolve, 600))
         }
       }
     }
   }
 
   return []
-}
-
-export interface MegaEmbedResolved {
-  // MP4 dublado em PT-BR (CDN fontedecanais-live).
-  dubbedMp4: string | null
-  // Stream HLS (.m3u8) nativo compatível com hls.js.
-  hlsProxy: string | null
 }
 
 export const resolveMegaEmbed = async (
@@ -262,26 +287,68 @@ export const resolveMegaEmbed = async (
     return resolvedSourcesCache.get(cacheKey)!
   }
 
-  const sources = await fetchMegaEmbedSources(tmdbId, mediaType, season, episode)
+  const rawSources = await fetchMegaEmbedSources(tmdbId, mediaType, season, episode)
+  const candidates: DirectCandidate[] = []
 
-  const dubbed = sources.find(
-    (source) =>
-      typeof source.file === 'string' && source.file.includes(DUBBED_SOURCE_HOST_HINT)
-  )
-  const hls = sources.find(
-    (source) =>
-      typeof source.file === 'string' &&
-      (source.file.includes('.m3u8') ||
-       source.file.includes('/includes/hls.php') ||
-       source.type === 'hls')
-  )
+  for (let i = 0; i < rawSources.length; i++) {
+    const s = rawSources[i]
+    const file = s.file || ''
+    if (!file || typeof file !== 'string') continue
+    // Descarta se for iframe externo ou página com anúncios
+    if (s.type === 'iframe') continue
+    if (file.includes('embed') && !file.includes('get_video')) continue
 
-  const result: MegaEmbedResolved = {
-    dubbedMp4: formatDirectStreamUrl(dubbed?.file ?? null),
-    hlsProxy: hls?.file ?? null,
+    const cleanUrl = formatDirectStreamUrl(file)
+    if (!cleanUrl) continue
+
+    const isFontedecanais = cleanUrl.includes(DUBBED_SOURCE_HOST_HINT)
+    const isDubbed =
+      isFontedecanais ||
+      cleanUrl.toLowerCase().includes('dublado') ||
+      cleanUrl.toLowerCase().includes('pt-br')
+
+    const isHls =
+      s.type === 'hls' ||
+      cleanUrl.includes('.m3u8') ||
+      cleanUrl.includes('/hls') ||
+      cleanUrl.includes('/includes/hls.php')
+
+    candidates.push({
+      url: cleanUrl,
+      kind: isHls ? 'hls' : 'mp4',
+      label: s.label || (isFontedecanais ? `Opção Dublada ${i + 1}` : `Servidor ${i + 1}`),
+      isDubbedHint: isDubbed,
+    })
   }
 
-  if (result.dubbedMp4 || result.hlsProxy) {
+  // Ordenação inteligente estilo YuCine:
+  // 1. Fontes com dica de dublagem (fontedecanais / dublado) primeiro
+  // 2. MP4s diretos (streamtape, supervideo, etc. - reprodução direta sem ads)
+  // 3. HLS streams
+  candidates.sort((a, b) => {
+    if (a.isDubbedHint && !b.isDubbedHint) return -1
+    if (!a.isDubbedHint && b.isDubbedHint) return 1
+    if (a.kind === 'mp4' && b.kind === 'hls') return -1
+    if (a.kind === 'hls' && b.kind === 'mp4') return 1
+    return 0
+  })
+
+  const dubbed =
+    candidates.find((c) => c.isDubbedHint) ||
+    candidates.find((c) => c.kind === 'mp4') ||
+    candidates[0]
+
+  const hls =
+    candidates.find((c) => c.kind === 'hls') ||
+    candidates[0]
+
+  const result: MegaEmbedResolved = {
+    dubbedMp4: dubbed?.url ?? null,
+    hlsProxy: hls?.url ?? (candidates.length > 0 ? candidates[0].url : null),
+    candidates,
+  }
+
+  if (result.dubbedMp4 || result.hlsProxy || candidates.length > 0) {
     resolvedSourcesCache.set(cacheKey, result)
   }
 

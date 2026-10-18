@@ -15,6 +15,7 @@ import {
   Layers,
   FastForward,
   Expand,
+  Server,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -23,6 +24,7 @@ import {
   isMirrorSandboxed,
   resolveMegaEmbed,
   MIRRORS,
+  type DirectCandidate,
 } from '@/services/streams'
 import { useAppStore } from '@/store/useAppStore'
 import type { AudioOption } from '@/store/useAppStore'
@@ -68,11 +70,13 @@ const StreamPlayer = ({
   // ComeÃ§a "resolvendo" para nÃ£o piscar o iframe (com anÃºncio) antes de tentar o nativo.
   const [resolvingDirect, setResolvingDirect] = useState(true)
 
-  // O espelho inicial se ajusta automaticamente ao Ã¡udio preferido
+  const [candidates, setCandidates] = useState<DirectCandidate[]>([])
+  const [candidateIndex, setCandidateIndex] = useState(0)
+
+  // O espelho inicial se ajusta automaticamente ao áudio preferido
   const [activeMirror, setActiveMirror] = useState(() => getInitialMirrorForAudio(audioOption))
   const [key, setKey] = useState(0)
-  // SÃ³ mostra o iframe (provedor externo, sujeito a anÃºncios) apÃ³s o usuÃ¡rio
-  // pedir explicitamente por "outra fonte". O padrÃ£o Ã© sempre o player nativo.
+  // Só mostra o iframe se o usuário pedir explicitamente em caso extremo. O padrão é 100% nativo.
   const [allowIframe, setAllowIframe] = useState(false)
 
   const loadedRef = useRef(false)
@@ -122,8 +126,7 @@ const StreamPlayer = ({
       ? buildMovieUrl(tmdbId, audioOption, activeMirror)
       : buildShowUrl(tmdbId, season, episode, audioOption, activeMirror)
 
-  // No modo Dublado tentamos tocar o MP4 dublado (PT-BR) diretamente; no modo
-  // Original/Legendado, o HLS proxy do MegaEmbed (ambos nativos, sem iframe).
+  // Alternância de áudio inteligente sem anúncios
   const switchAudio = (opt: AudioOption) => {
     setAudioOption(opt)
     setActiveMirror('megaembed')
@@ -132,30 +135,40 @@ const StreamPlayer = ({
     setError(false)
     setDirectSrc(null)
     setDirectKind(null)
+    setCandidates([])
+    setCandidateIndex(0)
     setFallbackAttempt(0)
     setKey((k) => k + 1)
   }
 
-  // Falha da transmissão nativa: mostra o aviso e deixa o iframe apenas sob
-  // demanda. Não troca mais de provedor silenciosamente (evitava abrir anúncios).
-  const handleStreamFailure = () => {
-    if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
-    nativeActiveRef.current = false
-    setFallbackAttempt((prev) => {
-      const nextIndex = prev + 1
-      if (nextIndex >= fallbackSequence.length) {
-        setIsAutoFallback(false)
-        setAllowIframe(true)
-        return 0
+  // Falha na reprodução direta da fonte atual: testa a próxima opção limpa da lista
+  const handleDirectMediaError = () => {
+    console.warn('[StreamPlayer] Falha na reprodução da fonte atual. Buscando próxima opção limpa...')
+    setCandidateIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1
+      if (nextIndex < candidates.length) {
+        const next = candidates[nextIndex]
+        console.info(`[StreamPlayer] Testando candidato alternativo: ${next.label} (${nextIndex + 1}/${candidates.length})`)
+        nativeActiveRef.current = true
+        setDirectSrc(next.url)
+        setDirectKind(next.kind)
+        setLoaded(false)
+        setError(false)
+        showFeedback(`Conectando: ${next.label}`)
+        return nextIndex
       }
-      setActiveMirror(fallbackSequence[nextIndex])
-      setLoaded(false)
-      setError(false)
+      // Se todos os candidatos diretos falharem, exibe estado de erro sem abrir iframe de anúncio
+      nativeActiveRef.current = false
       setDirectSrc(null)
       setDirectKind(null)
-      setKey((k) => k + 1)
-      return nextIndex
+      setError(true)
+      return prevIndex
     })
+  }
+
+  const handleStreamFailure = () => {
+    if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
+    handleDirectMediaError()
   }
 
   const handleManualRefresh = () => {
@@ -165,6 +178,8 @@ const StreamPlayer = ({
     setError(false)
     setDirectSrc(null)
     setDirectKind(null)
+    setCandidates([])
+    setCandidateIndex(0)
     setFallbackAttempt(0)
     setActiveMirror('megaembed')
     setKey((k) => k + 1)
@@ -174,7 +189,6 @@ const StreamPlayer = ({
     initAntiRedirectShield()
   }, [])
 
-
   useEffect(() => {
     loadedRef.current = false
     setLoaded(false)
@@ -182,14 +196,12 @@ const StreamPlayer = ({
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout de seguranÃ§a: se nada carregar em 12s, mostra o aviso. Ignoramos
-    // quando hÃ¡ uma fonte nativa tocando (o <video> tem onError prÃ³prio, entÃ£o
-    // MP4s grandes nÃ£o sÃ£o abortados pelo timer).
+    // Timeout de segurança: se nada carregar em 15s e não houver mídia nativa tocando, avança para a próxima fonte
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
       if (nativeActiveRef.current) return
-      handleStreamFailure()
-    }, 12000)
+      handleDirectMediaError()
+    }, 15000)
 
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
@@ -197,39 +209,42 @@ const StreamPlayer = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, tmdbId, season, episode, audioOption, activeMirror])
 
-  // Resolve a fonte nativa: MP4 dublado (PT) ou HLS proxy do MegaEmbed.
-  // Assim tocamos sem iframe -> sem abas de propaganda.
+  // Resolve fontes nativas sem anúncios (MP4 / HLS direto via Capacitor/Fetch)
   useEffect(() => {
     let cancelled = false
     nativeActiveRef.current = false
     setDirectSrc(null)
     setDirectKind(null)
+    setCandidates([])
+    setCandidateIndex(0)
     setResolvingDirect(true)
 
     const mediaType: 'movie' | 'tv' = type === 'movie' ? 'movie' : 'tv'
     resolveMegaEmbed(tmdbId, mediaType, season, episode)
       .then((resolved) => {
         if (cancelled) return
-        if (audioOption === 'dub') {
-          if (resolved.dubbedMp4) {
-            nativeActiveRef.current = true
-            setDirectSrc(resolved.dubbedMp4)
-            setDirectKind('mp4')
-          } else if (resolved.hlsProxy) {
-            nativeActiveRef.current = true
-            setDirectSrc(resolved.hlsProxy)
-            setDirectKind('hls')
-          }
+        const list = resolved.candidates || []
+        setCandidates(list)
+        setCandidateIndex(0)
+
+        if (list.length > 0) {
+          const first = list[0]
+          nativeActiveRef.current = true
+          setDirectSrc(first.url)
+          setDirectKind(first.kind)
+        } else if (resolved.dubbedMp4) {
+          nativeActiveRef.current = true
+          setDirectSrc(resolved.dubbedMp4)
+          setDirectKind('mp4')
+        } else if (resolved.hlsProxy) {
+          nativeActiveRef.current = true
+          setDirectSrc(resolved.hlsProxy)
+          setDirectKind('hls')
         } else {
-          if (resolved.hlsProxy) {
-            nativeActiveRef.current = true
-            setDirectSrc(resolved.hlsProxy)
-            setDirectKind('hls')
-          } else if (resolved.dubbedMp4) {
-            nativeActiveRef.current = true
-            setDirectSrc(resolved.dubbedMp4)
-            setDirectKind('mp4')
-          }
+          nativeActiveRef.current = false
+          setDirectSrc(null)
+          setDirectKind(null)
+          setError(true)
         }
       })
       .catch(() => {
@@ -237,6 +252,7 @@ const StreamPlayer = ({
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
+          setError(true)
         }
       })
       .finally(() => {
@@ -260,13 +276,6 @@ const StreamPlayer = ({
     setLoaded(true)
     setError(false)
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
-  }
-
-  const handleDirectMediaError = () => {
-    nativeActiveRef.current = false
-    setDirectSrc(null)
-    setDirectKind(null)
-    handleStreamFailure()
   }
 
   // Anexa o HLS (m3u8) ao <video> via hls.js (CORS garantido pelo proxy do MegaEmbed).
@@ -692,6 +701,36 @@ const StreamPlayer = ({
           </button>
         </div>
 
+        {/* Seleção de Servidor Limpo (Estilo YuCine) */}
+        {candidates.length > 1 && (
+          <div className="flex items-center gap-1 bg-[#1c1c28] p-1 rounded-lg border border-white/5">
+            <span className="text-[11px] font-bold text-white/50 px-1.5 flex items-center gap-1">
+              <Server className="h-3 w-3 text-amber-400" /> Servidor:
+            </span>
+            {candidates.map((cand, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setCandidateIndex(idx)
+                  setDirectSrc(cand.url)
+                  setDirectKind(cand.kind)
+                  setLoaded(false)
+                  setError(false)
+                  showFeedback(`Conectando: ${cand.label}`)
+                }}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                  candidateIndex === idx
+                    ? 'bg-amber-500 text-black shadow-md scale-105'
+                    : 'text-white/60 hover:text-white hover:bg-white/10'
+                }`}
+                title={cand.label}
+              >
+                {idx + 1}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
           {directSrc && (
             <button
@@ -841,9 +880,9 @@ const StreamPlayer = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-10 gap-4 p-6">
             <AlertCircle className="h-12 w-12 text-red-400" />
             <div className="text-center">
-              <p className="text-white font-bold text-lg">Transmissão indisponível</p>
-              <p className="text-white/40 text-sm mt-1">
-                Não foi possível conectar a esta fonte no momento. Tente novamente ou use outra fonte.
+              <p className="text-white font-bold text-lg">Transmissão indisponível nesta opção</p>
+              <p className="text-white/40 text-sm mt-1 max-w-md">
+                Não foi possível conectar a este servidor no momento. Você pode testar outra opção limpa ou alternar o áudio.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -854,42 +893,22 @@ const StreamPlayer = ({
                 <RefreshCw className="h-4 w-4" />
                 Tentar Novamente
               </button>
+              {candidates.length > 1 && (
+                <button
+                  onClick={handleDirectMediaError}
+                  className="flex items-center gap-2 bg-amber-500 text-black px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-400 transition-colors shadow-lg"
+                >
+                  <Server className="h-4 w-4" />
+                  Próxima Opção ({candidateIndex + 1}/{candidates.length})
+                </button>
+              )}
               <button
-                onClick={() => {
-                  setError(false)
-                  setLoaded(false)
-                  setAllowIframe(true)
-                }}
+                onClick={() => switchAudio(audioOption === 'dub' ? 'orig' : 'dub')}
                 className="flex items-center gap-2 bg-white/10 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-white/20 transition-colors"
               >
-                Usar outra fonte
+                Mudar para {audioOption === 'dub' ? 'Legendado' : 'Dublado'}
               </button>
             </div>
-          </div>
-        )}
-
-        {/* Auto-fallback indicator */}
-        {isAutoFallback && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10]/95 z-20 gap-3">
-            <RotateCcw className="h-10 w-10 text-accent-red animate-spin" />
-            <div className="text-center">
-              <p className="text-white font-semibold text-lg">Tentando próxima fonte...</p>
-              <p className="text-white/70 text-sm mt-1">
-                {getMirrorLabel(activeMirror)} ({fallbackAttempt + 1}/{fallbackSequence.length})
-              </p>
-              <p className="text-white/40 text-xs mt-2">
-                Isso acontece automaticamente. Aguarde...
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setIsAutoFallback(false)
-                setAllowIframe(true)
-              }}
-              className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              Pular para iframe
-            </button>
           </div>
         )}
 
