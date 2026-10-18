@@ -147,7 +147,7 @@ export const useAppStore = create<AppState>()(
         currentVersion: '1.2.10',
         latestVersion: '1.2.10',
         hasUpdate: false,
-        downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest',
+        downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-release.apk',
         mandatory: false,
       },
       checkForUpdates: async (manual = false) => {
@@ -155,15 +155,35 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 6000)
-          const res = await fetch(`/update.json?t=${Date.now()}`, { signal: controller.signal })
-          clearTimeout(timeoutId)
-          if (res.ok) {
-            const data = await res.json()
-            const currentVersion = '1.2.10'
+          const currentVersion = '1.2.10'
+          const candidateUrls = [
+            `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
+            `/update.json?t=${Date.now()}`,
+          ]
+
+          let data: { version?: string; downloadUrl?: string; mandatory?: boolean } | null = null
+
+          for (const url of candidateUrls) {
+            try {
+              const controller = new AbortController()
+              const timeoutId = setTimeout(() => controller.abort(), 4000)
+              const res = await fetch(url, { signal: controller.signal })
+              clearTimeout(timeoutId)
+              if (res.ok) {
+                const parsed = await res.json()
+                if (parsed && parsed.version) {
+                  data = parsed
+                  break
+                }
+              }
+            } catch {}
+          }
+
+          if (data) {
             const remoteVersion = data.version || currentVersion
-            const downloadUrl = data.downloadUrl || 'https://github.com/alej4p4/cinebg/releases/latest'
+            const downloadUrl =
+              data.downloadUrl ||
+              'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-release.apk'
             const hasUpdate = remoteVersion !== currentVersion
             set({
               updateInfo: {
