@@ -31,10 +31,5 @@
   "29": "improvement.md",
   "30": "eslint.config.js",
   "31": "vite.config.ts",
-  "32": "capacitor.config.ts",
-  "33": "UpdateModal.tsx",
-  "34": "LicenseGate.tsx",
-  "35": "App",
-  "36": "TvCursorOverlay.tsx",
-  "37": "useLicense.ts"
+  "32": "capacitor.config.ts"
 }
