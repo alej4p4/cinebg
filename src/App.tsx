@@ -13,6 +13,7 @@ import { isTVDevice } from '@/utils/tv'
 import UpdateModal from '@/components/UpdateModal'
 import { useLicense } from '@/hooks/useLicense'
 import LicenseGate from '@/components/LicenseGate'
+import TvCursorOverlay from '@/components/tv/TvCursorOverlay'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Movies = lazy(() => import('@/pages/Movies'))
@@ -137,7 +138,7 @@ function App() {
       <AnimatePresence>
         {showSplash && (
           <SplashScreen
-            version="1.2.10"
+            version={updateInfo.currentVersion}
             onComplete={handleSplashComplete}
           />
         )}
@@ -157,6 +158,7 @@ function App() {
               <main>
                 <AnimatedRoutes />
               </main>
+              <TvCursorOverlay />
             </div>
           </ErrorBoundary>
           <UpdateModal

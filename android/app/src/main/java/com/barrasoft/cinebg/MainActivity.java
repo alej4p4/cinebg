@@ -2,6 +2,7 @@ package com.barrasoft.cinebg;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
@@ -16,6 +17,82 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         setupImmersiveMode();
         setupTvFocus();
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int keyCode = event.getKeyCode();
+        int action = event.getAction();
+
+        // Teclas direcionais de controle remoto (D-Pad), Enter e Menu
+        String keyName = null;
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_UP:
+                keyName = "ArrowUp";
+                break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                keyName = "ArrowDown";
+                break;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                keyName = "ArrowLeft";
+                break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                keyName = "ArrowRight";
+                break;
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_ENTER:
+            case KeyEvent.KEYCODE_NUMPAD_ENTER:
+            case KeyEvent.KEYCODE_BUTTON_A:
+            case KeyEvent.KEYCODE_BUTTON_SELECT:
+                keyName = "Enter";
+                break;
+            case KeyEvent.KEYCODE_MENU:
+                keyName = "ContextMenu";
+                break;
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                keyName = "MediaPlayPause";
+                break;
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+                keyName = "MediaPlay";
+                break;
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                keyName = "MediaPause";
+                break;
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                keyName = "MediaFastForward";
+                break;
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+                keyName = "MediaRewind";
+                break;
+        }
+
+        if (keyName != null) {
+            final String jsKey = keyName;
+            final String eventType = (action == KeyEvent.ACTION_DOWN) ? "keydown" : "keyup";
+            final int jsCode = keyCode;
+
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                getBridge().getWebView().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String js = "window.dispatchEvent(new KeyboardEvent('" + eventType + "', {" +
+                                "key: '" + jsKey + "'," +
+                                "code: '" + jsKey + "'," +
+                                "keyCode: " + jsCode + "," +
+                                "which: " + jsCode + "," +
+                                "bubbles: true," +
+                                "cancelable: true" +
+                            "}));";
+                            getBridge().getWebView().evaluateJavascript(js, null);
+                        } catch (Exception ignored) {}
+                    }
+                });
+                return true;
+            }
+        }
+
+        return super.dispatchKeyEvent(event);
     }
 
     @Override

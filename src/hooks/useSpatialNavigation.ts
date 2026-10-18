@@ -7,8 +7,9 @@ import {
   SpatialNavigation,
   ROOT_FOCUS_KEY,
   getCurrentFocusKey,
+  doesFocusableExist,
 } from '@noriginmedia/norigin-spatial-navigation'
-import { isTvRemoteKey, isTVDevice } from '@/utils/tv'
+import { isTvRemoteKey, isTVDevice, markTvModeActive } from '@/utils/tv'
 
 let isInitialized = false
 
@@ -30,33 +31,43 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
           right: [39, 22, 'ArrowRight', 'Right'],
           up: [38, 19, 'ArrowUp', 'Up'],
           down: [40, 20, 'ArrowDown', 'Down'],
-          enter: [13, 23, 66, 'Enter', 'Select', 'OK', 'Space'],
+          enter: [13, 23, 66, 160, 96, 'Enter', 'Select', 'OK', 'Space'],
         })
-        setThrottle({ throttle: 120 })
+        setThrottle({ throttle: 80 })
         isInitialized = true
       } catch (err) {
         console.warn('Erro ao inicializar spatial navigation:', err)
       }
     }
 
+    const setInitialFocus = () => {
+      if (doesFocusableExist('hero-watch-btn')) {
+        setFocus('hero-watch-btn')
+      } else if (doesFocusableExist('card-0-0')) {
+        setFocus('card-0-0')
+      } else if (doesFocusableExist('nav-item-0')) {
+        setFocus('nav-item-0')
+      } else {
+        setFocus(ROOT_FOCUS_KEY).catch(() => {})
+      }
+    }
+
     // Se o dispositivo ja e uma TV identificada ou explicitamente ativado
     if (explicitEnabled || isTVDevice()) {
-      document.body.classList.add('tv-mode', 'tv-remote-active')
+      markTvModeActive()
       const timer = setTimeout(() => {
-        setFocus(ROOT_FOCUS_KEY).catch(() => {})
-      }, 250)
+        setInitialFocus()
+      }, 350)
       return () => clearTimeout(timer)
     }
 
     // Auto-ativacao: Ouvinte global de teclas do controle remoto
     const handleRemoteKeyDown = (e: KeyboardEvent) => {
       if (isTvRemoteKey(e)) {
-        if (!document.body.classList.contains('tv-remote-active')) {
-          document.body.classList.add('tv-mode', 'tv-remote-active')
-        }
-        // Se ainda nao houver foco ativo, focar o primeiro elemento
-        if (!getCurrentFocusKey() || getCurrentFocusKey() === ROOT_FOCUS_KEY) {
-          setFocus(ROOT_FOCUS_KEY).catch(() => {})
+        markTvModeActive()
+        const currentKey = getCurrentFocusKey()
+        if (!currentKey || currentKey === ROOT_FOCUS_KEY) {
+          setInitialFocus()
         }
       }
     }
