@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-18)
 
 ## Corpus Check
-- 84 files · ~447,172 words
+- 84 files · ~447,182 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 534 nodes · 1261 edges · 30 communities (18 shown, 12 thin omitted)
+- 534 nodes · 1262 edges · 30 communities (18 shown, 12 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 12 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d27f0a3b`
+- Built from commit: `724dfc7b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -71,7 +71,7 @@ Cohesion: 0.06
 Nodes (59): @capacitor/app, framer-motion, lucide-react, @noriginmedia/norigin-spatial-navigation, react, react-dom, react-router-dom, AnimatedRoutes() (+51 more)
 
 ### Community 2 - "index.ts"
-Cohesion: 0.08
+Cohesion: 0.09
 Nodes (38): EpisodeSelector(), EpisodeSelectorProps, StreamPlayer(), StreamPlayerProps, SkeletonEpisodeList(), useAppUpdate(), buildMovieUrl(), buildShowUrl() (+30 more)
 
 ### Community 3 - "LicenseGate.tsx"
@@ -155,7 +155,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `framer-motion` connect `App.tsx` to `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `tmdb.ts`, `notifications.ts`, `Search.tsx`, `index.ts`?**
   _High betweenness centrality (0.076) - this node is a cross-community bridge._
 - **Should `index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.08405797101449275 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08502415458937199 - nodes in this community are weakly interconnected._
 - **Why does `lucide-react` connect `App.tsx` to `index.ts`, `LicenseGate.tsx`, `package.json`, `LiveTV.tsx`, `tmdb.ts`, `notifications.ts`, `Search.tsx`, `index.ts`?**
   _High betweenness centrality (0.063) - this node is a cross-community bridge._
 - **Should `package.json` be split into smaller, more focused modules?**
