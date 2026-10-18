@@ -131,7 +131,7 @@ const StreamPlayer = ({
   const switchAudio = (opt: AudioOption) => {
     setAudioOption(opt)
     if (opt === 'orig') {
-      setActiveMirror('vidsrc-sh')
+      setActiveMirror('vidlink')
       setAllowIframe(true)
       setDirectSrc(null)
       setDirectKind(null)
@@ -946,9 +946,6 @@ const StreamPlayer = ({
             className="w-full h-full border-0"
             allowFullScreen
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-            {...(isMirrorSandboxed(activeMirror)
-              ? { sandbox: 'allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-orientation-lock allow-downloads allow-encrypted-media' }
-              : {})}
             referrerPolicy="no-referrer"
             onLoad={handleIframeLoad}
             onError={handleStreamFailure}
