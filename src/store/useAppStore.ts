@@ -63,6 +63,7 @@ interface AppState {
 
   notificationsEnabled: boolean
   tvMode: boolean
+  virtualCursor: boolean
 
   // Perfis
   setActiveProfile: (id: string) => void
@@ -92,6 +93,7 @@ interface AppState {
 
   // TV / leanback
   setTvMode: (enabled: boolean) => void
+  setVirtualCursor: (enabled: boolean) => void
 
   // Downloads
   downloads: DownloadItem[]
@@ -136,6 +138,10 @@ export const useAppStore = create<AppState>()(
       subtitleOption: 'off',
       notificationsEnabled: false,
       tvMode: false,
+      virtualCursor:
+        typeof window !== 'undefined'
+          ? localStorage.getItem('cinebg_virtual_cursor') === 'true'
+          : false,
       downloads: [],
       vipModalOpen: false,
 
@@ -144,8 +150,8 @@ export const useAppStore = create<AppState>()(
       setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
       isCheckingUpdate: false,
       updateInfo: {
-        currentVersion: '1.2.19',
-        latestVersion: '1.2.19',
+        currentVersion: '1.2.20',
+        latestVersion: '1.2.20',
         hasUpdate: false,
         downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-release.apk',
         mandatory: false,
@@ -155,7 +161,7 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const currentVersion = '1.2.19'
+          const currentVersion = '1.2.20'
           const candidateUrls = [
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,
@@ -386,7 +392,31 @@ export const useAppStore = create<AppState>()(
 
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
 
-      setTvMode: (enabled) => set({ tvMode: enabled }),
+      setTvMode: (enabled) => {
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('cinebg_tv_mode', enabled ? 'true' : 'false')
+            if (enabled) {
+              document.body.classList.add('tv-mode', 'tv-remote-active')
+            } else {
+              document.body.classList.remove('tv-mode')
+            }
+          }
+        } catch {}
+        set({ tvMode: enabled })
+      },
+
+      setVirtualCursor: (enabled) => {
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('cinebg_virtual_cursor', enabled ? 'true' : 'false')
+            if (enabled) {
+              document.body.classList.add('tv-mode', 'tv-remote-active')
+            }
+          }
+        } catch {}
+        set({ virtualCursor: enabled })
+      },
 
       addDownload: (item) =>
         set((state) => {
@@ -484,6 +514,7 @@ export const useAppStore = create<AppState>()(
         dataByProfile: state.dataByProfile,
         notificationsEnabled: state.notificationsEnabled,
         tvMode: state.tvMode,
+        virtualCursor: state.virtualCursor,
         downloads: state.downloads,
       }),
     }

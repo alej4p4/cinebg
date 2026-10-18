@@ -10,7 +10,7 @@ interface SplashScreenProps {
 
 export const SplashScreen = ({
   onComplete,
-  version = '1.2.19',
+  version = '1.2.20',
 }: SplashScreenProps) => {
   const [progress, setProgress] = useState(0)
   const [status, setStatus] = useState('Iniciando CineBG...')

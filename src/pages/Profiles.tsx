@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode, Download, RefreshCw } from 'lucide-react'
+import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode, Download, RefreshCw, MousePointer2 } from 'lucide-react'
 import { useAppStore, type UserProfile } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
@@ -24,6 +24,8 @@ const Profiles = () => {
     setNotificationsEnabled,
     tvMode,
     setTvMode,
+    virtualCursor,
+    setVirtualCursor,
     audioOption,
     setAudioOption,
     subtitleOption,
@@ -296,25 +298,55 @@ const Profiles = () => {
           </button>
         </div>
 
-        <div className="glass rounded-xl p-5 mt-8">
-          <h2 className="font-bold text-white mb-2 flex items-center gap-2">
-            <Tv className="h-5 w-5 text-accent-red" />
-            Modo TV
-          </h2>
-          <p className="text-text-secondary text-sm mb-4">
-            Ativa a navegação por controle remoto (D-pad) com foco espacial. Em TVs Android é
-            detectado automaticamente.
-          </p>
-          <button
-            onClick={() => setTvMode(!tvMode)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tvMode
-                ? 'bg-white/10 text-white hover:bg-white/15'
-                : 'bg-accent-red text-white hover:bg-red-600 shadow-lg shadow-red-900/40'
-            }`}
-          >
-            {tvMode ? 'Modo TV ativado' : 'Ativar modo TV'}
-          </button>
+        {/* Modo TV & Navegação por Controle Remoto */}
+        <div className="glass rounded-xl p-5 mt-8 border border-white/10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-bold text-white mb-1 flex items-center gap-2">
+                <Tv className="h-5 w-5 text-accent-red" />
+                Modo TV & Controle Remoto
+              </h2>
+              <p className="text-text-secondary text-sm">
+                Ativa a interface para Smart TV e TV Box (D-Pad). Em aparelhos de TV é detectado automaticamente.
+              </p>
+            </div>
+            <button
+              onClick={() => setTvMode(!tvMode)}
+              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors flex-shrink-0 ${
+                tvMode
+                  ? 'bg-white/10 text-white hover:bg-white/15'
+                  : 'bg-accent-red text-white hover:bg-red-600 shadow-lg shadow-red-900/40'
+              }`}
+            >
+              {tvMode ? 'Modo TV ativado' : 'Ativar modo TV'}
+            </button>
+          </div>
+
+          {/* Opção para Cursor Virtual de Mouse na TV */}
+          <div className="mt-5 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-shrink-0">
+                <MousePointer2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">Cursor Virtual (Modo Mouse no Controle)</h3>
+                <p className="text-text-secondary text-xs mt-0.5">
+                  Exibe um cursor na tela movimentado pelas setas do controle remoto da TV Box. Ideal para controles sem mouse físico.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setVirtualCursor(!virtualCursor)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${
+                virtualCursor
+                  ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/10'
+              }`}
+            >
+              {virtualCursor ? '✓ Cursor Ativado' : 'Ativar Cursor Virtual'}
+            </button>
+          </div>
         </div>
 
         {/* Otimização & Limpeza de Cache */}
