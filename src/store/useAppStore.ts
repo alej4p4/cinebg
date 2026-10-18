@@ -144,8 +144,8 @@ export const useAppStore = create<AppState>()(
       setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
       isCheckingUpdate: false,
       updateInfo: {
-        currentVersion: '1.2.13',
-        latestVersion: '1.2.13',
+        currentVersion: '1.2.14',
+        latestVersion: '1.2.14',
         hasUpdate: false,
         downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-release.apk',
         mandatory: false,
@@ -155,7 +155,7 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const currentVersion = '1.2.13'
+          const currentVersion = '1.2.14'
           const candidateUrls = [
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,

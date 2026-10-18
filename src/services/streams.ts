@@ -32,16 +32,10 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'FHD 1080p',
     type: 'multi_sub',
     sandboxed: false,
-    getMovieUrl: (tmdbId, audioInput) => {
-      const audio = normalizeAudio(audioInput)
-      const base = `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981`
-      return audio === 'orig' ? base : `${base}&sub_lang=pt`
-    },
-    getShowUrl: (tmdbId, season, episode, audioInput) => {
-      const audio = normalizeAudio(audioInput)
-      const base = `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981`
-      return audio === 'orig' ? base : `${base}&sub_lang=pt`
-    },
+    getMovieUrl: (tmdbId) =>
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt`,
   },
   {
     id: 'vidsrc-sh',

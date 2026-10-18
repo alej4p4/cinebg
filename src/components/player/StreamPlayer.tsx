@@ -83,6 +83,9 @@ const StreamPlayer = ({
   const loadedRef = useRef(false)
   const nativeActiveRef = useRef(false)
   const autoFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mediaKey = `${type}-${tmdbId}-${season}-${episode}`
+  const lastCheckedMediaRef = useRef<string>('')
+  const userManualAudioRef = useRef<AudioOption | null>(null)
 
   // ===== Controles do player (Sprint 2) =====
   const [speed, setSpeed] = useState(1)
@@ -129,6 +132,7 @@ const StreamPlayer = ({
 
   // Alternância de áudio inteligente sem anúncios
   const switchAudio = (opt: AudioOption) => {
+    userManualAudioRef.current = opt
     setAudioOption(opt)
     if (opt === 'orig') {
       setActiveMirror('vidlink')
@@ -167,11 +171,16 @@ const StreamPlayer = ({
         showFeedback(`Conectando: ${next.label}`)
         return nextIndex
       }
-      // Se todos os candidatos diretos falharem, exibe estado de erro sem abrir iframe de anúncio
+      // Se todos os candidatos diretos dublados falharem, alternamos automaticamente para Original Legendado (PT-BR)
+      console.info('[StreamPlayer] Fontes dubladas esgotadas. Alternando para Original Legendado (PT-BR)...')
       nativeActiveRef.current = false
       setDirectSrc(null)
       setDirectKind(null)
-      setError(true)
+      setAudioOption('orig')
+      setActiveMirror('vidlink')
+      setAllowIframe(true)
+      setError(false)
+      showFeedback('Áudio dublado indisponível. Alternando para Legendado (PT)...')
       return prevIndex
     })
   }
@@ -183,6 +192,8 @@ const StreamPlayer = ({
 
   const handleManualRefresh = () => {
     loadedRef.current = false
+    lastCheckedMediaRef.current = ''
+    userManualAudioRef.current = null
     setAllowIframe(false)
     setLoaded(false)
     setError(false)
@@ -219,13 +230,25 @@ const StreamPlayer = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, tmdbId, season, episode, audioOption, activeMirror])
 
-  // Resolve fontes nativas sem anúncios (MP4 / HLS direto via Capacitor/Fetch)
+  // Verificação e resolução inteligente de áudio:
+  // Ao entrar em um filme ou episódio, verifica se tem em português (dublado).
+  // Se tiver, deixa marcado 'Dublado' (audioOption='dub') e reproduz a fonte em português.
+  // Se não tiver áudio em português, muda automaticamente para o idioma original com legenda em português (audioOption='orig').
   useEffect(() => {
-    if (audioOption === 'orig') {
+    const isNewMedia = lastCheckedMediaRef.current !== mediaKey
+    if (isNewMedia) {
+      lastCheckedMediaRef.current = mediaKey
+      userManualAudioRef.current = null
+    }
+
+    // Se o usuário selecionou manualmente Original para este conteúdo, respeitamos a decisão manual
+    if (userManualAudioRef.current === 'orig' || userManualAudioRef.current === 'sub') {
       nativeActiveRef.current = false
       setResolvingDirect(false)
       setDirectSrc(null)
       setDirectKind(null)
+      setActiveMirror('vidlink')
+      setAllowIframe(true)
       return
     }
 
@@ -242,36 +265,50 @@ const StreamPlayer = ({
       .then((resolved) => {
         if (cancelled) return
         const list = resolved.candidates || []
-        setCandidates(list)
-        setCandidateIndex(0)
 
-        if (list.length > 0) {
-          const first = list[0]
-          nativeActiveRef.current = true
-          setDirectSrc(first.url)
-          setDirectKind(first.kind)
-        } else if (resolved.dubbedMp4) {
-          nativeActiveRef.current = true
-          setDirectSrc(resolved.dubbedMp4)
-          setDirectKind('mp4')
-        } else if (resolved.hlsProxy) {
-          nativeActiveRef.current = true
-          setDirectSrc(resolved.hlsProxy)
-          setDirectKind('hls')
+        if (list.length > 0 || resolved.dubbedMp4 || resolved.hlsProxy) {
+          // Possui áudio em português! Deixa marcado Dublado
+          console.info('[StreamPlayer] Áudio em português encontrado. Deixando marcado Dublado.')
+          setAudioOption('dub')
+          setCandidates(list)
+          setCandidateIndex(0)
+
+          if (list.length > 0) {
+            const first = list[0]
+            nativeActiveRef.current = true
+            setDirectSrc(first.url)
+            setDirectKind(first.kind)
+          } else if (resolved.dubbedMp4) {
+            nativeActiveRef.current = true
+            setDirectSrc(resolved.dubbedMp4)
+            setDirectKind('mp4')
+          } else if (resolved.hlsProxy) {
+            nativeActiveRef.current = true
+            setDirectSrc(resolved.hlsProxy)
+            setDirectKind('hls')
+          }
         } else {
-          nativeActiveRef.current = false
+          // Não tem em português: muda para o idioma original com legenda em português
+          console.info('[StreamPlayer] Sem áudio em português disponível. Alternando automaticamente para Original Legendado (PT-BR)...')
+          showFeedback('Áudio dublado indisponível. Mudando para Legendado (PT)...')
+          setAudioOption('orig')
+          setActiveMirror('vidlink')
+          setAllowIframe(true)
           setDirectSrc(null)
           setDirectKind(null)
-          setError(true)
+          setError(false)
         }
       })
-      .catch(() => {
-        if (!cancelled) {
-          nativeActiveRef.current = false
-          setDirectSrc(null)
-          setDirectKind(null)
-          setError(true)
-        }
+      .catch((err) => {
+        if (cancelled) return
+        console.warn('[StreamPlayer] Erro ao verificar áudio PT. Alternando para Original Legendado:', err)
+        showFeedback('Áudio dublado indisponível. Alternando para Legendado (PT)...')
+        setAudioOption('orig')
+        setActiveMirror('vidlink')
+        setAllowIframe(true)
+        setDirectSrc(null)
+        setDirectKind(null)
+        setError(false)
       })
       .finally(() => {
         if (!cancelled) setResolvingDirect(false)
@@ -280,7 +317,7 @@ const StreamPlayer = ({
     return () => {
       cancelled = true
     }
-  }, [key, tmdbId, season, episode, audioOption, type])
+  }, [key, mediaKey, tmdbId, season, episode, type, setAudioOption])
 
   const handleIframeLoad = () => {
     loadedRef.current = true
