@@ -237,15 +237,28 @@ iframe:focus-visible {
 /* Anel de foco controlado pelo norigin (navegacao espacial / controle remoto TV) */
 .tv-focused {
   outline: none !important;
-  box-shadow: 0 0 0 3px #fbbf24, 0 0 24px rgba(251, 191, 36, 0.65) !important;
-  border-radius: 14px;
-  transform: scale(1.04) !important;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+  box-shadow: 0 0 0 3px #fbbf24, 0 0 20px rgba(251, 191, 36, 0.65) !important;
+  border-radius: 12px;
+  transform: scale(1.04) translateZ(0) !important;
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out !important;
+  will-change: transform;
   z-index: 40 !important;
   position: relative;
 }
 
-/* Modo TV (Leanback / D-Pad ativo) */
+/* Modo TV (Leanback / D-Pad ativo) - Otimização de rolagem nativa 60fps */
+.tv-mode,
+.tv-remote-active,
+.tv-mode html,
+.tv-remote-active html {
+  scroll-behavior: auto !important;
+}
+
+.tv-mode .carousel-container,
+.tv-remote-active .carousel-container {
+  scroll-snap-type: none !important;
+}
+
 .tv-mode *,
 .tv-remote-active * {
   scrollbar-width: none !important;

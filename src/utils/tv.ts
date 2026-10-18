@@ -85,3 +85,39 @@ export const isTvRemoteKey = (e: KeyboardEvent): boolean => {
 
   return false
 }
+
+/**
+ * Rola um elemento para visualização de forma ágil e fluida para Smart TVs.
+ * Se o elemento já estiver visível na tela, NÃO causa rolagem desnecessária.
+ * Se precisar rolar, usa 'nearest' e rolagem direta para não sobrecarregar a CPU da TV.
+ */
+export const scrollTvElementIntoView = (el: HTMLElement | null) => {
+  if (!el || typeof el.getBoundingClientRect !== 'function') return
+
+  const rect = el.getBoundingClientRect()
+  const marginX = 48
+  const marginY = 54
+
+  // Se já está visível dentro do viewport, evita qualquer reflow ou rolagem desnecessária
+  const isVisibleHorizontally =
+    rect.left >= marginX && rect.right <= window.innerWidth - marginX
+  const isVisibleVertically =
+    rect.top >= marginY && rect.bottom <= window.innerHeight - marginY
+
+  if (isVisibleHorizontally && isVisibleVertically) {
+    return
+  }
+
+  try {
+    el.scrollIntoView({
+      behavior: 'auto',
+      block: 'nearest',
+      inline: 'nearest',
+    })
+  } catch {
+    try {
+      el.scrollIntoView(false)
+    } catch {}
+  }
+}
+
