@@ -10,7 +10,20 @@ interface LivePlayerProps {
 const LivePlayer = ({ channel }: LivePlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [sourceIndex, setSourceIndex] = useState(0)
+
+  // Recupera o último sinal funcional salvo para este canal ou inicia em 0
+  const getInitialSignal = () => {
+    try {
+      const saved = sessionStorage.getItem(`cinebg_signal_${channel.id}`)
+      if (saved !== null) {
+        const idx = Number(saved)
+        if (!isNaN(idx) && idx >= 0 && idx < channel.sources.length) return idx
+      }
+    } catch {}
+    return 0
+  }
+
+  const [sourceIndex, setSourceIndex] = useState(getInitialSignal)
   const [mountKey, setMountKey] = useState(0)
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
@@ -19,14 +32,15 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
 
   // Reinicia o player quando o canal muda.
   useEffect(() => {
-    setSourceIndex(0)
+    const initIdx = getInitialSignal()
+    setSourceIndex(initIdx)
     setMountKey(0)
     setLoaded(false)
     setError(false)
-    setStatusMessage('Sintonizando sinal...')
+    setStatusMessage(initIdx > 0 ? `Sintonizando Sinal ${initIdx + 1}...` : 'Sintonizando sinal...')
   }, [channel.id])
 
-  // Anexa o stream HLS atual com fallback automático e auto-recuperação.
+  // Anexa o stream HLS atual com fallback automático, auto-recuperação e áudio PT
   useEffect(() => {
     const video = videoRef.current
     const src = channel.sources[sourceIndex]
@@ -39,7 +53,7 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
     setError(false)
     setStatusMessage(
       channel.sources.length > 1 && sourceIndex > 0
-        ? `Alternando para Sinal ${sourceIndex + 1}...`
+        ? `Sintonizando Sinal ${sourceIndex + 1}...`
         : 'Sintonizando sinal...'
     )
 
@@ -55,29 +69,40 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
       }
     }
 
+    // Watchdog de segurança: se o sinal não reproduzir em até 8.5s e houver outro sinal, avança automaticamente
+    const stallWatchdog = setTimeout(() => {
+      if (!cancelled && !loaded) {
+        if (sourceIndex < channel.sources.length - 1) {
+          goNext()
+        }
+      }
+    }, 8500)
+
     void import('hls.js').then((mod) => {
       if (cancelled) return
       const Hls = mod.default
 
       if (Hls.isSupported()) {
         const hls = new Hls({
-          enableWorker: true,
+          enableWorker: false, // Desativa worker para evitar engasgos de thread em Android TV / WebViews
           liveDurationInfinity: true,
           lowLatencyMode: false,
-          backBufferLength: 30,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60,
-          maxBufferSize: 60 * 1000 * 1000,
-          liveSyncDurationCount: 5,
-          liveMaxLatencyDurationCount: 15,
-          manifestLoadingTimeOut: 15000,
-          manifestLoadingMaxRetry: 4,
-          levelLoadingTimeOut: 15000,
-          levelLoadingMaxRetry: 4,
-          fragLoadingTimeOut: 20000,
-          fragLoadingMaxRetry: 4,
-          nudgeOffset: 0.2,
+          backBufferLength: 15,
+          maxBufferLength: 15, // Buffer equilibrado (não tenta puxar além da janela do servidor)
+          maxMaxBufferLength: 30,
+          maxBufferSize: 30 * 1000 * 1000,
+          liveSyncDurationCount: 3, // Ótimo para IPTV com janelas de 3-4 segmentos (evita travamento contínuo)
+          liveMaxLatencyDurationCount: 10,
+          manifestLoadingTimeOut: 6500, // Timeout ágil de 6.5s
+          manifestLoadingMaxRetry: 2,
+          levelLoadingTimeOut: 6500,
+          levelLoadingMaxRetry: 2,
+          fragLoadingTimeOut: 12000,
+          fragLoadingMaxRetry: 3,
+          nudgeOffset: 0.1,
           nudgeMaxRetry: 5,
+          maxFragLookUpTolerance: 0.25,
+          autoStartLoad: true,
         })
 
         hlsInstance = hls
@@ -91,21 +116,53 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           const p = video.play()
           if (p !== undefined) {
             p.then(() => {
-              if (!cancelled) setLoaded(true)
+              if (!cancelled) {
+                setLoaded(true)
+                try {
+                  sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
+                } catch {}
+              }
             }).catch(() => {
               // Se o navegador barrar o áudio por política de autoplay, silencia e reproduz o vídeo imediatamente
               if (!cancelled && video) {
                 video.muted = true
                 setMuted(true)
                 video.play().then(() => {
-                  if (!cancelled) setLoaded(true)
+                  if (!cancelled) {
+                    setLoaded(true)
+                    try {
+                      sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
+                    } catch {}
+                  }
                 }).catch(() => {})
               }
             })
           }
         }
 
+        // Seleção automática do áudio em Português / Dublado
+        const selectPortugueseAudio = () => {
+          if (!hls.audioTracks || hls.audioTracks.length <= 1) return
+          const ptIdx = hls.audioTracks.findIndex((t) => {
+            const l = (t.lang || '').toLowerCase()
+            const n = (t.name || '').toLowerCase()
+            return (
+              l.startsWith('por') ||
+              l.startsWith('pt') ||
+              n.includes('por') ||
+              n.includes('dub') ||
+              n.includes('brasil')
+            )
+          })
+          if (ptIdx !== -1 && hls.audioTrack !== ptIdx) {
+            hls.audioTrack = ptIdx
+          }
+        }
+
+        hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, selectPortugueseAudio)
+
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          selectPortugueseAudio()
           tryPlay()
         })
 
@@ -118,7 +175,21 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
         hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
           if (cancelled) return
           const payload = data as { fatal?: boolean; type?: string; details?: string }
-          if (!payload.fatal) return
+
+          // Recuperação automática de pequenos saltos de timestamp / buraco no buffer IPTV
+          if (!payload.fatal) {
+            if (
+              payload.details === 'bufferStalledError' ||
+              payload.details === 'bufferNudgeOnStall'
+            ) {
+              if (video && !video.paused) {
+                try {
+                  video.currentTime += 0.1
+                } catch {}
+              }
+            }
+            return
+          }
 
           if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
             try {
@@ -130,14 +201,14 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           }
 
           if (payload.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            // Limita a recuperação a no máximo 2 tentativas com intervalo, evitando loop infinito
-            if (networkRetryCount < 2) {
+            // Tenta 1 recuperação rápida de rede antes de alternar sinal
+            if (networkRetryCount < 1) {
               networkRetryCount++
               setTimeout(() => {
                 if (!cancelled && hlsInstance) {
                   hls.startLoad()
                 }
-              }, 1200)
+              }, 1000)
               return
             }
           }
@@ -162,6 +233,7 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
 
     return () => {
       cancelled = true
+      clearTimeout(stallWatchdog)
       if (hlsInstance) hlsInstance.destroy()
     }
   }, [channel.id, channel.sources, sourceIndex, mountKey])
@@ -261,6 +333,9 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
                 src={channel.logo}
                 alt={channel.name}
                 className="h-12 max-w-[140px] object-contain opacity-60"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none'
+                }}
               />
             )}
             <p className="text-white/70 text-sm font-semibold">{statusMessage}</p>
@@ -314,8 +389,18 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           autoPlay
           playsInline
           className="w-full h-full bg-black cursor-pointer"
-          onLoadedData={() => setLoaded(true)}
-          onPlaying={() => setLoaded(true)}
+          onLoadedData={() => {
+            setLoaded(true)
+            try {
+              sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
+            } catch {}
+          }}
+          onPlaying={() => {
+            setLoaded(true)
+            try {
+              sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
+            } catch {}
+          }}
           onClick={() => {
             const v = videoRef.current
             if (!v) return
