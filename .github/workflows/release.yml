@@ -1,0 +1,102 @@
+name: Build and Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publicar / Atualizar release no GitHub'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build & Release CineBG APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Configure Keystore and Signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          STORE_PASS="${KEYSTORE_PASSWORD:-cinebg123}"
+          ALIAS="${KEY_ALIAS:-cinebg}"
+          KEY_PASS="${KEY_PASSWORD:-cinebg123}"
+
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Decodificando keystore de producao a partir dos secrets..."
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/cinebg-release.jks
+          else
+            echo "KEYSTORE_BASE64 nao configurado. Gerando keystore de release padrao..."
+            keytool -genkey -v -keystore android/cinebg-release.jks -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -storepass "$STORE_PASS" -keypass "$KEY_PASS" -dname "CN=CineBG, OU=Mobile, O=BarraSoft, L=Default, S=Default, C=BR"
+          fi
+
+          printf "storeFile=cinebg-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n" "$STORE_PASS" "$ALIAS" "$KEY_PASS" > android/keystore.properties
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x android/gradlew
+
+      - name: Assemble Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Prepare APK Asset
+        run: |
+          cp android/app/build/outputs/apk/release/CineBG-release.apk ./CineBG-release.apk
+          ls -la ./CineBG-release.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CineBG-release
+          path: ./CineBG-release.apk
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./CineBG-release.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
