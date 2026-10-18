@@ -41,7 +41,9 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
     }
 
     const setInitialFocus = () => {
-      if (doesFocusableExist('hero-watch-btn')) {
+      if (doesFocusableExist('details-play')) {
+        setFocus('details-play')
+      } else if (doesFocusableExist('hero-watch-btn')) {
         setFocus('hero-watch-btn')
       } else if (doesFocusableExist('card-0-0')) {
         setFocus('card-0-0')
