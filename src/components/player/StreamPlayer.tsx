@@ -332,16 +332,27 @@ const StreamPlayer = ({
         showFeedback(`Conectando: ${next.label}`)
         return nextIndex
       }
-      // Se todos os candidatos diretos dublados falharem, alternamos automaticamente para Original Legendado (PT-BR)
-      console.info('[StreamPlayer] Fontes dubladas esgotadas. Alternando para Original Legendado (PT-BR)...')
+      // Se todos os candidatos diretos falharem e estivermos em Dublado, usamos o espelho MegaEmbed web dublado (sem mudar para inglês)
+      if (audioOption === 'dub') {
+        console.info('[StreamPlayer] Fontes diretas esgotadas. Conectando espelho web dublado (MegaEmbed)...')
+        nativeActiveRef.current = false
+        setDirectSrc(null)
+        setDirectKind(null)
+        setActiveMirror('megaembed')
+        setAllowIframe(true)
+        setError(false)
+        showFeedback('Conectando reprodutor dublado...')
+        return prevIndex
+      }
+
+      console.info('[StreamPlayer] Fontes diretas originais esgotadas. Alternando espelho legendado...')
       nativeActiveRef.current = false
       setDirectSrc(null)
       setDirectKind(null)
-      setAudioOption('orig')
       setActiveMirror('vidlink')
       setAllowIframe(true)
       setError(false)
-      showFeedback('Áudio dublado indisponível. Alternando para Legendado (PT)...')
+      showFeedback('Conectando espelho legendado...')
       return prevIndex
     })
   }
@@ -492,35 +503,27 @@ const StreamPlayer = ({
             setDirectKind('hls')
           }
         } else {
-          // Não tem em português: muda para o idioma original com legenda em português
-          console.info('[StreamPlayer] Sem áudio em português disponível. Alternando automaticamente para Original Legendado (PT-BR)...')
-          showFeedback('Áudio dublado indisponível. Mudando para Legendado (PT)...')
-          setAudioOption('orig')
-          setCandidates(list)
+          // Se não extraiu fontes diretas por regex, mantemos Dublado e usamos o reprodutor web do MegaEmbed
+          console.info('[StreamPlayer] Fontes diretas não extraídas. Mantendo Dublado com reprodutor MegaEmbed...')
+          setAudioOption('dub')
+          setCandidates([])
           setCandidateIndex(0)
-
-          const directOrig = list.find((c) => !c.isDubbedHint) || list[0]
-          if (directOrig) {
-            console.info('[StreamPlayer] Usando fonte direta sem anúncios para áudio original:', directOrig.label)
-            nativeActiveRef.current = true
-            setDirectSrc(directOrig.url)
-            setDirectKind(directOrig.kind)
-            setAllowIframe(false)
-          } else {
-            setActiveMirror('vidlink')
-            setAllowIframe(true)
-            setDirectSrc(null)
-            setDirectKind(null)
-          }
+          nativeActiveRef.current = false
+          setDirectSrc(null)
+          setDirectKind(null)
+          setActiveMirror('megaembed')
+          setAllowIframe(true)
           setError(false)
         }
       })
       .catch((err) => {
         if (cancelled) return
-        console.warn('[StreamPlayer] Erro ao verificar áudio PT. Alternando para Original Legendado:', err)
-        showFeedback('Áudio dublado indisponível. Alternando para Legendado (PT)...')
-        setAudioOption('orig')
-        setActiveMirror('vidlink')
+        console.warn('[StreamPlayer] Erro ao carregar fontes diretas. Mantendo Dublado com MegaEmbed:', err)
+        setAudioOption('dub')
+        setCandidates([])
+        setCandidateIndex(0)
+        nativeActiveRef.current = false
+        setActiveMirror('megaembed')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
