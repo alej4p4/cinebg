@@ -279,9 +279,8 @@ const StreamPlayer = ({
     setShowHud(true)
     if (hudTimerRef.current) clearTimeout(hudTimerRef.current)
     hudTimerRef.current = setTimeout(() => {
+      // Auto-oculta o HUD e todos os textos da tela cheia se nenhum modal estiver aberto
       if (
-        videoRef.current &&
-        !videoRef.current.paused &&
         !settingsModalOpen &&
         !episodesDrawerOpen &&
         !speedOpen &&
@@ -290,7 +289,7 @@ const StreamPlayer = ({
       ) {
         setShowHud(false)
       }
-    }, 4500)
+    }, 3000)
   }, [settingsModalOpen, episodesDrawerOpen, speedOpen, subsOpen, qualityOpen])
 
   useEffect(() => {
@@ -767,6 +766,10 @@ const StreamPlayer = ({
         containerRef.current.requestFullscreen().catch(() => {})
       }
     }
+    // Ao alternar tela cheia, esconde os controles rapidamente após 800ms
+    setTimeout(() => {
+      setShowHud(false)
+    }, 800)
   }
 
   const toggleFitMode = () => {
@@ -1054,14 +1057,22 @@ const StreamPlayer = ({
     <div
       ref={containerRef}
       tabIndex={0}
+      onClick={() => {
+        // Clicar ou tocar na tela cheia alterna a exibição dos textos/HUD
+        setShowHud((prev) => {
+          if (!prev) resetHudTimer()
+          return !prev
+        })
+      }}
       onKeyDown={handleKeyDown}
       onMouseMove={resetHudTimer}
       onTouchStart={resetHudTimer}
       style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
-      className="player-container relative w-full h-full min-h-screen bg-black overflow-hidden flex flex-col justify-between outline-none ring-0 border-0 select-none"
+      className="player-container relative w-full h-full min-h-screen bg-black overflow-hidden flex flex-col justify-between outline-none ring-0 border-0 select-none cursor-pointer"
     >
       {/* ====== BARRA SUPERIOR HUD (Estilo YuCine TV) ====== */}
       <div
+        onClick={(e) => e.stopPropagation()}
         className={`absolute top-0 left-0 right-0 z-40 p-4 sm:p-6 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between transition-opacity duration-300 ${
           showHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
@@ -1372,8 +1383,8 @@ const StreamPlayer = ({
 
         {/* Barra Inferior HUD Integrada (Linha do Tempo + Ações Estilo YuCine) */}
         <div
-          className={`absolute bottom-0 inset-x-0 z-40 bg-gradient-to-t from-black/95 via-black/80 to-transparent pt-12 pb-6 px-4 sm:px-8 transition-opacity duration-300 pointer-events-auto ${
-            showHud || !isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          className={`absolute bottom-0 inset-x-0 z-40 bg-gradient-to-t from-black/95 via-black/80 to-transparent pt-12 pb-6 px-4 sm:px-8 transition-opacity duration-300 ${
+            showHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
           onClick={(e) => {
             e.stopPropagation()
