@@ -31,7 +31,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🚀',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: false,
+    sandboxed: true,
     getMovieUrl: (tmdbId) =>
       `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
@@ -100,8 +100,8 @@ export const MIRRORS: StreamMirror[] = [
 export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'dub'): string => {
   const sequence =
     audio === 'dub'
-      ? ['megaembed', 'vidsrc-sh', 'vidsrc-io', 'vsembed']
-      : ['vidsrc-sh', 'vidsrc-io', 'vsembed', 'megaembed']
+      ? ['megaembed', 'vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed']
+      : ['vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'megaembed']
 
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
