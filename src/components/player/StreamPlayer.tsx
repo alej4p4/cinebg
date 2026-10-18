@@ -341,12 +341,12 @@ const StreamPlayer = ({
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout de segurança: se nada carregar em 15s e não houver mídia nativa tocando, avança para a próxima fonte
+    // Timeout de segurança: se nada carregar em 8s (seja nativo ou iframe), avança para a próxima opção limpa
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
-      if (nativeActiveRef.current) return
+      console.warn('[StreamPlayer] Timeout de carregamento (8s). Tentando próxima opção limpa...')
       handleDirectMediaError()
-    }, 15000)
+    }, 8000)
 
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
@@ -932,7 +932,8 @@ const StreamPlayer = ({
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onDoubleClick={handleVideoDoubleClick}
-        className="relative bg-black overflow-hidden rounded-b-xl aspect-video [&:fullscreen]:aspect-auto [&:fullscreen]:w-screen [&:fullscreen]:h-screen [&:fullscreen]:rounded-none outline-none"
+        style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+        className="player-container relative bg-black overflow-hidden rounded-b-xl aspect-video [&:fullscreen]:aspect-auto [&:fullscreen]:w-screen [&:fullscreen]:h-screen [&:fullscreen]:rounded-none outline-none ring-0 border-0 focus:outline-none focus:ring-0 focus:border-0 focus-visible:outline-none focus-visible:ring-0 [outline:none!important] [border:none!important] [box-shadow:none!important]"
       >
         {feedback && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">

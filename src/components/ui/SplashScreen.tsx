@@ -10,7 +10,7 @@ interface SplashScreenProps {
 
 export const SplashScreen = ({
   onComplete,
-  version = '1.2.24',
+  version = '1.2.25',
 }: SplashScreenProps) => {
   const [progress, setProgress] = useState(0)
   const [status, setStatus] = useState('Iniciando CineBG...')
@@ -75,30 +75,19 @@ export const SplashScreen = ({
       className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-[#08070d] text-white overflow-hidden select-none"
       style={{ transform: 'translateZ(0)' }}
     >
-      {/* Imagem de Fundo (Cristo Redentor / Barra do Garças) */}
+      {/* Imagem de Fundo (Cristo Redentor / Barra do Garças) 100% Tela Cheia sem bordas */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        {/* Camada ambiente de fundo suave para imersão total em qualquer proporção de tela */}
         <img
           src={splashBg}
-          alt=""
-          aria-hidden="true"
-          className="w-full h-full object-cover object-center filter blur-xl opacity-35 scale-110"
+          alt="Cristo Redentor - Barra do Garças"
+          className="w-full h-full object-cover object-center scale-105"
           style={{ transform: 'translateZ(0)' }}
         />
 
-        {/* Imagem principal do Cristo Redentor de Barra do Garças visível POR INTEIRO */}
-        <div className="absolute inset-0 flex items-center justify-center p-0">
-          <img
-            src={splashBg}
-            alt="Cristo Redentor - Barra do Garças"
-            className="w-full h-full max-h-[85vh] object-contain object-center opacity-95 scale-100"
-            style={{ transform: 'translateZ(0)' }}
-          />
-        </div>
-
         {/* Vinhetas cinematográficas suaves para transição harmoniosa com o tema escuro #08070d */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#08070d] via-transparent to-[#08070d]/60 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#08070d]/50 via-transparent to-[#08070d]/80 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#08070d] via-[#08070d]/30 to-[#08070d]/70 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#08070d]/60 via-transparent to-[#08070d]/90 pointer-events-none" />
+        <div className="absolute inset-0 bg-black/30 pointer-events-none" />
       </div>
 
       {/* Espaçador Superior */}
