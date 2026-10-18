@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Tv, Search as SearchIcon, X, Loader2 } from 'lucide-react'
+import { Tv, Search as SearchIcon, X, Loader2, Calendar, Clock, ChevronDown, ChevronUp, Sparkles, Radio } from 'lucide-react'
 import LivePlayer from '@/components/player/LivePlayer'
 import YuCineChannelCard from '@/components/tv/YuCineChannelCard'
 import Focusable from '@/components/tv/Focusable'
+import { getLiveChannelEPG, getChannelDailySchedule } from '@/services/epg'
 import {
   LIVE_CATEGORIES,
   categoryLabel,
@@ -23,6 +24,7 @@ const LiveTV = () => {
   const [category, setCategory] = useState<string>('todos')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<LiveChannel | null>(null)
+  const [showSchedule, setShowSchedule] = useState(false)
   const [favorites, setFavorites] = useState<Set<string>>(() => loadLiveFavorites())
   const [lastChannelId, setLastChannelId] = useState<string | null>(() => loadLastLiveChannelId())
 
@@ -152,6 +154,116 @@ const LiveTV = () => {
               onNextChannel={handleNextChannel}
               onPrevChannel={handlePrevChannel}
             />
+
+            {/* Informações EPG e Programação no Ar */}
+            {(() => {
+              const epg = getLiveChannelEPG(selected.id, selected.category, selected.name)
+              const schedule = getChannelDailySchedule(selected.id, selected.category, selected.name)
+
+              return (
+                <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600/30 text-red-400 border border-red-500/40 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                          No Ar Agora
+                        </span>
+                        <span className="text-white/60 text-xs font-semibold font-mono">
+                          {epg.start} - {epg.end}
+                        </span>
+                        {epg.category && (
+                          <span className="px-2 py-0.5 rounded bg-white/5 text-white/60 text-[10px] font-medium">
+                            {epg.category}
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="text-white font-extrabold text-base md:text-lg tracking-tight">
+                        {epg.title}
+                      </h2>
+                    </div>
+
+                    <div className="flex items-center gap-3 self-stretch sm:self-auto justify-between sm:justify-end">
+                      <div className="text-right hidden sm:block">
+                        <span className="text-[10px] uppercase font-bold text-white/40 block">
+                          A Seguir
+                        </span>
+                        <span className="text-xs text-white/80 font-semibold truncate max-w-[220px] block">
+                          {epg.nextTitle}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowSchedule((s) => !s)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/90 text-xs font-bold transition-all border border-white/10 hover:border-amber-400/40"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                        <span>{showSchedule ? 'Ocultar Grade' : 'Grade do Dia'}</span>
+                        {showSchedule ? (
+                          <ChevronUp className="w-3.5 h-3.5 text-white/60" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 text-white/60" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Barra de Progresso do Programa */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] text-white/40 font-mono">
+                      <span>Início: {epg.start}</span>
+                      <span className="text-amber-300 font-bold">{epg.progress}% concluído</span>
+                      <span>Término: {epg.end}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-amber-400 via-orange-500 to-accent-red transition-all duration-300 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.6)]"
+                        style={{ width: `${epg.progress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Grade Completa do Dia Expansível */}
+                  {showSchedule && (
+                    <div className="mt-3 p-3.5 rounded-xl bg-black/50 border border-white/10 max-h-64 overflow-y-auto space-y-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-amber-300 mb-2">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>Programação Completa do Dia — Horário de Brasília</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {schedule.map((slot, idx) => (
+                          <div
+                            key={idx}
+                            className={`flex items-center justify-between p-2.5 rounded-lg text-xs transition-colors ${
+                              slot.isCurrent
+                                ? 'bg-amber-500/20 border border-amber-400/50 text-white font-bold'
+                                : 'bg-white/5 text-white/70 hover:bg-white/10'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 truncate">
+                              <span className="font-mono text-amber-400 text-xs font-bold flex-shrink-0">
+                                {slot.time}
+                              </span>
+                              <span className="truncate">{slot.title}</span>
+                            </div>
+                            {slot.isCurrent ? (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] bg-red-600 text-white font-black uppercase flex-shrink-0">
+                                No Ar
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-white/40 flex-shrink-0">
+                                {slot.category}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </div>
         )}
 
