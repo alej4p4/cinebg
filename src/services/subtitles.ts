@@ -79,123 +79,161 @@ export async function fetchPortugueseSubtitles(
   season = 1,
   episode = 1
 ): Promise<SubtitleTrackOption[]> {
-  const imdbId = await getImdbId(type, tmdbId)
-  if (!imdbId) return []
+  const fetchLogic = async (): Promise<SubtitleTrackOption[]> => {
+    const imdbId = await getImdbId(type, tmdbId)
+    if (!imdbId) return []
 
-  const targetPath =
-    type === 'movie'
-      ? `movie/${imdbId}`
-      : `series/${imdbId}:${season}:${episode}`
+    const targetPath =
+      type === 'movie'
+        ? `movie/${imdbId}`
+        : `series/${imdbId}:${season}:${episode}`
 
-  const endpoint = `https://opensubtitles-v3.strem.io/subtitles/${targetPath}.json`
+    const endpoint = `https://opensubtitles-v3.strem.io/subtitles/${targetPath}.json`
 
-  try {
-    let rawSubtitles: StremioSubtitle[] = []
+    try {
+      let rawSubtitles: StremioSubtitle[] = []
 
-    if (Capacitor.isNativePlatform()) {
-      const resp = await CapacitorHttp.get({ url: endpoint })
-      if (resp.status === 200 && resp.data?.subtitles) {
-        rawSubtitles = resp.data.subtitles
-      }
-    } else {
-      const resp = await fetch(endpoint)
-      if (resp.ok) {
-        const data = await resp.json()
-        if (Array.isArray(data?.subtitles)) {
-          rawSubtitles = data.subtitles
-        }
-      }
-    }
-
-    // Filtra legendas em Português do Brasil (pob) e Português (por)
-    const ptSubs = rawSubtitles.filter(
-      (s) => s.lang === 'pob' || s.lang === 'por' || s.lang === 'pt' || s.lang === 'pt-br'
-    )
-
-    if (ptSubs.length === 0) return []
-
-    // Procura por legenda especificamente marcada como Forçada (falas em outro idioma)
-    const forcedMatch = ptSubs.find((s) => {
-      const fn = (s.subtitleFileName || '').toLowerCase()
-      const rel = (s.movieReleaseName || '').toLowerCase()
-      return (
-        fn.includes('forced') ||
-        fn.includes('forcad') ||
-        fn.includes('forçad') ||
-        rel.includes('forced') ||
-        rel.includes('forcad') ||
-        rel.includes('forçad')
-      )
-    })
-
-    const fullMatch = ptSubs.find((s) => s !== forcedMatch) || ptSubs[0]
-
-    const toProcess: { sub: StremioSubtitle; isForced: boolean; label: string }[] = []
-
-    if (forcedMatch) {
-      toProcess.push({
-        sub: forcedMatch,
-        isForced: true,
-        label: '🇧🇷 Português (Falas em outro idioma / Forçada)',
-      })
-    } else {
-      // Quando não há arquivo específico 'forced', a primeira legenda serve para tradução
-      toProcess.push({
-        sub: fullMatch,
-        isForced: true,
-        label: '🇧🇷 Português (Tradução / Forçada)',
-      })
-    }
-
-    if (fullMatch && fullMatch !== forcedMatch) {
-      toProcess.push({
-        sub: fullMatch,
-        isForced: false,
-        label: '🇧🇷 Português Completo (PT-BR)',
-      })
-    }
-
-    const results: SubtitleTrackOption[] = []
-
-    for (const item of toProcess) {
-      try {
-        let srtText = ''
-        if (Capacitor.isNativePlatform()) {
-          const resp = await CapacitorHttp.get({ url: item.sub.url })
-          if (resp.status === 200 && typeof resp.data === 'string') {
-            srtText = resp.data
-          }
-        } else {
-          const resp = await fetch(item.sub.url)
-          if (resp.ok) {
-            srtText = await resp.text()
-          }
-        }
-
-        if (srtText && srtText.length > 20) {
-          const vtt = srtToVtt(srtText)
-          const blob = new Blob([vtt], { type: 'text/vtt;charset=utf-8' })
-          const blobUrl = URL.createObjectURL(blob)
-          activeBlobUrls.push(blobUrl)
-
-          results.push({
-            id: `pt-${item.sub.id}-${item.isForced ? 'forced' : 'full'}`,
-            label: item.label,
-            vttUrl: blobUrl,
-            isForced: item.isForced,
-            language: 'pt',
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const req = CapacitorHttp.get({
+            url: endpoint,
+            connectTimeout: 3500,
+            readTimeout: 3500,
           })
-        }
-      } catch (err) {
-        console.warn('[Subtitles] Erro ao baixar ou converter legenda:', err)
+          const to = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3500))
+          const resp = await Promise.race([req, to])
+          if (resp && resp.status === 200 && resp.data?.subtitles) {
+            rawSubtitles = resp.data.subtitles
+          }
+        } catch {}
+      } else {
+        try {
+          const controller = new AbortController()
+          const tId = setTimeout(() => controller.abort(), 3500)
+          const resp = await fetch(endpoint, { signal: controller.signal })
+          clearTimeout(tId)
+          if (resp.ok) {
+            const data = await resp.json()
+            if (Array.isArray(data?.subtitles)) {
+              rawSubtitles = data.subtitles
+            }
+          }
+        } catch {}
       }
-    }
 
-    return results
-  } catch (err) {
-    console.warn('[Subtitles] Erro ao buscar legendas:', err)
-    return []
+      // Filtra legendas em Português do Brasil (pob) e Português (por)
+      const ptSubs = rawSubtitles.filter(
+        (s) => s.lang === 'pob' || s.lang === 'por' || s.lang === 'pt' || s.lang === 'pt-br'
+      )
+
+      if (ptSubs.length === 0) return []
+
+      // Procura por legenda especificamente marcada como Forçada (falas em outro idioma)
+      const forcedMatch = ptSubs.find((s) => {
+        const fn = (s.subtitleFileName || '').toLowerCase()
+        const rel = (s.movieReleaseName || '').toLowerCase()
+        return (
+          fn.includes('forced') ||
+          fn.includes('forcad') ||
+          fn.includes('forçad') ||
+          rel.includes('forced') ||
+          rel.includes('forcad') ||
+          rel.includes('forçad')
+        )
+      })
+
+      const fullMatch = ptSubs.find((s) => s !== forcedMatch) || ptSubs[0]
+
+      const toProcess: { sub: StremioSubtitle; isForced: boolean; label: string }[] = []
+
+      if (forcedMatch) {
+        toProcess.push({
+          sub: forcedMatch,
+          isForced: true,
+          label: '🇧🇷 Português (Falas em outro idioma / Forçada)',
+        })
+      } else {
+        // Quando não há arquivo específico 'forced', a primeira legenda serve para tradução
+        toProcess.push({
+          sub: fullMatch,
+          isForced: true,
+          label: '🇧🇷 Português (Tradução / Forçada)',
+        })
+      }
+
+      if (fullMatch && fullMatch !== forcedMatch) {
+        toProcess.push({
+          sub: fullMatch,
+          isForced: false,
+          label: '🇧🇷 Português Completo (PT-BR)',
+        })
+      }
+
+      // Baixa e converte em paralelo para máxima velocidade no Android TV
+      const promises = toProcess.map(async (item): Promise<SubtitleTrackOption | null> => {
+        try {
+          let srtText = ''
+          if (Capacitor.isNativePlatform()) {
+            const req = CapacitorHttp.get({
+              url: item.sub.url,
+              connectTimeout: 3500,
+              readTimeout: 3500,
+            })
+            const to = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3500))
+            const resp = await Promise.race([req, to])
+            if (resp && resp.status === 200 && typeof resp.data === 'string') {
+              srtText = resp.data
+            }
+          } else {
+            const controller = new AbortController()
+            const tId = setTimeout(() => controller.abort(), 3500)
+            const resp = await fetch(item.sub.url, { signal: controller.signal })
+            clearTimeout(tId)
+            if (resp.ok) {
+              srtText = await resp.text()
+            }
+          }
+
+          if (srtText && srtText.length > 20) {
+            const vtt = srtToVtt(srtText)
+            const blob = new Blob([vtt], { type: 'text/vtt;charset=utf-8' })
+            const blobUrl = URL.createObjectURL(blob)
+            activeBlobUrls.push(blobUrl)
+
+            return {
+              id: `pt-${item.sub.id}-${item.isForced ? 'forced' : 'full'}`,
+              label: item.label,
+              vttUrl: blobUrl,
+              isForced: item.isForced,
+              language: 'pt',
+            }
+          }
+        } catch (err) {
+          console.warn('[Subtitles] Erro ao baixar ou converter legenda:', err)
+        }
+        return null
+      })
+
+      const settled = await Promise.allSettled(promises)
+      const results: SubtitleTrackOption[] = []
+      for (const res of settled) {
+        if (res.status === 'fulfilled' && res.value) {
+          results.push(res.value)
+        }
+      }
+
+      return results
+    } catch (err) {
+      console.warn('[Subtitles] Erro ao buscar legendas:', err)
+      return []
+    }
   }
+
+  const timeoutPromise = new Promise<SubtitleTrackOption[]>((resolve) =>
+    setTimeout(() => resolve([]), 4500)
+  )
+
+  return Promise.race([fetchLogic(), timeoutPromise])
 }
 
 /**

@@ -212,17 +212,25 @@ const fetchMegaEmbedSources = async (
     mediaType === 'movie' ? `${tmdbId}` : `${tmdbId}/${season}/${episode}`
   const targetUrl = `https://mgeb.site/embed/${targetPath}`
 
-  // 1. No app nativo Android (Capacitor), usa CapacitorHttp para contornar qualquer restrição de CORS e localhost
+  // 1. No app nativo Android (Capacitor), usa CapacitorHttp com timeout seguro de 4.5s
   if (Capacitor.isNativePlatform()) {
     try {
-      const resp = await CapacitorHttp.get({
+      const httpPromise = CapacitorHttp.get({
         url: targetUrl,
         headers: {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+          'User-Agent':
+            'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
         },
+        connectTimeout: 4500,
+        readTimeout: 4500,
       })
-      if (resp.status >= 200 && resp.status < 300 && typeof resp.data === 'string') {
+      const timeoutPromise = new Promise<null>((resolve) =>
+        setTimeout(() => resolve(null), 4500)
+      )
+      const resp = await Promise.race([httpPromise, timeoutPromise])
+
+      if (resp && resp.status >= 200 && resp.status < 300 && typeof resp.data === 'string') {
         const match = resp.data.match(/var sources = (\[[\s\S]*?\]);/)
         if (match) {
           const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
@@ -234,7 +242,7 @@ const fetchMegaEmbedSources = async (
     }
   }
 
-  // 2. Ambiente Web (Vite dev proxy ou fetch direto)
+  // 2. Ambiente Web (Vite dev proxy ou fetch direto com timeout rápido)
   const endpoints = [
     typeof window !== 'undefined' && window.location.port === '5173'
       ? `/api/mgeb/embed/${targetPath}`
@@ -243,28 +251,26 @@ const fetchMegaEmbedSources = async (
   ].filter(Boolean) as string[]
 
   for (const url of endpoints) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const res = await fetch(url, {
-          credentials: 'omit',
-          referrerPolicy: 'no-referrer',
-        })
-        if (!res.ok) continue
+    try {
+      const controller = new AbortController()
+      const tId = setTimeout(() => controller.abort(), 3500)
+      const res = await fetch(url, {
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        signal: controller.signal,
+      })
+      clearTimeout(tId)
+      if (!res.ok) continue
 
-        const html = await res.text()
-        const match = html.match(/var sources = (\[[\s\S]*?\]);/)
-        if (!match) continue
+      const html = await res.text()
+      const match = html.match(/var sources = (\[[\s\S]*?\]);/)
+      if (!match) continue
 
-        const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed
-        }
-      } catch {
-        if (attempt === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 600))
-        }
+      const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed
       }
-    }
+    } catch {}
   }
 
   return []
@@ -281,72 +287,87 @@ export const resolveMegaEmbed = async (
     return resolvedSourcesCache.get(cacheKey)!
   }
 
-  const rawSources = await fetchMegaEmbedSources(tmdbId, mediaType, season, episode)
-  const candidates: DirectCandidate[] = []
+  const resolveLogic = async (): Promise<MegaEmbedResolved> => {
+    const rawSources = await fetchMegaEmbedSources(tmdbId, mediaType, season, episode)
+    const candidates: DirectCandidate[] = []
 
-  for (let i = 0; i < rawSources.length; i++) {
-    const s = rawSources[i]
-    const file = s.file || ''
-    if (!file || typeof file !== 'string') continue
-    // Descarta se for iframe externo ou página com anúncios
-    if (s.type === 'iframe') continue
-    if (file.includes('embed') && !file.includes('get_video')) continue
+    for (let i = 0; i < rawSources.length; i++) {
+      const s = rawSources[i]
+      const file = s.file || ''
+      if (!file || typeof file !== 'string') continue
+      // Descarta se for iframe externo ou página com anúncios
+      if (s.type === 'iframe') continue
+      if (file.includes('embed') && !file.includes('get_video')) continue
 
-    const cleanUrl = formatDirectStreamUrl(file)
-    if (!cleanUrl) continue
+      const cleanUrl = formatDirectStreamUrl(file)
+      if (!cleanUrl) continue
 
-    const isFontedecanais = cleanUrl.includes(DUBBED_SOURCE_HOST_HINT)
-    const isDubbed =
-      isFontedecanais ||
-      cleanUrl.toLowerCase().includes('dublado') ||
-      cleanUrl.toLowerCase().includes('pt-br')
+      const isFontedecanais = cleanUrl.includes(DUBBED_SOURCE_HOST_HINT)
+      const isDubbed =
+        isFontedecanais ||
+        cleanUrl.toLowerCase().includes('dublado') ||
+        cleanUrl.toLowerCase().includes('pt-br')
 
-    const isHls =
-      s.type === 'hls' ||
-      cleanUrl.includes('.m3u8') ||
-      cleanUrl.includes('/hls') ||
-      cleanUrl.includes('/includes/hls.php')
+      const isHls =
+        s.type === 'hls' ||
+        cleanUrl.includes('.m3u8') ||
+        cleanUrl.includes('/hls') ||
+        cleanUrl.includes('/includes/hls.php')
 
-    candidates.push({
-      url: cleanUrl,
-      kind: isHls ? 'hls' : 'mp4',
-      label: s.label || (isFontedecanais ? `Opção Dublada ${i + 1}` : `Servidor ${i + 1}`),
-      isDubbedHint: isDubbed,
+      candidates.push({
+        url: cleanUrl,
+        kind: isHls ? 'hls' : 'mp4',
+        label: s.label || (isFontedecanais ? `Opção Dublada ${i + 1}` : `Servidor ${i + 1}`),
+        isDubbedHint: isDubbed,
+      })
+    }
+
+    // Ordenação inteligente estilo YuCine:
+    // 1. Fontes com dica de dublagem (fontedecanais / dublado) primeiro
+    // 2. MP4s diretos (streamtape, supervideo, etc. - reprodução direta sem ads)
+    // 3. HLS streams
+    candidates.sort((a, b) => {
+      if (a.isDubbedHint && !b.isDubbedHint) return -1
+      if (!a.isDubbedHint && b.isDubbedHint) return 1
+      if (a.kind === 'mp4' && b.kind === 'hls') return -1
+      if (a.kind === 'hls' && b.kind === 'mp4') return 1
+      return 0
     })
+
+    const dubbed =
+      candidates.find((c) => c.isDubbedHint) ||
+      candidates.find((c) => c.kind === 'mp4') ||
+      candidates[0]
+
+    const hls =
+      candidates.find((c) => c.kind === 'hls') ||
+      candidates[0]
+
+    const result: MegaEmbedResolved = {
+      dubbedMp4: dubbed?.url ?? null,
+      hlsProxy: hls?.url ?? (candidates.length > 0 ? candidates[0].url : null),
+      candidates,
+    }
+
+    if (result.dubbedMp4 || result.hlsProxy || candidates.length > 0) {
+      resolvedSourcesCache.set(cacheKey, result)
+    }
+
+    return result
   }
 
-  // Ordenação inteligente estilo YuCine:
-  // 1. Fontes com dica de dublagem (fontedecanais / dublado) primeiro
-  // 2. MP4s diretos (streamtape, supervideo, etc. - reprodução direta sem ads)
-  // 3. HLS streams
-  candidates.sort((a, b) => {
-    if (a.isDubbedHint && !b.isDubbedHint) return -1
-    if (!a.isDubbedHint && b.isDubbedHint) return 1
-    if (a.kind === 'mp4' && b.kind === 'hls') return -1
-    if (a.kind === 'hls' && b.kind === 'mp4') return 1
-    return 0
-  })
-
-  const dubbed =
-    candidates.find((c) => c.isDubbedHint) ||
-    candidates.find((c) => c.kind === 'mp4') ||
-    candidates[0]
-
-  const hls =
-    candidates.find((c) => c.kind === 'hls') ||
-    candidates[0]
-
-  const result: MegaEmbedResolved = {
-    dubbedMp4: dubbed?.url ?? null,
-    hlsProxy: hls?.url ?? (candidates.length > 0 ? candidates[0].url : null),
-    candidates,
+  // Timeout geral de 5.5s para não prender o player em redes lentas de TV
+  const fallbackEmpty: MegaEmbedResolved = {
+    dubbedMp4: null,
+    hlsProxy: null,
+    candidates: [],
   }
 
-  if (result.dubbedMp4 || result.hlsProxy || candidates.length > 0) {
-    resolvedSourcesCache.set(cacheKey, result)
-  }
+  const timeoutPromise = new Promise<MegaEmbedResolved>((resolve) =>
+    setTimeout(() => resolve(fallbackEmpty), 5500)
+  )
 
-  return result
+  return Promise.race([resolveLogic(), timeoutPromise])
 }
 
 export const resolveMegaEmbedDubbedSource = async (

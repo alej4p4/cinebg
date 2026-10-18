@@ -205,6 +205,28 @@ body {
   display: block;
 }
 
+/* ===== PLAYER CONTAINER & NO-OUTLINE (ANDROID TV FIX) ===== */
+div[tabindex="0"]:focus,
+div[tabindex="0"]:focus-visible,
+.player-container,
+.player-container:focus,
+.player-container:focus-visible,
+video,
+video:focus,
+video:focus-visible,
+iframe,
+iframe:focus,
+iframe:focus-visible {
+  outline: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+*:focus-visible {
+  outline: none !important;
+}
+
 /* ===== FOCUS RING (TV D-PAD) ===== */
 .tv-focusable:focus {
   outline: 3px solid var(--accent-red);
