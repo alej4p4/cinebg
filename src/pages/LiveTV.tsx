@@ -177,31 +177,15 @@ const LiveTV = () => {
                   >
                     <span>{cat.emoji}</span>
                     <span>{cat.label}</span>
+                    {cat.id === 'favorites' && favorites.size > 0 && (
+                      <span className="text-xs bg-black/30 px-1.5 py-0.5 rounded-full font-mono">
+                        {favorites.size}
+                      </span>
+                    )}
                   </button>
                 </Focusable>
               )
             })}
-
-            {favorites.size > 0 && (
-              <Focusable
-                focusKey="cat-favorites"
-                onEnterPress={() => setCategory('favorites')}
-                className="rounded-full flex-shrink-0"
-              >
-                <button
-                  onClick={() => setCategory('favorites')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-200 outline-none ${
-                    category === 'favorites'
-                      ? 'bg-accent-red text-white shadow-lg shadow-red-900/40 scale-105'
-                      : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
-                  }`}
-                >
-                  <span>❤️</span>
-                  <span>Favoritos</span>
-                  <span className="text-xs opacity-60">({favorites.size})</span>
-                </button>
-              </Focusable>
-            )}
           </div>
         )}
 
@@ -214,9 +198,13 @@ const LiveTV = () => {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center gap-2">
             <Tv className="h-12 w-12 text-white/20" />
-            <p className="text-white font-bold">Nenhum canal encontrado</p>
+            <p className="text-white font-bold">
+              {category === 'favorites' ? 'Nenhum canal favoritado ainda' : 'Nenhum canal encontrado'}
+            </p>
             <p className="text-white/40 text-sm">
-              Tente outra categoria ou ajuste o termo de busca.
+              {category === 'favorites'
+                ? 'Toque no coração de qualquer canal para fixar seus canais preferidos aqui.'
+                : 'Tente outra categoria ou ajuste o termo de busca.'}
             </p>
           </div>
         ) : (
