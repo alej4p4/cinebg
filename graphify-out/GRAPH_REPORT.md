@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-18)
 
 ## Corpus Check
-- 90 files · ~381,563 words
+- 90 files · ~381,648 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 602 nodes · 1420 edges · 32 communities (20 shown, 12 thin omitted)
+- 603 nodes · 1430 edges · 33 communities (21 shown, 12 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ad05872d`
+- Built from commit: `f2f2dd08`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,6 +19,7 @@
 - App.tsx
 - index.ts
 - framer-motion
+- StreamPlayer.tsx
 - package.json
 - LiveTV.tsx
 - scripts
@@ -31,7 +32,7 @@
 - main
 - MainActivity.java
 - index.ts
-- UpdateModal.tsx
+- react
 - bug_fix.md
 - PULL_REQUEST_TEMPLATE.md
 - feature_request.md
@@ -46,11 +47,11 @@
 3. `framer-motion` - 31 edges
 4. `lucide-react` - 27 edges
 5. `AnimatedRoutes()` - 20 edges
-6. `Home()` - 18 edges
-7. `compilerOptions` - 18 edges
-8. `Focusable()` - 17 edges
-9. `forKids()` - 17 edges
-10. `getPosterUrl()` - 17 edges
+6. `Focusable()` - 18 edges
+7. `Home()` - 18 edges
+8. `compilerOptions` - 18 edges
+9. `MovieCard()` - 17 edges
+10. `forKids()` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `3. Gerenciar Deploys estritamente por Pull Requests (PRs)` --references--> `main()`  [INFERRED]
@@ -61,41 +62,45 @@
   CONTRIBUTING.md → scripts/create-issues.py
 - `2. Fluxo de Branch e Desenvolvimento` --references--> `main()`  [INFERRED]
   README.md → scripts/create-issues.py
-- `useAppUpdate()` --calls--> `useAppStore`  [EXTRACTED]
-  src/hooks/useAppUpdate.ts → src/store/useAppStore.ts
+- `PageFallback()` --calls--> `LoadingSpinner()`  [EXTRACTED]
+  src/App.tsx → src/components/ui/LoadingSpinner.tsx
 
 ## Import Cycles
 - None detected.
 
-## Communities (32 total, 12 thin omitted)
+## Communities (33 total, 12 thin omitted)
 
 ### Community 0 - "App.tsx"
-Cohesion: 0.06
-Nodes (55): react-dom, AnimatedRoutes(), Anime, App(), Details, Downloads, Favorites, History (+47 more)
+Cohesion: 0.11
+Nodes (28): AnimatedRoutes(), Anime, Details, Downloads, Favorites, History, Home, LiveTV (+20 more)
 
 ### Community 1 - "index.ts"
-Cohesion: 0.12
-Nodes (44): Carousel(), ProgressBar(), ProgressBarProps, HeroSkeleton(), SkeletonCard(), SkeletonCarousel(), SkeletonHero(), SkeletonLiveTV() (+36 more)
+Cohesion: 0.11
+Nodes (49): Carousel(), ErrorState(), ErrorStateProps, MovieCard(), ProgressBar(), ProgressBarProps, HeroSkeleton(), SkeletonCard() (+41 more)
 
 ### Community 2 - "framer-motion"
-Cohesion: 0.07
-Nodes (54): framer-motion, lucide-react, @noriginmedia/norigin-spatial-navigation, react-router-dom, CATEGORIES_GRID, NAV_LINKS, Focusable(), FocusableProps (+46 more)
+Cohesion: 0.08
+Nodes (44): framer-motion, lucide-react, @noriginmedia/norigin-spatial-navigation, react-router-dom, CarouselProps, EmptyDownloads(), EmptyFavorites(), EmptyHistory() (+36 more)
+
+### Community 3 - "StreamPlayer.tsx"
+Cohesion: 0.09
+Nodes (38): EpisodeSelector(), EpisodeSelectorProps, StreamPlayer(), StreamPlayerProps, SkeletonEpisodeList(), buildMovieUrl(), buildShowUrl(), DirectCandidate (+30 more)
 
 ### Community 4 - "package.json"
-Cohesion: 0.11
-Nodes (18): name, private, type, version, autoprefixer, axios, @capacitor/android, @capacitor/app (+10 more)
+Cohesion: 0.10
+Nodes (19): name, private, type, version, autoprefixer, axios, @capacitor/android, @capacitor/app (+11 more)
 
 ### Community 5 - "LiveTV.tsx"
 Cohesion: 0.12
-Nodes (28): react, LivePlayer(), LivePlayerProps, YuCineChannelCard(), YuCineChannelCardProps, LiveTV(), ChannelScheduleSlot, DailyScheduleItem (+20 more)
+Nodes (27): LivePlayer(), LivePlayerProps, YuCineChannelCard(), YuCineChannelCardProps, LiveTV(), ChannelScheduleSlot, DailyScheduleItem, EPGProgram (+19 more)
 
 ### Community 6 - "scripts"
 Cohesion: 0.25
 Nodes (8): scripts, build, build:apk, cap:open, cap:sync, dev, lint, preview
 
 ### Community 7 - "notifications.ts"
-Cohesion: 0.16
-Nodes (20): useEpisodeNotifications(), COLORS, EMOJIS, ProfileCard(), Profiles(), checkForNewEpisodes(), daysAgoISO(), ensureNotificationChannel() (+12 more)
+Cohesion: 0.25
+Nodes (13): useEpisodeNotifications(), checkForNewEpisodes(), daysAgoISO(), ensureNotificationChannel(), ensureNotificationPermission(), episodeKey(), hashId(), loadNotified() (+5 more)
 
 ### Community 8 - "compilerOptions"
 Cohesion: 0.10
@@ -122,12 +127,12 @@ Cohesion: 0.06
 Nodes (27): 1. Criar ou Vincular a Issue, 2. Isolar em Branch de Trabalho, 3. Gerenciar Deploys estritamente por Pull Requests (PRs), 4. Critério de Aceite Técnico, graphify, 🤖 Instruções para Agentes de IA — CineBG, 🚨 PROTOCOLO MANDATÓRIO DE TRABALHO, 1. Classificação e Criação de Issues (+19 more)
 
 ### Community 21 - "index.ts"
-Cohesion: 0.05
-Nodes (72): @capacitor/filesystem, zustand, EpisodeSelector(), EpisodeSelectorProps, StreamPlayer(), StreamPlayerProps, GenreBadge(), GenreBadgeProps (+64 more)
+Cohesion: 0.09
+Nodes (43): @capacitor/filesystem, GenreBadge(), GenreBadgeProps, LoadingSpinner(), useAppUpdate(), Details(), Downloads(), Watch() (+35 more)
 
-### Community 25 - "UpdateModal.tsx"
-Cohesion: 0.10
-Nodes (21): @capacitor/core, @capacitor/status-bar, UpdateModal(), UpdateModalProps, UpdateStage, useOrientationFullscreen(), AppInstaller, AppInstallerPluginInterface (+13 more)
+### Community 25 - "react"
+Cohesion: 0.06
+Nodes (52): @capacitor/core, @capacitor/status-bar, react, react-dom, App(), CATEGORIES_GRID, NAV_LINKS, Navbar() (+44 more)
 
 ### Community 26 - "bug_fix.md"
 Cohesion: 0.33
@@ -157,17 +162,17 @@ Nodes (5): @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, g
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `LiveTV.tsx` to `App.tsx`, `index.ts`, `framer-motion`, `package.json`, `notifications.ts`, `index.ts`, `UpdateModal.tsx`?**
+- **Why does `react` connect `react` to `App.tsx`, `index.ts`, `framer-motion`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `notifications.ts`, `index.ts`?**
   _High betweenness centrality (0.085) - this node is a cross-community bridge._
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _10 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.05555555555555555 - nodes in this community are weakly interconnected._
-- **Why does `framer-motion` connect `framer-motion` to `App.tsx`, `index.ts`, `package.json`, `LiveTV.tsx`, `notifications.ts`, `index.ts`, `UpdateModal.tsx`?**
+  _Cohesion score 0.10668563300142248 - nodes in this community are weakly interconnected._
+- **Why does `framer-motion` connect `framer-motion` to `App.tsx`, `index.ts`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `index.ts`, `react`?**
   _High betweenness centrality (0.068) - this node is a cross-community bridge._
 - **Should `index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.11600279524807827 - nodes in this community are weakly interconnected._
-- **Why does `lucide-react` connect `framer-motion` to `App.tsx`, `index.ts`, `package.json`, `LiveTV.tsx`, `notifications.ts`, `index.ts`, `UpdateModal.tsx`?**
+  _Cohesion score 0.10819672131147541 - nodes in this community are weakly interconnected._
+- **Why does `lucide-react` connect `framer-motion` to `App.tsx`, `index.ts`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `index.ts`, `react`?**
   _High betweenness centrality (0.061) - this node is a cross-community bridge._
 - **Should `framer-motion` be split into smaller, more focused modules?**
-  _Cohesion score 0.07496194824961948 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08182349503214495 - nodes in this community are weakly interconnected._

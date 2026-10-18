@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
+import { scrollTvElementIntoView } from '@/utils/tv'
 
 interface FocusableProps {
   onEnterPress?: () => void
@@ -40,16 +41,8 @@ export const Focusable = ({
 
   useEffect(() => {
     if (focused && autoScroll) {
-      requestAnimationFrame(() => {
-        const el = (ref as any)?.current || innerRef.current
-        if (el && typeof el.scrollIntoView === 'function') {
-          el.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
-            inline: 'center',
-          })
-        }
-      })
+      const el = (ref as any)?.current || innerRef.current
+      scrollTvElementIntoView(el)
     }
   }, [focused, autoScroll, ref])
 

@@ -59,7 +59,7 @@ export const TvCursorOverlay: React.FC = () => {
   const [showBadge, setShowBadge] = useState(true)
 
   const posRef = useRef({ x: 0, y: 0 })
-  const speedRef = useRef(18) // Velocidade base do cursor (pixels por frame)
+  const speedRef = useRef(20) // Velocidade base do cursor (pixels por frame)
   const activeDirectionsRef = useRef<Set<Direction>>(new Set())
   const animationFrameRef = useRef<number | null>(null)
   const hideBadgeTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -164,8 +164,8 @@ export const TvCursorOverlay: React.FC = () => {
 
         if (dx !== 0 || dy !== 0) {
           refreshBadgeVisibility()
-          // Aceleracao suave e dinamica ao segurar a tecla (de 18px ate 44px)
-          speedRef.current = Math.min(speedRef.current + 1.1, 44)
+          // Aceleracao suave e dinamica ao segurar a tecla (de 20px ate 48px)
+          speedRef.current = Math.min(speedRef.current + 1.4, 48)
 
           const newX = Math.max(
             8,
@@ -188,7 +188,7 @@ export const TvCursorOverlay: React.FC = () => {
           }
         }
       } else {
-        speedRef.current = 18
+        speedRef.current = 20
       }
 
       animationFrameRef.current = requestAnimationFrame(moveLoop)

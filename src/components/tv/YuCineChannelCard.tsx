@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
 import type { LiveChannel } from '@/services/liveChannels'
 import { getLiveChannelEPG } from '@/services/epg'
+import { scrollTvElementIntoView } from '@/utils/tv'
 
 interface YuCineChannelCardProps {
   channel: LiveChannel
@@ -25,23 +26,9 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
     focusKey: `channel-${channel.id}`,
     onEnterPress: onClick,
     onFocus: () => {
-      ref.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center',
-      })
+      scrollTvElementIntoView(ref.current)
     },
   })
-
-  useEffect(() => {
-    if (focused && ref.current) {
-      ref.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center',
-      })
-    }
-  }, [focused])
   // Renderiza o corpo do card no padrão visual idêntico ao YuCine (Imagem 2)
   const renderCardContent = () => {
     switch (channel.cardBg) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
@@ -8,6 +8,7 @@ import { useAppStore } from '@/store/useAppStore'
 import type { MediaItem } from '@/types'
 import LazyImage from './LazyImage'
 import { FLUID_EASE, SPRING_SNAPPY } from '@/utils/motion'
+import { scrollTvElementIntoView } from '@/utils/tv'
 
 interface MovieCardProps {
   item: MediaItem
@@ -66,23 +67,9 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
       return true
     },
     onFocus: () => {
-      ref.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center',
-      })
+      scrollTvElementIntoView(ref.current)
     },
   })
-
-  useEffect(() => {
-    if (focused && ref.current) {
-      ref.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center',
-      })
-    }
-  }, [focused])
 
   const year = item.releaseDate ? new Date(item.releaseDate).getFullYear() : ''
   const posterUrl = getPosterUrl(item.posterPath)

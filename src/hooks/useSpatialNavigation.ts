@@ -33,7 +33,7 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
           down: [40, 20, 'ArrowDown', 'Down'],
           enter: [13, 23, 66, 160, 96, 'Enter', 'Select', 'OK', 'Space'],
         })
-        setThrottle({ throttle: 80 })
+        setThrottle({ throttle: 20 })
         isInitialized = true
       } catch (err) {
         console.warn('Erro ao inicializar spatial navigation:', err)
