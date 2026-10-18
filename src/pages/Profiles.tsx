@@ -45,9 +45,13 @@ const Profiles = () => {
 
   const handleCleanCache = () => {
     setOptimizing(true)
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         sessionStorage.clear()
+        if (typeof window !== 'undefined' && 'caches' in window) {
+          const keys = await window.caches.keys()
+          await Promise.all(keys.map((k) => window.caches.delete(k)))
+        }
       } catch {}
       setOptimizing(false)
       setOptimizedMsg('✨ Memória otimizada e caches temporários liberados!')

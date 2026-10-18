@@ -17,6 +17,7 @@ import {
   Expand,
   Server,
   Check,
+  Play,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -165,7 +166,8 @@ const StreamPlayer = ({
   const [showLockPrompt, setShowLockPrompt] = useState(false)
   const [showSkipIntro, setShowSkipIntro] = useState(false)
   const [episodesDrawerOpen, setEpisodesDrawerOpen] = useState(false)
-  const [fitMode, setFitMode] = useState<'contain' | 'cover'>('cover')
+  const [fitMode, setFitMode] = useState<'cover' | 'contain' | 'fill' | 'classic'>('cover')
+  const [resumeToast, setResumeToast] = useState<{ seconds: number } | null>(null)
   const hasSkippedIntroRef = useRef(false)
   const lockPromptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -548,8 +550,22 @@ const StreamPlayer = ({
 
   const toggleFitMode = () => {
     setFitMode((prev) => {
-      const next = prev === 'contain' ? 'cover' : 'contain'
-      showFeedback(next === 'cover' ? 'Preencher Tela' : 'Ajustar (Original)')
+      let next: 'cover' | 'contain' | 'fill' | 'classic' = 'contain'
+      let label = 'Padrão (16:9)'
+      if (prev === 'cover') {
+        next = 'contain'
+        label = 'Padrão (16:9)'
+      } else if (prev === 'contain') {
+        next = 'fill'
+        label = 'Esticar (100%)'
+      } else if (prev === 'fill') {
+        next = 'classic'
+        label = 'Clássico (4:3)'
+      } else {
+        next = 'cover'
+        label = 'Preencher Tela'
+      }
+      showFeedback(`Proporção: ${label}`)
       return next
     })
   }
@@ -657,8 +673,10 @@ const StreamPlayer = ({
       if (!Number.isFinite(duration) || startAt < duration - 15) {
         try {
           video.currentTime = startAt
+          setResumeToast({ seconds: Math.floor(startAt) })
+          setTimeout(() => setResumeToast(null), 8000)
         } catch {
-          /* seek invÃ¡lido */
+          /* seek inválido */
         }
       }
     }
@@ -1012,7 +1030,15 @@ const StreamPlayer = ({
             controls
             autoPlay
             playsInline
-            className={`w-full h-full bg-black transition-all duration-200 ${fitMode === 'cover' ? 'object-cover' : 'object-contain'}`}
+            className={`h-full bg-black transition-all duration-200 ${
+              fitMode === 'cover'
+                ? 'w-full object-cover'
+                : fitMode === 'fill'
+                ? 'w-full [object-fit:fill]'
+                : fitMode === 'classic'
+                ? 'w-auto max-w-full aspect-[4/3] object-contain mx-auto'
+                : 'w-full object-contain'
+            }`}
             onLoadedData={handleDirectMediaReady}
             onLoadedMetadata={handleLoadedMetadata}
             onCanPlay={handleDirectMediaReady}
@@ -1020,6 +1046,32 @@ const StreamPlayer = ({
             onError={handleDirectMediaError}
             onEnded={handleEnded}
           />
+        )}
+
+        {/* Toast Flutuante de Retomada Inteligente */}
+        {resumeToast && (
+          <div className="absolute top-4 left-4 z-40 flex items-center gap-2.5 bg-black/85 border border-white/20 px-3.5 py-2 rounded-xl backdrop-blur-md shadow-2xl">
+            <Play className="w-3.5 h-3.5 text-accent-red fill-accent-red flex-shrink-0" />
+            <span className="text-xs text-white">
+              Continuando de <b>{Math.floor(resumeToast.seconds / 60)}:{(resumeToast.seconds % 60).toString().padStart(2, '0')}</b>
+            </span>
+            <button
+              onClick={() => {
+                if (videoRef.current) videoRef.current.currentTime = 0
+                setResumeToast(null)
+                showFeedback('Reiniciado do início')
+              }}
+              className="ml-1.5 px-2 py-0.5 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold transition-colors"
+            >
+              Reiniciar
+            </button>
+            <button
+              onClick={() => setResumeToast(null)}
+              className="text-white/40 hover:text-white ml-0.5"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
         )}
 
         {/* Controles Flutuantes Nativos CineBG */}

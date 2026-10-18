@@ -126,13 +126,37 @@ const Series = () => {
     setFilteredList(airingToday)
   }
 
-  // Filtro "Clássicos"
-  const handleFilterClassics = () => {
+  const [selectedDecade, setSelectedDecade] = useState<string>('all')
+
+  // Filtro "Clássicos" com suporte a décadas
+  const handleFilterClassics = (decade = 'all') => {
     setActiveFilter('classics')
-    setFilterTitle('Séries Clássicas & Nostalgia')
+    setSelectedDecade(decade)
     setShowGenreBar(false)
     setSelectedGenreId(null)
-    setFilteredList(classics)
+    if (decade === 'all') {
+      setFilterTitle('Séries Clássicas & Nostalgia')
+      setFilteredList(classics)
+      return
+    }
+    const [start, end] =
+      decade === '70s'
+        ? [1970, 1979]
+        : decade === '80s'
+        ? [1980, 1989]
+        : decade === '90s'
+        ? [1990, 1999]
+        : [2000, 2009]
+    const label =
+      decade === '70s' ? 'Anos 70' : decade === '80s' ? 'Anos 80' : decade === '90s' ? 'Anos 90' : 'Anos 2000'
+    setFilterTitle(`Séries Clássicas — ${label}`)
+    setFilteredList(
+      classics.filter((c) => {
+        if (!c.releaseDate) return false
+        const y = parseInt(c.releaseDate.slice(0, 4), 10)
+        return y >= start && y <= end
+      }),
+    )
   }
 
   // Filtro "Gênero"
@@ -274,6 +298,34 @@ const Series = () => {
                   Ver todos os carrosséis
                 </button>
               </div>
+
+              {/* Filtro por Década para Clássicos */}
+              {activeFilter === 'classics' && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar">
+                  <span className="text-xs text-white/50 font-bold uppercase tracking-wider flex-shrink-0">
+                    Década:
+                  </span>
+                  {[
+                    { id: 'all', label: 'Todas as Épocas' },
+                    { id: '70s', label: 'Anos 70' },
+                    { id: '80s', label: 'Anos 80' },
+                    { id: '90s', label: 'Anos 90' },
+                    { id: '00s', label: 'Anos 2000' },
+                  ].map((d) => (
+                    <button
+                      key={d.id}
+                      onClick={() => handleFilterClassics(d.id)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex-shrink-0 ${
+                        selectedDecade === d.id
+                          ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/30 font-black scale-105'
+                          : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {filterLoading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">

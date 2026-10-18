@@ -26,6 +26,7 @@ export interface LiveChannel {
 
 export const LIVE_CATEGORIES: LiveCategory[] = [
   { id: 'todos', label: 'Todos', emoji: '✨' },
+  { id: 'favorites', label: 'Favoritos', emoji: '⭐' },
   { id: 'abertos', label: 'Abertos', emoji: '📺' },
   { id: 'filmes', label: 'Filmes & Séries', emoji: '🎬' },
   { id: 'esportes', label: 'Esportes', emoji: '⚽' },
