@@ -180,7 +180,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'tnt-hd',
     name: 'TNT HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/TNT_Logo_2016.svg/500px-TNT_Logo_2016.svg.png',
+    logo: 'https://i.imgur.com/Qh13Vek.png',
     cardBg: 'tnt',
     category: 'filmes',
     country: 'BR',
@@ -196,7 +196,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'tnt-novelas',
     name: 'TNT Novelas',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/TNT_Novelas_2025.svg/500px-TNT_Novelas_2025.svg.png',
+    logo: 'https://i.imgur.com/GZ0Q89G.png',
     cardBg: 'tnt-novelas',
     category: 'filmes',
     country: 'BR',
@@ -228,7 +228,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'max-hd',
     name: 'MAX HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Max_logo.svg/500px-Max_logo.svg.png',
+    logo: 'https://i.imgur.com/rM1iCq9.png',
     cardBg: 'max',
     category: 'filmes',
     country: 'BR',
@@ -406,7 +406,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'espn-brasil',
     name: 'ESPN Brasil',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/ESPN_wordmark.svg/500px-ESPN_wordmark.svg.png',
+    logo: 'https://i.imgur.com/2Y44R9d.png',
     cardBg: 'espn',
     category: 'esportes',
     country: 'BR',
@@ -422,7 +422,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'espn-4',
     name: 'ESPN 4 HD',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ESPN_4_logo.svg/500px-ESPN_4_logo.svg.png',
+    logo: 'https://i.imgur.com/2Y44R9d.png',
     cardBg: 'espn',
     category: 'esportes',
     country: 'BR',
@@ -568,7 +568,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'cartoon-network',
     name: 'Cartoon Network',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Cartoon_Network_2010_logo.svg/500px-Cartoon_Network_2010_logo.svg.png',
+    logo: 'https://i.imgur.com/YwN9p0a.png',
     cardBg: 'cartoon',
     category: 'infantil',
     country: 'BR',
@@ -712,7 +712,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'animal-planet',
     name: 'Animal Planet',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/2018_Animal_Planet_logo.svg/500px-2018_Animal_Planet_logo.svg.png',
+    logo: 'https://i.imgur.com/9O0mK1w.png',
     cardBg: 'discovery',
     category: 'variedades',
     country: 'BR',

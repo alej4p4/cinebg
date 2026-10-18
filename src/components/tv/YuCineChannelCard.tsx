@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
 import type { LiveChannel } from '@/services/liveChannels'
@@ -18,6 +18,7 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
   isFavorite,
   onToggleFavorite,
 }) => {
+  const [logoError, setLogoError] = useState(false)
   const { ref, focused } = useFocusable({
     focusKey: `channel-${channel.id}`,
     onEnterPress: onClick,
@@ -396,17 +397,15 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
       default:
         return (
           <div className="w-full h-full bg-gradient-to-br from-[#1b1c2b] to-[#0c0d16] flex flex-col items-center justify-center p-3 text-center">
-            {channel.logo ? (
+            {channel.logo && !logoError ? (
               <img
                 src={channel.logo}
                 alt={channel.name}
                 className="max-h-12 max-w-[80%] object-contain drop-shadow-md"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none'
-                }}
+                onError={() => setLogoError(true)}
               />
             ) : (
-              <span className="font-display font-black text-base text-white/90 uppercase tracking-wider">
+              <span className="font-display font-black text-sm text-white/90 uppercase tracking-wider px-2 line-clamp-2">
                 {channel.name}
               </span>
             )}
