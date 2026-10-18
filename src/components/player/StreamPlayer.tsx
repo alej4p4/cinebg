@@ -18,6 +18,8 @@ import {
   Server,
   Check,
   Play,
+  Star,
+  Download,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -37,6 +39,7 @@ import { useAppStore } from '@/store/useAppStore'
 import type { AudioOption } from '@/store/useAppStore'
 import type { TMDBSeason } from '@/types'
 import EpisodeSelector from './EpisodeSelector'
+import PlaybackSettingsModal from './PlaybackSettingsModal'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
 
 interface StreamPlayerProps {
@@ -64,10 +67,34 @@ const StreamPlayer = ({
   seasons,
   onSelectEpisode,
 }: StreamPlayerProps) => {
-  const { audioOption, subtitleOption, setAudioOption } = useAppStore()
+  const { audioOption, subtitleOption, setAudioOption, favorites, addFavorite, removeFavorite } = useAppStore()
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const isFavorite = favorites.some((f) => f.id === tmdbId)
+  const handleToggleFavorite = () => {
+    if (isFavorite) {
+      removeFavorite(tmdbId)
+      showFeedback('Removido dos Favoritos')
+    } else {
+      addFavorite({
+        id: tmdbId,
+        type,
+        title,
+        posterPath: null,
+        rating: 0,
+        addedAt: Date.now(),
+      })
+      showFeedback('Adicionado aos Favoritos')
+    }
+  }
+
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
+  const [subDelay, setSubDelay] = useState(0)
+  const [subLang, setSubLang] = useState<'off' | 'pt' | 'en'>('pt')
+  const [subStyle, setSubStyle] = useState<'white' | 'yellow' | 'boxed'>('boxed')
+  const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
@@ -362,6 +389,17 @@ const StreamPlayer = ({
     initAntiRedirectShield()
   }, [])
 
+  const handleStall = () => {
+    if (loadedRef.current) return
+    if (stallTimerRef.current) clearTimeout(stallTimerRef.current)
+    stallTimerRef.current = setTimeout(() => {
+      if (!loadedRef.current) {
+        console.warn('[StreamPlayer] Vídeo estagnado na rede. Avançando para próxima opção...')
+        handleDirectMediaError()
+      }
+    }, 4500)
+  }
+
   useEffect(() => {
     loadedRef.current = false
     setLoaded(false)
@@ -369,18 +407,18 @@ const StreamPlayer = ({
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout de segurança: se nada carregar em 8s (seja nativo ou iframe), avança para a próxima opção limpa
+    // Timeout de segurança: 6s por fonte/candidato direto ou iframe. Nunca fica preso infinitamente.
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
-      console.warn('[StreamPlayer] Timeout de carregamento (8s). Tentando próxima opção limpa...')
+      console.warn(`[StreamPlayer] Timeout de carregamento (6s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
       handleDirectMediaError()
-    }, 8000)
+    }, 6000)
 
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, tmdbId, season, episode, audioOption, activeMirror])
+  }, [key, tmdbId, season, episode, audioOption, activeMirror, candidateIndex, directSrc])
 
   // Verificação e resolução inteligente de áudio:
   // Ao entrar em um filme ou episódio, verifica se tem em português (dublado).
@@ -1082,17 +1120,40 @@ const StreamPlayer = ({
             </div>
           </div>
         )}
-        {/* Loading Overlay */}
+        {/* Loading Overlay com botões clicáveis por controle remoto na TV */}
         {!loaded && !error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-10 gap-3">
-            <div className="w-12 h-12 border-2 border-white/5 border-t-accent-red rounded-full animate-spin" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-20 gap-3 p-4">
+            <div className="w-12 h-12 border-4 border-white/10 border-t-yellow-400 rounded-full animate-spin" />
             <div className="text-center">
-              <p className="text-white/80 text-sm font-semibold">
-                {isAutoFallback
-                  ? `Tentando ${getMirrorLabel(activeMirror)} (${fallbackAttempt + 1}/${fallbackSequence.length})...`
+              <p className="text-white font-black text-lg">
+                {candidates[candidateIndex]?.label
+                  ? `Conectando: ${candidates[candidateIndex]?.label}`
+                  : isAutoFallback
+                  ? `Tentando ${getMirrorLabel(activeMirror)}...`
                   : 'Carregando transmissão...'}
               </p>
-              <p className="text-white/40 text-xs mt-0.5">{audioLabels[audioOption]}</p>
+              <p className="text-white/60 text-xs mt-1">{audioLabels[audioOption]}</p>
+            </div>
+
+            {/* Ações clicáveis com o controle remoto da TV */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-4 z-30">
+              {candidates.length > 1 && (
+                <button
+                  type="button"
+                  onClick={handleDirectMediaError}
+                  className="px-4 py-2 bg-yellow-400 text-black rounded-xl text-xs font-black hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 transition-all flex items-center gap-2 shadow-lg"
+                >
+                  <Server className="w-4 h-4" />
+                  <span>Pular Opção ({candidateIndex + 1}/{candidates.length})</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => switchAudio(audioOption === 'dub' ? 'orig' : 'dub')}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 transition-all"
+              >
+                Mudar para {audioOption === 'dub' ? 'Legendado' : 'Dublado'}
+              </button>
             </div>
           </div>
         )}
@@ -1182,6 +1243,8 @@ const StreamPlayer = ({
             onLoadedMetadata={handleLoadedMetadata}
             onCanPlay={handleDirectMediaReady}
             onTimeUpdate={handleTimeUpdate}
+            onWaiting={handleStall}
+            onStalled={handleStall}
             onError={handleDirectMediaError}
             onEnded={handleEnded}
           >
@@ -1588,6 +1651,118 @@ const StreamPlayer = ({
           </button>
         </div>
       </div>
+
+      {/* ====== BARRA DE BOTÕES ESTILO YUCINE PARA TV (Imagem 1) ====== */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mt-3 pt-3 border-t border-white/10">
+        {/* 1. Tela cheia */}
+        <button
+          type="button"
+          onClick={handleFullscreen}
+          className="flex items-center justify-center gap-2 bg-[#171824] hover:bg-[#232538] text-white px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+        >
+          <Expand className="w-4 h-4 text-yellow-400" />
+          <span>Tela cheia</span>
+        </button>
+
+        {/* 2. Idioma (Abre o modal Configurações de Reprodução - Imagem 2) */}
+        <button
+          type="button"
+          onClick={() => setSettingsModalOpen(true)}
+          className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
+            settingsModalOpen
+              ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
+              : 'bg-[#171824] hover:bg-[#232538] text-white border-white/10'
+          }`}
+        >
+          <Captions className="w-4 h-4 text-yellow-400" />
+          <span>Idioma</span>
+        </button>
+
+        {/* 3. Resolução / Opção de Servidor */}
+        <button
+          type="button"
+          onClick={handleDirectMediaError}
+          className="flex items-center justify-center gap-2 bg-[#171824] hover:bg-[#232538] text-white px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+          title="Alternar servidor ou resolução"
+        >
+          <Server className="w-4 h-4 text-yellow-400" />
+          <span>
+            {candidates.length > 0 ? `Opção ${candidateIndex + 1}` : 'Resolução'}
+          </span>
+        </button>
+
+        {/* 4. Favorito */}
+        <button
+          type="button"
+          onClick={handleToggleFavorite}
+          className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
+            isFavorite
+              ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
+              : 'bg-[#171824] hover:bg-[#232538] text-white border-white/10'
+          }`}
+        >
+          <Star className={`w-4 h-4 ${isFavorite ? 'text-black fill-black' : 'text-yellow-400'}`} />
+          <span>{isFavorite ? 'Favorito' : 'Favoritar'}</span>
+        </button>
+
+        {/* 5. Baixar / Upload */}
+        <button
+          type="button"
+          onClick={() => {
+            const btn = document.getElementById('watch-download-btn')
+            if (btn) btn.click()
+            else showFeedback('Preparando download...')
+          }}
+          className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 bg-[#171824] hover:bg-[#232538] text-white px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+        >
+          <Download className="w-4 h-4 text-yellow-400" />
+          <span>Baixar</span>
+        </button>
+      </div>
+
+      {/* Modal de Configurações de Reprodução (Imagem 2) */}
+      <PlaybackSettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        audioOption={audioOption === 'dub' ? 'dub' : 'orig'}
+        onChangeAudio={(opt) => {
+          switchAudio(opt)
+          setSettingsModalOpen(false)
+        }}
+        subtitleLang={subLang}
+        onChangeSubtitleLang={(lang) => {
+          setSubLang(lang)
+          if (lang === 'off') {
+            activeTrackRef.current = -1
+            setActiveTrack(-1)
+          } else {
+            const found = tracks.findIndex(t => lang === 'pt' ? t.label.toLowerCase().includes('port') || t.label.toLowerCase().includes('pt') : true)
+            if (found !== -1) {
+              activeTrackRef.current = found
+              setActiveTrack(found)
+            }
+          }
+        }}
+        subtitleDelay={subDelay}
+        onChangeSubtitleDelay={(delta) => setSubDelay(prev => Number((prev + delta).toFixed(1)))}
+        onResetSubtitleDelay={() => setSubDelay(0)}
+        subtitleSize={subSize === 'xl' ? 'lg' : subSize}
+        onChangeSubtitleSize={(size) => updateSubSize(size)}
+        subtitleStyle={subStyle}
+        onChangeSubtitleStyle={(st) => {
+          setSubStyle(st)
+          if (st === 'white') {
+            updateSubColor('white')
+            updateSubBg('solid')
+          } else if (st === 'yellow') {
+            updateSubColor('yellow')
+            updateSubBg('solid')
+          } else {
+            updateSubColor('yellow')
+            updateSubBg('box')
+          }
+        }}
+      />
     </div>
   )
 }

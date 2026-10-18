@@ -188,6 +188,11 @@ const Watch = () => {
     isMovie ? undefined : episode,
   )
 
+  const currentSeasonEpisodeCount = Math.max(
+    1,
+    showData?.seasons?.find((s) => s.season_number === season)?.episode_count || 12
+  )
+
   return (
     <motion.div
       className="min-h-screen bg-bg-primary pt-20 pb-10 page-enter"
@@ -198,7 +203,7 @@ const Watch = () => {
         {/* Top Nav */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white/70 hover:text-white mb-4 transition-colors w-fit"
+          className="flex items-center gap-2 text-white/70 hover:text-white mb-4 transition-colors w-fit px-3 py-1.5 rounded-lg focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:text-yellow-400 font-bold"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar
@@ -220,6 +225,63 @@ const Watch = () => {
               onSelectEpisode={handleEpisodeSelect}
             />
 
+            {/* Seletor Horizontal de Temporadas e Episódios (Estilo TV YuCine - Imagem 1) */}
+            {!isMovie && showData && showData.seasons && (
+              <div className="glass rounded-2xl p-4 md:p-5 space-y-3 border border-white/10">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-display font-black text-white text-base sm:text-lg">
+                      Temporada {season}
+                    </span>
+                    <span className="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-full font-bold">
+                      1-{currentSeasonEpisodeCount}
+                    </span>
+                  </div>
+
+                  {/* Abas de Temporada */}
+                  {showData.seasons.filter((s) => s.season_number > 0).length > 1 && (
+                    <div className="flex items-center gap-1.5 overflow-x-auto scroll-hide">
+                      {showData.seasons
+                        .filter((s) => s.season_number > 0)
+                        .map((s) => (
+                          <button
+                            key={s.id}
+                            onClick={() => handleEpisodeSelect(s.season_number, 1)}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all ${
+                              season === s.season_number
+                                ? 'bg-yellow-400 text-black border-yellow-400 shadow-md shadow-yellow-400/30'
+                                : 'bg-white/5 text-white/70 border-white/10 hover:text-white'
+                            } focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105`}
+                          >
+                            T{s.season_number}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Lista Horizontal de Episódios com Borda Amarela no Foco */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {Array.from({ length: currentSeasonEpisodeCount }, (_, i) => i + 1).map((epNum) => {
+                    const isCurrent = episode === epNum
+                    return (
+                      <button
+                        key={epNum}
+                        onClick={() => handleEpisodeSelect(season, epNum)}
+                        className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-sm font-black border transition-all ${
+                          isCurrent
+                            ? 'bg-yellow-400 text-black border-yellow-400 shadow-lg shadow-yellow-400/40 scale-105'
+                            : 'bg-[#1b1c28] hover:bg-[#25273a] text-white border-white/10'
+                        } focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-110`}
+                      >
+                        {epNum}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Download offline */}
             <div className="flex flex-wrap items-center gap-3 glass rounded-xl px-4 py-3">
               {alreadyDownloaded ? (
@@ -233,9 +295,10 @@ const Watch = () => {
                     Baixe e assista offline, sem precisar de internet.
                   </span>
                   <button
+                    id="watch-download-btn"
                     onClick={handleDownload}
                     disabled={downloading}
-                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400"
                   >
                     {downloading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
