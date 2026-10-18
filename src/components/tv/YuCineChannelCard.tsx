@@ -450,15 +450,16 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
           </button>
         )}
 
-        {/* Badge HD/Ao Vivo */}
-        <div className="absolute bottom-2 left-2 z-10 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[10px] font-bold text-white/80">
-          HD
+        {/* Badge Horário e Status Ao Vivo */}
+        <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md text-[10px] font-bold text-white/90 border border-white/10">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span>{epg.start} - {epg.end}</span>
         </div>
 
         {/* Barra de Progresso do Programa Atual (EPG) */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/60 z-20 overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/70 z-20 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-amber-500 to-accent-red"
+            className="h-full bg-gradient-to-r from-amber-400 via-amber-500 to-accent-red transition-all duration-300 shadow-[0_0_8px_rgba(251,191,36,0.8)]"
             style={{ width: `${epg.progress}%` }}
           />
         </div>
@@ -470,9 +471,14 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
       </span>
 
       {/* Programa no Ar Agora (EPG) */}
-      <div className="flex items-center justify-center gap-1.5 mt-0.5 px-1 text-[11px] text-white/50 truncate">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-        <span className="truncate">{epg.title}</span>
+      <div className="flex items-center justify-center gap-1.5 mt-0.5 px-1 text-[11px] text-white/70 font-medium truncate">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+        <span className="truncate text-white/80">{epg.title}</span>
+      </div>
+
+      {/* Próximo Programa a Seguir */}
+      <div className="text-[10px] text-white/40 text-center truncate px-1 mt-0.5">
+        A seguir: {epg.nextTitle}
       </div>
     </div>
   )

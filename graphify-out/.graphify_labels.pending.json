@@ -1,8 +1,8 @@
 {
   "0": "App.tsx",
   "1": "index.ts",
-  "2": "EmptyState.tsx",
-  "3": "LicenseGate.tsx",
+  "2": "index.ts",
+  "3": "react",
   "4": "package.json",
   "5": "LiveTV.tsx",
   "7": "notifications.ts",
@@ -28,9 +28,5 @@
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
   "29": "improvement.md",
-  "30": "index.ts",
-  "31": "scripts",
-  "32": "eslint.config.js",
-  "33": "vite.config.ts",
-  "34": "capacitor.config.ts"
+  "30": "Watch.tsx"
 }

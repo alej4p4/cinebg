@@ -242,3 +242,56 @@ export function getLiveChannelEPG(channelId: string, category: string, channelNa
     nextTitle: '12:00 - Programação Especial',
   }
 }
+
+export interface DailyScheduleItem {
+  time: string
+  endTime: string
+  title: string
+  category: string
+  isCurrent: boolean
+}
+
+/**
+ * Retorna a grade completa de programação do dia para o canal selecionado.
+ */
+export function getChannelDailySchedule(
+  channelId: string,
+  category: string,
+  channelName?: string
+): DailyScheduleItem[] {
+  const { totalMinutes } = getBrasiliaMinutes()
+  const pattern = getPatternForChannel(channelId, category)
+
+  return pattern.map((slot) => {
+    let startMin = slot.startHour * 60 + slot.startMinute
+    let endMin = slot.endHour * 60 + slot.endMinute
+    if (endMin < startMin) endMin += 24 * 60
+
+    let currentMinAdjusted = totalMinutes
+    if (currentMinAdjusted < startMin && slot.startHour > 18) {
+      currentMinAdjusted += 24 * 60
+    }
+
+    const isCurrent = currentMinAdjusted >= startMin && currentMinAdjusted < endMin
+
+    let displayTitle = slot.title
+    if (channelName && (category === 'filmes' || category === 'esportes')) {
+      if (channelName.includes('HBO')) {
+        displayTitle = displayTitle.replace('Cinema em Casa', 'Cine HBO').replace('Superestreia', 'Sessão HBO Max')
+      } else if (channelName.includes('Telecine')) {
+        displayTitle = displayTitle.replace('Superestreia', 'Sessão Superestreia Telecine')
+      } else if (channelName.includes('Premiere')) {
+        displayTitle = displayTitle.replace('Campeonato Brasileiro', 'Premiere Ao Vivo: Rodada')
+      }
+    }
+
+    return {
+      time: formatTime(slot.startHour, slot.startMinute),
+      endTime: formatTime(slot.endHour % 24, slot.endMinute),
+      title: displayTitle,
+      category: slot.category,
+      isCurrent,
+    }
+  })
+}
+
