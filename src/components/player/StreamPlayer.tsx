@@ -102,38 +102,80 @@ const StreamPlayer = ({
   const lastProgressRef = useRef(0)
 
   // Customização de aparência das legendas
-  const [subSize, setSubSize] = useState<'sm' | 'md' | 'lg'>(() => {
+  const [subSize, setSubSize] = useState<'sm' | 'md' | 'lg' | 'xl'>(() => {
     try {
-      return (localStorage.getItem('cinebg_subs_size') as 'sm' | 'md' | 'lg') || 'md'
+      return (localStorage.getItem('cinebg_subs_size') as any) || 'md'
     } catch {
       return 'md'
     }
   })
-  const [subColor, setSubColor] = useState<'white' | 'yellow'>(() => {
+  const [subColor, setSubColor] = useState<'yellow' | 'white' | 'cyan' | 'green'>(() => {
     try {
-      return (localStorage.getItem('cinebg_subs_color') as 'white' | 'yellow') || 'yellow'
+      return (localStorage.getItem('cinebg_subs_color') as any) || 'yellow'
     } catch {
       return 'yellow'
     }
   })
+  const [subBg, setSubBg] = useState<'solid' | 'box' | 'transparent'>(() => {
+    try {
+      return (localStorage.getItem('cinebg_subs_bg') as any) || 'box'
+    } catch {
+      return 'box'
+    }
+  })
 
-  const updateSubSize = (size: 'sm' | 'md' | 'lg') => {
+  const updateSubSize = (size: 'sm' | 'md' | 'lg' | 'xl') => {
     setSubSize(size)
     try {
       localStorage.setItem('cinebg_subs_size', size)
     } catch {}
   }
 
-  const updateSubColor = (color: 'white' | 'yellow') => {
+  const updateSubColor = (color: 'yellow' | 'white' | 'cyan' | 'green') => {
     setSubColor(color)
     try {
       localStorage.setItem('cinebg_subs_color', color)
     } catch {}
   }
 
+  const updateSubBg = (bg: 'solid' | 'box' | 'transparent') => {
+    setSubBg(bg)
+    try {
+      localStorage.setItem('cinebg_subs_bg', bg)
+    } catch {}
+  }
+
   useEffect(() => {
-    const fontSize = subSize === 'sm' ? '18px' : subSize === 'lg' ? '30px' : '23px'
-    const color = subColor === 'yellow' ? '#fde047' : '#ffffff'
+    const fontSize =
+      subSize === 'sm'
+        ? '16px'
+        : subSize === 'md'
+        ? '22px'
+        : subSize === 'lg'
+        ? '28px'
+        : '34px'
+
+    const color =
+      subColor === 'yellow'
+        ? '#fde047'
+        : subColor === 'white'
+        ? '#ffffff'
+        : subColor === 'cyan'
+        ? '#38bdf8'
+        : '#4ade80'
+
+    const backgroundColor =
+      subBg === 'solid'
+        ? 'rgba(0, 0, 0, 0.92)'
+        : subBg === 'box'
+        ? 'rgba(0, 0, 0, 0.65)'
+        : 'transparent'
+
+    const textShadow =
+      subBg === 'transparent'
+        ? '-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 3px 6px rgba(0,0,0,1)'
+        : '0px 2px 4px rgba(0,0,0,0.95)'
+
     const styleId = 'cinebg-custom-sub-style'
     let el = document.getElementById(styleId) as HTMLStyleElement | null
     if (!el) {
@@ -145,12 +187,15 @@ const StreamPlayer = ({
       video::cue {
         font-size: ${fontSize} !important;
         color: ${color} !important;
-        background-color: rgba(0, 0, 0, 0.78) !important;
-        text-shadow: 0px 2px 4px rgba(0,0,0,0.95) !important;
+        background-color: ${backgroundColor} !important;
+        text-shadow: ${textShadow} !important;
+        border-radius: 6px !important;
+        padding: 3px 8px !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        line-height: 1.35 !important;
       }
     `
-  }, [subSize, subColor])
+  }, [subSize, subColor, subBg])
 
   const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2]
   const AUTO_NEXT_DELAY = 10 // seconds
@@ -1193,49 +1238,121 @@ const StreamPlayer = ({
                   <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-2 py-0.5">
                     Aparência da Legenda
                   </div>
+
+                  {/* Pré-visualização em tempo real */}
+                  <div className="mx-2 my-1.5 p-2 rounded-lg bg-black/70 border border-white/10 text-center flex items-center justify-center overflow-hidden min-h-[36px]">
+                    <span
+                      style={{
+                        fontSize:
+                          subSize === 'sm'
+                            ? '12px'
+                            : subSize === 'md'
+                            ? '14px'
+                            : subSize === 'lg'
+                            ? '16px'
+                            : '18px',
+                        color:
+                          subColor === 'yellow'
+                            ? '#fde047'
+                            : subColor === 'white'
+                            ? '#ffffff'
+                            : subColor === 'cyan'
+                            ? '#38bdf8'
+                            : '#4ade80',
+                        backgroundColor:
+                          subBg === 'solid'
+                            ? 'rgba(0, 0, 0, 0.92)'
+                            : subBg === 'box'
+                            ? 'rgba(0, 0, 0, 0.65)'
+                            : 'transparent',
+                        textShadow:
+                          subBg === 'transparent'
+                            ? '-1px -1px 0 #000, 1px 1px 0 #000'
+                            : '0px 1px 3px rgba(0,0,0,0.9)',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Exemplo de Legenda (AaBb)
+                    </span>
+                  </div>
+
+                  {/* Tamanho da Fonte */}
                   <div className="flex items-center justify-between px-2 py-1 text-xs">
                     <span className="text-white/60 text-[11px]">Tamanho:</span>
                     <div className="flex items-center gap-1">
-                      {(['sm', 'md', 'lg'] as const).map((sz) => (
+                      {[
+                        { id: 'sm', label: 'P' },
+                        { id: 'md', label: 'M' },
+                        { id: 'lg', label: 'G' },
+                        { id: 'xl', label: 'XG' },
+                      ].map((s) => (
                         <button
-                          key={sz}
-                          onClick={() => updateSubSize(sz)}
+                          key={s.id}
+                          onClick={() => updateSubSize(s.id as any)}
                           className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
-                            subSize === sz
-                              ? 'bg-accent-red text-white'
+                            subSize === s.id
+                              ? 'bg-accent-red text-white shadow'
                               : 'bg-white/10 text-white/60 hover:text-white'
                           }`}
                         >
-                          {sz === 'sm' ? 'P' : sz === 'md' ? 'M' : 'G'}
+                          {s.label}
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between px-2 py-1 text-xs mb-1">
+
+                  {/* Cor do Texto */}
+                  <div className="flex items-center justify-between px-2 py-1 text-xs">
                     <span className="text-white/60 text-[11px]">Cor:</span>
                     <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => updateSubColor('yellow')}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${
-                          subColor === 'yellow'
-                            ? 'bg-amber-400 text-black'
-                            : 'bg-white/10 text-white/60 hover:text-white'
-                        }`}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 border border-black/30" />
-                        Amarelo
-                      </button>
-                      <button
-                        onClick={() => updateSubColor('white')}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${
-                          subColor === 'white'
-                            ? 'bg-white text-black'
-                            : 'bg-white/10 text-white/60 hover:text-white'
-                        }`}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-white border border-black/30" />
-                        Branco
-                      </button>
+                      {[
+                        { id: 'yellow', label: 'Amarelo', dot: '#facc15' },
+                        { id: 'white', label: 'Branco', dot: '#ffffff' },
+                        { id: 'cyan', label: 'Ciano', dot: '#38bdf8' },
+                        { id: 'green', label: 'Verde', dot: '#4ade80' },
+                      ].map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => updateSubColor(c.id as any)}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${
+                            subColor === c.id
+                              ? 'bg-white/20 text-white border border-white/40 shadow-sm'
+                              : 'bg-white/5 text-white/60 hover:text-white'
+                          }`}
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full border border-black/40"
+                            style={{ backgroundColor: c.dot }}
+                          />
+                          <span>{c.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Fundo / Contraste */}
+                  <div className="flex items-center justify-between px-2 py-1 text-xs mb-1">
+                    <span className="text-white/60 text-[11px]">Fundo:</span>
+                    <div className="flex items-center gap-1">
+                      {[
+                        { id: 'solid', label: 'Sólido' },
+                        { id: 'box', label: 'Translúcido' },
+                        { id: 'transparent', label: 'Sem Fundo' },
+                      ].map((b) => (
+                        <button
+                          key={b.id}
+                          onClick={() => updateSubBg(b.id as any)}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                            subBg === b.id
+                              ? 'bg-amber-400 text-black shadow'
+                              : 'bg-white/10 text-white/60 hover:text-white'
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
