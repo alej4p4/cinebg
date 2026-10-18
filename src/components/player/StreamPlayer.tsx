@@ -186,7 +186,7 @@ const StreamPlayer = ({
     userManualAudioRef.current = opt
     setAudioOption(opt)
     if (opt === 'orig') {
-      setActiveMirror('vidlink')
+      setActiveMirror('vidsrc-sh')
       setAllowIframe(true)
       setDirectSrc(null)
       setDirectKind(null)
@@ -228,7 +228,7 @@ const StreamPlayer = ({
       setDirectSrc(null)
       setDirectKind(null)
       setAudioOption('orig')
-      setActiveMirror('vidlink')
+      setActiveMirror('vidsrc-sh')
       setAllowIframe(true)
       setError(false)
       showFeedback('Áudio dublado indisponível. Alternando para Legendado (PT)...')
@@ -238,7 +238,25 @@ const StreamPlayer = ({
 
   const handleStreamFailure = () => {
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
-    handleDirectMediaError()
+    if (directSrc) {
+      handleDirectMediaError()
+    } else {
+      // Se estiver em iframe (legendado), tenta o próximo espelho da sequência
+      setFallbackAttempt((prev) => {
+        const nextAttempt = prev + 1
+        if (nextAttempt < fallbackSequence.length) {
+          const nextMirror = fallbackSequence[nextAttempt]
+          console.info(`[StreamPlayer] Iframe falhou. Alternando para próximo espelho: ${nextMirror}`)
+          setActiveMirror(nextMirror)
+          setLoaded(false)
+          setError(false)
+          setKey((k) => k + 1)
+          return nextAttempt
+        }
+        setError(true)
+        return prev
+      })
+    }
   }
 
   const handleManualRefresh = () => {
@@ -298,7 +316,7 @@ const StreamPlayer = ({
       setResolvingDirect(false)
       setDirectSrc(null)
       setDirectKind(null)
-      setActiveMirror('vidlink')
+      setActiveMirror('vidsrc-sh')
       setAllowIframe(true)
       return
     }
@@ -343,7 +361,7 @@ const StreamPlayer = ({
           console.info('[StreamPlayer] Sem áudio em português disponível. Alternando automaticamente para Original Legendado (PT-BR)...')
           showFeedback('Áudio dublado indisponível. Mudando para Legendado (PT)...')
           setAudioOption('orig')
-          setActiveMirror('vidlink')
+          setActiveMirror('vidsrc-sh')
           setAllowIframe(true)
           setDirectSrc(null)
           setDirectKind(null)
@@ -355,7 +373,7 @@ const StreamPlayer = ({
         console.warn('[StreamPlayer] Erro ao verificar áudio PT. Alternando para Original Legendado:', err)
         showFeedback('Áudio dublado indisponível. Alternando para Legendado (PT)...')
         setAudioOption('orig')
-        setActiveMirror('vidlink')
+        setActiveMirror('vidsrc-sh')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
@@ -804,63 +822,6 @@ const StreamPlayer = ({
           >
             <span className="text-sm leading-none">🇺🇸</span>
             <span>Original / Legendado</span>
-          </button>
-        </div>
-
-        {/* Seleção de Servidor Limpo (Estilo YuCine) */}
-        {candidates.length > 1 && (
-          <div className="flex items-center gap-1 bg-[#1c1c28] p-1 rounded-lg border border-white/5">
-            <span className="text-[11px] font-bold text-white/50 px-1.5 flex items-center gap-1">
-              <Server className="h-3 w-3 text-amber-400" /> Servidor:
-            </span>
-            {candidates.map((cand, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setCandidateIndex(idx)
-                  setDirectSrc(cand.url)
-                  setDirectKind(cand.kind)
-                  setLoaded(false)
-                  setError(false)
-                  showFeedback(`Conectando: ${cand.label}`)
-                }}
-                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
-                  candidateIndex === idx
-                    ? 'bg-amber-500 text-black shadow-md scale-105'
-                    : 'text-white/60 hover:text-white hover:bg-white/10'
-                }`}
-                title={cand.label}
-              >
-                {idx + 1}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center gap-2">
-          {directSrc && (
-            <button
-              onClick={() => {
-                const next = fitMode === 'cover' ? 'contain' : 'cover'
-                setFitMode(next)
-                showFeedback(next === 'cover' ? 'Preencher Tela' : 'Ajustar (Original)')
-              }}
-              className={`p-1.5 transition-colors rounded-lg ${
-                fitMode === 'cover'
-                  ? 'text-accent-red bg-accent-red/10'
-                  : 'text-white/40 hover:text-white hover:bg-white/5'
-              }`}
-              title={fitMode === 'cover' ? 'Ajustar para proporção original' : 'Preencher tela inteira'}
-            >
-              <Expand className="h-4 w-4" />
-            </button>
-          )}
-          <button
-            onClick={handleManualRefresh}
-            className="p-1.5 text-white/30 hover:text-white transition-colors rounded-lg hover:bg-white/5"
-            title="Recarregar player"
-          >
-            <RefreshCw className="h-4 w-4" />
           </button>
         </div>
       </div>
