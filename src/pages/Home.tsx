@@ -17,29 +17,30 @@ import {
   getClassicShows,
   discoverMovies,
   discoverShows,
+  getCachedCatalogItems,
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
 import type { MediaItem } from '@/types'
 import { PAGE_VARIANTS } from '@/utils/motion'
 
 const Home = () => {
-  const [trending, setTrending] = useState<MediaItem[]>([])
-  const [popularMovies, setPopularMovies] = useState<MediaItem[]>([])
-  const [topMovies, setTopMovies] = useState<MediaItem[]>([])
-  const [nowPlaying, setNowPlaying] = useState<MediaItem[]>([])
-  const [upcoming, setUpcoming] = useState<MediaItem[]>([])
+  const [trending, setTrending] = useState<MediaItem[]>(() => getCachedCatalogItems('/trending/all/week', {}, 'movie'))
+  const [popularMovies, setPopularMovies] = useState<MediaItem[]>(() => getCachedCatalogItems('/movie/popular', { page: 1 }, 'movie'))
+  const [topMovies, setTopMovies] = useState<MediaItem[]>(() => getCachedCatalogItems('/movie/top_rated', { page: 1 }, 'movie'))
+  const [nowPlaying, setNowPlaying] = useState<MediaItem[]>(() => getCachedCatalogItems('/movie/now_playing', { page: 1 }, 'movie'))
+  const [upcoming, setUpcoming] = useState<MediaItem[]>(() => getCachedCatalogItems('/movie/upcoming', { page: 1 }, 'movie'))
   const [classicMovies, setClassicMovies] = useState<MediaItem[]>([])
   const [classicShows, setClassicShows] = useState<MediaItem[]>([])
-  const [popularShows, setPopularShows] = useState<MediaItem[]>([])
-  const [topShows, setTopShows] = useState<MediaItem[]>([])
-  const [airingNow, setAiringNow] = useState<MediaItem[]>([])
+  const [popularShows, setPopularShows] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/popular', { page: 1 }, 'tv'))
+  const [topShows, setTopShows] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/top_rated', { page: 1 }, 'tv'))
+  const [airingNow, setAiringNow] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/airing_today', { page: 1 }, 'tv'))
   const [animeItems, setAnimeItems] = useState<MediaItem[]>([])
   const [actionMovies, setActionMovies] = useState<MediaItem[]>([])
   const [comedyMovies, setComedyMovies] = useState<MediaItem[]>([])
   const [scifiMovies, setScifiMovies] = useState<MediaItem[]>([])
   const [actionShows, setActionShows] = useState<MediaItem[]>([])
   const [comedyShows, setComedyShows] = useState<MediaItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => trending.length === 0)
 
   const { history, favorites } = useAppStore()
 

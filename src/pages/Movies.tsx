@@ -14,6 +14,7 @@ import {
   getUpcomingMovies,
   getClassicMovies,
   discoverMovies,
+  getCachedCatalogItems,
 } from '@/services/tmdb'
 import type { MediaItem } from '@/types'
 import { PAGE_VARIANTS } from '@/utils/motion'
@@ -42,10 +43,10 @@ const STREAMING_PLATFORMS = [
 ]
 
 const Movies = () => {
-  const [popular, setPopular] = useState<MediaItem[]>([])
-  const [topRated, setTopRated] = useState<MediaItem[]>([])
-  const [nowPlaying, setNowPlaying] = useState<MediaItem[]>([])
-  const [upcoming, setUpcoming] = useState<MediaItem[]>([])
+  const [popular, setPopular] = useState<MediaItem[]>(() => getCachedCatalogItems('/movie/popular', { page: 1 }, 'movie'))
+  const [topRated, setTopRated] = useState<MediaItem[]>(() => getCachedCatalogItems('/movie/top_rated', { page: 1 }, 'movie'))
+  const [nowPlaying, setNowPlaying] = useState<MediaItem[]>(() => getCachedCatalogItems('/movie/now_playing', { page: 1 }, 'movie'))
+  const [upcoming, setUpcoming] = useState<MediaItem[]>(() => getCachedCatalogItems('/movie/upcoming', { page: 1 }, 'movie'))
   const [classics, setClassics] = useState<MediaItem[]>([])
   const [filteredList, setFilteredList] = useState<MediaItem[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
@@ -53,14 +54,13 @@ const Movies = () => {
   const [showGenreBar, setShowGenreBar] = useState(false)
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null)
 
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => popular.length === 0)
   const [filterLoading, setFilterLoading] = useState(false)
   const [error, setError] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
-    setLoading(true)
-    setError(false)
+    let isMounted = true
     const load = async () => {
       try {
         const [popularResult, topResult, nowResult, upcomingResult, classicsResult] = await Promise.all([
@@ -70,18 +70,26 @@ const Movies = () => {
           getUpcomingMovies(),
           getClassicMovies(),
         ])
+        if (!isMounted) return
         setPopular(popularResult.items)
         setTopRated(topResult.items)
         setNowPlaying(nowResult.items)
         setUpcoming(upcomingResult.items)
         setClassics(classicsResult.items)
       } catch {
-        setError(true)
+        if (isMounted && popular.length === 0) {
+          setError(true)
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
     load()
+    return () => {
+      isMounted = false
+    }
   }, [reloadKey])
 
   // Filtro por Plataforma (Netflix, HBO, Disney, Prime, Apple)

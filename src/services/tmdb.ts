@@ -214,6 +214,36 @@ export const showToMediaItem = (show: TMDBShow, type: MediaType = 'tv'): MediaIt
   genreIds: show.genre_ids,
 })
 
+// Recupera lista de filmes ou séries sincronamente em 0ms se já estiverem em cache
+export const getCachedCatalogItems = (
+  endpoint: string,
+  params?: Record<string, unknown>,
+  type: 'movie' | 'tv' = 'movie'
+): MediaItem[] => {
+  try {
+    const key = buildCacheKey('GET', endpoint, { ...params, __kids: isKidsMode() })
+    const now = Date.now()
+
+    // 1. Memória RAM
+    const inMem = requestCache.get(key)
+    if (inMem && inMem.expiresAt > now && (inMem.data as any)?.results) {
+      const results = (inMem.data as any).results as any[]
+      const mapped = results.map((item) => (type === 'movie' ? movieToMediaItem(item) : showToMediaItem(item)))
+      return forKids(mapped)
+    }
+
+    // 2. Armazenamento Local Persistente
+    const fromStorage = loadFromLocalStorage<any>(key)
+    if (fromStorage && fromStorage.results) {
+      requestCache.set(key, { data: fromStorage, expiresAt: now + DEFAULT_CATALOG_TTL_MS })
+      const results = fromStorage.results as any[]
+      const mapped = results.map((item) => (type === 'movie' ? movieToMediaItem(item) : showToMediaItem(item)))
+      return forKids(mapped)
+    }
+  } catch {}
+  return []
+}
+
 // ===== API Functions =====
 
 // Trending

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { isTVDevice, isTvRemoteKey, markTvModeActive } from '@/utils/tv'
 import { useAppStore } from '@/store/useAppStore'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
-import { MousePointer2, Navigation, Move } from 'lucide-react'
+import { MousePointer2 } from 'lucide-react'
 
 type NavigationMode = 'focus' | 'cursor'
 type Direction = 'up' | 'down' | 'left' | 'right'
@@ -56,7 +56,7 @@ export const TvCursorOverlay: React.FC = () => {
   const [navMode, setNavMode] = useState<NavigationMode>(() => (virtualCursor ? 'cursor' : 'focus'))
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
   const [isClicking, setIsClicking] = useState(false)
-  const [showBadge, setShowBadge] = useState(true)
+  const [showBadge, setShowBadge] = useState(false)
 
   const posRef = useRef({ x: 0, y: 0 })
   const speedRef = useRef(20) // Velocidade base do cursor (pixels por frame)
@@ -109,9 +109,17 @@ export const TvCursorOverlay: React.FC = () => {
           setNavMode((prev) => {
             const next = prev === 'focus' ? 'cursor' : 'focus'
             setVirtualCursor(next === 'cursor')
+            if (next === 'cursor') {
+              setShowBadge(true)
+              if (hideBadgeTimerRef.current) clearTimeout(hideBadgeTimerRef.current)
+              hideBadgeTimerRef.current = setTimeout(() => {
+                setShowBadge(false)
+              }, 3000)
+            } else {
+              setShowBadge(false)
+            }
             return next
           })
-          setShowBadge(true)
         }
       }
     }
@@ -163,7 +171,6 @@ export const TvCursorOverlay: React.FC = () => {
         if (dirs.has('down')) dy += 1
 
         if (dx !== 0 || dy !== 0) {
-          refreshBadgeVisibility()
           // Aceleracao suave e dinamica ao segurar a tecla (de 20px ate 48px)
           speedRef.current = Math.min(speedRef.current + 1.4, 48)
 
@@ -264,42 +271,18 @@ export const TvCursorOverlay: React.FC = () => {
 
   return (
     <>
-      {/* Botao Flutuante e Indicador do Modo TV (canto superior direito) */}
-      <div
-        className={`fixed top-4 right-4 z-[9999] transition-all duration-300 pointer-events-auto ${
-          showBadge ? 'opacity-95 translate-y-0' : 'opacity-20 hover:opacity-100 translate-y-0'
-        }`}
-      >
-        <button
-          type="button"
-          onClick={() => {
-            const next = navMode === 'focus' ? 'cursor' : 'focus'
-            setNavMode(next)
-            setVirtualCursor(next === 'cursor')
-            refreshBadgeVisibility()
-          }}
-          className="flex items-center gap-2 bg-[#0c0d14]/95 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-full text-xs font-semibold text-white shadow-2xl hover:border-amber-400 transition-all hover:scale-105"
-          title="Clique para alternar entre Foco por Setas (D-Pad) e Cursor Virtual de Mouse"
-        >
-          {navMode === 'focus' ? (
-            <>
-              <Navigation className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>Modo Foco D-Pad</span>
-              <span className="text-[10px] text-white/60 bg-white/10 px-1.5 py-0.5 rounded font-mono">
-                Menu = Mouse
-              </span>
-            </>
-          ) : (
-            <>
-              <MousePointer2 className="w-3.5 h-3.5 text-accent-red animate-pulse" />
-              <span className="font-bold text-amber-300">Cursor Virtual Ativo</span>
-              <span className="text-[10px] text-white/60 bg-white/10 px-1.5 py-0.5 rounded font-mono">
-                Menu = Foco
-              </span>
-            </>
-          )}
-        </button>
-      </div>
+      {/* Indicador temporário exibido apenas quando o Cursor Virtual for ativado */}
+      {navMode === 'cursor' && showBadge && (
+        <div className="fixed top-4 right-4 z-[9999] transition-all duration-300 pointer-events-none">
+          <div className="flex items-center gap-2 bg-[#0c0d14]/95 backdrop-blur-md border border-amber-400/40 px-3.5 py-1.5 rounded-full text-xs font-semibold text-white shadow-2xl">
+            <MousePointer2 className="w-3.5 h-3.5 text-accent-red animate-pulse" />
+            <span className="font-bold text-amber-300">Cursor Virtual Ativo</span>
+            <span className="text-[10px] text-white/60 bg-white/10 px-1.5 py-0.5 rounded font-mono">
+              Menu = Foco D-Pad
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Ponteiro do Cursor Virtual na Tela */}
       {navMode === 'cursor' && (
