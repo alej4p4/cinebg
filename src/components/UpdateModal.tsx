@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Download,
@@ -12,6 +12,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import Focusable from '@/components/tv/Focusable'
+import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
 import {
   startAppUpdate,
   openAppInstallSettings,
@@ -36,8 +37,8 @@ type UpdateStage = 'idle' | 'downloading' | 'installing' | 'error'
 const UpdateModal = ({
   visible,
   downloadUrl = 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-release.apk',
-  currentVersion = '1.2.10',
-  latestVersion = '1.2.10',
+  currentVersion = '1.2.28',
+  latestVersion = '1.2.28',
   hasUpdate = false,
   isChecking = false,
   onDismiss,
@@ -51,6 +52,19 @@ const UpdateModal = ({
   })
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [needsPermission, setNeedsPermission] = useState(false)
+  const [activeActionIndex, setActiveActionIndex] = useState<number>(0)
+
+  // Referências para os botões do modal para foco direto no Android TV
+  const downloadBtnRef = useRef<HTMLButtonElement | null>(null)
+  const dismissBtnRef = useRef<HTMLButtonElement | null>(null)
+  const reinstallBtnRef = useRef<HTMLButtonElement | null>(null)
+  const installDismissBtnRef = useRef<HTMLButtonElement | null>(null)
+  const errorRetryBtnRef = useRef<HTMLButtonElement | null>(null)
+  const errorSettingsBtnRef = useRef<HTMLButtonElement | null>(null)
+  const errorBrowserBtnRef = useRef<HTMLButtonElement | null>(null)
+  const upToDateDownloadBtnRef = useRef<HTMLButtonElement | null>(null)
+  const upToDateRecheckBtnRef = useRef<HTMLButtonElement | null>(null)
+  const upToDateCloseBtnRef = useRef<HTMLButtonElement | null>(null)
 
   // Reseta estado quando o modal fecha ou abre
   useEffect(() => {
@@ -59,6 +73,7 @@ const UpdateModal = ({
       setProgress({ percent: 0, bytesDownloaded: 0, totalBytes: 0 })
       setErrorMessage(null)
       setNeedsPermission(false)
+      setActiveActionIndex(0)
     }
   }, [visible])
 
@@ -115,6 +130,198 @@ const UpdateModal = ({
       window.location.href = downloadUrl
     }
   }
+
+  // Foco ativo direto com sincronização entre D-Pad Spatial Navigation e elementos DOM
+  const focusCurrentAction = useCallback(
+    (index: number) => {
+      setActiveActionIndex(index)
+      if (stage === 'downloading') return
+
+      if (hasUpdate && stage === 'idle') {
+        if (index === 0) {
+          if (doesFocusableExist('modal-update-download')) setFocus('modal-update-download')
+          downloadBtnRef.current?.focus()
+        } else {
+          if (doesFocusableExist('modal-update-dismiss')) setFocus('modal-update-dismiss')
+          dismissBtnRef.current?.focus()
+        }
+      } else if (stage === 'installing') {
+        if (index === 0) {
+          if (doesFocusableExist('modal-install-retry')) setFocus('modal-install-retry')
+          reinstallBtnRef.current?.focus()
+        } else {
+          if (doesFocusableExist('modal-install-close')) setFocus('modal-install-close')
+          installDismissBtnRef.current?.focus()
+        }
+      } else if (stage === 'error') {
+        if (index === 0) {
+          if (doesFocusableExist('modal-error-retry')) setFocus('modal-error-retry')
+          errorRetryBtnRef.current?.focus()
+        } else if (index === 1 && Capacitor.isNativePlatform()) {
+          if (doesFocusableExist('modal-error-settings')) setFocus('modal-error-settings')
+          errorSettingsBtnRef.current?.focus()
+        } else {
+          if (doesFocusableExist('modal-error-browser')) setFocus('modal-error-browser')
+          errorBrowserBtnRef.current?.focus()
+        }
+      } else if (!hasUpdate && !isChecking) {
+        if (index === 0) {
+          if (doesFocusableExist('modal-uptodate-download')) setFocus('modal-uptodate-download')
+          upToDateDownloadBtnRef.current?.focus()
+        } else if (index === 1 && onCheckAgain) {
+          if (doesFocusableExist('modal-uptodate-recheck')) setFocus('modal-uptodate-recheck')
+          upToDateRecheckBtnRef.current?.focus()
+        } else {
+          if (doesFocusableExist('modal-uptodate-close')) setFocus('modal-uptodate-close')
+          upToDateCloseBtnRef.current?.focus()
+        }
+      }
+    },
+    [hasUpdate, stage, isChecking, onCheckAgain]
+  )
+
+  // Ao abrir o modal ou mudar de tela, força foco imediatamente no botão principal
+  useEffect(() => {
+    if (!visible) return
+    setActiveActionIndex(0)
+    const t1 = setTimeout(() => focusCurrentAction(0), 50)
+    const t2 = setTimeout(() => focusCurrentAction(0), 200)
+    const t3 = setTimeout(() => focusCurrentAction(0), 500)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+      clearTimeout(t3)
+    }
+  }, [visible, stage, hasUpdate, focusCurrentAction])
+
+  // Captura direta de teclas de controle remoto da TV (D-Pad, Enter, OK e Voltar)
+  useEffect(() => {
+    if (!visible || stage === 'downloading') return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const code = e.keyCode || e.which
+      const key = (e.key || '').toLowerCase()
+
+      // Back / Voltar / Esc
+      if (code === 27 || code === 4 || code === 8 || key === 'escape' || key === 'back') {
+        e.preventDefault()
+        e.stopPropagation()
+        onDismiss()
+        return
+      }
+
+      // Calcula o número total de botões interativos da tela atual
+      let totalActions = 2
+      if (hasUpdate && stage === 'idle') {
+        totalActions = 2
+      } else if (stage === 'installing') {
+        totalActions = 2
+      } else if (stage === 'error') {
+        totalActions = Capacitor.isNativePlatform() ? 3 : 2
+      } else if (!hasUpdate && !isChecking) {
+        totalActions = onCheckAgain ? 3 : 2
+      }
+
+      // D-Pad Left / Up
+      if (
+        code === 37 ||
+        code === 38 ||
+        code === 21 ||
+        code === 19 ||
+        key === 'arrowleft' ||
+        key === 'arrowup'
+      ) {
+        e.preventDefault()
+        e.stopPropagation()
+        setActiveActionIndex((prev) => {
+          const next = prev > 0 ? prev - 1 : totalActions - 1
+          focusCurrentAction(next)
+          return next
+        })
+        return
+      }
+
+      // D-Pad Right / Down / Tab
+      if (
+        code === 39 ||
+        code === 40 ||
+        code === 22 ||
+        code === 20 ||
+        key === 'arrowright' ||
+        key === 'arrowdown' ||
+        key === 'tab'
+      ) {
+        e.preventDefault()
+        e.stopPropagation()
+        setActiveActionIndex((prev) => {
+          const next = prev < totalActions - 1 ? prev + 1 : 0
+          focusCurrentAction(next)
+          return next
+        })
+        return
+      }
+
+      // Enter / OK / Select / Espaço
+      if (
+        code === 13 ||
+        code === 23 ||
+        code === 66 ||
+        code === 160 ||
+        code === 96 ||
+        key === 'enter' ||
+        key === 'select' ||
+        key === 'ok' ||
+        key === ' '
+      ) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        if (hasUpdate && stage === 'idle') {
+          if (activeActionIndex === 0) {
+            handleStartUpdate()
+          } else {
+            onDismiss()
+          }
+        } else if (stage === 'installing') {
+          if (activeActionIndex === 0) {
+            handleStartUpdate()
+          } else {
+            onDismiss()
+          }
+        } else if (stage === 'error') {
+          if (activeActionIndex === 0) {
+            handleStartUpdate()
+          } else if (activeActionIndex === 1 && Capacitor.isNativePlatform()) {
+            openAppInstallSettings()
+          } else {
+            handleOpenBrowserFallback()
+          }
+        } else if (!hasUpdate && !isChecking) {
+          if (activeActionIndex === 0) {
+            handleStartUpdate()
+          } else if (activeActionIndex === 1 && onCheckAgain) {
+            onCheckAgain()
+          } else {
+            onDismiss()
+          }
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, { capture: true })
+    }
+  }, [
+    visible,
+    stage,
+    hasUpdate,
+    isChecking,
+    activeActionIndex,
+    focusCurrentAction,
+    onDismiss,
+    onCheckAgain,
+  ])
 
   return (
     <AnimatePresence>
@@ -214,7 +421,7 @@ const UpdateModal = ({
                 </div>
                 <h2 className="text-white font-black text-2xl mb-1">Download Concluído!</h2>
                 <p className="text-white/70 text-sm mb-4 max-w-xs">
-                  O instalador de pacotes do Android foi acionado. Confirme na tela do seu aparelho para concluir a atualização.
+                  O instalador de pacotes do Android foi acionado. Confirme na tela da sua TV para concluir a atualização.
                 </p>
 
                 <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-left text-xs text-white/60 mb-6 space-y-1.5">
@@ -227,21 +434,47 @@ const UpdateModal = ({
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2 w-full">
-                  <button
-                    type="button"
-                    onClick={handleStartUpdate}
-                    className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/15 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors"
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  <Focusable
+                    focusKey="modal-install-retry"
+                    onEnterPress={handleStartUpdate}
+                    onFocus={() => setActiveActionIndex(0)}
+                    className="flex-1"
                   >
-                    Abrir Instalador Novamente
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onDismiss}
-                    className="py-3 px-5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-lg shadow-emerald-900/40"
+                    <button
+                      ref={reinstallBtnRef}
+                      type="button"
+                      onClick={handleStartUpdate}
+                      onFocus={() => setActiveActionIndex(0)}
+                      className={`w-full py-3.5 px-4 font-bold rounded-xl text-xs uppercase tracking-wider transition-all outline-none ${
+                        activeActionIndex === 0
+                          ? 'bg-accent-red text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/40 brightness-110'
+                          : 'bg-white/10 hover:bg-white/15 text-white'
+                      }`}
+                    >
+                      Abrir Instalador Novamente
+                    </button>
+                  </Focusable>
+
+                  <Focusable
+                    focusKey="modal-install-close"
+                    onEnterPress={onDismiss}
+                    onFocus={() => setActiveActionIndex(1)}
                   >
-                    Fechar
-                  </button>
+                    <button
+                      ref={installDismissBtnRef}
+                      type="button"
+                      onClick={onDismiss}
+                      onFocus={() => setActiveActionIndex(1)}
+                      className={`w-full sm:w-auto py-3.5 px-5 font-bold rounded-xl text-xs uppercase tracking-wider transition-all outline-none ${
+                        activeActionIndex === 1
+                          ? 'bg-emerald-500 text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/40 brightness-110'
+                          : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/40'
+                      }`}
+                    >
+                      Fechar
+                    </button>
+                  </Focusable>
                 </div>
               </div>
             ) : stage === 'error' ? (
@@ -254,35 +487,71 @@ const UpdateModal = ({
                   {errorMessage || 'Não foi possível baixar e iniciar o pacote de instalação.'}
                 </p>
 
-                <div className="flex flex-col gap-2 w-full">
-                  <button
-                    type="button"
-                    onClick={handleStartUpdate}
-                    className="w-full flex items-center justify-center gap-2 bg-accent-red hover:bg-red-600 text-white font-bold py-3 px-4 rounded-xl text-sm transition-colors shadow-lg shadow-red-900/40"
+                <div className="flex flex-col gap-2.5 w-full">
+                  <Focusable
+                    focusKey="modal-error-retry"
+                    onEnterPress={handleStartUpdate}
+                    onFocus={() => setActiveActionIndex(0)}
                   >
-                    <RefreshCw className="h-4 w-4" />
-                    Tentar Novamente
-                  </button>
+                    <button
+                      ref={errorRetryBtnRef}
+                      type="button"
+                      onClick={handleStartUpdate}
+                      onFocus={() => setActiveActionIndex(0)}
+                      className={`w-full flex items-center justify-center gap-2 font-bold py-3.5 px-4 rounded-xl text-sm transition-all outline-none ${
+                        activeActionIndex === 0
+                          ? 'bg-accent-red text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/40 brightness-110'
+                          : 'bg-accent-red hover:bg-red-600 text-white shadow-lg shadow-red-900/40'
+                      }`}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${activeActionIndex === 0 ? 'animate-spin' : ''}`} />
+                      Tentar Novamente
+                    </button>
+                  </Focusable>
 
                   {Capacitor.isNativePlatform() && (
-                    <button
-                      type="button"
-                      onClick={openAppInstallSettings}
-                      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                    <Focusable
+                      focusKey="modal-error-settings"
+                      onEnterPress={openAppInstallSettings}
+                      onFocus={() => setActiveActionIndex(1)}
                     >
-                      <Settings className="h-4 w-4 text-amber-400" />
-                      Permissões de Instalação (Configurações)
-                    </button>
+                      <button
+                        ref={errorSettingsBtnRef}
+                        type="button"
+                        onClick={openAppInstallSettings}
+                        onFocus={() => setActiveActionIndex(1)}
+                        className={`w-full flex items-center justify-center gap-2 text-xs font-semibold py-3 px-4 rounded-xl transition-all outline-none ${
+                          activeActionIndex === 1
+                            ? 'bg-white/25 text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/40 brightness-110'
+                            : 'bg-white/10 hover:bg-white/15 text-white'
+                        }`}
+                      >
+                        <Settings className="h-4 w-4 text-amber-400" />
+                        Permissões de Instalação (Configurações)
+                      </button>
+                    </Focusable>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={handleOpenBrowserFallback}
-                    className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                  <Focusable
+                    focusKey="modal-error-browser"
+                    onEnterPress={handleOpenBrowserFallback}
+                    onFocus={() => setActiveActionIndex(Capacitor.isNativePlatform() ? 2 : 1)}
                   >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Baixar pelo Navegador
-                  </button>
+                    <button
+                      ref={errorBrowserBtnRef}
+                      type="button"
+                      onClick={handleOpenBrowserFallback}
+                      onFocus={() => setActiveActionIndex(Capacitor.isNativePlatform() ? 2 : 1)}
+                      className={`w-full flex items-center justify-center gap-2 text-xs font-semibold py-3 px-4 rounded-xl transition-all outline-none ${
+                        (Capacitor.isNativePlatform() ? activeActionIndex === 2 : activeActionIndex === 1)
+                          ? 'bg-white/25 text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/40 brightness-110'
+                          : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white'
+                      }`}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Baixar pelo Navegador
+                    </button>
+                  </Focusable>
                 </div>
               </div>
             ) : hasUpdate ? (
@@ -309,29 +578,47 @@ const UpdateModal = ({
                   Uma versão atualizada do CineBG está disponível! Clique no botão abaixo para baixar a nova versão e abrir o instalador automaticamente.
                 </p>
 
+                {/* Botões com suporte prioritário para controle remoto e D-Pad da TV */}
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Focusable
                     focusKey="modal-update-download"
                     onEnterPress={handleStartUpdate}
+                    onFocus={() => setActiveActionIndex(0)}
                     className="flex-1"
                   >
                     <button
+                      ref={downloadBtnRef}
                       type="button"
                       onClick={handleStartUpdate}
-                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-accent-red to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-5 rounded-xl transition-all shadow-lg shadow-red-900/40 text-sm"
+                      onFocus={() => setActiveActionIndex(0)}
+                      className={`w-full flex items-center justify-center gap-2 font-bold py-3.5 px-5 rounded-xl transition-all text-sm outline-none ${
+                        activeActionIndex === 0
+                          ? 'bg-gradient-to-r from-accent-red to-red-600 text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/50 brightness-110 font-extrabold'
+                          : 'bg-gradient-to-r from-accent-red/90 to-red-600/90 text-white hover:from-red-600 hover:to-red-700'
+                      }`}
                     >
-                      <Download className="h-4 w-4" />
-                      Baixar e Instalar APK
+                      <Download className={`h-4 w-4 ${activeActionIndex === 0 ? 'animate-bounce' : ''}`} />
+                      <span>Baixar e Instalar APK</span>
                     </button>
                   </Focusable>
 
-                  <Focusable focusKey="modal-update-dismiss" onEnterPress={onDismiss}>
+                  <Focusable
+                    focusKey="modal-update-dismiss"
+                    onEnterPress={onDismiss}
+                    onFocus={() => setActiveActionIndex(1)}
+                  >
                     <button
+                      ref={dismissBtnRef}
                       type="button"
                       onClick={onDismiss}
-                      className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white text-sm font-semibold transition-colors"
+                      onFocus={() => setActiveActionIndex(1)}
+                      className={`w-full sm:w-auto px-6 py-3.5 rounded-xl text-sm font-semibold transition-all outline-none ${
+                        activeActionIndex === 1
+                          ? 'bg-white/30 text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/50 brightness-110 font-extrabold'
+                          : 'bg-white/10 hover:bg-white/15 text-white/80 hover:text-white'
+                      }`}
                     >
-                      Depois
+                      <span>Depois</span>
                     </button>
                   </Focusable>
                 </div>
@@ -358,40 +645,67 @@ const UpdateModal = ({
 
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Focusable
-                    focusKey="modal-update-redownload"
+                    focusKey="modal-uptodate-download"
                     onEnterPress={handleStartUpdate}
+                    onFocus={() => setActiveActionIndex(0)}
                     className="flex-1"
                   >
                     <button
+                      ref={upToDateDownloadBtnRef}
                       type="button"
                       onClick={handleStartUpdate}
-                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-accent-red to-red-600 hover:from-red-600 text-white font-bold py-3 px-4 rounded-xl transition-all text-sm shadow-lg shadow-red-900/30"
+                      onFocus={() => setActiveActionIndex(0)}
+                      className={`w-full flex items-center justify-center gap-2 font-bold py-3.5 px-4 rounded-xl transition-all text-sm outline-none ${
+                        activeActionIndex === 0
+                          ? 'bg-gradient-to-r from-accent-red to-red-600 text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/50 brightness-110'
+                          : 'bg-gradient-to-r from-accent-red to-red-600 hover:from-red-600 text-white shadow-lg shadow-red-900/30'
+                      }`}
                     >
-                      <Download className="h-4 w-4" />
-                      Baixar e Reinstalar APK
+                      <Download className={`h-4 w-4 ${activeActionIndex === 0 ? 'animate-bounce' : ''}`} />
+                      <span>Baixar e Reinstalar APK</span>
                     </button>
                   </Focusable>
 
                   {onCheckAgain && (
-                    <Focusable focusKey="modal-update-recheck" onEnterPress={onCheckAgain}>
+                    <Focusable
+                      focusKey="modal-uptodate-recheck"
+                      onEnterPress={onCheckAgain}
+                      onFocus={() => setActiveActionIndex(1)}
+                    >
                       <button
+                        ref={upToDateRecheckBtnRef}
                         type="button"
                         onClick={onCheckAgain}
-                        className="w-full sm:w-auto px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
+                        onFocus={() => setActiveActionIndex(1)}
+                        className={`w-full sm:w-auto px-4 py-3.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-1.5 outline-none ${
+                          activeActionIndex === 1
+                            ? 'bg-white/30 text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/50 brightness-110'
+                            : 'bg-white/10 hover:bg-white/15 text-white/80'
+                        }`}
                       >
-                        <RefreshCw className="h-4 w-4" />
-                        Reverificar
+                        <RefreshCw className={`h-4 w-4 ${activeActionIndex === 1 ? 'animate-spin' : ''}`} />
+                        <span>Reverificar</span>
                       </button>
                     </Focusable>
                   )}
 
-                  <Focusable focusKey="modal-update-close" onEnterPress={onDismiss}>
+                  <Focusable
+                    focusKey="modal-uptodate-close"
+                    onEnterPress={onDismiss}
+                    onFocus={() => setActiveActionIndex(onCheckAgain ? 2 : 1)}
+                  >
                     <button
+                      ref={upToDateCloseBtnRef}
                       type="button"
                       onClick={onDismiss}
-                      className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-semibold transition-colors"
+                      onFocus={() => setActiveActionIndex(onCheckAgain ? 2 : 1)}
+                      className={`w-full sm:w-auto px-6 py-3.5 rounded-xl text-sm font-semibold transition-all outline-none ${
+                        (onCheckAgain ? activeActionIndex === 2 : activeActionIndex === 1)
+                          ? 'bg-white/30 text-white ring-4 ring-amber-400 scale-[1.04] shadow-2xl shadow-amber-500/50 brightness-110'
+                          : 'bg-white/10 hover:bg-white/15 text-white'
+                      }`}
                     >
-                      OK
+                      <span>OK</span>
                     </button>
                   </Focusable>
                 </div>
