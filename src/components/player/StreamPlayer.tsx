@@ -28,6 +28,11 @@ import {
   MIRRORS,
   type DirectCandidate,
 } from '@/services/streams'
+import {
+  fetchPortugueseSubtitles,
+  clearActiveSubtitleBlobs,
+  type SubtitleTrackOption,
+} from '@/services/subtitles'
 import { useAppStore } from '@/store/useAppStore'
 import type { AudioOption } from '@/store/useAppStore'
 import type { TMDBSeason } from '@/types'
@@ -59,7 +64,7 @@ const StreamPlayer = ({
   seasons,
   onSelectEpisode,
 }: StreamPlayerProps) => {
-  const { audioOption, setAudioOption } = useAppStore()
+  const { audioOption, subtitleOption, setAudioOption } = useAppStore()
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -69,7 +74,7 @@ const StreamPlayer = ({
   // Fonte nativa direta: MP4 dublado (PT-BR) ou HLS proxy do MegaEmbed.
   const [directSrc, setDirectSrc] = useState<string | null>(null)
   const [directKind, setDirectKind] = useState<'mp4' | 'hls' | null>(null)
-  // ComeÃ§a "resolvendo" para nÃ£o piscar o iframe (com anÃºncio) antes de tentar o nativo.
+  // Começa "resolvendo" para não piscar o iframe (com anúncio) antes de tentar o nativo.
   const [resolvingDirect, setResolvingDirect] = useState(true)
 
   const [candidates, setCandidates] = useState<DirectCandidate[]>([])
@@ -88,10 +93,13 @@ const StreamPlayer = ({
   const lastCheckedMediaRef = useRef<string>('')
   const userManualAudioRef = useRef<AudioOption | null>(null)
 
+  // Legendas externas PT-BR (Stremio / OpenSubtitles / Forçadas)
+  const [externalSubs, setExternalSubs] = useState<SubtitleTrackOption[]>([])
+
   // ===== Controles do player (Sprint 2) =====
   const [speed, setSpeed] = useState(1)
   const [speedOpen, setSpeedOpen] = useState(false)
-  const [tracks, setTracks] = useState<{ index: number; label: string }[]>([])
+  const [tracks, setTracks] = useState<{ index: number; label: string; isForced?: boolean }[]>([])
   const [activeTrack, setActiveTrack] = useState(-1)
   const [subsOpen, setSubsOpen] = useState(false)
   const [pipActive, setPipActive] = useState(false)
@@ -533,6 +541,21 @@ const StreamPlayer = ({
     setEpisodesDrawerOpen(false)
   }, [directSrc, season, episode])
 
+  // Busca e carrega legendas em Português (PT-BR) públicas e forçadas
+  useEffect(() => {
+    let alive = true
+    fetchPortugueseSubtitles(type, tmdbId, season, episode).then((subs) => {
+      if (alive) {
+        setExternalSubs(subs)
+        setTimeout(() => refreshTextTracks(), 400)
+      }
+    })
+    return () => {
+      alive = false
+      clearActiveSubtitleBlobs()
+    }
+  }, [type, tmdbId, season, episode])
+
   // Observa a entrada/saída do Picture-in-Picture (eventos não tipados pelo React).
   useEffect(() => {
     const video = videoRef.current
@@ -645,14 +668,22 @@ const StreamPlayer = ({
   const refreshTextTracks = () => {
     const video = videoRef.current
     if (!video) return
-    const list: { index: number; label: string }[] = []
+    const list: { index: number; label: string; isForced?: boolean }[] = []
     for (let i = 0; i < video.textTracks.length; i += 1) {
       const track = video.textTracks[i]
-      list.push({ index: i, label: track.label || track.language || `Faixa ${i + 1}` })
+      const label = track.label || track.language || `Faixa ${i + 1}`
+      const isForced = /forced|forcad|forçad|falas/i.test(label)
+      list.push({ index: i, label, isForced })
     }
     setTracks(list)
-    // Liga automaticamente a primeira legenda quando ainda nÃ£o hÃ¡ escolha.
-    if (list.length > 0 && activeTrackRef.current === -1) applySubtitle(0)
+    // Se ainda não escolheu faixa:
+    // Áudio original: liga automaticamente a primeira legenda disponível
+    // Áudio dublado: liga se a preferência de legenda do perfil for 'pt'
+    if (list.length > 0 && activeTrackRef.current === -1) {
+      if (audioOption === 'orig' || subtitleOption === 'pt') {
+        applySubtitle(0)
+      }
+    }
   }
 
   const applySubtitle = (index: number) => {
@@ -664,6 +695,12 @@ const StreamPlayer = ({
     activeTrackRef.current = index
     setActiveTrack(index)
     setSubsOpen(false)
+    if (index >= 0) {
+      const selected = video.textTracks[index]
+      showFeedback(`Legenda: ${selected?.label || 'Ativada'}`)
+    } else {
+      showFeedback('Legenda: Desativada')
+    }
   }
 
   const handlePip = async () => {
@@ -1075,6 +1112,7 @@ const StreamPlayer = ({
             controls
             autoPlay
             playsInline
+            crossOrigin="anonymous"
             className={`h-full bg-black transition-all duration-200 ${
               fitMode === 'cover'
                 ? 'w-full object-cover'
@@ -1090,7 +1128,18 @@ const StreamPlayer = ({
             onTimeUpdate={handleTimeUpdate}
             onError={handleDirectMediaError}
             onEnded={handleEnded}
-          />
+          >
+            {externalSubs.map((sub) => (
+              <track
+                key={sub.id}
+                kind="subtitles"
+                label={sub.label}
+                src={sub.vttUrl}
+                srcLang={sub.language}
+                default={false}
+              />
+            ))}
+          </video>
         )}
 
         {/* Toast Flutuante de Retomada Inteligente */}
@@ -1191,22 +1240,22 @@ const StreamPlayer = ({
                   setSpeedOpen(false)
                 }}
                 className={`p-2 rounded-lg transition-colors backdrop-blur-sm ${
-                  activeTrack >= 0 || audioOption === 'orig'
+                  activeTrack >= 0
                     ? 'bg-accent-red text-white'
                     : 'bg-black/70 hover:bg-black/90 text-white/60 hover:text-white'
                 }`}
                 title="Opções de Legenda"
               >
-                {activeTrack >= 0 || audioOption === 'orig' ? (
+                {activeTrack >= 0 ? (
                   <Captions className="h-4 w-4" />
                 ) : (
                   <CaptionsOff className="h-4 w-4" />
                 )}
               </button>
               {subsOpen && (
-                <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1.5 flex flex-col min-w-[190px] max-h-60 overflow-y-auto shadow-2xl z-50">
+                <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1.5 flex flex-col min-w-[210px] max-h-64 overflow-y-auto shadow-2xl z-50">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-2 py-1">
-                    Legendas
+                    Legendas (PT-BR)
                   </div>
                   <button
                     onClick={() => applySubtitle(-1)}
@@ -1223,16 +1272,28 @@ const StreamPlayer = ({
                     <button
                       key={t.index}
                       onClick={() => applySubtitle(t.index)}
-                      className={`px-3 py-1.5 text-xs rounded text-left transition-colors truncate flex items-center justify-between ${
+                      className={`px-3 py-1.5 text-xs rounded text-left transition-colors flex items-center justify-between gap-2 ${
                         activeTrack === t.index
                           ? 'bg-accent-red text-white font-bold'
                           : 'text-white/70 hover:bg-white/10'
                       }`}
                     >
-                      <span className="truncate">{t.label}</span>
-                      {activeTrack === t.index && <Check className="h-3 w-3" />}
+                      <div className="flex flex-col min-w-0 pr-1">
+                        <span className="truncate">{t.label}</span>
+                        {t.isForced && (
+                          <span className="text-[10px] text-yellow-400 font-normal leading-tight">
+                            Traduz falas em outro idioma
+                          </span>
+                        )}
+                      </div>
+                      {activeTrack === t.index && <Check className="h-3 w-3 flex-shrink-0" />}
                     </button>
                   ))}
+                  {tracks.length === 0 && (
+                    <div className="px-3 py-1.5 text-[11px] text-white/40 italic">
+                      Buscando legendas...
+                    </div>
+                  )}
                   {/* Configurações visuais de Legenda */}
                   <div className="my-1.5 border-t border-white/10" />
                   <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 px-2 py-0.5">
