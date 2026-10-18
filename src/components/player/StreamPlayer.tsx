@@ -228,8 +228,8 @@ const StreamPlayer = ({
   const [fallbackAttempt, setFallbackAttempt] = useState(0)
   const [isAutoFallback, setIsAutoFallback] = useState(false)
   const fallbackSequence = audioOption === 'dub'
-    ? ['megaembed', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'vidlink', 'multiembed']
-    : ['vidsrc-sh', 'vidsrc-io', 'vsembed', 'megaembed', 'vidlink', 'multiembed']
+    ? ['megaembed', 'vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'multiembed']
+    : ['vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'megaembed', 'multiembed']
 
   const embedUrl =
     type === 'movie'
@@ -241,7 +241,7 @@ const StreamPlayer = ({
     userManualAudioRef.current = opt
     setAudioOption(opt)
     if (opt === 'orig') {
-      setActiveMirror('vidsrc-sh')
+      setActiveMirror('vidlink')
       setAllowIframe(true)
       setDirectSrc(null)
       setDirectKind(null)
@@ -283,7 +283,7 @@ const StreamPlayer = ({
       setDirectSrc(null)
       setDirectKind(null)
       setAudioOption('orig')
-      setActiveMirror('vidsrc-sh')
+      setActiveMirror('vidlink')
       setAllowIframe(true)
       setError(false)
       showFeedback('Áudio dublado indisponível. Alternando para Legendado (PT)...')
@@ -371,7 +371,7 @@ const StreamPlayer = ({
       setResolvingDirect(false)
       setDirectSrc(null)
       setDirectKind(null)
-      setActiveMirror('vidsrc-sh')
+      setActiveMirror('vidlink')
       setAllowIframe(true)
       return
     }
@@ -416,7 +416,7 @@ const StreamPlayer = ({
           console.info('[StreamPlayer] Sem áudio em português disponível. Alternando automaticamente para Original Legendado (PT-BR)...')
           showFeedback('Áudio dublado indisponível. Mudando para Legendado (PT)...')
           setAudioOption('orig')
-          setActiveMirror('vidsrc-sh')
+          setActiveMirror('vidlink')
           setAllowIframe(true)
           setDirectSrc(null)
           setDirectKind(null)
@@ -428,7 +428,7 @@ const StreamPlayer = ({
         console.warn('[StreamPlayer] Erro ao verificar áudio PT. Alternando para Original Legendado:', err)
         showFeedback('Áudio dublado indisponível. Alternando para Legendado (PT)...')
         setAudioOption('orig')
-        setActiveMirror('vidsrc-sh')
+        setActiveMirror('vidlink')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
@@ -1096,6 +1096,7 @@ const StreamPlayer = ({
             className="w-full h-full border-0"
             allowFullScreen
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
             referrerPolicy="no-referrer"
             onLoad={handleIframeLoad}
             onError={handleStreamFailure}
