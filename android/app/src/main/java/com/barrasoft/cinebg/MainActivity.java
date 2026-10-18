@@ -2,13 +2,20 @@ package com.barrasoft.cinebg;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebViewClient;
+import java.io.ByteArrayInputStream;
 
 public class MainActivity extends BridgeActivity {
     @Override
@@ -110,10 +117,49 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    private static final String[] AD_HOST_KEYWORDS = new String[] {
+        "doubleclick", "googlesyndication", "googleadservices", "popads", "adsterra",
+        "propellerads", "onclickmega", "exoclick", "juicyads", "monetag", "trafficjunky",
+        "bet365", "1xbet", "betano", "blaze", "adtrue", "histats", "adnxs", "adform",
+        "cpmstar", "hilltopads", "adcash", "bidvertiser", "clickadu", "popcash",
+        "ad-delivery", "magsrv", "tsyndicate", "adservice", "adsystem",
+        "streamad", "vpaid", "vast", "adroll", "smartadserver", "outbrain", "taboola",
+        "trafficstars", "zeroredirect", "richpush", "rtbdemand", "adkeeper", "adblade",
+        "openx", "rubiconproject", "pubmatic", "revcontent", "yieldmo", "inmobi", "adnetwork",
+        "betfair", "betway", "sportingbet", "bodog", "betsson", "kto", "parimatch",
+        "cassino", "casino", "roleta", "apostas", "aviator", "tigrinho", "fortune-tiger",
+        "playreplay", "midroll", "preroll", "postroll", "alwingulla", "topcreativeformat",
+        "creativecdn", "directrev", "highperformancegate", "whomeeto", "syndication",
+        "banner", "adclick", "clickserver", "adtracker", "affiliate", "landing",
+        "popmyads", "plugrush", "yllix", "admaven", "admob", "startapp", "unityads",
+        "applovin", "ironsource", "fyber", "chartboost", "vungle", "tapjoy", "mintegral",
+        "pangle", "yandex", "anonymizer", "coinhive", "coinimp", "crypto-loot"
+    };
+
+    private static boolean isAdUrl(String url) {
+        if (url == null) return false;
+        String lower = url.toLowerCase();
+        for (String keyword : AD_HOST_KEYWORDS) {
+            if (lower.contains(keyword)) {
+                return true;
+            }
+        }
+        if (lower.contains("/pop.") || lower.contains("/popunder") || lower.contains("/popup") ||
+            lower.contains("ad.js") || lower.contains("ads.js") || lower.contains("ads.min.js") ||
+            lower.contains("banner.js") || lower.contains("tracking.js") || lower.contains("tracker.js") ||
+            lower.contains("advert") || lower.contains("vast.xml") || lower.contains("vpaid.js") ||
+            lower.contains("adsbygoogle")) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean adBlockerInstalled = false;
+
     private void setupTvFocus() {
         try {
             if (getBridge() != null && getBridge().getWebView() != null) {
-                android.webkit.WebView webView = getBridge().getWebView();
+                WebView webView = getBridge().getWebView();
                 webView.setFocusable(true);
                 webView.setFocusableInTouchMode(true);
                 webView.requestFocus();
@@ -122,6 +168,111 @@ public class MainActivity extends BridgeActivity {
                     webView.getSettings().setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
                     webView.getSettings().setSupportMultipleWindows(false);
                     webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
+                }
+
+                if (!adBlockerInstalled) {
+                    adBlockerInstalled = true;
+
+                    // Bloqueio rigoroso de pop-ups, novas janelas e alertas de spam (Chrome Client)
+                    webView.setWebChromeClient(new WebChromeClient() {
+                        @Override
+                        public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+                            return false; // Bloqueia 100% de novas abas/janelas de anúncios
+                        }
+
+                        @Override
+                        public boolean onJsAlert(WebView view, String url, String message, android.webkit.JsResult result) {
+                            result.confirm();
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onJsConfirm(WebView view, String url, String message, android.webkit.JsResult result) {
+                            result.confirm();
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, android.webkit.JsPromptResult result) {
+                            result.cancel();
+                            return true;
+                        }
+                    });
+
+                    // Bloqueio de rede nativo de URLs de anúncios, redirecionamentos e sequestro de tela
+                    webView.setWebViewClient(new BridgeWebViewClient(getBridge()) {
+                        @Override
+                        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                            if (request != null && request.getUrl() != null) {
+                                String url = request.getUrl().toString();
+                                if (isAdUrl(url)) {
+                                    return new WebResourceResponse("text/plain", "UTF-8", new ByteArrayInputStream("".getBytes()));
+                                }
+                            }
+                            return super.shouldInterceptRequest(view, request);
+                        }
+
+                        @Override
+                        public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                            if (url != null && isAdUrl(url)) {
+                                return new WebResourceResponse("text/plain", "UTF-8", new ByteArrayInputStream("".getBytes()));
+                            }
+                            return super.shouldInterceptRequest(view, url);
+                        }
+
+                        @Override
+                        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                            if (request != null && request.getUrl() != null) {
+                                String url = request.getUrl().toString();
+                                String scheme = request.getUrl().getScheme();
+
+                                // Bloqueia intents externos (Play Store, cassinos, etc.)
+                                if (url.startsWith("intent:") || url.startsWith("market:") || "market".equalsIgnoreCase(scheme)) {
+                                    return true;
+                                }
+
+                                // Se for tentativa de navegação no frame principal para fora do app local (anúncio tentando tomar a tela)
+                                if (request.isForMainFrame()) {
+                                    String host = request.getUrl().getHost();
+                                    if (host != null && !host.contains("localhost") && !host.contains("127.0.0.1") && !url.startsWith("capacitor:")) {
+                                        return true; // Bloqueia sequestro de tela pelo player/anúncio
+                                    }
+                                }
+
+                                if (isAdUrl(url) || url.contains("bet") || url.contains("pop")) {
+                                    return true;
+                                }
+                            }
+                            return super.shouldOverrideUrlLoading(view, request);
+                        }
+
+                        @Override
+                        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                            if (url != null) {
+                                if (url.startsWith("intent:") || url.startsWith("market:") || isAdUrl(url)) {
+                                    return true;
+                                }
+                                if (!url.contains("localhost") && !url.contains("127.0.0.1") && !url.startsWith("capacitor:")) {
+                                    return true; // Protege WebView em versões legadas do Android
+                                }
+                            }
+                            return super.shouldOverrideUrlLoading(view, url);
+                        }
+
+                        @Override
+                        public void onPageFinished(WebView view, String url) {
+                            super.onPageFinished(view, url);
+                            try {
+                                String antiPopupJs =
+                                    "(function() {" +
+                                    "  try {" +
+                                    "    window.open = function() { return null; };" +
+                                    "  } catch(e) {}" +
+                                    "})();";
+                                view.evaluateJavascript(antiPopupJs, null);
+                            } catch (Exception ignored) {}
+                        }
+                    });
                 }
             }
         } catch (Exception ignored) {}

@@ -205,6 +205,17 @@ const StreamPlayer = ({
     `
   }, [subSize, subColor, subBg])
 
+  // Escudo JavaScript contra pop-ups e redirecionamentos no player
+  useEffect(() => {
+    try {
+      const originalOpen = window.open
+      window.open = () => null
+      return () => {
+        window.open = originalOpen
+      }
+    } catch {}
+  }, [])
+
   const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2]
   const AUTO_NEXT_DELAY = 10 // seconds
 
@@ -241,19 +252,36 @@ const StreamPlayer = ({
     userManualAudioRef.current = opt
     setAudioOption(opt)
     if (opt === 'orig') {
+      // Prioridade máxima: verifica se há candidato direto nativo com áudio original
+      const directOrig = candidates.find((c) => !c.isDubbedHint)
+      if (directOrig) {
+        console.info('[StreamPlayer] Reproduzindo fonte original direta nativa (sem anúncios):', directOrig.label)
+        nativeActiveRef.current = true
+        setDirectSrc(directOrig.url)
+        setDirectKind(directOrig.kind)
+        setAllowIframe(false)
+        setLoaded(false)
+        setError(false)
+        showFeedback(`Conectando: ${directOrig.label}`)
+        return
+      }
       setActiveMirror('vidlink')
       setAllowIframe(true)
       setDirectSrc(null)
       setDirectKind(null)
-      setCandidates([])
-      setCandidateIndex(0)
     } else {
       setActiveMirror('megaembed')
       setAllowIframe(false)
-      setDirectSrc(null)
-      setDirectKind(null)
-      setCandidates([])
-      setCandidateIndex(0)
+      const directDub = candidates.find((c) => c.isDubbedHint) || candidates[0]
+      if (directDub) {
+        nativeActiveRef.current = true
+        setDirectSrc(directDub.url)
+        setDirectKind(directDub.kind)
+        setLoaded(false)
+        setError(false)
+        showFeedback(`Conectando: ${directDub.label}`)
+        return
+      }
     }
     setLoaded(false)
     setError(false)
@@ -363,10 +391,21 @@ const StreamPlayer = ({
     if (isNewMedia) {
       lastCheckedMediaRef.current = mediaKey
       userManualAudioRef.current = null
+      // Sempre define Dublado como padrão ao abrir qualquer filme ou série novo
+      setAudioOption('dub')
     }
 
     // Se o usuário selecionou manualmente Original para este conteúdo, respeitamos a decisão manual
     if (userManualAudioRef.current === 'orig' || userManualAudioRef.current === 'sub') {
+      const directOrig = candidates.find((c) => !c.isDubbedHint)
+      if (directOrig) {
+        nativeActiveRef.current = true
+        setResolvingDirect(false)
+        setDirectSrc(directOrig.url)
+        setDirectKind(directOrig.kind)
+        setAllowIframe(false)
+        return
+      }
       nativeActiveRef.current = false
       setResolvingDirect(false)
       setDirectSrc(null)
@@ -390,18 +429,21 @@ const StreamPlayer = ({
         if (cancelled) return
         const list = resolved.candidates || []
 
-        if (list.length > 0 || resolved.dubbedMp4 || resolved.hlsProxy) {
-          // Possui áudio em português! Deixa marcado Dublado
-          console.info('[StreamPlayer] Áudio em português encontrado. Deixando marcado Dublado.')
+        // Verifica se há alguma fonte explicitamente dublada
+        const hasDubbedSource = list.some((c) => c.isDubbedHint) || !!resolved.dubbedMp4
+
+        if (hasDubbedSource) {
+          // Possui áudio em português! Deixa marcado Dublado como padrão absoluto
+          console.info('[StreamPlayer] Áudio em português encontrado. Deixando marcado Dublado como padrão.')
           setAudioOption('dub')
           setCandidates(list)
           setCandidateIndex(0)
 
-          if (list.length > 0) {
-            const first = list[0]
+          const firstDubbed = list.find((c) => c.isDubbedHint) || list[0]
+          if (firstDubbed) {
             nativeActiveRef.current = true
-            setDirectSrc(first.url)
-            setDirectKind(first.kind)
+            setDirectSrc(firstDubbed.url)
+            setDirectKind(firstDubbed.kind)
           } else if (resolved.dubbedMp4) {
             nativeActiveRef.current = true
             setDirectSrc(resolved.dubbedMp4)
@@ -416,10 +458,22 @@ const StreamPlayer = ({
           console.info('[StreamPlayer] Sem áudio em português disponível. Alternando automaticamente para Original Legendado (PT-BR)...')
           showFeedback('Áudio dublado indisponível. Mudando para Legendado (PT)...')
           setAudioOption('orig')
-          setActiveMirror('vidlink')
-          setAllowIframe(true)
-          setDirectSrc(null)
-          setDirectKind(null)
+          setCandidates(list)
+          setCandidateIndex(0)
+
+          const directOrig = list.find((c) => !c.isDubbedHint) || list[0]
+          if (directOrig) {
+            console.info('[StreamPlayer] Usando fonte direta sem anúncios para áudio original:', directOrig.label)
+            nativeActiveRef.current = true
+            setDirectSrc(directOrig.url)
+            setDirectKind(directOrig.kind)
+            setAllowIframe(false)
+          } else {
+            setActiveMirror('vidlink')
+            setAllowIframe(true)
+            setDirectSrc(null)
+            setDirectKind(null)
+          }
           setError(false)
         }
       })
