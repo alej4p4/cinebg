@@ -119,19 +119,20 @@ const UpdateModal = ({
   return (
     <AnimatePresence>
       {visible && (
-        <>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
             onClick={stage === 'downloading' ? undefined : onDismiss}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            initial={{ opacity: 0, scale: 0.9, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] w-[92vw] max-w-md bg-[#13131c] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden"
+            exit={{ opacity: 0, scale: 0.9, y: 15 }}
+            transition={{ duration: 0.2 }}
+            className="relative z-10 w-full max-w-md bg-[#13131c] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden my-auto"
           >
             {/* Botão fechar */}
             {stage !== 'downloading' && (
@@ -397,7 +398,7 @@ const UpdateModal = ({
               </div>
             )}
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   )
