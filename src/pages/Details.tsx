@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Play, Star, Calendar, Clock, Film, Heart,
-  ChevronRight, Tv, X
+  Tv, ChevronRight, X,
 } from 'lucide-react'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import GenreBadge from '@/components/ui/GenreBadge'
 import Focusable from '@/components/tv/Focusable'
+import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
 import {
   getMovieDetails, getShowDetails,
-  getPosterUrl, getBackdropUrl, getProfileUrl
+  getPosterUrl, getBackdropUrl, getProfileUrl,
+  getCachedMediaDetails,
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
 import type { TMDBMovieDetails, TMDBShowDetails, TMDBCast, TMDBVideo } from '@/types'
@@ -20,36 +22,72 @@ const Details = () => {
   const navigate = useNavigate()
   const { addFavorite, removeFavorite, isFavorite } = useAppStore()
 
-  const [movieData, setMovieData] = useState<TMDBMovieDetails | null>(null)
-  const [showData, setShowData] = useState<TMDBShowDetails | null>(null)
-  const [loading, setLoading] = useState(true)
+  const isMovie = type === 'movie'
+  const mediaId = Number(id)
+
+  // Cache instantâneo pré-carregado: se já foi visitado ou salvo em cache, carrega em 0ms sem spinner!
+  const cachedInitialMovie = isMovie ? getCachedMediaDetails<TMDBMovieDetails>(mediaId, 'movie') : null
+  const cachedInitialShow = !isMovie ? getCachedMediaDetails<TMDBShowDetails>(mediaId, type || 'tv') : null
+
+  const [movieData, setMovieData] = useState<TMDBMovieDetails | null>(cachedInitialMovie)
+  const [showData, setShowData] = useState<TMDBShowDetails | null>(cachedInitialShow)
+  const [loading, setLoading] = useState(!cachedInitialMovie && !cachedInitialShow)
   const [activeTab, setActiveTab] = useState<'overview' | 'cast' | 'seasons'>('overview')
   const [imgError, setImgError] = useState(false)
   const [trailerOpen, setTrailerOpen] = useState(false)
 
-  const isMovie = type === 'movie'
-  const mediaId = Number(id)
+  const playBtnRef = useRef<HTMLButtonElement | null>(null)
 
   useEffect(() => {
     if (!id || !type) return
-    setLoading(true)
+    let isCancelled = false
+
+    // Se já temos os dados no cache instantâneo, não bloqueamos com spinner de tela cheia
+    if (!cachedInitialMovie && !cachedInitialShow) {
+      setLoading(true)
+    }
+
     const fetch = async () => {
       try {
         if (isMovie) {
           const data = await getMovieDetails(mediaId)
-          setMovieData(data)
+          if (!isCancelled) setMovieData(data)
         } else {
           const data = await getShowDetails(mediaId)
-          setShowData(data)
+          if (!isCancelled) setShowData(data)
         }
       } catch (err) {
         console.error('Failed to load details:', err)
       } finally {
-        setLoading(false)
+        if (!isCancelled) setLoading(false)
       }
     }
     fetch()
-  }, [id, type, isMovie, mediaId])
+
+    return () => {
+      isCancelled = true
+    }
+  }, [id, type, isMovie, mediaId, cachedInitialMovie, cachedInitialShow])
+
+  // Foco automático e prioritário no botão "Assistir Agora" para controle remoto de TV
+  useEffect(() => {
+    if (!loading && (movieData || showData)) {
+      const focusPlay = () => {
+        if (doesFocusableExist('details-play')) {
+          setFocus('details-play')
+        }
+        playBtnRef.current?.focus()
+      }
+      const t1 = setTimeout(focusPlay, 40)
+      const t2 = setTimeout(focusPlay, 160)
+      const t3 = setTimeout(focusPlay, 400)
+      return () => {
+        clearTimeout(t1)
+        clearTimeout(t2)
+        clearTimeout(t3)
+      }
+    }
+  }, [loading, movieData, showData, id])
 
   useEffect(() => {
     if (!trailerOpen) return
@@ -141,6 +179,16 @@ const Details = () => {
         <Focusable
           focusKey="details-back"
           onEnterPress={() => navigate(-1)}
+          onArrowPress={(dir) => {
+            if (dir === 'down' || dir === 'right') {
+              if (doesFocusableExist('details-play')) {
+                setFocus('details-play')
+                playBtnRef.current?.focus()
+                return false
+              }
+            }
+            return true
+          }}
           className="absolute top-24 left-4 md:left-8 z-10 rounded-lg"
         >
           <button
@@ -237,13 +285,33 @@ const Details = () => {
               <Focusable
                 focusKey="details-play"
                 onEnterPress={handlePlay}
+                onArrowPress={(dir) => {
+                  if (dir === 'up') {
+                    if (doesFocusableExist('details-back')) {
+                      setFocus('details-back')
+                      return false
+                    }
+                  } else if (dir === 'right') {
+                    if (doesFocusableExist('details-fav')) {
+                      setFocus('details-fav')
+                      return false
+                    }
+                  } else if (dir === 'down') {
+                    if (doesFocusableExist('details-tab-overview')) {
+                      setFocus('details-tab-overview')
+                      return false
+                    }
+                  }
+                  return true
+                }}
                 className="rounded-xl"
               >
                 <motion.button
+                  ref={playBtnRef}
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={handlePlay}
-                  className="flex items-center gap-3 bg-accent-red hover:bg-red-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg glow-red transition-colors text-base outline-none"
+                  className="flex items-center gap-3 bg-accent-red hover:bg-red-600 text-white font-extrabold px-8 py-3.5 rounded-xl shadow-lg glow-red transition-all text-base outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105"
                 >
                   <Play className="h-5 w-5 fill-white" />
                   {isMovie ? 'Assistir Agora' : 'Assistir Episódio'}
@@ -253,6 +321,31 @@ const Details = () => {
               <Focusable
                 focusKey="details-fav"
                 onEnterPress={handleToggleFav}
+                onArrowPress={(dir) => {
+                  if (dir === 'left') {
+                    if (doesFocusableExist('details-play')) {
+                      setFocus('details-play')
+                      playBtnRef.current?.focus()
+                      return false
+                    }
+                  } else if (dir === 'right') {
+                    if (trailer && doesFocusableExist('details-trailer')) {
+                      setFocus('details-trailer')
+                      return false
+                    }
+                  } else if (dir === 'up') {
+                    if (doesFocusableExist('details-back')) {
+                      setFocus('details-back')
+                      return false
+                    }
+                  } else if (dir === 'down') {
+                    if (doesFocusableExist('details-tab-overview')) {
+                      setFocus('details-tab-overview')
+                      return false
+                    }
+                  }
+                  return true
+                }}
                 className="rounded-xl"
               >
                 <motion.button
@@ -274,6 +367,25 @@ const Details = () => {
                 <Focusable
                   focusKey="details-trailer"
                   onEnterPress={() => setTrailerOpen(true)}
+                  onArrowPress={(dir) => {
+                    if (dir === 'left') {
+                      if (doesFocusableExist('details-fav')) {
+                        setFocus('details-fav')
+                        return false
+                      }
+                    } else if (dir === 'up') {
+                      if (doesFocusableExist('details-back')) {
+                        setFocus('details-back')
+                        return false
+                      }
+                    } else if (dir === 'down') {
+                      if (doesFocusableExist('details-tab-overview')) {
+                        setFocus('details-tab-overview')
+                        return false
+                      }
+                    }
+                    return true
+                  }}
                   className="rounded-xl"
                 >
                   <motion.button
@@ -299,6 +411,16 @@ const Details = () => {
                 key={tab}
                 focusKey={`details-tab-${tab}`}
                 onEnterPress={() => setActiveTab(tab as typeof activeTab)}
+                onArrowPress={(dir) => {
+                  if (dir === 'up') {
+                    if (doesFocusableExist('details-play')) {
+                      setFocus('details-play')
+                      playBtnRef.current?.focus()
+                      return false
+                    }
+                  }
+                  return true
+                }}
                 className="rounded-t-lg"
               >
                 <button

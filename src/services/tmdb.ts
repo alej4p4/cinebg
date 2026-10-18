@@ -59,24 +59,108 @@ export const getProfileUrl = (path: string | null | undefined): string => {
   return `${IMAGE_BASE}/w185${path}`
 }
 
-// ===== Cache & Deduplication =====
+// ===== Cache & Deduplication com Persistência Local (Android TV High Performance) =====
 const requestCache = new Map<string, { data: unknown; expiresAt: number }>()
 const inflightMap = new Map<string, Promise<unknown>>()
 
-const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutos
+const STORAGE_PREFIX = 'cinebg_tmdb_cache_'
+const DEFAULT_CATALOG_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas para catálogos
+const DETAILS_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 dias para detalhes de filmes/séries
 
 const buildCacheKey = (method: string, url: string, params?: Record<string, unknown>) => {
   const p = params ? JSON.stringify(params) : ''
   return `${method.toUpperCase()}:${url}:${p}`
 }
 
+const getStorageKey = (key: string): string => {
+  try {
+    return STORAGE_PREFIX + btoa(unescape(encodeURIComponent(key))).slice(0, 48)
+  } catch {
+    return STORAGE_PREFIX + key.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 48)
+  }
+}
+
+const saveToLocalStorage = (key: string, data: unknown, ttlMs: number) => {
+  try {
+    if (typeof window === 'undefined') return
+    const payload = {
+      data,
+      expiresAt: Date.now() + ttlMs,
+    }
+    const safeKey = getStorageKey(key)
+    localStorage.setItem(safeKey, JSON.stringify(payload))
+  } catch {
+    // Se a cota do localStorage estiver próxima do limite, remove as chaves mais antigas
+    try {
+      const keysToRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith(STORAGE_PREFIX)) {
+          keysToRemove.push(k)
+        }
+      }
+      keysToRemove.slice(0, Math.ceil(keysToRemove.length / 2)).forEach((k) => localStorage.removeItem(k))
+    } catch {}
+  }
+}
+
+const loadFromLocalStorage = <T>(key: string): T | null => {
+  try {
+    if (typeof window === 'undefined') return null
+    const safeKey = getStorageKey(key)
+    const raw = localStorage.getItem(safeKey)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object' && parsed.expiresAt > Date.now()) {
+      return parsed.data as T
+    }
+    localStorage.removeItem(safeKey)
+  } catch {}
+  return null
+}
+
+// Recupera detalhes de filmes/séries de forma síncrona em 0ms se já estiverem em cache
+export const getCachedMediaDetails = <T>(id: number, type: 'movie' | 'tv' | 'anime'): T | null => {
+  const url = type === 'movie' ? `/movie/${id}` : `/tv/${id}`
+  const key = buildCacheKey('GET', url, {
+    append_to_response: 'videos,credits,similar,recommendations',
+    __kids: isKidsMode(),
+  })
+
+  // 1. Memória RAM (instantâneo)
+  const inMem = requestCache.get(key)
+  if (inMem && inMem.expiresAt > Date.now()) {
+    return inMem.data as T
+  }
+
+  // 2. Armazenamento Local Persistente (0ms)
+  const fromStorage = loadFromLocalStorage<T>(key)
+  if (fromStorage) {
+    requestCache.set(key, { data: fromStorage, expiresAt: Date.now() + DETAILS_TTL_MS })
+    return fromStorage
+  }
+
+  return null
+}
+
 const cachedGet = async <T>(url: string, params?: Record<string, unknown>): Promise<T> => {
   const key = buildCacheKey('GET', url, { ...params, __kids: isKidsMode() })
   const now = Date.now()
+
+  // 1. Verifica memória RAM
   const cached = requestCache.get(key)
   if (cached && cached.expiresAt > now) {
     return cached.data as T
   }
+
+  // 2. Verifica armazenamento persistente do dispositivo
+  const fromStorage = loadFromLocalStorage<T>(key)
+  if (fromStorage) {
+    requestCache.set(key, { data: fromStorage, expiresAt: now + DEFAULT_CATALOG_TTL_MS })
+    return fromStorage
+  }
+
+  // 3. Deduplicação de requisições em voo (Inflight Map)
   if (inflightMap.has(key)) {
     return inflightMap.get(key) as Promise<T>
   }
@@ -92,7 +176,10 @@ const cachedGet = async <T>(url: string, params?: Record<string, unknown>): Prom
 
   try {
     const data = await promise
-    requestCache.set(key, { data, expiresAt: now + CACHE_TTL_MS })
+    const isDetails = url.startsWith('/movie/') || url.startsWith('/tv/')
+    const ttl = isDetails ? DETAILS_TTL_MS : DEFAULT_CATALOG_TTL_MS
+    requestCache.set(key, { data, expiresAt: now + ttl })
+    saveToLocalStorage(key, data, ttl)
     return data
   } catch (error) {
     inflightMap.delete(key)

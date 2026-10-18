@@ -71,6 +71,10 @@ const Navbar = () => {
   }
 
   const handleNavDown = () => {
+    if (doesFocusableExist('details-play')) {
+      setFocus('details-play')
+      return false
+    }
     if (doesFocusableExist('hero-watch-btn')) {
       setFocus('hero-watch-btn')
       return false
