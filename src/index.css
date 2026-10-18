@@ -223,26 +223,29 @@ iframe:focus-visible {
   -webkit-tap-highlight-color: transparent !important;
 }
 
-*:focus-visible {
-  outline: none !important;
-}
-
-/* ===== FOCUS RING (TV D-PAD) ===== */
-.tv-focusable:focus {
-  outline: 3px solid var(--accent-red);
-  outline-offset: 4px;
-  border-radius: 8px;
-}
-
-/* Anel de foco controlado pelo norigin (navegacao espacial / controle remoto TV) */
-.tv-focused {
-  outline: none !important;
-  box-shadow: 0 0 0 3px #fbbf24, 0 0 20px rgba(251, 191, 36, 0.65) !important;
+/* ===== FOCUS RING (TV D-PAD & CONTROLE REMOTO) - BORDA AMARELA ===== */
+.tv-focusable:focus,
+.tv-focused,
+body.tv-mode button:focus,
+body.tv-mode a:focus,
+body.tv-mode [tabindex]:focus,
+body.tv-remote-active button:focus,
+body.tv-remote-active a:focus,
+body.tv-remote-active [tabindex]:focus,
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible,
+.focus-yellow:focus,
+.focus-yellow.tv-focused {
+  outline: 3px solid #facc15 !important;
+  outline-offset: 3px !important;
+  border-color: #facc15 !important;
+  box-shadow: 0 0 0 3px #facc15, 0 0 24px rgba(250, 204, 21, 0.85) !important;
   border-radius: 12px;
-  transform: scale(1.04) translateZ(0) !important;
-  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out !important;
+  transform: scale(1.05) translateZ(0) !important;
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, outline 0.12s ease-out !important;
   will-change: transform;
-  z-index: 40 !important;
+  z-index: 50 !important;
   position: relative;
 }
 
@@ -377,7 +380,7 @@ iframe:focus-visible {
 }
 
 /* ===== TAGS INPUT FOCUS ===== */
-input:focus, button:focus {
+input:focus {
   outline: none;
 }
 
