@@ -125,21 +125,21 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           enableWorker: false, // Desativa worker para evitar engasgos em Android TV / WebViews
           liveDurationInfinity: true,
           lowLatencyMode: false,
-          backBufferLength: 10,
-          maxBufferLength: 10,
-          maxMaxBufferLength: 20,
-          maxBufferSize: 30 * 1000 * 1000,
-          liveSyncDurationCount: 2, // 2 segmentos (6s) atrás do topo ao vivo. Perfeito e anti-travamento para IPTV!
-          liveMaxLatencyDurationCount: 8,
-          manifestLoadingTimeOut: 8000,
-          manifestLoadingMaxRetry: 3,
-          levelLoadingTimeOut: 8000,
-          levelLoadingMaxRetry: 3,
-          fragLoadingTimeOut: 12000,
-          fragLoadingMaxRetry: 4,
-          nudgeOffset: 0.1,
+          backBufferLength: 15,
+          maxBufferLength: 20,
+          maxMaxBufferLength: 40,
+          maxBufferSize: 50 * 1000 * 1000,
+          liveSyncDurationCount: 4, // 4 segmentos (~12s) de margem segura para IPTV estável sem travamento
+          liveMaxLatencyDurationCount: 15,
+          manifestLoadingTimeOut: 15000,
+          manifestLoadingMaxRetry: 4,
+          levelLoadingTimeOut: 15000,
+          levelLoadingMaxRetry: 4,
+          fragLoadingTimeOut: 20000,
+          fragLoadingMaxRetry: 6,
+          nudgeOffset: 0.2,
           nudgeMaxRetry: 5,
-          maxFragLookUpTolerance: 0.25,
+          maxFragLookUpTolerance: 0.3,
           autoStartLoad: true,
         })
 
@@ -202,17 +202,15 @@ const LivePlayer = ({ channel }: LivePlayerProps) => {
           if (cancelled) return
           const payload = data as { fatal?: boolean; type?: string; details?: string }
 
-          // Se houver um buraco de buffer temporário (bufferStalledError), avança suavemente 0.1s
+          // Se houver um stall transitório no buffer, apenas garante carregamento ativo sem salto destrutivo
           if (!payload.fatal) {
             if (
               payload.details === 'bufferStalledError' ||
               payload.details === 'bufferNudgeOnStall'
             ) {
-              if (video && !video.paused) {
-                try {
-                  video.currentTime += 0.1
-                } catch {}
-              }
+              try {
+                hls.startLoad()
+              } catch {}
             }
             return
           }

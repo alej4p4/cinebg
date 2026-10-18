@@ -377,9 +377,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
-      'http://45.162.64.114/TNT_NOVELAS/index.m3u8',
       'http://181.78.197.59:8000/play/a085/index.m3u8',
       'http://181.78.197.59:8000/play/a08g/index.m3u8',
+      'http://45.162.64.114/TNT_NOVELAS/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -443,8 +443,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'esportes',
     country: 'BR',
     sources: [
-      'http://45.162.64.114/ESPN_BRASIL/index.m3u8',
       'http://181.78.197.59:8000/play/a07z/index.m3u8',
+      'http://45.162.64.114/ESPN_BRASIL/index.m3u8',
       'http://45.162.64.114/BAND_SPORTS/index.m3u8',
     ],
     quality: '1080p',
