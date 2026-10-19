@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { isTVDevice, isTvRemoteKey, markTvModeActive } from '@/utils/tv'
+import { isTVDevice, isTvRemoteKey, markTvModeActive, isMobileDevice } from '@/utils/tv'
 import { useAppStore } from '@/store/useAppStore'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 import { MousePointer2 } from 'lucide-react'
@@ -34,23 +34,53 @@ const isEnterEvent = (e: KeyboardEvent): boolean => {
 }
 
 const isToggleModeEvent = (e: KeyboardEvent): boolean => {
+  // Se estiver em campo de texto ou input, NUNCA alterna modo de cursor
+  const activeEl = typeof document !== 'undefined' ? document.activeElement : null
+  if (
+    activeEl &&
+    (activeEl.tagName === 'INPUT' ||
+      activeEl.tagName === 'TEXTAREA' ||
+      (activeEl as HTMLElement).isContentEditable)
+  ) {
+    return false
+  }
+
   const code = e.keyCode || e.which
   const key = (e.key || '').toLowerCase()
+
+  // NUNCA disparar com letras normais do teclado (R, C, M, ou qualquer A-Z: 65 a 90)
+  // Nota: o keycode 82 é a letra 'R' no browser! Não pode alternar o cursor!
+  if (
+    key === 'r' ||
+    key === 'c' ||
+    key === 'm' ||
+    (code >= 65 && code <= 90) ||
+    (code >= 97 && code <= 122)
+  ) {
+    return false
+  }
+
+  // Apenas teclas reais exclusivas de controle remoto de TV
   return (
-    code === 82 || // KEYCODE_MENU
     code === 165 || // KEYCODE_INFO
     code === 172 || // KEYCODE_GUIDE
-    code === 109 || // KEYCODE_BUTTON_SELECT
     key === 'contextmenu' ||
     key === 'menu' ||
     key === 'info' ||
-    key === 'guide' ||
-    key === 'c' || // Atalho tecla C (Cursor)
-    key === 'm' // Atalho tecla M (Mouse)
+    key === 'guide'
   )
 }
 
 export const TvCursorOverlay: React.FC = () => {
+  // Celulares e tablets móveis NUNCA devem renderizar ou ativar o cursor virtual
+  if (isMobileDevice()) {
+    try {
+      localStorage.removeItem('cinebg_virtual_cursor')
+      localStorage.removeItem('cinebg_tv_mode')
+      document.body.classList.remove('tv-mode', 'tv-remote-active')
+    } catch {}
+    return null
+  }
   const { tvMode, virtualCursor, setVirtualCursor } = useAppStore()
   const [isTvActive, setIsTvActive] = useState(false)
   const [navMode, setNavMode] = useState<NavigationMode>(() => (virtualCursor ? 'cursor' : 'focus'))
@@ -64,23 +94,23 @@ export const TvCursorOverlay: React.FC = () => {
   const animationFrameRef = useRef<number | null>(null)
   const hideBadgeTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Sincroniza o modo inicial com a preferencia salva na Store
+  // Sincroniza o modo inicial com a preferencia salva na Store (apenas se for TV legítima)
   useEffect(() => {
+    if (isMobileDevice()) {
+      setIsTvActive(false)
+      setVirtualCursor(false)
+      return
+    }
     if (virtualCursor) {
       setNavMode('cursor')
       setIsTvActive(true)
     }
-  }, [virtualCursor])
+  }, [virtualCursor, setVirtualCursor])
 
   // Detecta dispositivo de TV ou ativacao por controle remoto
   useEffect(() => {
     const checkTv = () => {
-      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
-      if (
-        ua.includes('CineBG-Mobile') ||
-        (typeof window !== 'undefined' &&
-          (window.innerHeight > window.innerWidth || window.innerWidth < 768))
-      ) {
+      if (isMobileDevice()) {
         setIsTvActive(false)
         return
       }

@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Settings,
   Smartphone,
+  Tv,
   ExternalLink,
 } from 'lucide-react'
 import Focusable from '@/components/tv/Focusable'
@@ -20,6 +21,7 @@ import {
   type DownloadProgress,
 } from '@/services/appUpdater'
 import { Capacitor } from '@capacitor/core'
+import { isMobileDevice } from '@/utils/tv'
 
 interface UpdateModalProps {
   visible: boolean
@@ -37,13 +39,19 @@ type UpdateStage = 'idle' | 'downloading' | 'installing' | 'error'
 const UpdateModal = ({
   visible,
   downloadUrl = 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk',
-  currentVersion = '1.2.47',
-  latestVersion = '1.2.47',
+  currentVersion = '1.2.48',
+  latestVersion = '1.2.48',
   hasUpdate = false,
   isChecking = false,
   onDismiss,
   onCheckAgain,
 }: UpdateModalProps) => {
+  const isMobile = isMobileDevice()
+  const flavorLabel = isMobile ? 'CineBG Mobile' : 'CineBG TV'
+  const deviceConfirmText = isMobile
+    ? 'O instalador de pacotes do Android foi acionado. Confirme na tela do seu celular para concluir a atualização.'
+    : 'O instalador de pacotes do Android foi acionado. Confirme na tela da sua TV para concluir a atualização.'
+
   const [stage, setStage] = useState<UpdateStage>('idle')
   const [progress, setProgress] = useState<DownloadProgress>({
     percent: 0,
@@ -374,8 +382,8 @@ const UpdateModal = ({
                 </div>
 
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-red/15 border border-accent-red/30 text-red-300 text-xs font-bold uppercase tracking-wider mb-2">
-                  <Smartphone className="h-3.5 w-3.5" />
-                  Baixando Atualização
+                  {isMobile ? <Smartphone className="h-3.5 w-3.5" /> : <Tv className="h-3.5 w-3.5" />}
+                  Baixando {flavorLabel}
                 </div>
 
                 <h2 className="text-white font-black text-xl mb-1">
@@ -421,13 +429,17 @@ const UpdateModal = ({
                 </div>
                 <h2 className="text-white font-black text-2xl mb-1">Download Concluído!</h2>
                 <p className="text-white/70 text-sm mb-4 max-w-xs">
-                  O instalador de pacotes do Android foi acionado. Confirme na tela da sua TV para concluir a atualização.
+                  {deviceConfirmText}
                 </p>
 
                 <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-left text-xs text-white/60 mb-6 space-y-1.5">
                   <div className="flex items-center gap-2 text-white font-semibold">
-                    <Smartphone className="h-4 w-4 text-emerald-400" />
-                    <span>Instalação do CineBG</span>
+                    {isMobile ? (
+                      <Smartphone className="h-4 w-4 text-emerald-400" />
+                    ) : (
+                      <Tv className="h-4 w-4 text-emerald-400" />
+                    )}
+                    <span>Instalação do {flavorLabel}</span>
                   </div>
                   <p className="text-[11px]">
                     Toque em <b>Instalar</b> ou <b>Atualizar</b> na janela do sistema operacional. Seus perfis e favoritos permanecerão intactos.
@@ -565,7 +577,7 @@ const UpdateModal = ({
                   Nova Versão Pronta
                 </div>
 
-                <h2 className="text-white font-black text-2xl mb-1">Atualização do CineBG</h2>
+                <h2 className="text-white font-black text-2xl mb-1">Atualização do {flavorLabel}</h2>
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-xs font-semibold text-white/50">
                     Instalada: v{currentVersion}
@@ -575,7 +587,7 @@ const UpdateModal = ({
                 </div>
 
                 <p className="text-white/70 text-sm mb-6 leading-relaxed">
-                  Uma versão atualizada do CineBG está disponível! Clique no botão abaixo para baixar a nova versão e abrir o instalador automaticamente.
+                  Uma versão atualizada do {flavorLabel} está disponível! Clique no botão abaixo para baixar a nova versão e abrir o instalador automaticamente.
                 </p>
 
                 {/* Botões com suporte prioritário para controle remoto e D-Pad da TV */}
@@ -598,7 +610,7 @@ const UpdateModal = ({
                       }`}
                     >
                       <Download className={`h-4 w-4 ${activeActionIndex === 0 ? 'animate-bounce' : ''}`} />
-                      <span>Baixar e Instalar APK</span>
+                      <span>Baixar e Instalar {flavorLabel}</span>
                     </button>
                   </Focusable>
 

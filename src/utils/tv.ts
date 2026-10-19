@@ -1,26 +1,51 @@
+/**
+ * Detecta se o dispositivo atual é comprovadamente um celular ou tablet móvel
+ * (orientação retrato, tela sensível ao toque, largura estreita ou sabor CineBG-Mobile).
+ */
+export const isMobileDevice = (): boolean => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
+
+  const ua = navigator.userAgent
+  if (ua.includes('CineBG-Mobile')) return true
+
+  // Se o dispositivo está em orientação retrato ou tem largura de celular/tablet
+  if (window.innerHeight > window.innerWidth || window.innerWidth < 768) {
+    return true
+  }
+
+  // Dispositivo com toque e sem características de Android TV / SmartTV
+  const hasTouchScreen = navigator.maxTouchPoints > 1 || 'ontouchstart' in window
+  const isDedicatedTvUa = /Android TV|GoogleTV|Google TV|SmartTV|SMART-TV|Tizen|WebOS|BRAVIA|AFT[MNBST]|AppleTV|tvOS|HbbTV|NetCast|Viera|Xbox|PlayStation|MiBOX|SHIELD|TVBOX|OTT|Chromecast|Nexus Player|Philips|TX9|MX9|TX3|TX6|Tanix|H96|X96|Sunvell|Allwinner|Rockchip|Amlogic|Leelbox|Bqeel|FireTV|Fire TV/i.test(
+    ua
+  )
+
+  if (hasTouchScreen && !isDedicatedTvUa) {
+    return true
+  }
+
+  return false
+}
+
 export const isTVDevice = (): boolean => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
+
+  // Se o dispositivo é comprovadamente um celular/tablet, NUNCA é TV
+  // (mesmo que o usuário tenha instalado temporariamente o APK de TV no celular)
+  if (isMobileDevice()) {
+    try {
+      localStorage.removeItem('cinebg_tv_mode')
+      localStorage.removeItem('cinebg_virtual_cursor')
+      document.body.classList.remove('tv-mode', 'tv-remote-active')
+    } catch {}
+    return false
+  }
 
   const ua = navigator.userAgent
   // Identificação oficial dos sabores CineBG TV e Mobile
   if (ua.includes('CineBG-TV')) return true
   if (ua.includes('CineBG-Mobile')) return false
 
-  // Se o dispositivo está em orientação retrato ou tem largura de celular/tablet, NUNCA é TV
-  const isPortraitOrPhone =
-    window.innerHeight > window.innerWidth ||
-    window.innerWidth < 768 ||
-    (navigator.maxTouchPoints > 1 && !/Android TV|GoogleTV|SmartTV|BRAVIA/i.test(ua))
-
-  if (isPortraitOrPhone) {
-    try {
-      localStorage.removeItem('cinebg_tv_mode')
-      localStorage.removeItem('cinebg_virtual_cursor')
-    } catch {}
-    return false
-  }
-
-  // Se o modo TV foi ativado previamente ou marcado pelo usuario
+  // Se o modo TV foi ativado previamente ou marcado pelo usuário em dispositivo compatível
   if (
     localStorage.getItem('cinebg_tv_mode') === 'true' ||
     localStorage.getItem('cinebg_virtual_cursor') === 'true'
@@ -34,7 +59,7 @@ export const isTVDevice = (): boolean => {
     )
   if (isTvUa) return true
 
-  // Deteccao para Android TV boxes e Smart TVs com UA generico
+  // Detecção para Android TV boxes e Smart TVs com UA genérico em landscape
   const isLandscapeLarge = window.innerWidth >= 800 && window.innerWidth > window.innerHeight
   const noTouchOrTv =
     typeof navigator !== 'undefined' &&
@@ -45,13 +70,18 @@ export const isTVDevice = (): boolean => {
 }
 
 /**
- * Ativa e persiste o modo TV no app
+ * Ativa e persiste o modo TV no app (apenas para dispositivos de TV legítimos)
  */
 export const markTvModeActive = () => {
   if (typeof window !== 'undefined') {
-    const ua = navigator.userAgent
-    if (ua.includes('CineBG-Mobile')) return
-    if (window.innerHeight > window.innerWidth || window.innerWidth < 768) return
+    if (isMobileDevice()) {
+      try {
+        localStorage.removeItem('cinebg_tv_mode')
+        localStorage.removeItem('cinebg_virtual_cursor')
+        document.body.classList.remove('tv-mode', 'tv-remote-active')
+      } catch {}
+      return
+    }
 
     try {
       localStorage.setItem('cinebg_tv_mode', 'true')
@@ -64,6 +94,11 @@ export const markTvModeActive = () => {
  * Verifica se o evento de teclado veio de um controle remoto ou D-Pad
  */
 export const isTvRemoteKey = (e: KeyboardEvent): boolean => {
+  // Dispositivos móveis nunca tratam teclas como controle remoto de TV
+  if (isMobileDevice()) {
+    return false
+  }
+
   const activeEl = typeof document !== 'undefined' ? document.activeElement : null
   const isInputActive =
     activeEl &&
