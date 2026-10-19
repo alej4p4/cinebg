@@ -44,13 +44,9 @@ const Carousel = ({
 
   return (
     <FocusContext.Provider value={focusKey}>
-      <motion.section
+      <section
         ref={ref}
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.38, ease: FLUID_EASE }}
-        className="relative group/carousel"
+        className="relative group/carousel opacity-100"
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-4 px-4 md:px-8">
@@ -119,7 +115,7 @@ const Carousel = ({
             </div>
           )}
         </div>
-      </motion.section>
+      </section>
     </FocusContext.Provider>
   )
 }

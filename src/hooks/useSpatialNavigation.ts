@@ -62,10 +62,16 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
     // Se o dispositivo ja e uma TV identificada ou explicitamente ativado
     if (explicitEnabled || isTVDevice()) {
       markTvModeActive()
-      const timer = setTimeout(() => {
-        setInitialFocus()
-      }, 350)
-      return () => clearTimeout(timer)
+      const t1 = setTimeout(setInitialFocus, 200)
+      const t2 = setTimeout(setInitialFocus, 800)
+      const t3 = setTimeout(setInitialFocus, 1800)
+      const t4 = setTimeout(setInitialFocus, 2600)
+      return () => {
+        clearTimeout(t1)
+        clearTimeout(t2)
+        clearTimeout(t3)
+        clearTimeout(t4)
+      }
     }
 
     // Auto-ativacao: Ouvinte global de teclas do controle remoto
