@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -74,8 +74,11 @@ const LiveTV = () => {
     }
   }, [lastChannelId, selected])
 
+  const lastSelectedChannelIdRef = useRef<string | null>(null)
+
   useEffect(() => {
     if (selected) {
+      lastSelectedChannelIdRef.current = selected.id
       saveLastLiveChannelId(selected.id)
       setLastChannelId(selected.id)
     }
@@ -105,21 +108,64 @@ const LiveTV = () => {
 
   // Restaura o foco D-Pad no card do canal quando o player fecha
   const handleClosePlayer = useCallback(() => {
-    const lastId = selected?.id
+    const targetId = selected?.id || lastSelectedChannelIdRef.current || lastChannelId
     setSelected(null)
-    setTimeout(() => {
+
+    const restoreCardFocus = () => {
       try {
+        SpatialNavigation.resume()
         SpatialNavigation.updateAllLayouts().catch(() => {})
-        if (lastId && doesFocusableExist(`channel-${lastId}`)) {
-          setFocus(`channel-${lastId}`)
-        } else if (filtered.length > 0 && doesFocusableExist(`channel-${filtered[0].id}`)) {
-          setFocus(`channel-${filtered[0].id}`)
-        } else {
-          setFocus(ROOT_FOCUS_KEY).catch(() => {})
+        const focusKey = targetId && doesFocusableExist(`channel-${targetId}`)
+          ? `channel-${targetId}`
+          : filtered.length > 0 && doesFocusableExist(`channel-${filtered[0].id}`)
+          ? `channel-${filtered[0].id}`
+          : ROOT_FOCUS_KEY
+
+        setFocus(focusKey)
+        const domEl = document.querySelector(`[data-focus-key="${focusKey}"]`) as HTMLElement | null
+        if (domEl) {
+          domEl.focus()
+          domEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
         }
       } catch {}
-    }, 80)
-  }, [selected, filtered])
+    }
+
+    // Executa em múltiplos estágios para cobrir a saída assíncrona do Fullscreen no Android TV
+    setTimeout(restoreCardFocus, 60)
+    setTimeout(restoreCardFocus, 200)
+    setTimeout(restoreCardFocus, 500)
+  }, [selected, filtered, lastChannelId])
+
+  // Fallback de segurança: quando o player fechar ou ao navegar na grade da TV,
+  // se o foco for perdido, qualquer seta do controle remoto restaura o foco no canal imediatamente
+  useEffect(() => {
+    if (selected) return
+
+    const handleEnsureFocus = (e: KeyboardEvent) => {
+      const isArrow = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)
+      if (!isArrow) return
+
+      const activeEl = document.activeElement
+      const isInput = ['INPUT', 'TEXTAREA'].includes(activeEl?.tagName || '')
+      if (isInput) return
+
+      if (!activeEl || activeEl === document.body || activeEl === document.documentElement) {
+        e.preventDefault()
+        const targetId = lastSelectedChannelIdRef.current || lastChannelId || channels[0]?.id
+        if (targetId && doesFocusableExist(`channel-${targetId}`)) {
+          setFocus(`channel-${targetId}`)
+          const domEl = document.querySelector(`[data-focus-key="channel-${targetId}"]`) as HTMLElement | null
+          if (domEl) {
+            domEl.focus()
+            domEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+          }
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleEnsureFocus)
+    return () => window.removeEventListener('keydown', handleEnsureFocus)
+  }, [selected, channels, lastChannelId])
 
   // Tratamento da tecla Voltar do controle remoto quando está na grade de canais (sem player ativo)
   useEffect(() => {

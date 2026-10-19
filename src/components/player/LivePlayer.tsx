@@ -18,6 +18,7 @@ import type { LiveChannel } from '@/services/liveChannels'
 import { categoryLabel } from '@/services/liveChannels'
 import { getLiveChannelEPG } from '@/services/epg'
 import Focusable from '@/components/tv/Focusable'
+import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
 interface LivePlayerProps {
   channel: LiveChannel
@@ -41,6 +42,31 @@ const LivePlayer = ({
   const loadedRef = useRef(false)
   const playingRef = useRef(false)
   const watchdogRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Pausa a navegação espacial do fundo enquanto o player de TV ao vivo estiver ativo
+  useEffect(() => {
+    try {
+      SpatialNavigation.pause()
+    } catch {}
+    return () => {
+      try {
+        SpatialNavigation.resume()
+      } catch {}
+    }
+  }, [])
+
+  const handleClose = useCallback(() => {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document
+        .exitFullscreen()
+        .catch(() => {})
+        .finally(() => {
+          onClose?.()
+        })
+    } else {
+      onClose?.()
+    }
+  }, [onClose])
 
   // OSD auto-hiding (oculta após 3.5 segundos sem interação)
   const [showOsd, setShowOsd] = useState(true)
@@ -106,6 +132,63 @@ const LivePlayer = ({
   // Obtém dados em tempo real da programação do canal
   const epg = getLiveChannelEPG(channel.id, channel.category, channel.name)
 
+  const reload = useCallback(() => {
+    setSourceIndex(0)
+    setLoaded(false)
+    setError(false)
+    setStatusMessage('Sintonizando sinal...')
+    setMountKey((k) => k + 1)
+  }, [])
+
+  const selectSource = useCallback((index: number) => {
+    setSourceIndex(index)
+    setLoaded(false)
+    setError(false)
+    setStatusMessage(`Sintonizando Sinal ${index + 1}...`)
+    setMountKey((k) => k + 1)
+  }, [])
+
+  const goNext = useCallback(() => {
+    if (watchdogRef.current) {
+      clearTimeout(watchdogRef.current)
+      watchdogRef.current = null
+    }
+    setSourceIndex((prev) => {
+      if (prev < channel.sources.length - 1) {
+        const next = prev + 1
+        console.info(
+          `[LivePlayer] Sinal ${prev + 1} indisponível. Alternando para sinal ${next + 1}...`
+        )
+        setLoaded(false)
+        setError(false)
+        setStatusMessage(`Sintonizando Sinal ${next + 1}...`)
+        setMountKey((k) => k + 1)
+        return next
+      } else {
+        console.warn(`[LivePlayer] Todos os sinais de ${channel.name} falharam.`)
+        setError(true)
+        return prev
+      }
+    })
+  }, [channel.name, channel.sources.length])
+
+  const handleFullscreen = useCallback(() => {
+    const node = containerRef.current
+    if (!node) return
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {})
+    } else {
+      node.requestFullscreen().catch(() => {})
+    }
+  }, [])
+
+  const toggleMute = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.muted = !video.muted
+    setMuted(video.muted)
+  }, [])
+
   // Suporte a atalhos de controle remoto e teclado para TV Box / Computador
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -121,12 +204,12 @@ const LivePlayer = ({
       } else if (e.key === 'ArrowLeft') {
         if (channel.sources.length > 1) {
           e.preventDefault()
-          setSourceIndex((prev) => (prev - 1 + channel.sources.length) % channel.sources.length)
+          selectSource((sourceIndex - 1 + channel.sources.length) % channel.sources.length)
         }
       } else if (e.key === 'ArrowRight') {
         if (channel.sources.length > 1) {
           e.preventDefault()
-          setSourceIndex((prev) => (prev + 1) % channel.sources.length)
+          selectSource((sourceIndex + 1) % channel.sources.length)
         }
       } else {
         const code = e.keyCode || e.which
@@ -143,7 +226,7 @@ const LivePlayer = ({
         ) {
           e.preventDefault()
           e.stopPropagation()
-          onClose?.()
+          handleClose()
         } else if (e.key === 'm' || e.key === 'M') {
           toggleMute()
         } else if (e.key === 'f' || e.key === 'F') {
@@ -156,7 +239,7 @@ const LivePlayer = ({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [channel, onNextChannel, onPrevChannel, onClose])
+  }, [channel, onNextChannel, onPrevChannel, handleClose, selectSource, toggleMute, handleFullscreen, sourceIndex])
 
   // Reinicia o player quando o canal muda.
   useEffect(() => {
@@ -235,36 +318,20 @@ const LivePlayer = ({
     let cancelled = false
     let hlsInstance: Hls | null = null
 
-    const goNext = () => {
+    const CONNECT_TIMEOUT_MS = 6000 // 6 segundos de tolerância máxima por sinal
+
+    // Timeout estrito de 6s para TV (NÃO reseta em FRAG_LOADING para evitar loop infinito)
+    if (watchdogRef.current) clearTimeout(watchdogRef.current)
+    watchdogRef.current = setTimeout(() => {
       if (cancelled) return
-      if (watchdogRef.current) {
-        clearTimeout(watchdogRef.current)
-        watchdogRef.current = null
+      if (loadedRef.current || playingRef.current) return
+      const v = videoRef.current
+      if (v && !v.paused && v.currentTime > 0) {
+        markPlaying()
+        return
       }
-      if (sourceIndex < channel.sources.length - 1) {
-        setSourceIndex((i) => i + 1)
-      } else {
-        setError(true)
-      }
-    }
-
-    const resetWatchdog = (ms = 18000) => {
-      if (watchdogRef.current) {
-        clearTimeout(watchdogRef.current)
-      }
-      watchdogRef.current = setTimeout(() => {
-        if (cancelled) return
-        if (loadedRef.current || playingRef.current) return
-        const v = videoRef.current
-        if (v && !v.paused && v.currentTime > 0) {
-          markPlaying()
-          return
-        }
-        goNext()
-      }, ms)
-    }
-
-    resetWatchdog(18000)
+      goNext()
+    }, CONNECT_TIMEOUT_MS)
 
     const tryNativeHls = () => {
       if (cancelled || !video) return
@@ -289,17 +356,17 @@ const LivePlayer = ({
         liveDurationInfinity: true,
         lowLatencyMode: false,
         backBufferLength: 10,
-        maxBufferLength: 10,
-        maxMaxBufferLength: 20,
-        maxBufferSize: 30 * 1000 * 1000,
-        liveSyncDurationCount: 2, // 2 segmentos (~4-8s) de margem rápida para início imediato
-        liveMaxLatencyDurationCount: 10,
-        manifestLoadingTimeOut: 15000,
-        manifestLoadingMaxRetry: 4,
-        levelLoadingTimeOut: 15000,
-        levelLoadingMaxRetry: 4,
-        fragLoadingTimeOut: 20000,
-        fragLoadingMaxRetry: 6,
+        maxBufferLength: 8,
+        maxMaxBufferLength: 16,
+        maxBufferSize: 25 * 1000 * 1000,
+        liveSyncDurationCount: 3,
+        liveMaxLatencyDurationCount: 8,
+        manifestLoadingTimeOut: 5000,
+        manifestLoadingMaxRetry: 1,
+        levelLoadingTimeOut: 5000,
+        levelLoadingMaxRetry: 1,
+        fragLoadingTimeOut: 6000,
+        fragLoadingMaxRetry: 2,
         nudgeOffset: 0.2,
         nudgeMaxRetry: 5,
         maxFragLookUpTolerance: 0.3,
@@ -336,10 +403,6 @@ const LivePlayer = ({
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         selectPortugueseAudio()
         tryPlay()
-      })
-
-      hls.on(Hls.Events.FRAG_LOADING, () => {
-        resetWatchdog(18000)
       })
 
       hls.on(Hls.Events.FRAG_LOADED, () => {
@@ -419,40 +482,7 @@ const LivePlayer = ({
       }
       if (hlsInstance) hlsInstance.destroy()
     }
-  }, [channel.id, channel.sources, sourceIndex, mountKey, markPlaying, tryPlay])
-
-  const reload = () => {
-    setSourceIndex(0)
-    setLoaded(false)
-    setError(false)
-    setStatusMessage('Sintonizando sinal...')
-    setMountKey((k) => k + 1)
-  }
-
-  const selectSource = (index: number) => {
-    setSourceIndex(index)
-    setLoaded(false)
-    setError(false)
-    setStatusMessage(`Sintonizando Sinal ${index + 1}...`)
-    setMountKey((k) => k + 1)
-  }
-
-  const handleFullscreen = () => {
-    const node = containerRef.current
-    if (!node) return
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {})
-    } else {
-      node.requestFullscreen().catch(() => {})
-    }
-  }
-
-  const toggleMute = () => {
-    const video = videoRef.current
-    if (!video) return
-    video.muted = !video.muted
-    setMuted(video.muted)
-  }
+  }, [channel.id, channel.sources, sourceIndex, mountKey, markPlaying, tryPlay, goNext])
 
   return (
     <div
@@ -462,10 +492,10 @@ const LivePlayer = ({
       onTouchStart={resetOsdTimer}
       onClick={resetOsdTimer}
     >
-      {/* Loading state */}
+      {/* Loading state com ações navegáveis por controle remoto na TV */}
       {!loaded && !error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-20 gap-3 pointer-events-none">
-          <div className="w-14 h-14 border-3 border-white/10 border-t-amber-400 rounded-full animate-spin" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-20 gap-3 p-4">
+          <div className="w-14 h-14 border-4 border-white/10 border-t-amber-400 rounded-full animate-spin" />
           {channel.logo && (
             <img
               src={channel.logo}
@@ -476,12 +506,43 @@ const LivePlayer = ({
               }}
             />
           )}
-          <p className="text-white/80 text-sm font-bold tracking-wide">{statusMessage}</p>
+          <p className="text-white font-bold text-base tracking-wide">{statusMessage}</p>
           {channel.sources.length > 1 && (
-            <p className="text-amber-400/80 text-xs font-mono">
-              Sinal {sourceIndex + 1} de {channel.sources.length}
+            <p className="text-amber-400 text-xs font-mono font-bold">
+              Testando Sinal {sourceIndex + 1} de {channel.sources.length}
             </p>
           )}
+
+          {/* Ações rápidas com o controle remoto enquanto sincroniza */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-4 z-30">
+            {channel.sources.length > 1 && (
+              <button
+                type="button"
+                onClick={() => selectSource((sourceIndex + 1) % channel.sources.length)}
+                className="px-4 py-2.5 bg-amber-400 text-black rounded-xl text-xs font-black hover:bg-amber-300 focus:outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105 transition-all flex items-center gap-2 shadow-lg"
+              >
+                <span>Pular para Próximo Sinal ({((sourceIndex + 1) % channel.sources.length) + 1})</span>
+              </button>
+            )}
+            {onNextChannel && (
+              <button
+                type="button"
+                onClick={onNextChannel}
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105 transition-all flex items-center gap-1.5"
+              >
+                <span>Próximo Canal (▼)</span>
+              </button>
+            )}
+            {onClose && (
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105 transition-all flex items-center gap-1.5"
+              >
+                <span>Voltar (ESC)</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -499,49 +560,50 @@ const LivePlayer = ({
           {channel.sources.length > 1 && (
             <div className="flex flex-wrap items-center justify-center gap-2">
               {channel.sources.map((_, idx) => (
-                <Focusable key={idx} onEnterPress={() => selectSource(idx)}>
-                  <button
-                    onClick={() => selectSource(idx)}
-                    className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold transition-colors"
-                  >
-                    Testar Sinal {idx + 1}
-                  </button>
-                </Focusable>
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => selectSource(idx)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all focus:outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105 ${
+                    sourceIndex === idx
+                      ? 'bg-amber-400 text-black'
+                      : 'bg-white/10 hover:bg-white/20 text-white'
+                  }`}
+                >
+                  Testar Sinal {idx + 1}
+                </button>
               ))}
             </div>
           )}
 
           <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
-            <Focusable onEnterPress={reload}>
-              <button
-                onClick={reload}
-                className="flex items-center gap-2 bg-accent-red text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-900/40"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Tentar Novamente
-              </button>
-            </Focusable>
+            <button
+              type="button"
+              onClick={reload}
+              className="flex items-center gap-2 bg-accent-red text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-red-600 transition-all focus:outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105 shadow-lg shadow-red-900/40"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Tentar Novamente
+            </button>
             {onNextChannel && (
-              <Focusable onEnterPress={onNextChannel}>
-                <button
-                  onClick={onNextChannel}
-                  className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black px-5 py-2.5 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-amber-400/20"
-                >
-                  <span>Próximo Canal</span>
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </Focusable>
+              <button
+                type="button"
+                onClick={onNextChannel}
+                className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black px-5 py-2.5 rounded-xl text-sm font-bold transition-all focus:outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105 shadow-lg shadow-amber-400/20"
+              >
+                <span>Próximo Canal</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
             )}
             {onClose && (
-              <Focusable onEnterPress={onClose}>
-                <button
-                  onClick={onClose}
-                  className="flex items-center gap-1.5 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-bold rounded-xl transition-colors"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Voltar aos Canais
-                </button>
-              </Focusable>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-bold rounded-xl transition-all focus:outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Voltar aos Canais
+              </button>
             )}
           </div>
         </div>
@@ -568,19 +630,19 @@ const LivePlayer = ({
         onPlaying={() => {
           markPlaying()
         }}
+        onWaiting={() => {
+          if (loadedRef.current) {
+            setStatusMessage('Bufferizando sinal...')
+          }
+        }}
+        onError={() => {
+          console.warn('[LivePlayer] Erro no vídeo nativo. Alternando sinal...')
+          goNext()
+        }}
         onTimeUpdate={() => {
           const v = videoRef.current
           if (v && v.currentTime > 0 && !loadedRef.current) {
-            loadedRef.current = true
-            playingRef.current = true
-            setLoaded(true)
-            if (watchdogRef.current) {
-              clearTimeout(watchdogRef.current)
-              watchdogRef.current = null
-            }
-            try {
-              sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
-            } catch {}
+            markPlaying()
           }
         }}
         onClick={() => {
