@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import HeroBanner from '@/components/ui/HeroBanner'
 import Carousel from '@/components/ui/Carousel'
+import LiveTvCarousel from '@/components/tv/LiveTvCarousel'
 import { SkeletonCarousel } from '@/components/ui/SkeletonCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import {
@@ -182,6 +183,8 @@ const Home = () => {
                     {top10.length > 0 && (
                       <Carousel rowIndex={rowIdx++} title="Top 10 da Semana" emoji="🏆" items={top10} showRanking />
                     )}
+
+                    <LiveTvCarousel rowIndex={rowIdx++} />
 
                     <Carousel rowIndex={rowIdx++} title="Em Cartaz nos Cinemas" emoji="🎬" items={nowPlaying} />
                     <Carousel rowIndex={rowIdx++} title="Novidades em Filmes" emoji="🆕" items={popularMovies} />

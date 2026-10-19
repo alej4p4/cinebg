@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Tv, Search as SearchIcon, X, Loader2, Calendar, Clock, ChevronDown, ChevronUp, Sparkles, Radio } from 'lucide-react'
 import LivePlayer from '@/components/player/LivePlayer'
@@ -31,6 +32,17 @@ const LiveTV = () => {
   const [lastChannelId, setLastChannelId] = useState<string | null>(() => loadLastLiveChannelId())
   const { isLicensed, isTrial } = useLicense()
   const { setVipModalOpen } = useAppStore()
+  const [searchParams] = useSearchParams()
+  const channelParam = searchParams.get('channel')
+
+  useEffect(() => {
+    if (channelParam && channels.length > 0) {
+      const found = channels.find((c) => c.id === channelParam)
+      if (found) {
+        setSelected(found)
+      }
+    }
+  }, [channelParam, channels])
 
   useEffect(() => {
     let alive = true
