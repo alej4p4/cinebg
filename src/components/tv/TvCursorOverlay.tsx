@@ -70,7 +70,7 @@ const isToggleModeEvent = (e: KeyboardEvent): boolean => {
   )
 }
 
-export const TvCursorOverlay: React.FC = () => {
+const TvCursorOverlayContent: React.FC = () => {
   const { tvMode, virtualCursor, setVirtualCursor } = useAppStore()
   const [isTvActive, setIsTvActive] = useState(false)
   const [navMode, setNavMode] = useState<NavigationMode>(() => (virtualCursor ? 'cursor' : 'focus'))
@@ -377,6 +377,37 @@ export const TvCursorOverlay: React.FC = () => {
       )}
     </>
   )
+}
+
+export const TvCursorOverlay: React.FC = () => {
+  const [isMobile, setIsMobile] = useState(() => isMobileDevice())
+
+  useEffect(() => {
+    const check = () => {
+      const mobile = isMobileDevice()
+      setIsMobile(mobile)
+      if (mobile) {
+        try {
+          localStorage.removeItem('cinebg_virtual_cursor')
+          localStorage.removeItem('cinebg_tv_mode')
+          document.body.classList.remove('tv-mode', 'tv-remote-active')
+        } catch {}
+      }
+    }
+    check()
+    window.addEventListener('resize', check)
+    window.addEventListener('orientationchange', check)
+    return () => {
+      window.removeEventListener('resize', check)
+      window.removeEventListener('orientationchange', check)
+    }
+  }, [])
+
+  if (isMobile) {
+    return null
+  }
+
+  return <TvCursorOverlayContent />
 }
 
 export default TvCursorOverlay

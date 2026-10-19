@@ -1,5 +1,5 @@
 {
-  "0": "useAppStore.ts",
+  "0": "notifications.ts",
   "1": "index.ts",
   "2": "react",
   "3": "StreamPlayer.tsx",
@@ -24,6 +24,7 @@
   "22": "variables.gradle",
   "23": "postcss.config.js",
   "24": "vite-env.d.ts",
+  "25": "EmptyState.tsx",
   "26": "bug_fix.md",
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
@@ -32,9 +33,5 @@
   "31": "eslint.config.js",
   "32": "vite.config.ts",
   "33": "capacitor.config.ts",
-  "34": "UpdateModal.tsx",
-  "35": "Navbar.tsx",
-  "36": "ErrorBoundary",
-  "37": "useLicense",
-  "38": "useOrientationFullscreen.ts"
+  "34": "UpdateModal.tsx"
 }
