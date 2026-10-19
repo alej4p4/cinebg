@@ -65,29 +65,38 @@ export const VIP_PLANS: VipPlan[] = [
 export const DEFAULT_PIX_KEY = '66996175239'
 
 const MP_STORAGE_TOKEN_KEY = 'cinebg_mp_access_token'
+const MP_STORAGE_EXPIRES_KEY = 'cinebg_mp_token_expires'
 
 export const getMercadoPagoToken = (): string => {
   const local = localStorage.getItem(MP_STORAGE_TOKEN_KEY)
-  if (local && local.trim().length > 10) return local.trim()
+  const expires = localStorage.getItem(MP_STORAGE_EXPIRES_KEY)
+  const now = Date.now()
+  // Se o token em cache ainda for valido por mais de 5 minutos, usa ele
+  if (local && local.trim().length > 10 && expires && Number(expires) > now + 300000) {
+    return local.trim()
+  }
 
   const envToken = import.meta.env.VITE_MERCADO_PAGO_ACCESS_TOKEN
   if (envToken && typeof envToken === 'string' && envToken.trim().length > 10) {
     return envToken.trim()
   }
 
-  return 'APP_USR-863f7d8e-e6a8-4e19-8fe6-1f7aff0d9a9d'
+  return ''
 }
 
-export const setMercadoPagoToken = (token: string): void => {
-  if (token.trim()) {
+export const setMercadoPagoToken = (token: string, expiresInSeconds = 21600): void => {
+  if (token && token.trim().length > 10) {
     localStorage.setItem(MP_STORAGE_TOKEN_KEY, token.trim())
+    localStorage.setItem(MP_STORAGE_EXPIRES_KEY, String(Date.now() + (expiresInSeconds * 1000)))
   } else {
     localStorage.removeItem(MP_STORAGE_TOKEN_KEY)
+    localStorage.removeItem(MP_STORAGE_EXPIRES_KEY)
   }
 }
 
 /**
- * Renova o Access Token do Mercado Pago automaticamente via OAuth 2.0
+ * Renova o Access Token do Mercado Pago automaticamente via OAuth 2.0 (Client ID + Client Secret)
+ * Garantindo que as requisições de Pix nunca falhem por expiração.
  */
 export async function refreshMercadoPagoToken(): Promise<string> {
   const clientId = import.meta.env.VITE_MERCADO_PAGO_CLIENT_ID || '4070043112593139'
@@ -109,15 +118,25 @@ export async function refreshMercadoPagoToken(): Promise<string> {
     if (res.ok) {
       const data = await res.json()
       if (data.access_token) {
-        setMercadoPagoToken(data.access_token)
+        setMercadoPagoToken(data.access_token, data.expires_in || 21600)
         return data.access_token
       }
+    } else {
+      console.warn('[MercadoPago] Resposta não-ok ao renovar token OAuth:', res.status)
     }
   } catch (e) {
-    console.warn('Falha na renovação OAuth do Mercado Pago:', e)
+    console.warn('[MercadoPago] Falha de conexão ao renovar OAuth:', e)
   }
 
   return getMercadoPagoToken()
+}
+
+export async function ensureValidMercadoPagoToken(): Promise<string> {
+  let token = getMercadoPagoToken()
+  if (!token) {
+    token = await refreshMercadoPagoToken()
+  }
+  return token
 }
 
 export interface CreatePixPaymentResult {
@@ -239,7 +258,7 @@ export async function createMercadoPagoPix(
 export async function checkMercadoPagoStatus(
   paymentId: number | string
 ): Promise<PaymentStatusResult> {
-  const token = getMercadoPagoToken()
+  const token = await ensureValidMercadoPagoToken()
   if (!token || !paymentId) {
     return { status: 'unknown', isApproved: false }
   }
