@@ -312,17 +312,24 @@ export const resolveMegaEmbed = async (
         cleanUrl.includes('/hls') ||
         cleanUrl.includes('/includes/hls.php')
 
+      const isDubbed =
+        isFontedecanais ||
+        /dub/i.test(s.label || '') ||
+        cleanUrl.toLowerCase().includes('dublado') ||
+        cleanUrl.toLowerCase().includes('audio-pt') ||
+        cleanUrl.toLowerCase().includes('-dub')
+
       candidates.push({
         url: cleanUrl,
         kind: isHls ? 'hls' : 'mp4',
-        label: s.label || (isFontedecanais ? `Opção Dublada ${i + 1}` : `Opção ${i + 1}`),
-        isDubbedHint: true,
+        label: s.label || (isDubbed ? `Opção Dublada ${i + 1}` : `Opção ${i + 1}`),
+        isDubbedHint: isDubbed,
       })
     }
 
     // Ordenação inteligente estilo YuCine:
-    // 1. Fontes com dica de dublagem (fontedecanais / dublado) primeiro
-    // 2. MP4s diretos (streamtape, supervideo, etc. - reprodução direta sem ads)
+    // 1. Fontes com áudio dublado confirmado (fontedecanais / dublado) primeiro
+    // 2. MP4s diretos (reprodução nativa fluida sem buffer)
     // 3. HLS streams
     candidates.sort((a, b) => {
       if (a.isDubbedHint && !b.isDubbedHint) return -1
@@ -333,6 +340,7 @@ export const resolveMegaEmbed = async (
     })
 
     const dubbed =
+      candidates.find((c) => c.isDubbedHint && c.kind === 'mp4') ||
       candidates.find((c) => c.isDubbedHint) ||
       candidates.find((c) => c.kind === 'mp4') ||
       candidates[0]
