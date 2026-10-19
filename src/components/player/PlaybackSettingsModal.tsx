@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Volume2, Captions, Clock, Type, Palette } from 'lucide-react'
+import { X, Volume2, Captions, Clock, Type, Palette, Check } from 'lucide-react'
+import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
 export interface PlaybackSettingsProps {
   isOpen: boolean
@@ -45,13 +46,27 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
     return subtitleLang === 'off' ? 0 : subtitleLang === 'pt' ? 1 : 2
   })
 
+  // Pausa a navegação espacial externa enquanto o modal de configurações estiver aberto
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        SpatialNavigation.pause()
+      } catch {}
+      return () => {
+        try {
+          SpatialNavigation.resume()
+        } catch {}
+      }
+    }
+  }, [isOpen])
+
   // Ao abrir o modal, posiciona o foco diretamente na linha de legendas
   useEffect(() => {
     if (isOpen) {
       setFocusedRow(1)
       setFocusedCol(subtitleLang === 'off' ? 0 : subtitleLang === 'pt' ? 1 : 2)
     }
-  }, [isOpen, subtitleLang])
+  }, [isOpen])
 
   // Move o foco DOM e faz scroll suave até o item ativo no controle remoto
   useEffect(() => {
@@ -165,9 +180,13 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
             else onChangeAudio('orig')
             break
           case 1:
-            if (focusedCol === 0) onChangeSubtitleLang('off')
-            else if (focusedCol === 1) onChangeSubtitleLang('pt')
-            else onChangeSubtitleLang('en')
+            if (focusedCol === 0) {
+              onChangeSubtitleLang('off')
+            } else if (focusedCol === 1) {
+              onChangeSubtitleLang(subtitleLang === 'pt' ? 'off' : 'pt')
+            } else {
+              onChangeSubtitleLang(subtitleLang === 'en' ? 'off' : 'en')
+            }
             break
           case 2:
             if (focusedCol === 0) onChangeSubtitleDelay(-0.5)
@@ -285,11 +304,11 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                   )} focus:outline-none`}
                 >
                   <span
-                    className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${
-                      audioOption === 'dub' ? 'border-black bg-black' : 'border-white/40'
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                      audioOption === 'dub' ? 'border-yellow-400 bg-yellow-400' : 'border-white/40 bg-black/40'
                     }`}
                   >
-                    {audioOption === 'dub' && <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />}
+                    {audioOption === 'dub' && <Check className="w-3 h-3 text-black stroke-[3.5]" />}
                   </span>
                   <span>Português (Dublado)</span>
                 </button>
@@ -314,11 +333,11 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                   )} focus:outline-none`}
                 >
                   <span
-                    className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${
-                      audioOption === 'orig' ? 'border-black bg-black' : 'border-white/40'
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                      audioOption === 'orig' ? 'border-yellow-400 bg-yellow-400' : 'border-white/40 bg-black/40'
                     }`}
                   >
-                    {audioOption === 'orig' && <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />}
+                    {audioOption === 'orig' && <Check className="w-3 h-3 text-black stroke-[3.5]" />}
                   </span>
                   <span>Inglês (Original)</span>
                 </button>
@@ -352,11 +371,11 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                   )} focus:outline-none`}
                 >
                   <span
-                    className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
-                      subtitleLang === 'off' ? 'border-black bg-black' : 'border-white/40'
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                      subtitleLang === 'off' ? 'border-yellow-400 bg-yellow-400' : 'border-white/40 bg-black/40'
                     }`}
                   >
-                    {subtitleLang === 'off' && <span className="w-1 h-1 rounded-full bg-yellow-400" />}
+                    {subtitleLang === 'off' && <Check className="w-3 h-3 text-black stroke-[3.5]" />}
                   </span>
                   <span>Sem legendas</span>
                 </button>
@@ -368,7 +387,7 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                   onClick={() => {
                     setFocusedRow(1)
                     setFocusedCol(1)
-                    onChangeSubtitleLang('pt')
+                    onChangeSubtitleLang(subtitleLang === 'pt' ? 'off' : 'pt')
                   }}
                   onMouseEnter={() => {
                     setFocusedRow(1)
@@ -381,11 +400,11 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                   )} focus:outline-none`}
                 >
                   <span
-                    className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
-                      subtitleLang === 'pt' ? 'border-black bg-black' : 'border-white/40'
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                      subtitleLang === 'pt' ? 'border-yellow-400 bg-yellow-400' : 'border-white/40 bg-black/40'
                     }`}
                   >
-                    {subtitleLang === 'pt' && <span className="w-1 h-1 rounded-full bg-yellow-400" />}
+                    {subtitleLang === 'pt' && <Check className="w-3 h-3 text-black stroke-[3.5]" />}
                   </span>
                   <span>Português (PT-BR)</span>
                 </button>
@@ -397,7 +416,7 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                   onClick={() => {
                     setFocusedRow(1)
                     setFocusedCol(2)
-                    onChangeSubtitleLang('en')
+                    onChangeSubtitleLang(subtitleLang === 'en' ? 'off' : 'en')
                   }}
                   onMouseEnter={() => {
                     setFocusedRow(1)
@@ -410,11 +429,11 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                   )} focus:outline-none`}
                 >
                   <span
-                    className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
-                      subtitleLang === 'en' ? 'border-black bg-black' : 'border-white/40'
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                      subtitleLang === 'en' ? 'border-yellow-400 bg-yellow-400' : 'border-white/40 bg-black/40'
                     }`}
                   >
-                    {subtitleLang === 'en' && <span className="w-1 h-1 rounded-full bg-yellow-400" />}
+                    {subtitleLang === 'en' && <Check className="w-3 h-3 text-black stroke-[3.5]" />}
                   </span>
                   <span>Inglês (EN)</span>
                 </button>
