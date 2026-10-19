@@ -44,11 +44,12 @@ const EpisodeSelector = ({
         {realSeasons.map((s) => (
           <motion.button
             key={s.season_number}
+            tabIndex={0}
             onClick={() => setSelectedSeason(s.season_number)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={SPRING_SNAPPY}
-            className={`relative px-3 py-1 text-xs font-semibold rounded-full transition-colors border overflow-hidden ${
+            className={`relative px-3 py-1 text-xs font-semibold rounded-full transition-colors border overflow-hidden tv-focusable outline-none ${
               selectedSeason === s.season_number
                 ? 'bg-accent-red border-accent-red text-white'
                 : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10'
@@ -85,13 +86,14 @@ const EpisodeSelector = ({
               return (
                 <motion.button
                   key={ep.episode_number}
+                  tabIndex={0}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.22, delay: i * 0.025, ease: FLUID_EASE }}
                   whileHover={{ x: 3, backgroundColor: 'rgba(255,255,255,0.06)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onSelect(selectedSeason, ep.episode_number)}
-                  className={`flex items-start gap-3 p-2.5 rounded-xl text-left border ${
+                  className={`flex items-start gap-3 p-2.5 rounded-xl text-left border tv-focusable outline-none ${
                     isCurrent
                       ? 'bg-accent-red/15 border-accent-red/30 text-white'
                       : 'border-transparent text-white/60 hover:text-white'
