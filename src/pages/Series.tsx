@@ -12,6 +12,7 @@ import {
   getTopRatedShows,
   getAiringToday,
   getClassicShows,
+  getTurkishShows,
   discoverShows,
   getCachedCatalogItems,
 } from '@/services/tmdb'
@@ -32,6 +33,7 @@ const SERIES_GENRES = [
 ]
 
 const STREAMING_PLATFORMS = [
+  { id: 'turkish', name: 'Novelas Turcas', providerId: 0, networkId: 0, emoji: '🇹🇷', isTurkish: true },
   { id: 'netflix', name: 'Netflix', providerId: 8, networkId: 213, emoji: '🔴' },
   { id: 'hbo', name: 'Max (HBO)', providerId: 384, networkId: 49, emoji: '🟣' },
   { id: 'disney', name: 'Disney+', providerId: 337, networkId: 2739, emoji: '🔵' },
@@ -44,6 +46,7 @@ const Series = () => {
   const [topRated, setTopRated] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/top_rated', { page: 1 }, 'tv'))
   const [airingToday, setAiringToday] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/airing_today', { page: 1 }, 'tv'))
   const [classics, setClassics] = useState<MediaItem[]>([])
+  const [turkish, setTurkish] = useState<MediaItem[]>([])
   const [filteredList, setFilteredList] = useState<MediaItem[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [filterTitle, setFilterTitle] = useState<string>('')
@@ -59,17 +62,19 @@ const Series = () => {
     let isMounted = true
     const load = async () => {
       try {
-        const [popularResult, topResult, airingResult, classicsResult] = await Promise.all([
+        const [popularResult, topResult, airingResult, classicsResult, turkishResult] = await Promise.all([
           getPopularShows(),
           getTopRatedShows(),
           getAiringToday(),
           getClassicShows(),
+          getTurkishShows(),
         ])
         if (!isMounted) return
         setPopular(popularResult.items)
         setTopRated(topResult.items)
         setAiringToday(airingResult.items)
         setClassics(classicsResult.items)
+        setTurkish(turkishResult.items)
       } catch {
         if (isMounted && popular.length === 0) {
           setError(true)
@@ -86,7 +91,7 @@ const Series = () => {
     }
   }, [reloadKey])
 
-  // Filtro por Plataforma (Netflix, HBO, Disney, Prime, Apple)
+  // Filtro por Plataforma (Netflix, HBO, Disney, Prime, Apple, Novelas Turcas)
   const handleFilterPlatform = async (platform: typeof STREAMING_PLATFORMS[0]) => {
     const filterKey = `platform-${platform.id}`
     if (activeFilter === filterKey) {
@@ -94,13 +99,18 @@ const Series = () => {
       return
     }
     setActiveFilter(filterKey)
-    setFilterTitle(`Séries ${platform.name}`)
+    setFilterTitle(platform.id === 'turkish' ? 'Novelas & Séries Turcas' : `Séries ${platform.name}`)
     setShowGenreBar(false)
     setSelectedGenreId(null)
     setFilterLoading(true)
     try {
-      const res = await discoverShows({ withNetworks: platform.networkId, withWatchProviders: platform.providerId })
-      setFilteredList(res.items)
+      if ((platform as any).isTurkish) {
+        const res = await getTurkishShows()
+        setFilteredList(res.items)
+      } else {
+        const res = await discoverShows({ withNetworks: platform.networkId, withWatchProviders: platform.providerId })
+        setFilteredList(res.items)
+      }
     } catch {
       setFilteredList([])
     } finally {
@@ -366,6 +376,9 @@ const Series = () => {
               ) : (
                 <>
                   <Carousel title="Séries Populares" emoji="📺" items={popular} />
+                  {turkish.length > 0 && (
+                    <Carousel title="Novelas & Séries Turcas" emoji="🇹🇷" items={turkish} />
+                  )}
                   <Carousel title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classics} />
                   <Carousel title="Em Exibição Hoje" emoji="🔴" items={airingToday} />
                   <Carousel title="Top Séries de Todos os Tempos" emoji="⭐" items={topRated} />

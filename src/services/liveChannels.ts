@@ -16,7 +16,7 @@ export interface LiveChannel {
   name: string
   logo: string | null
   cardBg?: string
-  category: 'abertos' | 'esportes' | 'filmes' | 'infantil' | 'noticias' | 'variedades'
+  category: 'abertos' | 'esportes' | 'filmes' | 'infantil' | 'noticias' | 'variedades' | 'canais24h'
   country: string | null
   sources: string[]
   quality: string | null
@@ -28,6 +28,7 @@ export const LIVE_CATEGORIES: LiveCategory[] = [
   { id: 'todos', label: 'Todos', emoji: '✨' },
   { id: 'favorites', label: 'Favoritos', emoji: '⭐' },
   { id: 'abertos', label: 'Abertos', emoji: '📺' },
+  { id: 'canais24h', label: 'Canais 24h', emoji: '⚡' },
   { id: 'filmes', label: 'Filmes & Séries', emoji: '🎬' },
   { id: 'esportes', label: 'Esportes', emoji: '⚽' },
   { id: 'infantil', label: 'Infantil', emoji: '🧸' },
@@ -757,6 +758,107 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     quality: '1080p',
     geoBlocked: false,
     genres: ['Natureza', 'Exploração', 'Ciência'],
+  },
+  // ===== CANAIS 24H E TEMÁTICOS (FAST & IPTV SELECIONADOS) =====
+  {
+    id: 'avatar-24h',
+    name: 'Avatar: A Lenda de Aang (24h)',
+    logo: 'https://images.pluto.tv/channels/6759eeb1bd523200083b4f29/colorLogoPNG.png',
+    cardBg: 'avatar-24h',
+    category: 'canais24h',
+    country: 'BR',
+    sources: [
+      'https://jmp2.uk/plu-6759eeb1bd523200083b4f29.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Animação', 'Ação', '24h', 'Kids'],
+  },
+  {
+    id: 'south-park-24h',
+    name: 'South Park (24h)',
+    logo: 'https://images.pluto.tv/channels/609ae66b359b270007869ff1/colorLogoPNG_1733160636316.png',
+    cardBg: 'southpark-24h',
+    category: 'canais24h',
+    country: 'BR',
+    sources: [
+      'https://jmp2.uk/plu-609ae66b359b270007869ff1.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Animação', 'Comédia', '24h', 'Adulto'],
+  },
+  {
+    id: 'turma-monica-24h',
+    name: 'Turma da Mônica (24h)',
+    logo: 'https://i.imgur.com/nrvPPrW.png',
+    cardBg: 'monica-24h',
+    category: 'canais24h',
+    country: 'BR',
+    sources: [
+      'https://jmp2.uk/plu-5f997e44949bc70007a6941e.m3u8',
+    ],
+    quality: '720p',
+    geoBlocked: false,
+    genres: ['Infantil', 'Desenhos', '24h', 'Nacional'],
+  },
+  {
+    id: 'adrenalina-pura-24h',
+    name: 'Adrenalina Pura (Filmes 24h)',
+    logo: 'https://i.imgur.com/Pvid2iH.png',
+    cardBg: 'adrenalina-24h',
+    category: 'canais24h',
+    country: 'BR',
+    sources: [
+      'https://jmp2.uk/plu-61b790b985706b00072cb797.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Filmes', 'Ação', '24h', 'Suspense'],
+  },
+  {
+    id: 'masterchef-24h',
+    name: 'MasterChef Brasil (24h)',
+    logo: 'https://i.imgur.com/lOuySbz.png',
+    cardBg: 'masterchef-24h',
+    category: 'canais24h',
+    country: 'BR',
+    sources: [
+      'https://jmp2.uk/plu-6077045b6031bd00078de127.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Reality', 'Culinária', '24h', 'Entretenimento'],
+  },
+  {
+    id: 'tv-cultura-hd',
+    name: 'TV Cultura HD',
+    logo: 'https://i.ibb.co/nm0jXMM/cultura-3x.png',
+    cardBg: 'cultura-hd',
+    category: 'abertos',
+    country: 'BR',
+    sources: [
+      'https://fpa-gateway.tvcultura.com.br:8181/memfs/606caef0-a290-413d-9f1f-8fcdb3a73831.m3u8',
+      'http://45.162.64.114/TV_CULTURA/index.m3u8',
+    ],
+    quality: '720p',
+    geoBlocked: false,
+    genres: ['Educativo', 'Cultura', 'Infantil', 'Jornalismo'],
+  },
+  {
+    id: 'record-news-hd',
+    name: 'Record News HD',
+    logo: 'https://i.imgur.com/HZDRG0K.png',
+    cardBg: 'record-news',
+    category: 'noticias',
+    country: 'BR',
+    sources: [
+      'http://45.162.64.114/RECORD_NEWS/index.m3u8',
+      'https://jmp2.uk/plu-6102e04e9ab1db0007a980a1.m3u8',
+    ],
+    quality: '720p',
+    geoBlocked: false,
+    genres: ['Notícias', 'Jornalismo', 'Ao Vivo', 'Informação'],
   },
 ]
 
