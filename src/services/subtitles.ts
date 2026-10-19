@@ -11,14 +11,20 @@ export interface SubtitleTrackOption {
 
 export function srtToVtt(srt: string): string {
   const normalized = srt
+    .replace(/^\uFEFF/, '')
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     // Remove tags obsoletas de formatação
     .replace(/<font[^>]*>/gi, '')
     .replace(/<\/font>/gi, '')
     .replace(/\{\\an\d\}/g, '')
-    // Substitui vírgula por ponto nos timestamps de tempo (00:00:20,123 -> 00:00:20.123)
-    .replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2')
+    // Substitui vírgula por ponto e garante formato HH:MM:SS.mmm
+    .replace(/(\d{1,2}:\d{2}:\d{2}),(\d{3})/g, (_m, time, ms) => {
+      const parts = time.split(':')
+      const h = parts[0].padStart(2, '0')
+      return `${h}:${parts[1]}:${parts[2]}.${ms}`
+    })
+    .replace(/(\d{2}:\d{2}),(\d{3})/g, '00:$1.$2')
 
   return `WEBVTT\n\n${normalized.trim()}\n`
 }

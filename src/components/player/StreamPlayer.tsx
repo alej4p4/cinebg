@@ -238,6 +238,29 @@ const StreamPlayer = ({
     `
   }, [subSize, subColor, subBg])
 
+  // Ajuste fino de sincronização de tempo de legendas (subDelay)
+  const lastAppliedSubDelayRef = useRef(0)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    const delta = subDelay - lastAppliedSubDelayRef.current
+    if (Math.abs(delta) < 0.01) return
+    lastAppliedSubDelayRef.current = subDelay
+
+    for (let i = 0; i < video.textTracks.length; i += 1) {
+      const track = video.textTracks[i]
+      if (track.cues) {
+        for (let j = 0; j < track.cues.length; j += 1) {
+          const cue = track.cues[j] as VTTCue
+          if (cue) {
+            cue.startTime = Math.max(0, cue.startTime + delta)
+            cue.endTime = Math.max(0, cue.endTime + delta)
+          }
+        }
+      }
+    }
+  }, [subDelay])
+
   // Escudo JavaScript contra pop-ups e redirecionamentos no player
   useEffect(() => {
     try {
@@ -1740,13 +1763,13 @@ const StreamPlayer = ({
         onChangeSubtitleLang={(lang) => {
           setSubLang(lang)
           if (lang === 'off') {
-            activeTrackRef.current = -1
-            setActiveTrack(-1)
+            applySubtitle(-1)
           } else {
             const found = tracks.findIndex(t => lang === 'pt' ? t.label.toLowerCase().includes('port') || t.label.toLowerCase().includes('pt') : true)
             if (found !== -1) {
-              activeTrackRef.current = found
-              setActiveTrack(found)
+              applySubtitle(found)
+            } else if (tracks.length > 0) {
+              applySubtitle(0)
             }
           }
         }}
