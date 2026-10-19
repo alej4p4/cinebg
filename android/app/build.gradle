@@ -23,6 +23,40 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    flavorDimensions "device"
+    productFlavors {
+        mobile {
+            dimension "device"
+            applicationId "com.barrasoft.cinebg"
+            resValue "string", "app_name", "CineBG"
+            manifestPlaceholders = [
+                screenOrientation: "sensorPortrait",
+                isLeanbackRequired: "false",
+                isTouchscreenRequired: "true"
+            ]
+        }
+        tv {
+            dimension "device"
+            applicationId "com.barrasoft.cinebg.tv"
+            resValue "string", "app_name", "CineBG TV"
+            manifestPlaceholders = [
+                screenOrientation: "sensorLandscape",
+                isLeanbackRequired: "true",
+                isTouchscreenRequired: "false"
+            ]
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def flavorName = variant.flavorName ? variant.flavorName.capitalize() : ""
+            outputFileName = "CineBG-${flavorName}-${variant.buildType.name}.apk"
+        }
+    }
+    buildFeatures {
+        buildConfig true
+    }
+
     signingConfigs {
         release {
             if (keystorePropertiesFile.exists()) {

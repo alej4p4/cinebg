@@ -1,6 +1,11 @@
 export const isTVDevice = (): boolean => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
 
+  const ua = navigator.userAgent
+  // Identificação oficial dos sabores CineBG TV e Mobile
+  if (ua.includes('CineBG-TV')) return true
+  if (ua.includes('CineBG-Mobile')) return false
+
   // Se o modo TV foi ativado previamente ou marcado pelo usuario
   if (
     localStorage.getItem('cinebg_tv_mode') === 'true' ||
@@ -9,7 +14,6 @@ export const isTVDevice = (): boolean => {
     return true
   }
 
-  const ua = navigator.userAgent
   const isTvUa =
     /Android TV|GoogleTV|Google TV|SmartTV|SMART-TV|Tizen|WebOS|BRAVIA|AFT[MNBST]|AppleTV|tvOS|HbbTV|NetCast|Viera|Xbox|PlayStation|MiBOX|SHIELD|TVBOX|OTT|Chromecast|Nexus Player|Philips|TX9|MX9|TX3|TX6|Tanix|H96|X96|Sunvell|Allwinner|Rockchip|Amlogic|Leelbox|Bqeel|FireTV|Fire TV/i.test(
       ua,

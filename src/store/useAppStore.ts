@@ -161,13 +161,13 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const currentVersion = '1.2.38'
+          const currentVersion = get().updateInfo.currentVersion || '1.2.41'
           const candidateUrls = [
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,
           ]
 
-          let data: { version?: string; downloadUrl?: string; mandatory?: boolean } | null = null
+          let data: { version?: string; downloadUrl?: string; downloadUrlTv?: string; mandatory?: boolean } | null = null
 
           for (const url of candidateUrls) {
             try {
@@ -187,9 +187,13 @@ export const useAppStore = create<AppState>()(
 
           if (data) {
             const remoteVersion = data.version || currentVersion
-            const downloadUrl =
-              data.downloadUrl ||
-              'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-release.apk'
+            const isTv = typeof window !== 'undefined' && (
+              navigator.userAgent.includes('CineBG-TV') ||
+              localStorage.getItem('cinebg_tv_mode') === 'true'
+            )
+            const downloadUrl = (isTv && data.downloadUrlTv)
+              ? data.downloadUrlTv
+              : (data.downloadUrl || 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk')
             const hasUpdate = remoteVersion !== currentVersion
             set({
               updateInfo: {
