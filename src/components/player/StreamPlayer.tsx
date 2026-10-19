@@ -22,6 +22,7 @@ import {
   Star,
   Download,
   ArrowLeft,
+  Sliders,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -866,27 +867,6 @@ const StreamPlayer = ({
     video.muted = !video.muted
   }
 
-  const refreshTextTracks = () => {
-    const video = videoRef.current
-    if (!video) return
-    const list: { index: number; label: string; isForced?: boolean }[] = []
-    for (let i = 0; i < video.textTracks.length; i += 1) {
-      const track = video.textTracks[i]
-      const label = track.label || track.language || `Faixa ${i + 1}`
-      const isForced = /forced|forcad|forçad|falas/i.test(label)
-      list.push({ index: i, label, isForced })
-    }
-    setTracks(list)
-    // Se ainda não escolheu faixa:
-    // Áudio original: liga automaticamente a primeira legenda disponível
-    // Áudio dublado: liga se a preferência de legenda do perfil for 'pt'
-    if (list.length > 0 && activeTrackRef.current === -1) {
-      if (audioOption === 'orig' || subtitleOption === 'pt') {
-        applySubtitle(0)
-      }
-    }
-  }
-
   const applySubtitle = (index: number) => {
     const video = videoRef.current
     if (!video) return
@@ -898,9 +878,101 @@ const StreamPlayer = ({
     setSubsOpen(false)
     if (index >= 0) {
       const selected = video.textTracks[index]
-      showFeedback(`Legenda: ${selected?.label || 'Ativada'}`)
+      showFeedback(`Legenda: ${selected?.label || 'Ativada 🇧🇷'}`)
     } else {
-      showFeedback('Legenda: Desativada')
+      showFeedback('Legendas: Desativadas 🚫')
+    }
+  }
+
+  const applySubtitleLang = useCallback((lang: 'off' | 'pt' | 'en') => {
+    setSubLang(lang)
+    const video = videoRef.current
+    if (!video) return
+
+    if (lang === 'off') {
+      for (let i = 0; i < video.textTracks.length; i += 1) {
+        video.textTracks[i].mode = 'disabled'
+      }
+      activeTrackRef.current = -1
+      setActiveTrack(-1)
+      showFeedback('Legendas: Desativadas 🚫')
+      return
+    }
+
+    let targetIndex = -1
+    for (let i = 0; i < video.textTracks.length; i += 1) {
+      const track = video.textTracks[i]
+      const label = (track.label || track.language || '').toLowerCase()
+      if (
+        lang === 'pt' &&
+        (label.includes('port') || label.includes('pt') || label.includes('pob') || label.includes('bra'))
+      ) {
+        targetIndex = i
+        break
+      }
+      if (
+        lang === 'en' &&
+        (label.includes('eng') || label.includes('ing') || label.includes('en'))
+      ) {
+        targetIndex = i
+        break
+      }
+    }
+
+    if (targetIndex === -1 && video.textTracks.length > 0) {
+      targetIndex = 0
+    }
+
+    if (targetIndex !== -1) {
+      for (let i = 0; i < video.textTracks.length; i += 1) {
+        video.textTracks[i].mode = i === targetIndex ? 'showing' : 'disabled'
+      }
+      activeTrackRef.current = targetIndex
+      setActiveTrack(targetIndex)
+      const selected = video.textTracks[targetIndex]
+      showFeedback(`Legenda: ${selected?.label || (lang === 'pt' ? 'Português 🇧🇷' : 'Inglês 🇺🇸')}`)
+    } else {
+      showFeedback(lang === 'pt' ? 'Legendas: Português 🇧🇷' : 'Legendas: Inglês 🇺🇸')
+    }
+  }, [])
+
+  const cycleSubtitles = useCallback(() => {
+    setSubLang((prev) => {
+      const nextLang: 'off' | 'pt' | 'en' = prev === 'off' ? 'pt' : prev === 'pt' ? 'en' : 'off'
+      applySubtitleLang(nextLang)
+      return nextLang
+    })
+  }, [applySubtitleLang])
+
+  const refreshTextTracks = () => {
+    const video = videoRef.current
+    if (!video) return
+    const list: { index: number; label: string; isForced?: boolean }[] = []
+    for (let i = 0; i < video.textTracks.length; i += 1) {
+      const track = video.textTracks[i]
+      const label = track.label || track.language || `Faixa ${i + 1}`
+      const isForced = /forced|forcad|forçad|falas/i.test(label)
+      list.push({ index: i, label, isForced })
+    }
+    setTracks(list)
+
+    if (list.length > 0) {
+      if (subLang === 'off') {
+        for (let i = 0; i < video.textTracks.length; i += 1) {
+          video.textTracks[i].mode = 'disabled'
+        }
+        activeTrackRef.current = -1
+        setActiveTrack(-1)
+      } else {
+        let targetIndex = list.findIndex((t) => {
+          const l = t.label.toLowerCase()
+          return subLang === 'pt'
+            ? l.includes('port') || l.includes('pt') || l.includes('pob') || l.includes('bra')
+            : l.includes('eng') || l.includes('ing') || l.includes('en')
+        })
+        if (targetIndex === -1) targetIndex = 0
+        applySubtitle(targetIndex)
+      }
     }
   }
 
@@ -1060,11 +1132,7 @@ const StreamPlayer = ({
       case 's':
       case 'S':
         e.preventDefault()
-        setSubLang((prev) => {
-          const next = prev === 'off' ? 'pt' : 'off'
-          showFeedback(next === 'off' ? 'Legendas: Desativadas' : 'Legendas: Português (PT-BR)')
-          return next
-        })
+        cycleSubtitles()
         break
       case 'c':
       case 'C':
@@ -1175,13 +1243,19 @@ const StreamPlayer = ({
         const nextOpt = audioOption === 'dub' ? 'orig' : 'dub'
         switchAudio(nextOpt)
         showFeedback(nextOpt === 'dub' ? 'Áudio: Dublado 🇧🇷' : 'Áudio: Legendado / Original 🇺🇸')
-      } else if (key === 's' || key === 'S') {
+      } else if (
+        key === 's' ||
+        key === 'S' ||
+        key === 'Subtitle' ||
+        key === 'Captions' ||
+        key === 'ClosedCaptioning' ||
+        code === 460
+      ) {
         e.preventDefault()
-        setSubLang((prev) => {
-          const next = prev === 'off' ? 'pt' : 'off'
-          showFeedback(next === 'off' ? 'Legendas: Desativadas' : 'Legendas: Português (PT-BR)')
-          return next
-        })
+        cycleSubtitles()
+      } else if (key === 'c' || key === 'C' || key === 'Menu' || code === 82) {
+        e.preventDefault()
+        setSettingsModalOpen((prev) => !prev)
       } else if (key === 'e' || key === 'E') {
         if (type !== 'movie') {
           e.preventDefault()
@@ -1199,7 +1273,7 @@ const StreamPlayer = ({
     return () => {
       window.removeEventListener('keydown', handleGlobalRemoteKey)
     }
-  }, [settingsModalOpen, episodesDrawerOpen, onBack, audioOption, type, onNextEpisode])
+  }, [settingsModalOpen, episodesDrawerOpen, onBack, audioOption, type, onNextEpisode, cycleSubtitles])
 
   const handleVideoDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isLocked) {
@@ -1633,7 +1707,18 @@ const StreamPlayer = ({
                 <span>{audioOption === 'dub' ? '🇧🇷 Dublado' : '🇺🇸 Legendado'}</span>
               </button>
 
-              {/* 3. Legendas & Ajustes (Abre o modal Configurações de Reprodução) */}
+              {/* 3. Legendas 1-Click (Ativar / Desativar / Alternar no controle remoto) */}
+              <button
+                type="button"
+                onClick={cycleSubtitles}
+                className="flex items-center justify-center gap-1.5 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+                title="Clique ou pressione S no controle para alternar legendas"
+              >
+                <Captions className={`w-4 h-4 ${subLang !== 'off' ? 'text-yellow-400' : 'text-white/40'}`} />
+                <span>{subLang === 'off' ? '🚫 Sem Legenda' : subLang === 'pt' ? '🇧🇷 Legenda PT' : '🇺🇸 Legenda EN'}</span>
+              </button>
+
+              {/* 4. Ajustes de Reprodução (Abre o modal) */}
               <button
                 type="button"
                 onClick={() => setSettingsModalOpen(true)}
@@ -1642,10 +1727,10 @@ const StreamPlayer = ({
                     ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
                     : 'bg-[#171824]/90 hover:bg-[#232538] text-white border-white/10'
                 }`}
-                title="Configurações completas de áudio e legendas (Tecla C)"
+                title="Ajustes completos de áudio, legendas, sincronização e estilos (Tecla C)"
               >
-                <Captions className="w-4 h-4 text-yellow-400" />
-                <span>Legendas / Ajustes</span>
+                <Sliders className="w-4 h-4 text-yellow-400" />
+                <span>Ajustes</span>
               </button>
 
               {/* 3. Resolução / Opção de Servidor */}
@@ -1769,17 +1854,7 @@ const StreamPlayer = ({
         }}
         subtitleLang={subLang}
         onChangeSubtitleLang={(lang) => {
-          setSubLang(lang)
-          if (lang === 'off') {
-            applySubtitle(-1)
-          } else {
-            const found = tracks.findIndex(t => lang === 'pt' ? t.label.toLowerCase().includes('port') || t.label.toLowerCase().includes('pt') : true)
-            if (found !== -1) {
-              applySubtitle(found)
-            } else if (tracks.length > 0) {
-              applySubtitle(0)
-            }
-          }
+          applySubtitleLang(lang)
         }}
         subtitleDelay={subDelay}
         onChangeSubtitleDelay={(delta) => setSubDelay(prev => Number((prev + delta).toFixed(1)))}
