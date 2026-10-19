@@ -6,6 +6,20 @@ export const isTVDevice = (): boolean => {
   if (ua.includes('CineBG-TV')) return true
   if (ua.includes('CineBG-Mobile')) return false
 
+  // Se o dispositivo está em orientação retrato ou tem largura de celular/tablet, NUNCA é TV
+  const isPortraitOrPhone =
+    window.innerHeight > window.innerWidth ||
+    window.innerWidth < 768 ||
+    (navigator.maxTouchPoints > 1 && !/Android TV|GoogleTV|SmartTV|BRAVIA/i.test(ua))
+
+  if (isPortraitOrPhone) {
+    try {
+      localStorage.removeItem('cinebg_tv_mode')
+      localStorage.removeItem('cinebg_virtual_cursor')
+    } catch {}
+    return false
+  }
+
   // Se o modo TV foi ativado previamente ou marcado pelo usuario
   if (
     localStorage.getItem('cinebg_tv_mode') === 'true' ||
@@ -35,6 +49,10 @@ export const isTVDevice = (): boolean => {
  */
 export const markTvModeActive = () => {
   if (typeof window !== 'undefined') {
+    const ua = navigator.userAgent
+    if (ua.includes('CineBG-Mobile')) return
+    if (window.innerHeight > window.innerWidth || window.innerWidth < 768) return
+
     try {
       localStorage.setItem('cinebg_tv_mode', 'true')
     } catch {}

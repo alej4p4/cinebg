@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { isTVDevice } from '@/utils/tv'
 import type { DownloadItem, FavoriteItem, WatchHistoryItem } from '@/types'
 
 export type Language = 'pt' | 'en'
@@ -150,10 +151,10 @@ export const useAppStore = create<AppState>()(
       setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
       isCheckingUpdate: false,
       updateInfo: {
-        currentVersion: '1.2.45',
-        latestVersion: '1.2.45',
+        currentVersion: '1.2.46',
+        latestVersion: '1.2.46',
         hasUpdate: false,
-        downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-release.apk',
+        downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk',
         mandatory: false,
       },
       checkForUpdates: async (manual = false) => {
@@ -161,7 +162,7 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const currentVersion = get().updateInfo.currentVersion || '1.2.45'
+          const currentVersion = get().updateInfo.currentVersion || '1.2.46'
           const candidateUrls = [
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,
@@ -189,7 +190,10 @@ export const useAppStore = create<AppState>()(
             const remoteVersion = data.version || currentVersion
             const isTv = typeof window !== 'undefined' && (
               navigator.userAgent.includes('CineBG-TV') ||
-              localStorage.getItem('cinebg_tv_mode') === 'true'
+              (!navigator.userAgent.includes('CineBG-Mobile') &&
+                window.innerWidth >= 800 &&
+                window.innerWidth > window.innerHeight &&
+                (localStorage.getItem('cinebg_tv_mode') === 'true' || isTVDevice()))
             )
             const downloadUrl = (isTv && data.downloadUrlTv)
               ? data.downloadUrlTv

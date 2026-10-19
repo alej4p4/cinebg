@@ -75,6 +75,15 @@ export const TvCursorOverlay: React.FC = () => {
   // Detecta dispositivo de TV ou ativacao por controle remoto
   useEffect(() => {
     const checkTv = () => {
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+      if (
+        ua.includes('CineBG-Mobile') ||
+        (typeof window !== 'undefined' &&
+          (window.innerHeight > window.innerWidth || window.innerWidth < 768))
+      ) {
+        setIsTvActive(false)
+        return
+      }
       if (
         isTVDevice() ||
         tvMode ||
@@ -267,7 +276,14 @@ export const TvCursorOverlay: React.FC = () => {
     }
   }, [isTvActive, navMode, refreshBadgeVisibility])
 
-  if (!isTvActive) return null
+  if (
+    !isTvActive ||
+    (typeof navigator !== 'undefined' && navigator.userAgent.includes('CineBG-Mobile')) ||
+    (typeof window !== 'undefined' &&
+      (window.innerHeight > window.innerWidth || window.innerWidth < 768))
+  ) {
+    return null
+  }
 
   return (
     <>

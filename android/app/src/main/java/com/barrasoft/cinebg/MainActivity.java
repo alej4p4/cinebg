@@ -24,6 +24,16 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         setupImmersiveMode();
         setupTvFocus();
+
+        // Identifica formalmente o sabor (Mobile vs TV) no User-Agent do WebView
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            WebView webView = getBridge().getWebView();
+            String currentUa = webView.getSettings().getUserAgentString();
+            String flavorTag = getPackageName().endsWith(".tv") ? " CineBG-TV" : " CineBG-Mobile";
+            if (!currentUa.contains("CineBG-")) {
+                webView.getSettings().setUserAgentString(currentUa + flavorTag);
+            }
+        }
     }
 
     @Override
