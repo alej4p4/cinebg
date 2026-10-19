@@ -122,8 +122,8 @@ export const TvCursorOverlay: React.FC = () => {
       if (typeof window === 'undefined') return
       const targetEl =
         document.querySelector('[data-focus-key="hero-watch-btn"]') ||
-        document.querySelector('.tv-focused') ||
         document.querySelector('[data-focus-key="card-0-0"]') ||
+        document.querySelector('.tv-focused') ||
         document.querySelector('[data-focus-key="nav-item-0"]')
       if (targetEl) {
         const rect = targetEl.getBoundingClientRect()

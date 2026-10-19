@@ -161,18 +161,22 @@ function App() {
 
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false)
-    setTimeout(() => {
+    const focusHome = () => {
       try {
         SpatialNavigation.updateAllLayouts().catch(() => {})
         if (doesFocusableExist('hero-watch-btn')) {
           setFocus('hero-watch-btn')
         } else if (doesFocusableExist('card-0-0')) {
           setFocus('card-0-0')
-        } else if (doesFocusableExist('nav-item-0')) {
-          setFocus('nav-item-0')
         }
       } catch {}
-    }, 150)
+    }
+
+    focusHome()
+    setTimeout(focusHome, 80)
+    setTimeout(focusHome, 300)
+    setTimeout(focusHome, 800)
+    setTimeout(focusHome, 1600)
   }, [])
 
   return (

@@ -100,22 +100,31 @@ const Home = () => {
     load()
   }, [])
 
-  // Quando o catálogo da tela inicial finaliza o carregamento, posiciona o foco/cursor imediatamente
+  // Quando a tela inicial monta ou o catálogo finaliza o carregamento, posiciona o foco/cursor na tela inicial
   useEffect(() => {
-    if (!loading) {
-      const timer = setTimeout(() => {
-        try {
-          SpatialNavigation.updateAllLayouts().catch(() => {})
-          if (doesFocusableExist('hero-watch-btn')) {
-            setFocus('hero-watch-btn')
-          } else if (doesFocusableExist('card-0-0')) {
-            setFocus('card-0-0')
-          } else if (doesFocusableExist('nav-item-0')) {
-            setFocus('nav-item-0')
-          }
-        } catch {}
-      }, 100)
-      return () => clearTimeout(timer)
+    const focusHomeTarget = () => {
+      try {
+        SpatialNavigation.updateAllLayouts().catch(() => {})
+        if (doesFocusableExist('hero-watch-btn')) {
+          setFocus('hero-watch-btn')
+        } else if (doesFocusableExist('card-0-0')) {
+          setFocus('card-0-0')
+        } else if (doesFocusableExist('card-1-0')) {
+          setFocus('card-1-0')
+        }
+      } catch {}
+    }
+
+    focusHomeTarget()
+    const t1 = setTimeout(focusHomeTarget, 100)
+    const t2 = setTimeout(focusHomeTarget, 500)
+    const t3 = setTimeout(focusHomeTarget, 1200)
+    const t4 = setTimeout(focusHomeTarget, 2400)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+      clearTimeout(t3)
+      clearTimeout(t4)
     }
   }, [loading])
 

@@ -6,8 +6,8 @@
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792433106.753179,
-    "seen": 1792433140.0095093,
+    "mtime": 1792434046.2556596,
+    "seen": 1792434072.9833362,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792433106.753109,
-    "seen": 1792433140.009547,
+    "mtime": 1792434046.25466,
+    "seen": 1792434072.9833548,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -102,9 +102,9 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792429436.6311085,
-    "seen": 1792430441.267583,
-    "ast_hash": "760a460a8c25b1c572117d7659e535e8",
+    "mtime": 1792433935.1842601,
+    "seen": 1792434072.9833784,
+    "ast_hash": "17401646525c033adc26302c9b101bf6",
     "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
@@ -144,8 +144,8 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1792432941.2973218,
-    "seen": 1792433140.0096517,
+    "mtime": 1792433190.0536005,
+    "seen": 1792434072.9833958,
     "ast_hash": "1d8f511aeaee7ef739da1e80d06cc3ff",
     "semantic_hash": ""
   },
@@ -180,15 +180,15 @@
     "semantic_hash": "7b49bb9d167a046a558eef893e1baed8"
   },
   "src/components/ui/HeroBanner.tsx": {
-    "mtime": 1792368975.796391,
-    "seen": 1792370385.1033251,
-    "ast_hash": "f2031f57efc8d0676c31b1185fc0b9b5",
+    "mtime": 1792433890.4135866,
+    "seen": 1792434072.9834173,
+    "ast_hash": "19056b63fa5b635f156ad4f501b31ff5",
     "semantic_hash": ""
   },
   "src/components/ui/LazyImage.tsx": {
-    "mtime": 1792174834.7543142,
-    "seen": 1792179646.883831,
-    "ast_hash": "7265612ddcf20945b85c5820afcfdf40",
+    "mtime": 1792433848.3818285,
+    "seen": 1792434072.9834192,
+    "ast_hash": "3189126fa92e986f79cca2491c2fcdea",
     "semantic_hash": ""
   },
   "src/components/ui/LoadingSpinner.tsx": {
@@ -198,9 +198,9 @@
     "semantic_hash": "5475e3fb0fdec69554ca4b3fa2816e4e"
   },
   "src/components/ui/MovieCard.tsx": {
-    "mtime": 1792429436.637388,
-    "seen": 1792430441.267709,
-    "ast_hash": "dfa2c4e6aa40fcd21fc836099566e760",
+    "mtime": 1792433875.2996898,
+    "seen": 1792434072.983423,
+    "ast_hash": "9a976a2a48890910edd02bcb2b5eb285",
     "semantic_hash": ""
   },
   "src/components/ui/ProgressBar.tsx": {
@@ -246,9 +246,9 @@
     "semantic_hash": "42b2597d65b2ebfa88e72c1a4a95a747"
   },
   "src/hooks/useSpatialNavigation.ts": {
-    "mtime": 1792429436.6391735,
-    "seen": 1792430441.2677639,
-    "ast_hash": "3fc11e1dbfe7c058f48e025f80624c40",
+    "mtime": 1792433904.862622,
+    "seen": 1792434072.9834442,
+    "ast_hash": "cdacf44c2cb6c0b0413d6c90505cfc33",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -288,9 +288,9 @@
     "semantic_hash": "5cabcc87ea2243cebf8f8f2d517d20c9"
   },
   "src/pages/Home.tsx": {
-    "mtime": 1792429436.6402204,
-    "seen": 1792430441.2678075,
-    "ast_hash": "a03f3c6ae5c80097ec4b2a189aed3ace",
+    "mtime": 1792433920.855608,
+    "seen": 1792434072.98346,
+    "ast_hash": "5b09722bdc06776d347fd83ff482a4ef",
     "semantic_hash": ""
   },
   "src/pages/LiveTV.tsx": {
@@ -390,10 +390,10 @@
     "semantic_hash": ""
   },
   "src/utils/motion.ts": {
-    "mtime": 1792022620.2646708,
-    "seen": 1792158340.1035788,
-    "ast_hash": "daf39070d68a6d84e543ed362e3ef333",
-    "semantic_hash": "daf39070d68a6d84e543ed362e3ef333"
+    "mtime": 1792433841.6275642,
+    "seen": 1792434072.9835005,
+    "ast_hash": "1242d7387ae945d65a95f696b74183f9",
+    "semantic_hash": ""
   },
   "src/utils/tv.ts": {
     "mtime": 1792428308.1669743,
@@ -762,9 +762,9 @@
     "semantic_hash": ""
   },
   "src/components/tv/TvCursorOverlay.tsx": {
-    "mtime": 1792429436.6363504,
-    "seen": 1792430441.2676554,
-    "ast_hash": "d2cc0facc537e435ded04e67b6249732",
+    "mtime": 1792433950.4234376,
+    "seen": 1792434072.983402,
+    "ast_hash": "e6e401a447774d85df645416cf785233",
     "semantic_hash": ""
   },
   "src/hooks/useSpeechRecognition.ts": {
@@ -792,8 +792,8 @@
     "semantic_hash": ""
   },
   "src/components/player/PlaybackSettingsModal.tsx": {
-    "mtime": 1792432764.982105,
-    "seen": 1792433140.0096467,
+    "mtime": 1792433190.052147,
+    "seen": 1792434072.9833934,
     "ast_hash": "ece6cdcb29d4ba066be35a192ff8a331",
     "semantic_hash": ""
   },

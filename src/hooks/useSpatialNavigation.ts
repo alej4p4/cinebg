@@ -44,6 +44,22 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
     }
 
     const setInitialFocus = () => {
+      // Na tela inicial (root), o foco do controle DEVE ficar no conteúdo principal (Hero Banner ou primeiro card)
+      if (routeKey === '/' || !routeKey) {
+        if (doesFocusableExist('hero-watch-btn')) {
+          setFocus('hero-watch-btn')
+          return
+        }
+        if (doesFocusableExist('card-0-0')) {
+          setFocus('card-0-0')
+          return
+        }
+        if (doesFocusableExist('card-1-0')) {
+          setFocus('card-1-0')
+          return
+        }
+      }
+
       if (doesFocusableExist('details-play')) {
         setFocus('details-play')
       } else if (doesFocusableExist('hero-watch-btn')) {

@@ -65,15 +65,15 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
   const year = item.releaseDate ? new Date(item.releaseDate).getFullYear() : ''
 
   const backdropVariants = {
-    enter: (dir: number) => ({ opacity: 0, x: dir * 40, scale: 1.04 }),
-    center: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.55, ease: FLUID_EASE } },
-    exit: (dir: number) => ({ opacity: 0, x: dir * -40, scale: 0.97, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }),
+    enter: (dir: number) => ({ opacity: dir === 0 ? 1 : 0, x: dir * 30, scale: 1 }),
+    center: { opacity: 1, x: 0, scale: 1, transition: { duration: direction === 0 ? 0.05 : 0.25 } },
+    exit: (dir: number) => ({ opacity: 0, x: dir * -30, scale: 1, transition: { duration: 0.15 } }),
   }
 
   const contentVariants = {
-    enter: { opacity: 0, y: 24 },
-    center: { opacity: 1, y: 0, transition: { duration: 0.42, delay: 0.1, ease: FLUID_EASE } },
-    exit: { opacity: 0, y: -16, transition: { duration: 0.2, ease: [0.4, 0, 1, 1] } },
+    enter: { opacity: direction === 0 ? 1 : 0, y: direction === 0 ? 0 : 12 },
+    center: { opacity: 1, y: 0, transition: { duration: direction === 0 ? 0.05 : 0.2 } },
+    exit: { opacity: 0, y: -8, transition: { duration: 0.15 } },
   }
 
   return (
