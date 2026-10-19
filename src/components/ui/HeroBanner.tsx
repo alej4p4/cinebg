@@ -20,10 +20,17 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
   const [direction, setDirection] = useState(0)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
 
-  const featured = items.slice(0, 6)
+  const featured = items.slice(0, 8)
 
-  // Banners mantidos fixos sem carrossel automático por timer (estilo YuCine / TV)
-  // Navegação apenas manual frente/trás por controle remoto ou toque no celular
+  // Transição automática suave de slides a cada 7 segundos ("fica passando lançamentos")
+  useEffect(() => {
+    if (loading || featured.length <= 1) return
+    const timer = setInterval(() => {
+      setDirection(1)
+      setCurrent((c) => (c + 1) % featured.length)
+    }, 7000)
+    return () => clearInterval(timer)
+  }, [loading, featured.length])
 
   const goTo = (idx: number) => {
     setDirection(idx > current ? 1 : -1)

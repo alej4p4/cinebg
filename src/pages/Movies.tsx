@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Sparkles, Filter } from 'lucide-react'
 import YuCineHero from '@/components/ui/YuCineHero'
@@ -202,6 +202,23 @@ const Movies = () => {
     setSelectedGenreId(null)
   }
 
+  // Slides da aba Filmes: Estritamente FILMES, priorizando lançamentos em cartaz e populares
+  const moviesHeroItems = useMemo(() => {
+    const pool = [...nowPlaying, ...popular, ...upcoming, ...topRated]
+    const seen = new Set<string>()
+    const unique: MediaItem[] = []
+
+    for (const item of pool) {
+      if (!item || !item.id || !item.backdropPath || item.type !== 'movie') continue
+      const key = `movie-${item.id}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      unique.push(item)
+    }
+
+    return unique.length > 0 ? unique.slice(0, 10) : popular
+  }, [nowPlaying, popular, upcoming, topRated])
+
   return (
     <>
       <ProgressBar isLoading={loading || filterLoading} />
@@ -215,7 +232,7 @@ const Movies = () => {
         {/* Banner Hero no Estilo YuCine (Imagem 1) */}
         <YuCineHero
           type="movie"
-          items={popular}
+          items={moviesHeroItems}
           loading={loading}
           activeFilter={activeFilter}
           onFilterGenre={handleToggleGenreBar}

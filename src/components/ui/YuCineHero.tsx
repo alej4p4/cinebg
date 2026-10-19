@@ -41,8 +41,14 @@ const YuCineHero = ({
   const sideItem1 = items[5] || items[1]
   const sideItem2 = items[6] || items[2]
 
-  // Banners mantidos fixos sem carrossel automático por timer
-  // Somente atualização manual frente/trás por controle remoto ou toque no celular
+  // Transição automática suave de slides a cada 7 segundos ("fica passando filmes/séries")
+  useEffect(() => {
+    if (loading || carouselItems.length <= 1) return
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % carouselItems.length)
+    }, 7000)
+    return () => clearInterval(timer)
+  }, [loading, carouselItems.length])
   const prev = () => {
     setCurrentIndex((prev) => (prev - 1 + carouselItems.length) % carouselItems.length)
   }

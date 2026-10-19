@@ -164,13 +164,48 @@ const Home = () => {
     genreIds: [],
   }))
 
+  // Slides do Início: Mescla harmônica de Filmes e Séries priorizando Lançamentos Recentes (2025/2026) e Em Alta
+  const homeHeroItems = useMemo(() => {
+    const pool = [...nowPlaying, ...airingNow, ...trending, ...popularMovies, ...popularShows]
+    const seen = new Set<string>()
+    const unique: MediaItem[] = []
+
+    for (const item of pool) {
+      if (!item || !item.id || !item.backdropPath) continue
+      const key = `${item.type}-${item.id}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      unique.push(item)
+    }
+
+    // Ordena priorizando lançamentos mais novos (data de estreia mais recente)
+    const sorted = unique.sort((a, b) => {
+      const timeA = a.releaseDate ? new Date(a.releaseDate).getTime() : 0
+      const timeB = b.releaseDate ? new Date(b.releaseDate).getTime() : 0
+      return timeB - timeA
+    })
+
+    // Alterna dinamicamente entre filmes e séries
+    const movies = sorted.filter((i) => i.type === 'movie')
+    const series = sorted.filter((i) => i.type === 'tv')
+    const mixed: MediaItem[] = []
+    const limit = Math.max(movies.length, series.length)
+
+    for (let i = 0; i < limit; i++) {
+      if (movies[i]) mixed.push(movies[i])
+      if (series[i]) mixed.push(series[i])
+    }
+
+    return mixed.length > 0 ? mixed.slice(0, 10) : trending
+  }, [nowPlaying, airingNow, trending, popularMovies, popularShows])
+
   const top10 = trending.slice(0, 10)
 
   return (
     <>
       <ProgressBar isLoading={loading} />
       <div className="min-h-screen bg-bg-primary">
-        <HeroBanner items={trending} loading={loading} />
+        <HeroBanner items={homeHeroItems} loading={loading} />
 
         <div className="space-y-8 md:space-y-10 py-8 md:py-10">
           {(() => {
