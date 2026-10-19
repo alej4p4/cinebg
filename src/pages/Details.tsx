@@ -102,6 +102,54 @@ const Details = () => {
     }
   }, [loading, movieData, showData, id])
 
+  // Foco automático e captura de teclas Voltar / Escape para Modais YouCine
+  useEffect(() => {
+    if (idiomaModalOpen) {
+      const t = setTimeout(() => {
+        setFocus(audioOption === 'dub' ? 'modal-idioma-dub' : 'modal-idioma-orig')
+      }, 60)
+      return () => clearTimeout(t)
+    }
+  }, [idiomaModalOpen, audioOption])
+
+  useEffect(() => {
+    if (resolucaoModalOpen) {
+      const t = setTimeout(() => {
+        setFocus(`modal-res-${selectedResolution}`)
+      }, 60)
+      return () => clearTimeout(t)
+    }
+  }, [resolucaoModalOpen, selectedResolution])
+
+  useEffect(() => {
+    const handleModalKeyDown = (e: KeyboardEvent) => {
+      const code = e.keyCode || e.which
+      if (
+        e.key === 'Escape' ||
+        e.key === 'GoBack' ||
+        code === 27 ||
+        code === 4 ||
+        code === 10009 ||
+        code === 461 ||
+        code === 283
+      ) {
+        if (idiomaModalOpen) {
+          e.preventDefault()
+          e.stopPropagation()
+          setIdiomaModalOpen(false)
+          setTimeout(() => setFocus('details-idioma'), 50)
+        } else if (resolucaoModalOpen) {
+          e.preventDefault()
+          e.stopPropagation()
+          setResolucaoModalOpen(false)
+          setTimeout(() => setFocus('details-resolucao'), 50)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleModalKeyDown)
+    return () => window.removeEventListener('keydown', handleModalKeyDown)
+  }, [idiomaModalOpen, resolucaoModalOpen])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
@@ -262,6 +310,12 @@ const Details = () => {
           <Focusable
             focusKey="details-back"
             onEnterPress={() => navigate(-1)}
+            onArrowPress={(direction) => {
+              if (direction === 'down') {
+                setFocus('details-fullscreen')
+                return false
+              }
+            }}
             className="rounded-xl"
           >
             <button
@@ -417,6 +471,25 @@ const Details = () => {
           <Focusable
             focusKey="details-fullscreen"
             onEnterPress={() => handlePlayFullscreen()}
+            onArrowPress={(direction) => {
+              if (direction === 'up') {
+                setFocus('details-back')
+                return false
+              }
+              if (direction === 'right') {
+                setFocus('details-idioma')
+                return false
+              }
+              if (direction === 'down') {
+                if (!isMovie && seasons.length > 1) {
+                  setFocus(`season-pill-${selectedSeason}`)
+                } else if (!isMovie && episodeCount > 0) {
+                  setFocus(`ep-${selectedSeason}-${selectedEpisode}`)
+                }
+                return false
+              }
+              if (direction === 'left') return false
+            }}
             className="rounded-xl"
           >
             <motion.button
@@ -435,6 +508,28 @@ const Details = () => {
           <Focusable
             focusKey="details-idioma"
             onEnterPress={() => setIdiomaModalOpen(true)}
+            onArrowPress={(direction) => {
+              if (direction === 'up') {
+                setFocus('details-back')
+                return false
+              }
+              if (direction === 'left') {
+                setFocus('details-fullscreen')
+                return false
+              }
+              if (direction === 'right') {
+                setFocus('details-resolucao')
+                return false
+              }
+              if (direction === 'down') {
+                if (!isMovie && seasons.length > 1) {
+                  setFocus(`season-pill-${selectedSeason}`)
+                } else if (!isMovie && episodeCount > 0) {
+                  setFocus(`ep-${selectedSeason}-${selectedEpisode}`)
+                }
+                return false
+              }
+            }}
             className="rounded-xl"
           >
             <motion.button
@@ -452,6 +547,28 @@ const Details = () => {
           <Focusable
             focusKey="details-resolucao"
             onEnterPress={() => setResolucaoModalOpen(true)}
+            onArrowPress={(direction) => {
+              if (direction === 'up') {
+                setFocus('details-back')
+                return false
+              }
+              if (direction === 'left') {
+                setFocus('details-idioma')
+                return false
+              }
+              if (direction === 'right') {
+                setFocus('details-fav')
+                return false
+              }
+              if (direction === 'down') {
+                if (!isMovie && seasons.length > 1) {
+                  setFocus(`season-pill-${selectedSeason}`)
+                } else if (!isMovie && episodeCount > 0) {
+                  setFocus(`ep-${selectedSeason}-${selectedEpisode}`)
+                }
+                return false
+              }
+            }}
             className="rounded-xl"
           >
             <motion.button
@@ -469,6 +586,28 @@ const Details = () => {
           <Focusable
             focusKey="details-fav"
             onEnterPress={handleToggleFav}
+            onArrowPress={(direction) => {
+              if (direction === 'up') {
+                setFocus('details-back')
+                return false
+              }
+              if (direction === 'left') {
+                setFocus('details-resolucao')
+                return false
+              }
+              if (direction === 'right') {
+                setFocus('details-download')
+                return false
+              }
+              if (direction === 'down') {
+                if (!isMovie && seasons.length > 1) {
+                  setFocus(`season-pill-${selectedSeason}`)
+                } else if (!isMovie && episodeCount > 0) {
+                  setFocus(`ep-${selectedSeason}-${selectedEpisode}`)
+                }
+                return false
+              }
+            }}
             className="rounded-xl"
           >
             <motion.button
@@ -490,6 +629,25 @@ const Details = () => {
           <Focusable
             focusKey="details-download"
             onEnterPress={handleDownload}
+            onArrowPress={(direction) => {
+              if (direction === 'up') {
+                setFocus('details-back')
+                return false
+              }
+              if (direction === 'left') {
+                setFocus('details-fav')
+                return false
+              }
+              if (direction === 'down') {
+                if (!isMovie && seasons.length > 1) {
+                  setFocus(`season-pill-${selectedSeason}`)
+                } else if (!isMovie && episodeCount > 0) {
+                  setFocus(`ep-${selectedSeason}-${selectedEpisode}`)
+                }
+                return false
+              }
+              if (direction === 'right') return false
+            }}
             className="rounded-xl"
           >
             <motion.button
@@ -524,11 +682,35 @@ const Details = () => {
             {/* Seletor de Temporadas (quando há mais de uma) */}
             {seasons.length > 1 && (
               <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                {seasons.map((s) => (
+                {seasons.map((s, sIdx) => (
                   <Focusable
                     key={`season-pill-${s.season_number}`}
                     focusKey={`season-pill-${s.season_number}`}
                     onEnterPress={() => handleSelectSeason(s.season_number)}
+                    onArrowPress={(direction) => {
+                      if (direction === 'up') {
+                        setFocus('details-fullscreen')
+                        return false
+                      }
+                      if (direction === 'down') {
+                        setFocus(`ep-${selectedSeason}-${selectedEpisode}`)
+                        return false
+                      }
+                      if (direction === 'left') {
+                        if (sIdx > 0) {
+                          setFocus(`season-pill-${seasons[sIdx - 1].season_number}`)
+                          return false
+                        }
+                        return false
+                      }
+                      if (direction === 'right') {
+                        if (sIdx < seasons.length - 1) {
+                          setFocus(`season-pill-${seasons[sIdx + 1].season_number}`)
+                          return false
+                        }
+                        return false
+                      }
+                    }}
                     className="rounded-xl flex-shrink-0"
                   >
                     <button
@@ -554,7 +736,35 @@ const Details = () => {
                   <Focusable
                     key={`ep-${selectedSeason}-${epNum}`}
                     focusKey={`ep-${selectedSeason}-${epNum}`}
+                    onFocus={() => setSelectedEpisode(epNum)}
                     onEnterPress={() => handlePlayFullscreen(epNum)}
+                    onArrowPress={(direction) => {
+                      if (direction === 'up') {
+                        if (seasons.length > 1) {
+                          setFocus(`season-pill-${selectedSeason}`)
+                        } else {
+                          setFocus('details-fullscreen')
+                        }
+                        return false
+                      }
+                      if (direction === 'left') {
+                        if (epNum > 1) {
+                          setFocus(`ep-${selectedSeason}-${epNum - 1}`)
+                          return false
+                        }
+                        return false
+                      }
+                      if (direction === 'right') {
+                        if (epNum < episodeCount) {
+                          setFocus(`ep-${selectedSeason}-${epNum + 1}`)
+                          return false
+                        }
+                        return false
+                      }
+                      if (direction === 'down') {
+                        return false
+                      }
+                    }}
                     className="rounded-xl flex-shrink-0"
                   >
                     <motion.button
@@ -593,46 +803,102 @@ const Details = () => {
                   <MessageSquare className="w-5 h-5 text-amber-400" />
                   <span>Selecione o Idioma</span>
                 </h3>
-                <button
-                  onClick={() => setIdiomaModalOpen(false)}
-                  className="p-1 rounded-lg text-white/60 hover:text-white"
+                <Focusable
+                  focusKey="modal-idioma-close"
+                  onEnterPress={() => {
+                    setIdiomaModalOpen(false)
+                    setTimeout(() => setFocus('details-idioma'), 50)
+                  }}
+                  onArrowPress={(direction) => {
+                    if (direction === 'down') {
+                      setFocus('modal-idioma-dub')
+                      return false
+                    }
+                  }}
+                  className="rounded-lg"
                 >
-                  <X className="w-5 h-5" />
-                </button>
+                  <button
+                    onClick={() => {
+                      setIdiomaModalOpen(false)
+                      setTimeout(() => setFocus('details-idioma'), 50)
+                    }}
+                    className="p-1 rounded-lg text-white/60 hover:text-white outline-none focus:ring-2 focus:ring-amber-400"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </Focusable>
               </div>
 
               <div className="space-y-2.5">
-                <button
-                  type="button"
-                  onClick={() => {
+                <Focusable
+                  focusKey="modal-idioma-dub"
+                  onEnterPress={() => {
                     setAudioOption('dub')
                     setIdiomaModalOpen(false)
+                    setTimeout(() => setFocus('details-idioma'), 50)
                   }}
-                  className={`w-full flex items-center justify-between p-4 rounded-xl border text-sm font-bold transition-all outline-none ${
-                    audioOption === 'dub'
-                      ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
-                      : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
-                  }`}
+                  onArrowPress={(direction) => {
+                    if (direction === 'down') {
+                      setFocus('modal-idioma-orig')
+                      return false
+                    }
+                    if (direction === 'up') {
+                      setFocus('modal-idioma-close')
+                      return false
+                    }
+                  }}
+                  className="rounded-xl"
                 >
-                  <span>Áudio Dublado (Português)</span>
-                  {audioOption === 'dub' && <Check className="w-5 h-5 stroke-[3]" />}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAudioOption('dub')
+                      setIdiomaModalOpen(false)
+                      setTimeout(() => setFocus('details-idioma'), 50)
+                    }}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border text-sm font-bold transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 ${
+                      audioOption === 'dub'
+                        ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
+                        : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <span>Áudio Dublado (Português)</span>
+                    {audioOption === 'dub' && <Check className="w-5 h-5 stroke-[3]" />}
+                  </button>
+                </Focusable>
 
-                <button
-                  type="button"
-                  onClick={() => {
+                <Focusable
+                  focusKey="modal-idioma-orig"
+                  onEnterPress={() => {
                     setAudioOption('orig')
                     setIdiomaModalOpen(false)
+                    setTimeout(() => setFocus('details-idioma'), 50)
                   }}
-                  className={`w-full flex items-center justify-between p-4 rounded-xl border text-sm font-bold transition-all outline-none ${
-                    audioOption === 'orig'
-                      ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
-                      : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
-                  }`}
+                  onArrowPress={(direction) => {
+                    if (direction === 'up') {
+                      setFocus('modal-idioma-dub')
+                      return false
+                    }
+                  }}
+                  className="rounded-xl"
                 >
-                  <span>Áudio Original (com Legenda PT-BR)</span>
-                  {audioOption === 'orig' && <Check className="w-5 h-5 stroke-[3]" />}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAudioOption('orig')
+                      setIdiomaModalOpen(false)
+                      setTimeout(() => setFocus('details-idioma'), 50)
+                    }}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border text-sm font-bold transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 ${
+                      audioOption === 'orig'
+                        ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
+                        : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <span>Áudio Original (com Legenda PT-BR)</span>
+                    {audioOption === 'orig' && <Check className="w-5 h-5 stroke-[3]" />}
+                  </button>
+                </Focusable>
               </div>
             </motion.div>
           </div>
@@ -654,12 +920,30 @@ const Details = () => {
                   <Sliders className="w-5 h-5 text-amber-400" />
                   <span>Qualidade de Transmissão</span>
                 </h3>
-                <button
-                  onClick={() => setResolucaoModalOpen(false)}
-                  className="p-1 rounded-lg text-white/60 hover:text-white"
+                <Focusable
+                  focusKey="modal-res-close"
+                  onEnterPress={() => {
+                    setResolucaoModalOpen(false)
+                    setTimeout(() => setFocus('details-resolucao'), 50)
+                  }}
+                  onArrowPress={(direction) => {
+                    if (direction === 'down') {
+                      setFocus('modal-res-1080p')
+                      return false
+                    }
+                  }}
+                  className="rounded-lg"
                 >
-                  <X className="w-5 h-5" />
-                </button>
+                  <button
+                    onClick={() => {
+                      setResolucaoModalOpen(false)
+                      setTimeout(() => setFocus('details-resolucao'), 50)
+                    }}
+                    className="p-1 rounded-lg text-white/60 hover:text-white outline-none focus:ring-2 focus:ring-amber-400"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </Focusable>
               </div>
 
               <div className="space-y-2.5">
@@ -667,23 +951,50 @@ const Details = () => {
                   { id: '1080p', label: 'Full HD (1080p) — Alta Qualidade' },
                   { id: '720p', label: 'HD (720p) — Conexão Padrão' },
                   { id: 'auto', label: 'Automático — Ajuste Dinâmico' },
-                ].map((res) => (
-                  <button
-                    key={res.id}
-                    type="button"
-                    onClick={() => {
+                ].map((res, rIdx, arr) => (
+                  <Focusable
+                    key={`modal-res-${res.id}`}
+                    focusKey={`modal-res-${res.id}`}
+                    onEnterPress={() => {
                       setSelectedResolution(res.id)
                       setResolucaoModalOpen(false)
+                      setTimeout(() => setFocus('details-resolucao'), 50)
                     }}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl border text-sm font-bold transition-all outline-none ${
-                      selectedResolution === res.id
-                        ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
-                        : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
-                    }`}
+                    onArrowPress={(direction) => {
+                      if (direction === 'up') {
+                        if (rIdx === 0) {
+                          setFocus('modal-res-close')
+                        } else {
+                          setFocus(`modal-res-${arr[rIdx - 1].id}`)
+                        }
+                        return false
+                      }
+                      if (direction === 'down') {
+                        if (rIdx < arr.length - 1) {
+                          setFocus(`modal-res-${arr[rIdx + 1].id}`)
+                          return false
+                        }
+                      }
+                    }}
+                    className="rounded-xl"
                   >
-                    <span>{res.label}</span>
-                    {selectedResolution === res.id && <Check className="w-5 h-5 stroke-[3]" />}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedResolution(res.id)
+                        setResolucaoModalOpen(false)
+                        setTimeout(() => setFocus('details-resolucao'), 50)
+                      }}
+                      className={`w-full flex items-center justify-between p-4 rounded-xl border text-sm font-bold transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 ${
+                        selectedResolution === res.id
+                          ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
+                          : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <span>{res.label}</span>
+                      {selectedResolution === res.id && <Check className="w-5 h-5 stroke-[3]" />}
+                    </button>
+                  </Focusable>
                 ))}
               </div>
             </motion.div>

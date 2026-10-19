@@ -1945,7 +1945,6 @@ const StreamPlayer = ({
             title={title}
             autoPlay
             playsInline
-            crossOrigin="anonymous"
             className={`w-full h-full bg-black transition-all duration-200 ${
               fitMode === 'cover'
                 ? 'object-cover'

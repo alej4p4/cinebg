@@ -6,8 +6,8 @@
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792446141.0100148,
-    "seen": 1792446183.0899868,
+    "mtime": 1792447481.3594303,
+    "seen": 1792447509.627604,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792446141.0100148,
-    "seen": 1792446183.0900059,
+    "mtime": 1792447481.3574326,
+    "seen": 1792447509.627653,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1792444951.85757,
-    "seen": 1792446183.090049,
-    "ast_hash": "1ff44d1cffe6b4bbb5aeffb4edba6faa",
+    "mtime": 1792447279.8041801,
+    "seen": 1792447509.6277773,
+    "ast_hash": "f9f4b61f8f96736b229a73868cb1800c",
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
@@ -264,9 +264,9 @@
     "semantic_hash": "691b79b7905b3b207f78f878c3299ad5"
   },
   "src/pages/Details.tsx": {
-    "mtime": 1792445899.9820466,
-    "seen": 1792446183.0901072,
-    "ast_hash": "a910c4ae1743070c49ac9f447a36efc9",
+    "mtime": 1792447362.4871962,
+    "seen": 1792447509.6279385,
+    "ast_hash": "bf4828b02b687369bdaa83a4c8d65a24",
     "semantic_hash": ""
   },
   "src/pages/Downloads.tsx": {
@@ -360,9 +360,9 @@
     "semantic_hash": ""
   },
   "src/services/streams.ts": {
-    "mtime": 1792444951.8585696,
-    "seen": 1792446183.0901463,
-    "ast_hash": "718e11eb99ee194713bb0db142ba23d9",
+    "mtime": 1792447264.5806153,
+    "seen": 1792447509.6280494,
+    "ast_hash": "b60a8cd8f2f216c119953e7a20b79ef3",
     "semantic_hash": ""
   },
   "src/services/tmdb.ts": {
@@ -378,8 +378,8 @@
     "semantic_hash": ""
   },
   "src/types/index.ts": {
-    "mtime": 1792445978.9203062,
-    "seen": 1792446183.0901544,
+    "mtime": 1792446411.5632102,
+    "seen": 1792447509.6280708,
     "ast_hash": "be4ea6171df7907022d84e076ff9eb59",
     "semantic_hash": ""
   },
