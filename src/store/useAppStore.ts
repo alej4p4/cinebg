@@ -83,6 +83,7 @@ interface AppState {
   clearHistory: () => void
   getLastWatched: (id: number) => WatchHistoryItem | undefined
   updateHistoryProgress: (id: number, progress: number) => void
+  updateHistoryRating: (id: number, rating: number) => void
 
   // Idioma & Áudio (por perfil)
   setLanguage: (lang: Language) => void
@@ -322,6 +323,20 @@ export const useAppStore = create<AppState>()(
           const data = dataFor(state)
           if (!data.history.some((h) => h.id === id)) return {}
           const history = data.history.map((h) => (h.id === id ? { ...h, progress } : h))
+          return {
+            dataByProfile: {
+              ...state.dataByProfile,
+              [state.activeProfileId]: { ...data, history },
+            },
+            history,
+          }
+        }),
+
+      updateHistoryRating: (id, rating) =>
+        set((state) => {
+          const data = dataFor(state)
+          if (!data.history.some((h) => h.id === id)) return {}
+          const history = data.history.map((h) => (h.id === id ? { ...h, rating } : h))
           return {
             dataByProfile: {
               ...state.dataByProfile,

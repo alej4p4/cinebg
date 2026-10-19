@@ -54,6 +54,7 @@ interface StreamPlayerProps {
   season?: number
   episode?: number
   title: string
+  originalLanguage?: string
   onNextEpisode?: () => void
   startAt?: number
   onProgress?: (seconds: number, duration: number) => void
@@ -69,6 +70,7 @@ const StreamPlayer = ({
   season = 1,
   episode = 1,
   title,
+  originalLanguage,
   onNextEpisode,
   startAt,
   onProgress,
@@ -522,20 +524,9 @@ const StreamPlayer = ({
         showFeedback(`Conectando: ${next.label}`)
         return nextIndex
       }
-      // Se todos os candidatos diretos falharem e estivermos em Dublado, usamos o espelho MegaEmbed web dublado (sem mudar para inglês)
-      if (audioOption === 'dub') {
-        console.info('[StreamPlayer] Fontes diretas esgotadas. Conectando espelho web dublado (MegaEmbed)...')
-        nativeActiveRef.current = false
-        setDirectSrc(null)
-        setDirectKind(null)
-        setActiveMirror('megaembed')
-        setAllowIframe(true)
-        setError(false)
-        showFeedback('Conectando reprodutor dublado...')
-        return prevIndex
-      }
-
-      console.info('[StreamPlayer] Fontes diretas originais esgotadas. Alternando espelho legendado...')
+      // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho com áudio original e legenda PT-BR
+      console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho legendado PT-BR (VidLink)...')
+      setAudioOption('orig')
       nativeActiveRef.current = false
       setDirectSrc(null)
       setDirectKind(null)
@@ -699,27 +690,33 @@ const StreamPlayer = ({
             setDirectKind('hls')
           }
         } else {
-          // Se não extraiu fontes diretas por regex, mantemos Dublado e usamos o reprodutor web do MegaEmbed
-          console.info('[StreamPlayer] Fontes diretas não extraídas. Mantendo Dublado com reprodutor MegaEmbed...')
-          setAudioOption('dub')
+          // Nenhuma fonte dublada disponível no MegaEmbed (comum em séries turcas, doramas ou produções com áudio original)
+          // Alterna automaticamente para o reprodutor com áudio original e legenda em português (VidLink / VidSrc / MultiEmbed)
+          console.info('[StreamPlayer] Nenhuma fonte dublada disponível no MegaEmbed. Alternando para áudio original com legendas PT-BR...')
+          setAudioOption('orig')
           setCandidates([])
           setCandidateIndex(0)
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
-          setActiveMirror('megaembed')
+          setActiveMirror('vidlink')
           setAllowIframe(true)
           setError(false)
+          if (originalLanguage === 'tr') {
+            showFeedback('Série Turca (Áudio Original / Legendas PT-BR)')
+          } else {
+            showFeedback('Iniciando em versão legendada PT-BR...')
+          }
         }
       })
       .catch((err) => {
         if (cancelled) return
-        console.warn('[StreamPlayer] Erro ao carregar fontes diretas. Mantendo Dublado com MegaEmbed:', err)
-        setAudioOption('dub')
+        console.warn('[StreamPlayer] Erro ao carregar fontes diretas. Alternando para espelho legendado:', err)
+        setAudioOption('orig')
         setCandidates([])
         setCandidateIndex(0)
         nativeActiveRef.current = false
-        setActiveMirror('megaembed')
+        setActiveMirror('vidlink')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
@@ -732,7 +729,7 @@ const StreamPlayer = ({
     return () => {
       cancelled = true
     }
-  }, [key, mediaKey, tmdbId, season, episode, type, setAudioOption])
+  }, [key, mediaKey, tmdbId, season, episode, type, originalLanguage, setAudioOption])
 
   const handleIframeLoad = () => {
     loadedRef.current = true

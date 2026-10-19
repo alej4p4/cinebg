@@ -195,7 +195,12 @@ const resolvedSourcesCache = new Map<string, MegaEmbedResolved>()
 // Normaliza URLs de CDN para HTTPS e remove portas obsoletas
 export const formatDirectStreamUrl = (url: string | null): string | null => {
   if (!url) return null
-  return url.trim()
+  let clean = url.trim()
+  // Normaliza URLs de CDN para HTTPS e remove portas obsoletas (:80) para evitar bloqueio de Mixed Content (HTTP em HTTPS)
+  if (clean.startsWith('http://') && !clean.includes('localhost') && !clean.includes('127.0.0.1')) {
+    clean = clean.replace('http://', 'https://').replace(':80/', '/')
+  }
+  return clean
 }
 
 // Devolve as fontes diretas do MegaEmbed com suporte a CapacitorHttp nativo e retry

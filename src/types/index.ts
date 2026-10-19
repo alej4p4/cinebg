@@ -161,6 +161,7 @@ export interface WatchHistoryItem {
   season?: number
   episode?: number
   progress?: number
+  rating?: number
 }
 
 export interface FavoriteItem {
@@ -191,6 +192,7 @@ export interface AppStore {
   removeFavorite: (id: number) => void
   isFavorite: (id: number) => boolean
   addToHistory: (item: WatchHistoryItem) => void
+  updateHistoryRating?: (id: number, rating: number) => void
   clearHistory: () => void
 }
 
