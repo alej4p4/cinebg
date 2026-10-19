@@ -1044,6 +1044,116 @@ const StreamPlayer = ({
     }
   }
 
+  // Listener Global de Teclas do Controle Remoto (Android TV / TV Box / D-Pad)
+  useEffect(() => {
+    const handleGlobalRemoteKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) return
+
+      const key = e.key
+      const code = e.keyCode || e.which
+
+      // Qualquer tecla no controle remoto reativa e exibe o HUD por 3.5 segundos
+      resetHudTimer()
+
+      // Teclas especiais de Back no Android TV (keycode 4, Escape, GoBack)
+      if (key === 'Escape' || key === 'GoBack' || key === 'Backspace' || code === 4) {
+        if (settingsModalOpen) {
+          e.preventDefault()
+          setSettingsModalOpen(false)
+          return
+        }
+        if (episodesDrawerOpen) {
+          e.preventDefault()
+          setEpisodesDrawerOpen(false)
+          return
+        }
+        if (onBack) {
+          e.preventDefault()
+          onBack()
+          return
+        }
+      }
+
+      // Se um modal ou gaveta de episódios estiver aberto, permite navegação nativa pelos botões focáveis
+      if (settingsModalOpen || episodesDrawerOpen) {
+        return
+      }
+
+      if (key === 'ArrowRight' || key === 'MediaFastForward') {
+        if (document.activeElement?.tagName !== 'BUTTON') {
+          e.preventDefault()
+          seekBy(10)
+        }
+      } else if (key === 'ArrowLeft' || key === 'MediaRewind') {
+        if (document.activeElement?.tagName !== 'BUTTON') {
+          e.preventDefault()
+          seekBy(-10)
+        }
+      } else if (key === 'ArrowUp') {
+        if (document.activeElement?.tagName !== 'BUTTON') {
+          e.preventDefault()
+          if (videoRef.current) {
+            videoRef.current.volume = Math.min(1, Number((videoRef.current.volume + 0.1).toFixed(2)))
+            showFeedback(`Vol ${Math.round(videoRef.current.volume * 100)}%`)
+          }
+        }
+      } else if (key === 'ArrowDown') {
+        if (document.activeElement?.tagName !== 'BUTTON') {
+          e.preventDefault()
+          if (videoRef.current) {
+            videoRef.current.volume = Math.max(0, Number((videoRef.current.volume - 0.1).toFixed(2)))
+            showFeedback(`Vol ${Math.round(videoRef.current.volume * 100)}%`)
+          }
+        }
+      } else if (
+        key === ' ' ||
+        key === 'k' ||
+        key === 'K' ||
+        key === 'MediaPlay' ||
+        key === 'MediaPause' ||
+        key === 'MediaPlayPause'
+      ) {
+        if (document.activeElement?.tagName !== 'BUTTON') {
+          e.preventDefault()
+          togglePlay()
+        }
+      } else if (key === 'Enter' || code === 23 || code === 66) {
+        if (document.activeElement?.tagName !== 'BUTTON') {
+          e.preventDefault()
+          togglePlay()
+        }
+      } else if (key === 'a' || key === 'A') {
+        e.preventDefault()
+        const nextOpt = audioOption === 'dub' ? 'orig' : 'dub'
+        switchAudio(nextOpt)
+        showFeedback(nextOpt === 'dub' ? 'Áudio: Dublado 🇧🇷' : 'Áudio: Legendado / Original 🇺🇸')
+      } else if (key === 's' || key === 'S') {
+        e.preventDefault()
+        setSubLang((prev) => {
+          const next = prev === 'off' ? 'pt' : 'off'
+          showFeedback(next === 'off' ? 'Legendas: Desativadas' : 'Legendas: Português (PT-BR)')
+          return next
+        })
+      } else if (key === 'e' || key === 'E') {
+        if (type !== 'movie') {
+          e.preventDefault()
+          setEpisodesDrawerOpen((prev) => !prev)
+        }
+      } else if (key === 'n' || key === 'N') {
+        if (type !== 'movie' && onNextEpisode) {
+          e.preventDefault()
+          onNextEpisode()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalRemoteKey)
+    return () => {
+      window.removeEventListener('keydown', handleGlobalRemoteKey)
+    }
+  }, [settingsModalOpen, episodesDrawerOpen, onBack, audioOption, type, onNextEpisode])
+
   const handleVideoDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isLocked) {
       handleLockTap()
