@@ -11,6 +11,8 @@ import { searchMulti } from '@/services/tmdb'
 import { MOVIE_GENRES, TV_GENRES, type MediaItem } from '@/types'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
 import { isTVDevice } from '@/utils/tv'
+import { useAppStore } from '@/store/useAppStore'
+import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
 
 const ALL_GENRES = { ...MOVIE_GENRES, ...TV_GENRES }
 
@@ -30,11 +32,13 @@ const KEYBOARD_LAYOUT = [
   ['G', 'H', 'I', 'J', 'K', 'L'],
   ['M', 'N', 'O', 'P', 'Q', 'R'],
   ['S', 'T', 'U', 'V', 'W', 'X'],
-  ['Y', 'Z', '0', '1', '2', '3'],
-  ['4', '5', '6', '7', '8', '9'],
+  ['Y', 'Z', '1', '2', '3', '4'],
+  ['5', '6', '7', '8', '9', '0'],
 ]
 
 const Search = () => {
+  const { tvMode } = useAppStore()
+  const isTv = isTVDevice() || tvMode
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -44,8 +48,35 @@ const Search = () => {
   const [selectedYear, setSelectedYear] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [voiceToast, setVoiceToast] = useState<string | null>(null)
-  const [showTvKeyboard, setShowTvKeyboard] = useState(() => isTVDevice())
+  const [showTvKeyboard, setShowTvKeyboard] = useState(() => isTVDevice() || useAppStore.getState().tvMode)
   const inputRef = useRef<HTMLInputElement>(null)
+  const lastInputTimeRef = useRef(0)
+
+  // Inserção suave com debounce para evitar caracteres duplicados em D-Pad/Enter + Click simultâneo
+  const handleKeyInput = (char: string) => {
+    const now = Date.now()
+    if (now - lastInputTimeRef.current < 75) return
+    lastInputTimeRef.current = now
+    setQuery((prev) => prev + char)
+  }
+
+  const handleSpace = () => {
+    const now = Date.now()
+    if (now - lastInputTimeRef.current < 75) return
+    lastInputTimeRef.current = now
+    setQuery((prev) => prev + ' ')
+  }
+
+  const handleBackspace = () => {
+    const now = Date.now()
+    if (now - lastInputTimeRef.current < 75) return
+    lastInputTimeRef.current = now
+    setQuery((prev) => prev.slice(0, -1))
+  }
+
+  const handleClear = () => {
+    setQuery('')
+  }
 
   const handleVoiceResult = (spokenText: string) => {
     setQuery(spokenText)
@@ -62,8 +93,68 @@ const Search = () => {
     stopListening,
   } = useSpeechRecognition(handleVoiceResult)
 
+  // Posicionamento de foco inicial inteligente (TV = Tecla 'A' do teclado virtual; Mobile/Desktop = input de busca)
   useEffect(() => {
-    inputRef.current?.focus()
+    if (isTv) {
+      setShowTvKeyboard(true)
+      const timer = setTimeout(() => {
+        try {
+          if (doesFocusableExist('tvkey-A')) {
+            setFocus('tvkey-A')
+          }
+        } catch {}
+      }, 150)
+      return () => clearTimeout(timer)
+    } else {
+      inputRef.current?.focus()
+    }
+  }, [isTv])
+
+  // Suporte global a digitação direta via controle remoto com teclado físico ou mini-teclado USB na TV
+  useEffect(() => {
+    const handlePhysicalKeyDown = (e: KeyboardEvent) => {
+      // Se estiver focado no input de texto nativo, deixa o navegador processar
+      if (document.activeElement === inputRef.current) return
+
+      // Teclas reservadas para navegação direcional espacial D-Pad
+      if (
+        [
+          'ArrowUp',
+          'ArrowDown',
+          'ArrowLeft',
+          'ArrowRight',
+          'Enter',
+          'Tab',
+          'Escape',
+        ].includes(e.key) ||
+        [19, 20, 21, 22, 23, 13, 27].includes(e.keyCode || e.which)
+      ) {
+        return
+      }
+
+      // Backspace
+      if (e.key === 'Backspace' || e.keyCode === 8) {
+        e.preventDefault()
+        handleBackspace()
+        return
+      }
+
+      // Espaço
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault()
+        handleSpace()
+        return
+      }
+
+      // Caracteres imprimíveis gerais (letras A-Z, números 0-9, pontuação)
+      if (e.key && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault()
+        handleKeyInput(e.key.toUpperCase())
+      }
+    }
+
+    window.addEventListener('keydown', handlePhysicalKeyDown)
+    return () => window.removeEventListener('keydown', handlePhysicalKeyDown)
   }, [])
 
   useEffect(() => {
@@ -185,45 +276,103 @@ const Search = () => {
                   <Focusable
                     key={char}
                     focusKey={`tvkey-${char}`}
-                    onEnterPress={() => setQuery((prev) => prev + char)}
+                    onEnterPress={() => handleKeyInput(char)}
                     autoScroll={false}
                   >
                     <button
                       type="button"
+                      tabIndex={-1}
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => setQuery((prev) => prev + char)}
-                      className="w-full h-10 rounded-xl bg-white/5 hover:bg-white/15 text-white font-bold text-sm border border-white/10 transition-transform active:scale-95 flex items-center justify-center outline-none"
+                      onClick={() => handleKeyInput(char)}
+                      className="w-full h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white font-bold text-base border border-white/10 transition-transform active:scale-95 flex items-center justify-center outline-none select-none"
                     >
                       {char}
                     </button>
                   </Focusable>
                 ))}
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 <Focusable
                   focusKey="tvkey-space"
-                  onEnterPress={() => setQuery((prev) => prev + ' ')}
+                  onEnterPress={handleSpace}
                   autoScroll={false}
+                  className="col-span-2"
+                  onArrowPress={(dir) => {
+                    if (dir === 'down') {
+                      if (doesFocusableExist('search-card-0')) {
+                        setFocus('search-card-0')
+                        return false
+                      }
+                      if (doesFocusableExist('search-tag-0')) {
+                        setFocus('search-tag-0')
+                        return false
+                      }
+                    }
+                    return true
+                  }}
                 >
                   <button
                     type="button"
+                    tabIndex={-1}
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => setQuery((prev) => prev + ' ')}
-                    className="w-full h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 flex items-center justify-center gap-1.5 outline-none transition-transform active:scale-95"
+                    onClick={handleSpace}
+                    className="w-full h-11 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 flex items-center justify-center gap-1.5 outline-none transition-transform active:scale-95 select-none"
                   >
                     ESPAÇO
                   </button>
                 </Focusable>
                 <Focusable
-                  focusKey="tvkey-backspace"
-                  onEnterPress={() => setQuery((prev) => prev.slice(0, -1))}
+                  focusKey="tvkey-ç"
+                  onEnterPress={() => handleKeyInput('Ç')}
                   autoScroll={false}
+                  onArrowPress={(dir) => {
+                    if (dir === 'down') {
+                      if (doesFocusableExist('search-card-0')) {
+                        setFocus('search-card-0')
+                        return false
+                      }
+                      if (doesFocusableExist('search-tag-0')) {
+                        setFocus('search-tag-0')
+                        return false
+                      }
+                    }
+                    return true
+                  }}
                 >
                   <button
                     type="button"
+                    tabIndex={-1}
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => setQuery((prev) => prev.slice(0, -1))}
-                    className="w-full h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 flex items-center justify-center gap-1.5 outline-none transition-transform active:scale-95"
+                    onClick={() => handleKeyInput('Ç')}
+                    className="w-full h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white font-bold text-base border border-white/10 flex items-center justify-center outline-none transition-transform active:scale-95 select-none"
+                  >
+                    Ç
+                  </button>
+                </Focusable>
+                <Focusable
+                  focusKey="tvkey-backspace"
+                  onEnterPress={handleBackspace}
+                  autoScroll={false}
+                  onArrowPress={(dir) => {
+                    if (dir === 'down') {
+                      if (doesFocusableExist('search-card-0')) {
+                        setFocus('search-card-0')
+                        return false
+                      }
+                      if (doesFocusableExist('search-tag-0')) {
+                        setFocus('search-tag-0')
+                        return false
+                      }
+                    }
+                    return true
+                  }}
+                >
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={handleBackspace}
+                    className="w-full h-11 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 flex items-center justify-center gap-1.5 outline-none transition-transform active:scale-95 select-none"
                   >
                     <Delete className="h-4 w-4" />
                     APAGAR
@@ -231,14 +380,28 @@ const Search = () => {
                 </Focusable>
                 <Focusable
                   focusKey="tvkey-clear"
-                  onEnterPress={() => setQuery('')}
+                  onEnterPress={handleClear}
                   autoScroll={false}
+                  onArrowPress={(dir) => {
+                    if (dir === 'down') {
+                      if (doesFocusableExist('search-card-0')) {
+                        setFocus('search-card-0')
+                        return false
+                      }
+                      if (doesFocusableExist('search-tag-0')) {
+                        setFocus('search-tag-0')
+                        return false
+                      }
+                    }
+                    return true
+                  }}
                 >
                   <button
                     type="button"
+                    tabIndex={-1}
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => setQuery('')}
-                    className="w-full h-10 rounded-xl bg-accent-red/20 hover:bg-accent-red/30 text-red-400 border border-accent-red/30 font-semibold text-xs flex items-center justify-center gap-1.5 outline-none transition-transform active:scale-95"
+                    onClick={handleClear}
+                    className="w-full h-11 rounded-xl bg-accent-red/20 hover:bg-accent-red/30 text-red-400 border border-accent-red/30 font-semibold text-xs flex items-center justify-center gap-1.5 outline-none transition-transform active:scale-95 select-none"
                   >
                     <X className="h-4 w-4" />
                     LIMPAR
@@ -394,7 +557,20 @@ const Search = () => {
           >
             {results.map((item, i) => (
               <motion.div key={item.id} variants={STAGGER_ITEM}>
-                <MovieCard item={item} index={i} />
+                <MovieCard
+                  item={item}
+                  index={i}
+                  focusKey={`search-card-${i}`}
+                  onArrowPress={(dir) => {
+                    if (dir === 'up' && i < 6) {
+                      if (doesFocusableExist('tvkey-space')) {
+                        setFocus('tvkey-space')
+                        return false
+                      }
+                    }
+                    return true
+                  }}
+                />
               </motion.div>
             ))}
           </motion.div>
@@ -418,15 +594,31 @@ const Search = () => {
             </div>
 
             <div className="flex flex-wrap gap-2.5">
-              {POPULAR_SEARCH_TAGS.map((tag) => (
-                <button
+              {POPULAR_SEARCH_TAGS.map((tag, idx) => (
+                <Focusable
                   key={tag.label}
-                  tabIndex={0}
-                  onClick={() => setQuery(tag.query)}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white text-xs sm:text-sm font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 tv-focusable outline-none"
+                  focusKey={`search-tag-${idx}`}
+                  onEnterPress={() => setQuery(tag.query)}
+                  autoScroll={false}
+                  onArrowPress={(dir) => {
+                    if (dir === 'up') {
+                      if (doesFocusableExist('tvkey-space')) {
+                        setFocus('tvkey-space')
+                        return false
+                      }
+                    }
+                    return true
+                  }}
                 >
-                  <span>{tag.label}</span>
-                </button>
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setQuery(tag.query)}
+                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white text-xs sm:text-sm font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 outline-none select-none"
+                  >
+                    <span>{tag.label}</span>
+                  </button>
+                </Focusable>
               ))}
             </div>
 

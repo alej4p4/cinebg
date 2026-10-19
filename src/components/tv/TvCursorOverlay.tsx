@@ -28,8 +28,7 @@ const isEnterEvent = (e: KeyboardEvent): boolean => {
     code === 96 || // BUTTON_A
     key === 'enter' ||
     key === 'select' ||
-    key === 'ok' ||
-    key === ' '
+    key === 'ok'
   )
 }
 

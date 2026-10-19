@@ -60,6 +60,14 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
         }
       }
 
+      // Na tela de pesquisa, posiciona o foco diretamente na primeira tecla do teclado virtual (letra A)
+      if (routeKey === '/search') {
+        if (doesFocusableExist('tvkey-A')) {
+          setFocus('tvkey-A')
+          return
+        }
+      }
+
       if (doesFocusableExist('details-play')) {
         setFocus('details-play')
       } else if (doesFocusableExist('hero-watch-btn')) {
