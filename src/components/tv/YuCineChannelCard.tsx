@@ -406,7 +406,15 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
   return (
     <div
       ref={ref}
+      tabIndex={0}
+      data-focus-key={`channel-${channel.id}`}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
       className={`flex flex-col group cursor-pointer select-none rounded-xl transition-all duration-200 outline-none ${
         focused ? 'tv-focused scale-[1.04]' : ''
       }`}
