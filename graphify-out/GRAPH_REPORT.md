@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-19)
 
 ## Corpus Check
-- 92 files · ~388,635 words
+- 92 files · ~388,818 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 636 nodes · 1549 edges · 35 communities (24 shown, 11 thin omitted)
+- 636 nodes · 1552 edges · 35 communities (24 shown, 11 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e1c4fffe`
+- Built from commit: `e941d94a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -45,7 +45,7 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 37 edges
-2. `useAppStore` - 36 edges
+2. `useAppStore` - 37 edges
 3. `framer-motion` - 33 edges
 4. `lucide-react` - 28 edges
 5. `Focusable()` - 22 edges
