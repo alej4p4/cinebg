@@ -249,12 +249,35 @@ a:focus-visible,
   position: relative;
 }
 
-/* Modo TV (Leanback / D-Pad ativo) - Otimização de rolagem nativa 60fps */
+/* Modo TV (Leanback / D-Pad ativo) - Otimização de rolagem nativa 60fps sem engasgos */
 .tv-mode,
 .tv-remote-active,
 .tv-mode html,
 .tv-remote-active html {
   scroll-behavior: auto !important;
+}
+
+/* DESATIVA FILTROS DE DESFOQUE PESADOS NO MODO TV PARA EVITAR TRAVAMENTOS DE GPU */
+.tv-mode .glass,
+.tv-remote-active .glass,
+.tv-mode [class*="backdrop-blur"],
+.tv-remote-active [class*="backdrop-blur"],
+.tv-mode .navbar-blur,
+.tv-remote-active .navbar-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(14, 14, 22, 0.98) !important;
+}
+
+/* ACELERAÇÃO DE HARDWARE E RENDERIZAÇÃO PLANA PARA TVS */
+.tv-mode .movie-card,
+.tv-remote-active .movie-card,
+.tv-mode .carousel-container,
+.tv-remote-active .carousel-container,
+.tv-mode .content-grid,
+.tv-remote-active .content-grid {
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .tv-mode .carousel-container,
