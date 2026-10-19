@@ -1916,11 +1916,9 @@ const StreamPlayer = ({
         )}
 
         {/*
-          SANDBOX (escudo anti-popup/anti-redirect):
-          Usamos `sandbox` COM `allow-same-origin`. Isso mantÃ©m a origem real do iframe
-          (nÃ£o fica "opaca"), entÃ£o os detectores de sandbox do MegaEmbed e do vidsrc/sbx.js
-          nÃ£o disparam e o vÃ­deo toca. Sem `allow-popups`/`allow-top-navigation`, a abertura
-          de abas de propaganda e o redirect da janela principal ficam bloqueados.
+          Escudo anti-popup/anti-redirect é mantido pelo `initAntiRedirectShield()` global
+          e pela camada de segurança do Capacitor/WebView, sem utilizar o atributo `sandbox`
+          que ativa detectores de anti-tamper (como "Please disable sandbox" no VidLink/VidSrc).
         */}
         {showIframe && (
           <iframe
@@ -1931,7 +1929,6 @@ const StreamPlayer = ({
             className="w-full h-full border-0"
             allowFullScreen
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-            sandbox={activeMirror === 'megaembed' ? undefined : "allow-scripts allow-same-origin allow-forms allow-presentation"}
             referrerPolicy="no-referrer"
             onLoad={handleIframeLoad}
             onError={handleStreamFailure}
