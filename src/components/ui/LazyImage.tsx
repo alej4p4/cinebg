@@ -42,29 +42,14 @@ export const LazyImage = ({
     <div
       className={`relative w-full ${aspectRatio} overflow-hidden rounded-xl bg-[#12121a] ${containerClassName}`}
     >
-      {/* Skeleton Shimmer enquanto a imagem carrega */}
-      <AnimatePresence>
-        {!isLoaded && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="absolute inset-0 skeleton z-0"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Imagem com transição fluida acelerada por GPU sem filtro de desfoque pesado */}
       <img
         src={src}
         alt={alt}
-        loading="lazy"
+        loading="eager"
         decoding="async"
         onLoad={() => setIsLoaded(true)}
         onError={() => setHasError(true)}
-        className={`w-full h-full object-cover select-none transition-opacity duration-250 ${
-          isLoaded ? 'opacity-100' : 'opacity-0'
-        } ${className}`}
+        className={`w-full h-full object-cover select-none ${className}`}
         style={{ transform: 'translateZ(0)' }}
       />
     </div>

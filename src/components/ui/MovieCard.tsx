@@ -75,19 +75,13 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
   const posterUrl = getPosterUrl(item.posterPath, 'w342')
 
   return (
-    <motion.div
-      whileHover={{
-        y: -4,
-        scale: 1.025,
-      }}
-      whileTap={{
-        scale: 0.98,
-      }}
-      style={{ transform: 'translateZ(0)' }}
+    <div
       ref={ref}
       tabIndex={0}
-      className={`group cursor-pointer relative select-none tv-focusable rounded-xl ${
-        focused ? 'tv-focused' : ''
+      data-focus-key={focusKey}
+      style={{ transform: 'translateZ(0)' }}
+      className={`group cursor-pointer relative select-none tv-focusable rounded-xl transition-all duration-150 ${
+        focused ? 'tv-focused ring-4 ring-yellow-400 scale-[1.03] z-20 shadow-xl shadow-yellow-500/30' : ''
       }`}
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -192,7 +186,7 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
         </h3>
         {year && <p className="text-[11px] text-white/40 mt-0.5 font-medium">{year}</p>}
       </div>
-    </motion.div>
+    </div>
   )
 }
 

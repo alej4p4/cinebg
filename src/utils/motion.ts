@@ -32,58 +32,55 @@ export const SPRING_BOUNCE: Transition = {
   mass: 0.6,
 }
 
-// 3. Transição de Páginas (Entrada fluida de 320ms, Saída ágil de 160ms)
+// 3. Transição de Páginas (Renderização imediata e estável para Smart TV / Mobile)
 export const PAGE_VARIANTS: Variants = {
   initial: {
-    opacity: 0,
-    y: 12,
-    scale: 0.995,
+    opacity: 1,
+    y: 0,
+    scale: 1,
   },
   animate: {
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
-      duration: 0.32,
-      ease: FLUID_EASE,
+      duration: 0.1,
     },
   },
   exit: {
-    opacity: 0,
-    y: -8,
-    scale: 0.995,
+    opacity: 1,
+    y: 0,
+    scale: 1,
     transition: {
-      duration: 0.16,
-      ease: EXIT_EASE,
+      duration: 0.05,
     },
   },
 }
 
-// 4. Stagger Cascading Containers (Efeito cascata suave para listas/grids)
+// 4. Stagger Cascading Containers (Cards mantidos fixos e estáveis sem efeito cascata atrasado)
 export const STAGGER_CONTAINER: Variants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 1 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.04,
-      delayChildren: 0.06,
+      staggerChildren: 0,
+      delayChildren: 0,
     },
   },
 }
 
 export const STAGGER_ITEM: Variants = {
   hidden: {
-    opacity: 0,
-    y: 16,
-    scale: 0.96,
+    opacity: 1,
+    y: 0,
+    scale: 1,
   },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
-      duration: 0.35,
-      ease: FLUID_EASE,
+      duration: 0,
     },
   },
 }
