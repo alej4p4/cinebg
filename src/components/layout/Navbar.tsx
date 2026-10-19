@@ -145,16 +145,6 @@ const Navbar = () => {
 
         {/* Right Section: All top action icons strictly visible without cut-off */}
         <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-shrink-0">
-          {/* Mobile Grade Button */}
-          <button
-            type="button"
-            onClick={() => setGridMenuOpen(true)}
-            className="md:hidden flex items-center gap-1 px-2 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-400 hover:bg-white/10 text-xs font-bold transition-all active:scale-95 flex-shrink-0"
-            title="Grade de Categorias"
-          >
-            <LayoutGrid className="h-4 w-4 text-amber-400" />
-            <span className="text-white text-[11px] font-bold">Grade</span>
-          </button>
 
           {/* Search Button (Navega para a tela /search com teclado D-pad completo) */}
           <Focusable
@@ -513,15 +503,6 @@ const Navbar = () => {
           </>
         )}
       </AnimatePresence>
-
-      {/* Mobile menu */}
-        <button
-          className="md:hidden p-2 text-white/80 hover:text-white"
-          onClick={() => setGridMenuOpen(true)}
-          title="Grade de Categorias"
-        >
-          <LayoutGrid className="h-5 w-5 text-amber-400" />
-        </button>
       </div>
 
       {/* Barra de Categorias Rápida no Mobile (Estilo YuCine) */}
