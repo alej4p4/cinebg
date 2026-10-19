@@ -9,7 +9,7 @@ import {
   getCurrentFocusKey,
   doesFocusableExist,
 } from '@noriginmedia/norigin-spatial-navigation'
-import { isTvRemoteKey, isTVDevice, markTvModeActive } from '@/utils/tv'
+import { isTvRemoteKey, isTVDevice, markTvModeActive, isMobileDevice } from '@/utils/tv'
 
 let isInitialized = false
 
@@ -19,6 +19,9 @@ let isInitialized = false
  */
 export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string) => {
   useEffect(() => {
+    if (isMobileDevice()) {
+      return
+    }
     if (!isInitialized) {
       try {
         init({
@@ -96,6 +99,9 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
 
   // Recalcular layouts e reposicionar foco nas trocas de tela
   useEffect(() => {
+    if (isMobileDevice()) {
+      return
+    }
     const timer = setTimeout(() => {
       try {
         SpatialNavigation.updateAllLayouts().catch(() => {})

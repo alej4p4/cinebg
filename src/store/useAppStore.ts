@@ -151,8 +151,8 @@ export const useAppStore = create<AppState>()(
       setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
       isCheckingUpdate: false,
       updateInfo: {
-        currentVersion: '1.2.48',
-        latestVersion: '1.2.48',
+        currentVersion: '1.2.49',
+        latestVersion: '1.2.49',
         hasUpdate: false,
         downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk',
         mandatory: false,
@@ -162,7 +162,7 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const currentVersion = get().updateInfo.currentVersion || '1.2.48'
+          const currentVersion = get().updateInfo.currentVersion || '1.2.49'
           const candidateUrls = [
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,
@@ -399,29 +399,45 @@ export const useAppStore = create<AppState>()(
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
 
       setTvMode: (enabled) => {
+        const isMobile = isMobileDevice()
+        const effectiveEnabled = isMobile ? false : enabled
         try {
           if (typeof window !== 'undefined') {
-            localStorage.setItem('cinebg_tv_mode', enabled ? 'true' : 'false')
-            if (enabled) {
-              document.body.classList.add('tv-mode', 'tv-remote-active')
+            if (isMobile) {
+              localStorage.removeItem('cinebg_tv_mode')
+              localStorage.removeItem('cinebg_virtual_cursor')
+              document.body.classList.remove('tv-mode', 'tv-remote-active')
             } else {
-              document.body.classList.remove('tv-mode')
+              localStorage.setItem('cinebg_tv_mode', effectiveEnabled ? 'true' : 'false')
+              if (effectiveEnabled) {
+                document.body.classList.add('tv-mode', 'tv-remote-active')
+              } else {
+                document.body.classList.remove('tv-mode')
+              }
             }
           }
         } catch {}
-        set({ tvMode: enabled })
+        set({ tvMode: effectiveEnabled })
       },
 
       setVirtualCursor: (enabled) => {
+        const isMobile = isMobileDevice()
+        const effectiveEnabled = isMobile ? false : enabled
         try {
           if (typeof window !== 'undefined') {
-            localStorage.setItem('cinebg_virtual_cursor', enabled ? 'true' : 'false')
-            if (enabled) {
-              document.body.classList.add('tv-mode', 'tv-remote-active')
+            if (isMobile) {
+              localStorage.removeItem('cinebg_virtual_cursor')
+              localStorage.removeItem('cinebg_tv_mode')
+              document.body.classList.remove('tv-mode', 'tv-remote-active')
+            } else {
+              localStorage.setItem('cinebg_virtual_cursor', effectiveEnabled ? 'true' : 'false')
+              if (effectiveEnabled) {
+                document.body.classList.add('tv-mode', 'tv-remote-active')
+              }
             }
           }
         } catch {}
-        set({ virtualCursor: enabled })
+        set({ virtualCursor: effectiveEnabled })
       },
 
       addDownload: (item) =>
@@ -504,6 +520,15 @@ export const useAppStore = create<AppState>()(
       // Recalcula os espelhos após reidratar (não persistem sozinhos).
       merge: (persisted, current) => {
         const merged = { ...current, ...(persisted as object) } as AppState
+        if (isMobileDevice()) {
+          merged.tvMode = false
+          merged.virtualCursor = false
+          try {
+            localStorage.removeItem('cinebg_tv_mode')
+            localStorage.removeItem('cinebg_virtual_cursor')
+            document.body.classList.remove('tv-mode', 'tv-remote-active')
+          } catch {}
+        }
         const data = dataFor(merged)
         return {
           ...merged,

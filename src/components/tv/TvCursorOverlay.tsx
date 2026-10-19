@@ -48,14 +48,14 @@ const isToggleModeEvent = (e: KeyboardEvent): boolean => {
   const code = e.keyCode || e.which
   const key = (e.key || '').toLowerCase()
 
-  // NUNCA disparar com letras normais do teclado (R, C, M, ou qualquer A-Z: 65 a 90)
-  // Nota: o keycode 82 é a letra 'R' no browser! Não pode alternar o cursor!
+  // NUNCA disparar com qualquer caractere digitável (letras A-Z, números 0-9, R, C, M, etc.)
   if (
+    key.length === 1 ||
     key === 'r' ||
     key === 'c' ||
     key === 'm' ||
-    (code >= 65 && code <= 90) ||
-    (code >= 97 && code <= 122)
+    (code >= 48 && code <= 90) ||
+    (code >= 96 && code <= 122)
   ) {
     return false
   }
@@ -72,15 +72,6 @@ const isToggleModeEvent = (e: KeyboardEvent): boolean => {
 }
 
 export const TvCursorOverlay: React.FC = () => {
-  // Celulares e tablets móveis NUNCA devem renderizar ou ativar o cursor virtual
-  if (isMobileDevice()) {
-    try {
-      localStorage.removeItem('cinebg_virtual_cursor')
-      localStorage.removeItem('cinebg_tv_mode')
-      document.body.classList.remove('tv-mode', 'tv-remote-active')
-    } catch {}
-    return null
-  }
   const { tvMode, virtualCursor, setVirtualCursor } = useAppStore()
   const [isTvActive, setIsTvActive] = useState(false)
   const [navMode, setNavMode] = useState<NavigationMode>(() => (virtualCursor ? 'cursor' : 'focus'))
@@ -306,12 +297,7 @@ export const TvCursorOverlay: React.FC = () => {
     }
   }, [isTvActive, navMode, refreshBadgeVisibility])
 
-  if (
-    !isTvActive ||
-    (typeof navigator !== 'undefined' && navigator.userAgent.includes('CineBG-Mobile')) ||
-    (typeof window !== 'undefined' &&
-      (window.innerHeight > window.innerWidth || window.innerWidth < 768))
-  ) {
+  if (!isTvActive || isMobileDevice()) {
     return null
   }
 
