@@ -14,6 +14,7 @@ import UpdateModal from '@/components/UpdateModal'
 import { useLicense } from '@/hooks/useLicense'
 import LicenseGate from '@/components/LicenseGate'
 import TvCursorOverlay from '@/components/tv/TvCursorOverlay'
+import BottomNav from '@/components/layout/BottomNav'
 import { setFocus, doesFocusableExist, SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
 const Home = lazy(() => import('@/pages/Home'))
@@ -197,11 +198,12 @@ function App() {
       ) : (
         <BrowserRouter>
           <ErrorBoundary>
-            <div className="min-h-screen bg-bg-primary text-text-primary">
+            <div className="min-h-screen bg-bg-primary text-text-primary pb-16 md:pb-0">
               <Navbar />
               <main>
                 <AnimatedRoutes isVipActive={isLicensed || isTrial} />
               </main>
+              <BottomNav />
               {!isMobileDevice() && <TvCursorOverlay />}
             </div>
           </ErrorBoundary>
