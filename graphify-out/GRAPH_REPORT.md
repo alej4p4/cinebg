@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-19)
 
 ## Corpus Check
-- 92 files · ~388,534 words
+- 92 files · ~388,635 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 636 nodes · 1546 edges · 35 communities (24 shown, 11 thin omitted)
+- 636 nodes · 1549 edges · 35 communities (24 shown, 11 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `86eb80c3`
+- Built from commit: `e1c4fffe`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -48,9 +48,9 @@
 2. `useAppStore` - 36 edges
 3. `framer-motion` - 33 edges
 4. `lucide-react` - 28 edges
-5. `Home()` - 21 edges
-6. `AnimatedRoutes()` - 20 edges
-7. `Focusable()` - 20 edges
+5. `Focusable()` - 22 edges
+6. `Home()` - 21 edges
+7. `AnimatedRoutes()` - 20 edges
 8. `forKids()` - 19 edges
 9. `compilerOptions` - 18 edges
 10. `MovieCard()` - 17 edges
@@ -177,16 +177,16 @@ Nodes (10): EmptyDownloads(), EmptyFavorites(), EmptyHistory(), EmptyLiveTV(), E
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `App.tsx`, `index.ts`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`, `notifications.ts`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+  _High betweenness centrality (0.070) - this node is a cross-community bridge._
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _10 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.061507936507936505 - nodes in this community are weakly interconnected._
 - **Why does `framer-motion` connect `react` to `App.tsx`, `index.ts`, `EmptyState.tsx`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`, `notifications.ts`?**
-  _High betweenness centrality (0.060) - this node is a cross-community bridge._
+  _High betweenness centrality (0.059) - this node is a cross-community bridge._
 - **Should `index.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.09769335142469471 - nodes in this community are weakly interconnected._
 - **Why does `lucide-react` connect `react` to `App.tsx`, `index.ts`, `EmptyState.tsx`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`, `notifications.ts`?**
-  _High betweenness centrality (0.050) - this node is a cross-community bridge._
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
 - **Should `react` be split into smaller, more focused modules?**
   _Cohesion score 0.11904761904761904 - nodes in this community are weakly interconnected._

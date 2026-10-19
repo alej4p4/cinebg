@@ -46,20 +46,28 @@ export const markTvModeActive = () => {
  * Verifica se o evento de teclado veio de um controle remoto ou D-Pad
  */
 export const isTvRemoteKey = (e: KeyboardEvent): boolean => {
+  const activeEl = typeof document !== 'undefined' ? document.activeElement : null
+  const isInputActive =
+    activeEl &&
+    (activeEl.tagName === 'INPUT' ||
+      activeEl.tagName === 'TEXTAREA' ||
+      (activeEl as HTMLElement).isContentEditable)
+
+  // Quando o usuário está digitando em um campo de texto, não trata letras como controle remoto
+  if (isInputActive) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'].includes(e.key)) {
+      return true
+    }
+    return false
+  }
+
   const code = e.keyCode || e.which
   const key = e.key || ''
 
-  // Keycodes do Android TV D-Pad, Enter, Menu, Media e Teclas Comuns:
-  // 19: KEYCODE_DPAD_UP, 20: KEYCODE_DPAD_DOWN, 21: KEYCODE_DPAD_LEFT, 22: KEYCODE_DPAD_RIGHT
-  // 23: KEYCODE_DPAD_CENTER, 66: KEYCODE_ENTER, 13: ENTER, 160: NUMPAD_ENTER, 96: BUTTON_A
-  // 37: ArrowLeft, 38: ArrowUp, 39: ArrowRight, 40: ArrowDown
-  // 82: KEYCODE_MENU, 4: KEYCODE_BACK, 109: SELECT, 165: INFO, 172: GUIDE
-  if (
-    [
-      19, 20, 21, 22, 23, 66, 160, 96, 109, 13, 37, 38, 39, 40, 82, 4, 165,
-      172,
-    ].includes(code)
-  ) {
+  // Keycodes do Android TV D-Pad e teclas de navegação específicas (sem colidir com letras A-Z: 65 a 90):
+  // 19: DPAD_UP, 20: DPAD_DOWN, 21: DPAD_LEFT, 22: DPAD_RIGHT, 23: DPAD_CENTER
+  // 13: ENTER, 4: KEYCODE_BACK, 165: INFO, 172: GUIDE
+  if ([19, 20, 21, 22, 23, 13, 37, 38, 39, 40, 4, 165, 172].includes(code)) {
     markTvModeActive()
     return true
   }

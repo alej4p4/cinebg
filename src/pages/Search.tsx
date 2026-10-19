@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search as SearchIcon, X, SlidersHorizontal, Sparkles, Mic, Keyboard, Delete } from 'lucide-react'
 import useSpeechRecognition from '@/hooks/useSpeechRecognition'
 import MovieCard from '@/components/ui/MovieCard'
+import Focusable from '@/components/tv/Focusable'
 import { SkeletonGrid } from '@/components/ui/SkeletonCard'
 import ErrorState from '@/components/ui/ErrorState'
 import { EmptySearch } from '@/components/ui/EmptyState'
@@ -181,40 +182,68 @@ const Search = () => {
             >
               <div className="grid grid-cols-6 gap-2 mb-2">
                 {KEYBOARD_LAYOUT.flat().map((char) => (
-                  <button
+                  <Focusable
                     key={char}
-                    type="button"
-                    onClick={() => setQuery((prev) => prev + char)}
-                    className="h-10 rounded-xl bg-white/5 hover:bg-white/15 text-white font-bold text-sm border border-white/10 tv-focusable transition-transform active:scale-95 flex items-center justify-center outline-none"
+                    focusKey={`tvkey-${char}`}
+                    onEnterPress={() => setQuery((prev) => prev + char)}
+                    autoScroll={false}
                   >
-                    {char}
-                  </button>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setQuery((prev) => prev + char)}
+                      className="w-full h-10 rounded-xl bg-white/5 hover:bg-white/15 text-white font-bold text-sm border border-white/10 transition-transform active:scale-95 flex items-center justify-center outline-none"
+                    >
+                      {char}
+                    </button>
+                  </Focusable>
                 ))}
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setQuery((prev) => prev + ' ')}
-                  className="h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 tv-focusable flex items-center justify-center gap-1.5 outline-none"
+                <Focusable
+                  focusKey="tvkey-space"
+                  onEnterPress={() => setQuery((prev) => prev + ' ')}
+                  autoScroll={false}
                 >
-                  ESPAÇO
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQuery((prev) => prev.slice(0, -1))}
-                  className="h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 tv-focusable flex items-center justify-center gap-1.5 outline-none"
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setQuery((prev) => prev + ' ')}
+                    className="w-full h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 flex items-center justify-center gap-1.5 outline-none transition-transform active:scale-95"
+                  >
+                    ESPAÇO
+                  </button>
+                </Focusable>
+                <Focusable
+                  focusKey="tvkey-backspace"
+                  onEnterPress={() => setQuery((prev) => prev.slice(0, -1))}
+                  autoScroll={false}
                 >
-                  <Delete className="h-4 w-4" />
-                  APAGAR
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQuery('')}
-                  className="h-10 rounded-xl bg-accent-red/20 hover:bg-accent-red/30 text-red-400 border border-accent-red/30 font-semibold text-xs tv-focusable flex items-center justify-center gap-1.5 outline-none"
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setQuery((prev) => prev.slice(0, -1))}
+                    className="w-full h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 flex items-center justify-center gap-1.5 outline-none transition-transform active:scale-95"
+                  >
+                    <Delete className="h-4 w-4" />
+                    APAGAR
+                  </button>
+                </Focusable>
+                <Focusable
+                  focusKey="tvkey-clear"
+                  onEnterPress={() => setQuery('')}
+                  autoScroll={false}
                 >
-                  <X className="h-4 w-4" />
-                  LIMPAR
-                </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setQuery('')}
+                    className="w-full h-10 rounded-xl bg-accent-red/20 hover:bg-accent-red/30 text-red-400 border border-accent-red/30 font-semibold text-xs flex items-center justify-center gap-1.5 outline-none transition-transform active:scale-95"
+                  >
+                    <X className="h-4 w-4" />
+                    LIMPAR
+                  </button>
+                </Focusable>
               </div>
             </motion.div>
           )}
