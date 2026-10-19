@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { setFocus, doesFocusableExist, SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 import HeroBanner from '@/components/ui/HeroBanner'
 import Carousel from '@/components/ui/Carousel'
 import LiveTvCarousel from '@/components/tv/LiveTvCarousel'
@@ -23,7 +23,6 @@ import {
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
 import type { MediaItem } from '@/types'
-import { PAGE_VARIANTS } from '@/utils/motion'
 
 const Home = () => {
   const [trending, setTrending] = useState<MediaItem[]>(() => getCachedCatalogItems('/trending/all/week', {}, 'movie'))
@@ -101,6 +100,25 @@ const Home = () => {
     load()
   }, [])
 
+  // Quando o catálogo da tela inicial finaliza o carregamento, posiciona o foco/cursor imediatamente
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        try {
+          SpatialNavigation.updateAllLayouts().catch(() => {})
+          if (doesFocusableExist('hero-watch-btn')) {
+            setFocus('hero-watch-btn')
+          } else if (doesFocusableExist('card-0-0')) {
+            setFocus('card-0-0')
+          } else if (doesFocusableExist('nav-item-0')) {
+            setFocus('nav-item-0')
+          }
+        } catch {}
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [loading])
+
   const historyItems: MediaItem[] = history
     .slice(0, 12)
     .map((h) => ({
@@ -142,13 +160,7 @@ const Home = () => {
   return (
     <>
       <ProgressBar isLoading={loading} />
-      <motion.div
-        className="min-h-screen bg-bg-primary"
-        variants={PAGE_VARIANTS}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-      >
+      <div className="min-h-screen bg-bg-primary">
         <HeroBanner items={trending} loading={loading} />
 
         <div className="space-y-8 md:space-y-10 py-8 md:py-10">
@@ -156,17 +168,15 @@ const Home = () => {
             let rowIdx = 0
             return (
               <>
-                <AnimatePresence>
-                  {historyItems.length > 0 && (
-                    <Carousel
-                      rowIndex={rowIdx++}
-                      title="Continuar Assistindo"
-                      emoji="▶️"
-                      items={historyItems}
-                      getProgress={(item) => progressMap.get(`${item.type}-${item.id}`) ?? 0}
-                    />
-                  )}
-                </AnimatePresence>
+                {historyItems.length > 0 && (
+                  <Carousel
+                    rowIndex={rowIdx++}
+                    title="Continuar Assistindo"
+                    emoji="▶️"
+                    items={historyItems}
+                    getProgress={(item) => progressMap.get(`${item.type}-${item.id}`) ?? 0}
+                  />
+                )}
 
                 {loading ? (
                   <>
@@ -211,7 +221,7 @@ const Home = () => {
             )
           })()}
         </div>
-      </motion.div>
+      </div>
     </>
   )
 }

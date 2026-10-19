@@ -117,15 +117,39 @@ export const TvCursorOverlay: React.FC = () => {
     }
     checkTv()
 
-    // Centraliza o cursor virtual na tela inicialmente
-    if (typeof window !== 'undefined') {
+    // Posiciona o cursor virtual na tela inicial diretamente sobre o item de ação principal
+    const alignToInitialTarget = () => {
+      if (typeof window === 'undefined') return
+      const targetEl =
+        document.querySelector('[data-focus-key="hero-watch-btn"]') ||
+        document.querySelector('.tv-focused') ||
+        document.querySelector('[data-focus-key="card-0-0"]') ||
+        document.querySelector('[data-focus-key="nav-item-0"]')
+      if (targetEl) {
+        const rect = targetEl.getBoundingClientRect()
+        if (rect.width > 0 && rect.height > 0) {
+          const targetPos = {
+            x: Math.round(rect.left + rect.width / 2),
+            y: Math.round(rect.top + rect.height / 2),
+          }
+          posRef.current = targetPos
+          setCursorPos(targetPos)
+          return
+        }
+      }
+      // Posição padrão focalizada na área do banner da tela inicial
       const initialPos = {
-        x: Math.round(window.innerWidth / 2),
-        y: Math.round(window.innerHeight / 2),
+        x: Math.round(window.innerWidth * 0.22),
+        y: Math.round(window.innerHeight * 0.48),
       }
       posRef.current = initialPos
       setCursorPos(initialPos)
     }
+
+    alignToInitialTarget()
+    const tInitial1 = setTimeout(alignToInitialTarget, 300)
+    const tInitial2 = setTimeout(alignToInitialTarget, 1000)
+    const tInitial3 = setTimeout(alignToInitialTarget, 2500)
 
     const handleGlobalKey = (e: KeyboardEvent) => {
       if (isTvRemoteKey(e)) {
@@ -155,7 +179,12 @@ export const TvCursorOverlay: React.FC = () => {
     }
 
     window.addEventListener('keydown', handleGlobalKey, { passive: false })
-    return () => window.removeEventListener('keydown', handleGlobalKey)
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKey)
+      clearTimeout(tInitial1)
+      clearTimeout(tInitial2)
+      clearTimeout(tInitial3)
+    }
   }, [tvMode, virtualCursor, setVirtualCursor])
 
   // Temporizador para esconder badge discretamente apos 6 segundos

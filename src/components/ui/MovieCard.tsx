@@ -76,9 +76,6 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
       whileHover={{
         y: -4,
         scale: 1.025,

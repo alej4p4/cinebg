@@ -59,6 +59,7 @@ export const Focusable = ({
         }
       }}
       className={`${className} ${focused ? 'tv-focused' : ''} outline-none`}
+      data-focus-key={focusKey}
     >
       {children}
     </div>

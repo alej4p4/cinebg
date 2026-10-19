@@ -14,6 +14,7 @@ import UpdateModal from '@/components/UpdateModal'
 import { useLicense } from '@/hooks/useLicense'
 import LicenseGate from '@/components/LicenseGate'
 import TvCursorOverlay from '@/components/tv/TvCursorOverlay'
+import { setFocus, doesFocusableExist, SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Movies = lazy(() => import('@/pages/Movies'))
@@ -160,6 +161,18 @@ function App() {
 
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false)
+    setTimeout(() => {
+      try {
+        SpatialNavigation.updateAllLayouts().catch(() => {})
+        if (doesFocusableExist('hero-watch-btn')) {
+          setFocus('hero-watch-btn')
+        } else if (doesFocusableExist('card-0-0')) {
+          setFocus('card-0-0')
+        } else if (doesFocusableExist('nav-item-0')) {
+          setFocus('nav-item-0')
+        }
+      } catch {}
+    }, 150)
   }, [])
 
   return (

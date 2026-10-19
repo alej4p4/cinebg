@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792428143.13763,
-    "seen": 1792428262.8465126,
-    "ast_hash": "d5d83ed84f3717b5892360bbd6096462",
+    "mtime": 1792429208.562242,
+    "seen": 1792429388.3658304,
+    "ast_hash": "d31adbf70257e7ca9596181664beddbc",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792428242.090989,
-    "seen": 1792428262.8465207,
+    "mtime": 1792429364.664863,
+    "seen": 1792429388.3658407,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792428242.0899901,
-    "seen": 1792428262.8465405,
+    "mtime": 1792429364.664863,
+    "seen": 1792429388.365869,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -72,9 +72,9 @@
     "semantic_hash": "e6a5711fca159c8793e07440a22147be"
   },
   "package.json": {
-    "mtime": 1792428135.2597058,
-    "seen": 1792428262.8465533,
-    "ast_hash": "9ebd853af643cb31232e76efdb7c4156",
+    "mtime": 1792429197.3994122,
+    "seen": 1792429388.3658926,
+    "ast_hash": "7409c78c84e102de70445d8f71dbf7ef",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1792428127.1212478,
-    "seen": 1792428262.8465598,
-    "ast_hash": "db9af22112ff59e277a5466eccaaabf6",
+    "mtime": 1792429220.371077,
+    "seen": 1792429388.3659039,
+    "ast_hash": "0438d84de8a41e80d4c7ca0e2613100d",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -102,9 +102,9 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792427485.0529501,
-    "seen": 1792428262.8465636,
-    "ast_hash": "4449d44225c9f6bc33ac3fe4f4a3ebf2",
+    "mtime": 1792429140.5758784,
+    "seen": 1792429388.3659112,
+    "ast_hash": "760a460a8c25b1c572117d7659e535e8",
     "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
@@ -120,14 +120,14 @@
     "semantic_hash": ""
   },
   "src/components/UpdateModal.tsx": {
-    "mtime": 1792428118.247203,
-    "seen": 1792428262.8465698,
-    "ast_hash": "2b66ac8f651dfe5085bbfa46cb39bd23",
+    "mtime": 1792429241.2688334,
+    "seen": 1792429388.365923,
+    "ast_hash": "2b7284d816295699655a9885f8ba8d9d",
     "semantic_hash": ""
   },
   "src/components/layout/Navbar.tsx": {
-    "mtime": 1792427978.7021344,
-    "seen": 1792428262.8465714,
+    "mtime": 1792428308.136922,
+    "seen": 1792429388.3659258,
     "ast_hash": "e924b733071cc415cf1c7efa4b2b8281",
     "semantic_hash": ""
   },
@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
-    "mtime": 1792353598.2402852,
-    "seen": 1792354201.6679647,
-    "ast_hash": "27736c930e649afad1bb3f01413e0f3b",
+    "mtime": 1792429034.7189226,
+    "seen": 1792429388.3659456,
+    "ast_hash": "72d58e8a765e206d1ebafa734bf3f760",
     "semantic_hash": ""
   },
   "src/components/ui/Carousel.tsx": {
-    "mtime": 1792185862.8410552,
-    "seen": 1792186883.7996721,
-    "ast_hash": "50821d0d9e45e169305feb76569a1972",
+    "mtime": 1792428993.5864964,
+    "seen": 1792429388.36596,
+    "ast_hash": "cce2d77019e3d617875d73f94cbaa810",
     "semantic_hash": ""
   },
   "src/components/ui/EmptyState.tsx": {
@@ -198,9 +198,9 @@
     "semantic_hash": "5475e3fb0fdec69554ca4b3fa2816e4e"
   },
   "src/components/ui/MovieCard.tsx": {
-    "mtime": 1792408200.743106,
-    "seen": 1792408815.834082,
-    "ast_hash": "a00ca42a0ff4d1fcef4ad95618f5d031",
+    "mtime": 1792429023.4632285,
+    "seen": 1792429388.3659897,
+    "ast_hash": "dfa2c4e6aa40fcd21fc836099566e760",
     "semantic_hash": ""
   },
   "src/components/ui/ProgressBar.tsx": {
@@ -246,9 +246,9 @@
     "semantic_hash": "42b2597d65b2ebfa88e72c1a4a95a747"
   },
   "src/hooks/useSpatialNavigation.ts": {
-    "mtime": 1792428059.9179325,
-    "seen": 1792428262.8466427,
-    "ast_hash": "1842f1868add1504e96bd4e5945a4576",
+    "mtime": 1792429190.785122,
+    "seen": 1792429388.366027,
+    "ast_hash": "3fc11e1dbfe7c058f48e025f80624c40",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -288,9 +288,9 @@
     "semantic_hash": "5cabcc87ea2243cebf8f8f2d517d20c9"
   },
   "src/pages/Home.tsx": {
-    "mtime": 1792422664.0802622,
-    "seen": 1792423057.8863492,
-    "ast_hash": "ee38b0f025030828e647d3f1846b9625",
+    "mtime": 1792429112.4321742,
+    "seen": 1792429388.366057,
+    "ast_hash": "a03f3c6ae5c80097ec4b2a189aed3ace",
     "semantic_hash": ""
   },
   "src/pages/LiveTV.tsx": {
@@ -312,8 +312,8 @@
     "semantic_hash": ""
   },
   "src/pages/Profiles.tsx": {
-    "mtime": 1792428041.2747035,
-    "seen": 1792428262.8466864,
+    "mtime": 1792428308.1638112,
+    "seen": 1792429388.3660712,
     "ast_hash": "643506c4b39b3359d3cfc4cb25166944",
     "semantic_hash": ""
   },
@@ -372,9 +372,9 @@
     "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1792428100.6395683,
-    "seen": 1792428262.8467362,
-    "ast_hash": "5483aa088626ca3ebfbcd21846472fcb",
+    "mtime": 1792429253.4448392,
+    "seen": 1792429388.366125,
+    "ast_hash": "1d7af90a14a17d067a4b8be936048e60",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -396,8 +396,8 @@
     "semantic_hash": "daf39070d68a6d84e543ed362e3ef333"
   },
   "src/utils/tv.ts": {
-    "mtime": 1792427989.1611917,
-    "seen": 1792428262.8467507,
+    "mtime": 1792428308.1669743,
+    "seen": 1792429388.3661397,
     "ast_hash": "cfe60e5b3b2cd87afe4c043b4a45366a",
     "semantic_hash": ""
   },
@@ -678,9 +678,9 @@
     "semantic_hash": ""
   },
   "src/components/ui/SplashScreen.tsx": {
-    "mtime": 1792428109.6098435,
-    "seen": 1792428262.846621,
-    "ast_hash": "c4f263a4b6633fd1188c66b1fa34f9e2",
+    "mtime": 1792429230.4435208,
+    "seen": 1792429388.3660045,
+    "ast_hash": "5063b3e2a2c4e78b334f0651be45c438",
     "semantic_hash": ""
   },
   "src/services/mercadoPago.ts": {
@@ -762,9 +762,9 @@
     "semantic_hash": ""
   },
   "src/components/tv/TvCursorOverlay.tsx": {
-    "mtime": 1792428022.257419,
-    "seen": 1792428262.8465867,
-    "ast_hash": "a9f6c26e0830285821cc6fc15700ec87",
+    "mtime": 1792429178.200439,
+    "seen": 1792429388.3659523,
+    "ast_hash": "d2cc0facc537e435ded04e67b6249732",
     "semantic_hash": ""
   },
   "src/hooks/useSpeechRecognition.ts": {
@@ -798,9 +798,9 @@
     "semantic_hash": ""
   },
   "src/components/tv/LiveTvCarousel.tsx": {
-    "mtime": 1792422664.0782633,
-    "seen": 1792423057.8862822,
-    "ast_hash": "f18eafde75cdae6fc1fd89d3a584b08f",
+    "mtime": 1792429008.6669614,
+    "seen": 1792429388.3659487,
+    "ast_hash": "c3fa7fb0970146cc5f9f98a22a54e264",
     "semantic_hash": ""
   }
 }

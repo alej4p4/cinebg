@@ -6,7 +6,7 @@
   "4": "package.json",
   "5": "LiveTV.tsx",
   "6": "LicenseGate.tsx",
-  "7": "UpdateModal.tsx",
+  "7": "notifications.ts",
   "8": "compilerOptions",
   "9": "dependencies",
   "10": "devDependencies",
@@ -31,6 +31,5 @@
   "30": "scripts",
   "31": "eslint.config.js",
   "32": "vite.config.ts",
-  "33": "capacitor.config.ts",
-  "34": "EmptyState.tsx"
+  "33": "capacitor.config.ts"
 }
