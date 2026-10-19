@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-19)
 
 ## Corpus Check
-- 92 files · ~389,454 words
+- 92 files · ~389,529 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 637 nodes · 1565 edges · 35 communities (24 shown, 11 thin omitted)
+- 637 nodes · 1570 edges · 34 communities (23 shown, 11 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9cb3d012`
+- Built from commit: `1e3e1c35`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -32,7 +32,6 @@
 - main
 - MainActivity.java
 - index.ts
-- notifications.ts
 - bug_fix.md
 - PULL_REQUEST_TEMPLATE.md
 - feature_request.md
@@ -70,11 +69,11 @@
 ## Import Cycles
 - None detected.
 
-## Communities (35 total, 11 thin omitted)
+## Communities (34 total, 11 thin omitted)
 
 ### Community 0 - "App.tsx"
-Cohesion: 0.07
-Nodes (45): react-dom, AnimatedRoutes(), Anime, App(), Details, Downloads, Favorites, History (+37 more)
+Cohesion: 0.05
+Nodes (66): @capacitor/app, react-dom, AnimatedRoutes(), Anime, App(), Details, Downloads, Favorites (+58 more)
 
 ### Community 1 - "index.ts"
 Cohesion: 0.10
@@ -136,10 +135,6 @@ Nodes (3): MainActivity, BridgeWebViewClient, WebChromeClient
 Cohesion: 0.08
 Nodes (42): @capacitor/core, @capacitor/filesystem, @capacitor/status-bar, GenreBadge(), GenreBadgeProps, LoadingSpinner(), useAppUpdate(), useOrientationFullscreen() (+34 more)
 
-### Community 25 - "notifications.ts"
-Cohesion: 0.15
-Nodes (21): @capacitor/app, useEpisodeNotifications(), COLORS, EMOJIS, ProfileCard(), Profiles(), checkForNewEpisodes(), daysAgoISO() (+13 more)
-
 ### Community 26 - "bug_fix.md"
 Cohesion: 0.33
 Nodes (5): 📱 Ambiente de Ocorrência, 🎯 Comportamento Esperado, ✅ Critérios de Aceite, 🐛 Descrição do Problema, 🔄 Passos para Reproduzir
@@ -176,17 +171,17 @@ Nodes (11): EmptyDownloads(), EmptyFavorites(), EmptyHistory(), EmptyLiveTV(), E
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `App.tsx`, `index.ts`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`, `notifications.ts`?**
+- **Why does `react` connect `react` to `App.tsx`, `index.ts`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`?**
   _High betweenness centrality (0.069) - this node is a cross-community bridge._
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _10 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.0715846994535519 - nodes in this community are weakly interconnected._
-- **Why does `framer-motion` connect `react` to `App.tsx`, `index.ts`, `EmptyState.tsx`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`, `notifications.ts`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
+  _Cohesion score 0.05322128851540616 - nodes in this community are weakly interconnected._
+- **Why does `framer-motion` connect `react` to `App.tsx`, `index.ts`, `EmptyState.tsx`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`?**
+  _High betweenness centrality (0.058) - this node is a cross-community bridge._
 - **Should `index.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.10140474100087796 - nodes in this community are weakly interconnected._
-- **Why does `lucide-react` connect `react` to `App.tsx`, `index.ts`, `EmptyState.tsx`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`, `notifications.ts`?**
+- **Why does `lucide-react` connect `react` to `App.tsx`, `index.ts`, `EmptyState.tsx`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`?**
   _High betweenness centrality (0.049) - this node is a cross-community bridge._
 - **Should `react` be split into smaller, more focused modules?**
   _Cohesion score 0.08700564971751412 - nodes in this community are weakly interconnected._

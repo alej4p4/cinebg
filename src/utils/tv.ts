@@ -8,17 +8,29 @@ export const isMobileDevice = (): boolean => {
   const ua = navigator.userAgent
   if (ua.includes('CineBG-Mobile')) return true
 
-  // Se o dispositivo está em orientação retrato ou tem largura de celular/tablet
-  if (window.innerHeight > window.innerWidth || window.innerWidth < 768) {
-    return true
-  }
-
-  // Dispositivo com toque e sem características de Android TV / SmartTV
-  const hasTouchScreen = navigator.maxTouchPoints > 1 || 'ontouchstart' in window
+  // Indicador explícito de smartphone / celular no User Agent
+  const isPhoneUa = /iPhone|iPod|Android.*Mobile|Mobile.*Android|BlackBerry|IEMobile|Opera Mini/i.test(ua)
   const isDedicatedTvUa = /Android TV|GoogleTV|Google TV|SmartTV|SMART-TV|Tizen|WebOS|BRAVIA|AFT[MNBST]|AppleTV|tvOS|HbbTV|NetCast|Viera|Xbox|PlayStation|MiBOX|SHIELD|TVBOX|OTT|Chromecast|Nexus Player|Philips|TX9|MX9|TX3|TX6|Tanix|H96|X96|Sunvell|Allwinner|Rockchip|Amlogic|Leelbox|Bqeel|FireTV|Fire TV/i.test(
     ua
   )
 
+  // Se o User Agent indica celular e não é uma Smart TV de tela grande
+  if (isPhoneUa && !isDedicatedTvUa) {
+    return true
+  }
+
+  // Dispositivo em orientação retrato (típico de celulares e tablets; Smart TVs são estritamente 16:9 horizontais)
+  if (window.innerHeight > window.innerWidth) {
+    return true
+  }
+
+  // Telas menores que 850px de largura
+  if (window.innerWidth < 850) {
+    return true
+  }
+
+  // Dispositivo com toque e sem características de Android TV / SmartTV
+  const hasTouchScreen = (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || 'ontouchstart' in window
   if (hasTouchScreen && !isDedicatedTvUa) {
     return true
   }
