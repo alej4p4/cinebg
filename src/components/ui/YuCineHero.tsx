@@ -181,7 +181,7 @@ const YuCineHero = ({
               </button>
 
               {/* Informações do Filme/Série */}
-              <div className="absolute bottom-5 left-5 right-24 z-10 space-y-2">
+              <div className="absolute bottom-4 left-4 right-16 sm:bottom-5 sm:left-5 sm:right-24 z-10 space-y-1.5 sm:space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded bg-accent-red text-white text-[11px] font-black uppercase tracking-wider">
                     {type === 'movie' ? 'Filme' : 'Série'}
@@ -199,7 +199,7 @@ const YuCineHero = ({
                   )}
                 </div>
 
-                <h2 className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-white drop-shadow-md leading-tight max-w-xl">
+                <h2 className="font-display font-black text-xl sm:text-3xl md:text-4xl text-white drop-shadow-md leading-tight max-w-xl line-clamp-1 sm:line-clamp-2">
                   {currentItem.title}
                 </h2>
 
@@ -211,13 +211,13 @@ const YuCineHero = ({
               </div>
 
               {/* Botão Assistir Flutuante ao Hover */}
-              <div className="absolute bottom-5 right-5 z-20 flex items-center gap-3">
+              <div className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 z-20 flex items-center gap-3">
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     navigate(`/watch/${currentItem.type}/${currentItem.id}`)
                   }}
-                  className="p-3 bg-accent-red hover:bg-red-600 text-white rounded-full shadow-xl shadow-red-950/50 hover:scale-110 active:scale-95 transition-all"
+                  className="p-2.5 sm:p-3 bg-accent-red hover:bg-red-600 text-white rounded-full shadow-xl shadow-red-950/50 hover:scale-110 active:scale-95 transition-all"
                   title="Assistir Agora"
                 >
                   <Play className="h-5 w-5 fill-current" />
@@ -225,7 +225,7 @@ const YuCineHero = ({
               </div>
 
               {/* Indicadores de Paginação estilo YuCine (Pílula Amarela + Pontos) */}
-              <div className="absolute bottom-3 right-20 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/10">
+              <div className="absolute bottom-3 right-16 sm:right-20 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/10">
                 {carouselItems.map((item, idx) => (
                   <button
                     key={item.id}
@@ -235,8 +235,8 @@ const YuCineHero = ({
                     }}
                     className={`transition-all duration-300 rounded-full ${
                       currentIndex === idx
-                        ? 'w-6 h-2 bg-amber-400'
-                        : 'w-2 h-2 bg-white/40 hover:bg-white/70'
+                        ? 'w-5 sm:w-6 h-1.5 sm:h-2 bg-amber-400'
+                        : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 hover:bg-white/70'
                     }`}
                   />
                 ))}
@@ -245,12 +245,12 @@ const YuCineHero = ({
           </Focusable>
 
           {/* 5 Botões Coloridos de Filtro Rápido (Estilo YuCine + Clássicos) */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 md:gap-3">
+          <div className="flex gap-2 overflow-x-auto scroll-hide pb-1 sm:grid sm:grid-cols-5 md:gap-3">
             {/* 1. Rosa: Gênero */}
-            <Focusable onEnterPress={() => onFilterGenre && onFilterGenre()}>
+            <Focusable onEnterPress={() => onFilterGenre && onFilterGenre()} className="flex-shrink-0 sm:flex-shrink">
               <button
                 onClick={onFilterGenre}
-                className={`w-full py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-md ${
+                className={`w-full min-w-[92px] sm:min-w-0 py-2.5 sm:py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-md ${
                   activeFilter === 'genre'
                     ? 'ring-2 ring-white scale-[1.03]'
                     : 'hover:scale-[1.02] active:scale-[0.98]'
@@ -262,10 +262,10 @@ const YuCineHero = ({
             </Focusable>
 
             {/* 2. Ciano: 2026 */}
-            <Focusable onEnterPress={() => onFilterYear && onFilterYear(2026)}>
+            <Focusable onEnterPress={() => onFilterYear && onFilterYear(2026)} className="flex-shrink-0 sm:flex-shrink">
               <button
                 onClick={() => onFilterYear && onFilterYear(2026)}
-                className={`w-full py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-md ${
+                className={`w-full min-w-[92px] sm:min-w-0 py-2.5 sm:py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-md ${
                   activeFilter === '2026'
                     ? 'ring-2 ring-white scale-[1.03]'
                     : 'hover:scale-[1.02] active:scale-[0.98]'
@@ -277,10 +277,10 @@ const YuCineHero = ({
             </Focusable>
 
             {/* 3. Âmbar/Dourado: Clássicos */}
-            <Focusable onEnterPress={() => onFilterClassics && onFilterClassics()}>
+            <Focusable onEnterPress={() => onFilterClassics && onFilterClassics()} className="flex-shrink-0 sm:flex-shrink">
               <button
                 onClick={onFilterClassics}
-                className={`w-full py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-md ${
+                className={`w-full min-w-[92px] sm:min-w-0 py-2.5 sm:py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-md ${
                   activeFilter === 'classics'
                     ? 'ring-2 ring-white scale-[1.03]'
                     : 'hover:scale-[1.02] active:scale-[0.98]'
@@ -292,10 +292,10 @@ const YuCineHero = ({
             </Focusable>
 
             {/* 4. Verde: No Cinema / Em Alta */}
-            <Focusable onEnterPress={() => onFilterSpecial && onFilterSpecial()}>
+            <Focusable onEnterPress={() => onFilterSpecial && onFilterSpecial()} className="flex-shrink-0 sm:flex-shrink">
               <button
                 onClick={onFilterSpecial}
-                className={`w-full py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-md ${
+                className={`w-full min-w-[92px] sm:min-w-0 py-2.5 sm:py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-md ${
                   activeFilter === 'special'
                     ? 'ring-2 ring-white scale-[1.03]'
                     : 'hover:scale-[1.02] active:scale-[0.98]'
@@ -307,10 +307,10 @@ const YuCineHero = ({
             </Focusable>
 
             {/* 5. Amarelo: Todos / Todas */}
-            <Focusable onEnterPress={() => onFilterAll && onFilterAll()} className="col-span-2 sm:col-span-1">
+            <Focusable onEnterPress={() => onFilterAll && onFilterAll()} className="flex-shrink-0 sm:flex-shrink sm:col-span-1">
               <button
                 onClick={onFilterAll}
-                className={`w-full py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-black font-extrabold text-xs sm:text-sm transition-all duration-200 shadow-md ${
+                className={`w-full min-w-[92px] sm:min-w-0 py-2.5 sm:py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 md:gap-2 text-black font-extrabold text-xs sm:text-sm transition-all duration-200 shadow-md ${
                   activeFilter === 'all' || !activeFilter
                     ? 'ring-2 ring-white scale-[1.03]'
                     : 'hover:scale-[1.02] active:scale-[0.98]'
