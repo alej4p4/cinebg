@@ -229,7 +229,7 @@ const fetchMegaEmbedSources = async (
       const resp = await Promise.race([httpPromise, timeoutPromise])
 
       if (resp && resp.status >= 200 && resp.status < 300 && typeof resp.data === 'string') {
-        const match = resp.data.match(/var sources = (\[[\s\S]*?\]);/)
+        const match = resp.data.match(/var sources\s*=\s*(\[[\s\S]*?\]);/)
         if (match) {
           const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
           if (Array.isArray(parsed) && parsed.length > 0) return parsed
@@ -261,7 +261,7 @@ const fetchMegaEmbedSources = async (
       if (!res.ok) continue
 
       const html = await res.text()
-      const match = html.match(/var sources = (\[[\s\S]*?\]);/)
+      const match = html.match(/var sources\s*=\s*(\[[\s\S]*?\]);/)
       if (!match) continue
 
       const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
