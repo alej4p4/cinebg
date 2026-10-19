@@ -1004,6 +1004,29 @@ const StreamPlayer = ({
       case 'a':
       case 'A':
         e.preventDefault()
+        {
+          const nextOpt = audioOption === 'dub' ? 'orig' : 'dub'
+          switchAudio(nextOpt)
+          showFeedback(nextOpt === 'dub' ? 'Áudio: Dublado 🇧🇷' : 'Áudio: Legendado / Original 🇺🇸')
+        }
+        break
+      case 's':
+      case 'S':
+        e.preventDefault()
+        setSubLang((prev) => {
+          const next = prev === 'off' ? 'pt' : 'off'
+          showFeedback(next === 'off' ? 'Legendas: Desativadas' : 'Legendas: Português (PT-BR)')
+          return next
+        })
+        break
+      case 'c':
+      case 'C':
+        e.preventDefault()
+        setSettingsModalOpen((prev) => !prev)
+        break
+      case 'z':
+      case 'Z':
+        e.preventDefault()
         toggleFitMode()
         break
       case 'Escape':
@@ -1438,7 +1461,22 @@ const StreamPlayer = ({
                 <span>Tela cheia</span>
               </button>
 
-              {/* 2. Idioma (Abre o modal Configurações de Reprodução) */}
+              {/* 2. Áudio 1-Click (Dublado / Legendado - Estilo YuCine) */}
+              <button
+                type="button"
+                onClick={() => {
+                  const nextOpt = audioOption === 'dub' ? 'orig' : 'dub'
+                  switchAudio(nextOpt)
+                  showFeedback(nextOpt === 'dub' ? 'Áudio: Dublado 🇧🇷' : 'Áudio: Legendado / Original 🇺🇸')
+                }}
+                className="flex items-center justify-center gap-1.5 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+                title="Clique ou pressione A no controle para alternar áudio"
+              >
+                <Volume2 className="w-4 h-4 text-yellow-400 group-focus:text-black" />
+                <span>{audioOption === 'dub' ? '🇧🇷 Dublado' : '🇺🇸 Legendado'}</span>
+              </button>
+
+              {/* 3. Legendas & Ajustes (Abre o modal Configurações de Reprodução) */}
               <button
                 type="button"
                 onClick={() => setSettingsModalOpen(true)}
@@ -1447,9 +1485,10 @@ const StreamPlayer = ({
                     ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
                     : 'bg-[#171824]/90 hover:bg-[#232538] text-white border-white/10'
                 }`}
+                title="Configurações completas de áudio e legendas (Tecla C)"
               >
                 <Captions className="w-4 h-4 text-yellow-400" />
-                <span>Idioma ({audioOption === 'dub' ? 'Dublado' : 'Original'})</span>
+                <span>Legendas / Ajustes</span>
               </button>
 
               {/* 3. Resolução / Opção de Servidor */}
