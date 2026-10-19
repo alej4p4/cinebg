@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-19)
 
 ## Corpus Check
-- 91 files · ~387,921 words
+- 92 files · ~388,482 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 632 nodes · 1524 edges · 35 communities (24 shown, 11 thin omitted)
+- 636 nodes · 1546 edges · 35 communities (24 shown, 11 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2e49b1e4`
+- Built from commit: `666480ff`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -44,13 +44,13 @@
 - EmptyState.tsx
 
 ## God Nodes (most connected - your core abstractions)
-1. `react` - 36 edges
+1. `react` - 37 edges
 2. `useAppStore` - 36 edges
-3. `framer-motion` - 32 edges
-4. `lucide-react` - 27 edges
-5. `AnimatedRoutes()` - 20 edges
-6. `Focusable()` - 20 edges
-7. `Home()` - 20 edges
+3. `framer-motion` - 33 edges
+4. `lucide-react` - 28 edges
+5. `Home()` - 21 edges
+6. `AnimatedRoutes()` - 20 edges
+7. `Focusable()` - 20 edges
 8. `forKids()` - 19 edges
 9. `compilerOptions` - 18 edges
 10. `MovieCard()` - 17 edges
@@ -73,36 +73,36 @@
 ## Communities (35 total, 11 thin omitted)
 
 ### Community 0 - "App.tsx"
-Cohesion: 0.07
-Nodes (37): @capacitor/status-bar, react-dom, AnimatedRoutes(), Anime, App(), Details, Downloads, Favorites (+29 more)
+Cohesion: 0.06
+Nodes (47): @capacitor/app, @capacitor/status-bar, react-dom, AnimatedRoutes(), Anime, App(), Details, Downloads (+39 more)
 
 ### Community 1 - "index.ts"
-Cohesion: 0.17
-Nodes (35): Carousel(), Home(), Movies(), Series(), buildCacheKey(), cachedGet(), discoverMovies(), discoverShows() (+27 more)
+Cohesion: 0.10
+Nodes (56): Carousel(), ErrorState(), ErrorStateProps, HeroBanner(), ProgressBar(), ProgressBarProps, HeroSkeleton(), SkeletonCard() (+48 more)
 
 ### Community 2 - "react"
-Cohesion: 0.08
-Nodes (55): framer-motion, lucide-react, @noriginmedia/norigin-spatial-navigation, react, react-router-dom, CATEGORIES_GRID, NAV_LINKS, PlaybackSettingsProps (+47 more)
+Cohesion: 0.12
+Nodes (34): framer-motion, lucide-react, @noriginmedia/norigin-spatial-navigation, react, react-router-dom, CATEGORIES_GRID, NAV_LINKS, PlaybackSettingsProps (+26 more)
 
 ### Community 3 - "StreamPlayer.tsx"
 Cohesion: 0.07
-Nodes (46): EpisodeSelector(), EpisodeSelectorProps, PlaybackSettingsModal(), StreamPlayer(), StreamPlayerProps, HeroSkeleton(), SkeletonCard(), SkeletonCarousel() (+38 more)
+Nodes (49): EpisodeSelector(), EpisodeSelectorProps, PlaybackSettingsModal(), StreamPlayer(), StreamPlayerProps, SkeletonEpisodeList(), buildMovieUrl(), buildShowUrl() (+41 more)
 
 ### Community 4 - "package.json"
-Cohesion: 0.10
-Nodes (19): name, private, type, version, autoprefixer, axios, @capacitor/android, @capacitor/app (+11 more)
+Cohesion: 0.11
+Nodes (18): name, private, type, version, autoprefixer, axios, @capacitor/android, @capacitor/haptics (+10 more)
 
 ### Community 5 - "LiveTV.tsx"
-Cohesion: 0.11
-Nodes (27): hls.js, LivePlayer(), LivePlayerProps, YuCineChannelCard(), YuCineChannelCardProps, LiveTV(), ChannelScheduleSlot, DailyScheduleItem (+19 more)
+Cohesion: 0.10
+Nodes (32): LivePlayer(), LivePlayerProps, Focusable(), FocusableProps, FEATURED_CHANNEL_IDS, LiveTvCarousel(), LiveTvCarouselProps, YuCineChannelCard() (+24 more)
 
 ### Community 6 - "LicenseGate.tsx"
-Cohesion: 0.16
-Nodes (21): LicenseGate(), LicenseGateProps, getDeviceId(), getFirstUse(), getStoredLicense(), License, LicenseResponse, TRIAL_DAYS (+13 more)
+Cohesion: 0.27
+Nodes (13): LicenseGateProps, checkMercadoPagoStatus(), createMercadoPagoPix(), CreatePixPaymentResult, DEFAULT_PIX_KEY, ensureValidMercadoPagoToken(), generateFallbackPix(), getMercadoPagoToken() (+5 more)
 
 ### Community 7 - "UpdateModal.tsx"
-Cohesion: 0.27
-Nodes (10): UpdateModal(), UpdateModalProps, UpdateStage, AppInstaller, AppInstallerPluginInterface, canInstallUnknownApps(), DownloadProgress, openAppInstallSettings() (+2 more)
+Cohesion: 0.21
+Nodes (11): @capacitor/core, UpdateModal(), UpdateModalProps, UpdateStage, AppInstaller, AppInstallerPluginInterface, canInstallUnknownApps(), DownloadProgress (+3 more)
 
 ### Community 8 - "compilerOptions"
 Cohesion: 0.10
@@ -134,11 +134,11 @@ Nodes (3): MainActivity, BridgeWebViewClient, WebChromeClient
 
 ### Community 21 - "index.ts"
 Cohesion: 0.09
-Nodes (42): @capacitor/core, GenreBadge(), GenreBadgeProps, LoadingSpinner(), useAppUpdate(), Details(), Downloads(), Watch() (+34 more)
+Nodes (36): @capacitor/filesystem, GenreBadge(), GenreBadgeProps, LoadingSpinner(), IWindowWithSpeech, SpeechRecognitionHook, useSpeechRecognition(), Details() (+28 more)
 
 ### Community 25 - "notifications.ts"
-Cohesion: 0.16
-Nodes (20): useEpisodeNotifications(), COLORS, EMOJIS, ProfileCard(), Profiles(), checkForNewEpisodes(), daysAgoISO(), ensureNotificationChannel() (+12 more)
+Cohesion: 0.18
+Nodes (19): COLORS, EMOJIS, ProfileCard(), Profiles(), checkForNewEpisodes(), daysAgoISO(), ensureNotificationChannel(), ensureNotificationPermission() (+11 more)
 
 ### Community 26 - "bug_fix.md"
 Cohesion: 0.33
@@ -170,7 +170,7 @@ Nodes (10): EmptyDownloads(), EmptyFavorites(), EmptyHistory(), EmptyLiveTV(), E
 
 ## Knowledge Gaps
 - **10 isolated node(s):** `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard`, `@types/react`, `@types/react-dom` (+5 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 229 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 231 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
@@ -181,12 +181,12 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _10 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.07197763801537387 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.061507936507936505 - nodes in this community are weakly interconnected._
 - **Why does `framer-motion` connect `react` to `App.tsx`, `index.ts`, `EmptyState.tsx`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`, `notifications.ts`?**
-  _High betweenness centrality (0.061) - this node is a cross-community bridge._
-- **Should `react` be split into smaller, more focused modules?**
-  _Cohesion score 0.08035087719298245 - nodes in this community are weakly interconnected._
-- **Why does `lucide-react` connect `react` to `App.tsx`, `EmptyState.tsx`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`, `notifications.ts`?**
+  _High betweenness centrality (0.060) - this node is a cross-community bridge._
+- **Should `index.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.09769335142469471 - nodes in this community are weakly interconnected._
+- **Why does `lucide-react` connect `react` to `App.tsx`, `index.ts`, `EmptyState.tsx`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `UpdateModal.tsx`, `index.ts`, `notifications.ts`?**
   _High betweenness centrality (0.050) - this node is a cross-community bridge._
-- **Should `StreamPlayer.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.07003367003367003 - nodes in this community are weakly interconnected._
+- **Should `react` be split into smaller, more focused modules?**
+  _Cohesion score 0.11904761904761904 - nodes in this community are weakly interconnected._
