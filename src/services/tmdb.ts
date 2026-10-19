@@ -350,6 +350,7 @@ export const discoverShows = async (params: {
   isAnime?: boolean
   withNetworks?: string | number
   withWatchProviders?: string | number
+  withOriginalLanguage?: string
 }): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
     page: params.page || 1,
@@ -361,10 +362,20 @@ export const discoverShows = async (params: {
     with_watch_providers: params.withWatchProviders,
     watch_region: params.withWatchProviders ? 'BR' : undefined,
     with_keywords: params.isAnime ? '210024|287501' : undefined,
-    with_original_language: params.isAnime ? 'ja' : undefined,
+    with_original_language: params.isAnime ? 'ja' : params.withOriginalLanguage,
   })
   const type: MediaType = params.isAnime ? 'anime' : 'tv'
   return { items: forKids(data.results.map((s) => showToMediaItem(s, type))), totalPages: data.total_pages }
+}
+
+// Novelas e Séries Turcas (Origem turca com dublagem / legendas traduzidas em PT-BR)
+export const getTurkishShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
+    page,
+    sort_by: 'popularity.desc',
+    with_original_language: 'tr',
+  })
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 
 // Details

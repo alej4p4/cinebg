@@ -17,6 +17,7 @@ import {
   getClassicShows,
   discoverMovies,
   discoverShows,
+  getTurkishShows,
   getCachedCatalogItems,
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
@@ -40,6 +41,7 @@ const Home = () => {
   const [scifiMovies, setScifiMovies] = useState<MediaItem[]>([])
   const [actionShows, setActionShows] = useState<MediaItem[]>([])
   const [comedyShows, setComedyShows] = useState<MediaItem[]>([])
+  const [turkishShows, setTurkishShows] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(() => trending.length === 0)
 
   const { history, favorites } = useAppStore()
@@ -51,7 +53,7 @@ const Home = () => {
           t,
           pm, tom, np, up, cm, cs, ps, ts, a, anime,
           actionM, comedyM, scifiM,
-          actionS, comedyS,
+          actionS, comedyS, turkish,
         ] = await Promise.all([
           getTrending('all', 'week'),
           getPopularMovies(),
@@ -69,6 +71,7 @@ const Home = () => {
           discoverMovies({ genre: 878, sort: 'popularity.desc' }),
           discoverShows({ genre: 10759, sort: 'popularity.desc' }),
           discoverShows({ genre: 35, sort: 'popularity.desc' }),
+          getTurkishShows(),
         ])
 
         setTrending(t)
@@ -87,6 +90,7 @@ const Home = () => {
         setScifiMovies(scifiM.items)
         setActionShows(actionS.items)
         setComedyShows(comedyS.items)
+        setTurkishShows(turkish.items)
       } catch (err) {
         console.error('Failed to load home data:', err)
       } finally {
@@ -189,6 +193,9 @@ const Home = () => {
                     <Carousel rowIndex={rowIdx++} title="Mais Bem Avaliados" emoji="⭐" items={topMovies} />
                     <Carousel rowIndex={rowIdx++} title="Em Breve" emoji="🎥" items={upcoming} />
                     <Carousel rowIndex={rowIdx++} title="Séries Populares" emoji="📺" items={popularShows} />
+                    {turkishShows.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Novelas & Séries Turcas" emoji="🇹🇷" items={turkishShows} />
+                    )}
                     <Carousel rowIndex={rowIdx++} title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classicShows} />
                     <Carousel rowIndex={rowIdx++} title="Ação e Aventura em Séries" emoji="⚔️" items={actionShows} />
                     <Carousel rowIndex={rowIdx++} title="Comédia em Séries" emoji="😄" items={comedyShows} />

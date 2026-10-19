@@ -5,7 +5,7 @@
   "3": "StreamPlayer.tsx",
   "4": "package.json",
   "5": "LiveTV.tsx",
-  "6": "notifications.ts",
+  "6": "LicenseGate.tsx",
   "7": "UpdateModal.tsx",
   "8": "compilerOptions",
   "9": "dependencies",
@@ -24,6 +24,7 @@
   "22": "variables.gradle",
   "23": "postcss.config.js",
   "24": "vite-env.d.ts",
+  "25": "notifications.ts",
   "26": "bug_fix.md",
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
@@ -31,5 +32,6 @@
   "30": "scripts",
   "31": "eslint.config.js",
   "32": "vite.config.ts",
-  "33": "capacitor.config.ts"
+  "33": "capacitor.config.ts",
+  "34": "EmptyState.tsx"
 }
