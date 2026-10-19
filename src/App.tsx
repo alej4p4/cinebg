@@ -9,7 +9,7 @@ import { useEpisodeNotifications } from '@/hooks/useEpisodeNotifications'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
 import { useAppStore } from '@/store/useAppStore'
-import { isTVDevice } from '@/utils/tv'
+import { isTVDevice, isMobileDevice } from '@/utils/tv'
 import UpdateModal from '@/components/UpdateModal'
 import { useLicense } from '@/hooks/useLicense'
 import LicenseGate from '@/components/LicenseGate'
@@ -185,7 +185,7 @@ function App() {
               <main>
                 <AnimatedRoutes isVipActive={isLicensed || isTrial} />
               </main>
-              <TvCursorOverlay />
+              {!isMobileDevice() && <TvCursorOverlay />}
             </div>
           </ErrorBoundary>
           <UpdateModal

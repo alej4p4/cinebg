@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { isTVDevice } from '@/utils/tv'
+import { isTVDevice, isMobileDevice } from '@/utils/tv'
 import type { DownloadItem, FavoriteItem, WatchHistoryItem } from '@/types'
 
 export type Language = 'pt' | 'en'
@@ -141,7 +141,7 @@ export const useAppStore = create<AppState>()(
       tvMode: false,
       virtualCursor:
         typeof window !== 'undefined'
-          ? localStorage.getItem('cinebg_virtual_cursor') === 'true'
+          ? (!isMobileDevice() && localStorage.getItem('cinebg_virtual_cursor') === 'true')
           : false,
       downloads: [],
       vipModalOpen: false,
@@ -151,8 +151,8 @@ export const useAppStore = create<AppState>()(
       setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
       isCheckingUpdate: false,
       updateInfo: {
-        currentVersion: '1.2.47',
-        latestVersion: '1.2.47',
+        currentVersion: '1.2.48',
+        latestVersion: '1.2.48',
         hasUpdate: false,
         downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk',
         mandatory: false,
@@ -162,7 +162,7 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const currentVersion = get().updateInfo.currentVersion || '1.2.47'
+          const currentVersion = get().updateInfo.currentVersion || '1.2.48'
           const candidateUrls = [
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,
@@ -188,12 +188,10 @@ export const useAppStore = create<AppState>()(
 
           if (data) {
             const remoteVersion = data.version || currentVersion
-            const isTv = typeof window !== 'undefined' && (
+            const isMobile = isMobileDevice()
+            const isTv = !isMobile && (
               navigator.userAgent.includes('CineBG-TV') ||
-              (!navigator.userAgent.includes('CineBG-Mobile') &&
-                window.innerWidth >= 800 &&
-                window.innerWidth > window.innerHeight &&
-                (localStorage.getItem('cinebg_tv_mode') === 'true' || isTVDevice()))
+              isTVDevice()
             )
             const downloadUrl = (isTv && data.downloadUrlTv)
               ? data.downloadUrlTv
