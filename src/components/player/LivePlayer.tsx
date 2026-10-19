@@ -257,6 +257,38 @@ const LivePlayer = ({
     setStatusMessage(initIdx > 0 ? `Sintonizando Sinal ${initIdx + 1}...` : 'Sintonizando sinal...')
   }, [channel.id])
 
+  // Monitor anti-congelamento (anti-freeze watchdog) para TV: detecta micro-travamentos e recupera o fluxo
+  const lastTimeRef = useRef(0)
+  const freezeCountRef = useRef(0)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const video = videoRef.current
+      if (!video || video.paused || video.ended || !loadedRef.current) return
+
+      if (Math.abs(video.currentTime - lastTimeRef.current) < 0.05) {
+        freezeCountRef.current++
+        if (freezeCountRef.current >= 2) {
+          // Vídeo travou por mais de 3 segundos consecutivos no mesmo frame
+          freezeCountRef.current = 0
+          try {
+            if (video.buffered.length > 0) {
+              const liveEnd = video.buffered.end(video.buffered.length - 1)
+              if (video.currentTime < liveEnd - 0.5) {
+                video.currentTime = Math.min(liveEnd - 0.5, video.currentTime + 0.4)
+              }
+            }
+            video.play().catch(() => {})
+          } catch {}
+        }
+      } else {
+        lastTimeRef.current = video.currentTime
+        freezeCountRef.current = 0
+      }
+    }, 1800)
+
+    return () => clearInterval(interval)
+  }, [])
+
   const markPlaying = useCallback(() => {
     loadedRef.current = true
     playingRef.current = true
@@ -355,21 +387,21 @@ const LivePlayer = ({
         enableWorker: false, // Desativa worker para evitar engasgos em Android TV / WebViews
         liveDurationInfinity: true,
         lowLatencyMode: false,
-        backBufferLength: 10,
-        maxBufferLength: 8,
-        maxMaxBufferLength: 16,
-        maxBufferSize: 25 * 1000 * 1000,
-        liveSyncDurationCount: 3,
-        liveMaxLatencyDurationCount: 8,
-        manifestLoadingTimeOut: 5000,
-        manifestLoadingMaxRetry: 1,
-        levelLoadingTimeOut: 5000,
-        levelLoadingMaxRetry: 1,
-        fragLoadingTimeOut: 6000,
-        fragLoadingMaxRetry: 2,
-        nudgeOffset: 0.2,
-        nudgeMaxRetry: 5,
-        maxFragLookUpTolerance: 0.3,
+        backBufferLength: 20,
+        maxBufferLength: 25,
+        maxMaxBufferLength: 50,
+        maxBufferSize: 30 * 1000 * 1000,
+        liveSyncDurationCount: 4,
+        liveMaxLatencyDurationCount: 12,
+        manifestLoadingTimeOut: 8000,
+        manifestLoadingMaxRetry: 2,
+        levelLoadingTimeOut: 8000,
+        levelLoadingMaxRetry: 2,
+        fragLoadingTimeOut: 12000,
+        fragLoadingMaxRetry: 3,
+        nudgeOffset: 0.3,
+        nudgeMaxRetry: 6,
+        maxFragLookUpTolerance: 0.35,
         autoStartLoad: true,
       })
 
@@ -424,7 +456,7 @@ const LivePlayer = ({
         if (cancelled) return
         const payload = data as { fatal?: boolean; type?: string; details?: string }
 
-        // Se houver um stall transitório no buffer, apenas garante carregamento ativo sem salto destrutivo
+        // Se houver um stall transitório no buffer, recarrega e avança o frame travado
         if (!payload.fatal) {
           if (
             payload.details === 'bufferStalledError' ||
@@ -432,6 +464,13 @@ const LivePlayer = ({
           ) {
             try {
               hls.startLoad()
+              if (video && !video.paused && video.buffered.length > 0) {
+                const liveEnd = video.buffered.end(video.buffered.length - 1)
+                if (video.currentTime < liveEnd - 0.5) {
+                  video.currentTime = Math.min(liveEnd - 0.5, video.currentTime + 0.3)
+                }
+                video.play().catch(() => {})
+              }
             } catch {}
           }
           return
