@@ -1,53 +1,68 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  ArrowLeft, Play, Star, Calendar, Clock, Film, Heart,
-  Tv, ChevronRight, X,
+  ArrowLeft, Play, Star, Heart,
+  Tv, X, Check, Maximize2, MessageSquare, Sliders, Download,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import GenreBadge from '@/components/ui/GenreBadge'
 import Focusable from '@/components/tv/Focusable'
 import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
 import {
   getMovieDetails, getShowDetails,
-  getPosterUrl, getBackdropUrl, getProfileUrl,
+  getBackdropUrl,
   getCachedMediaDetails,
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
-import type { TMDBMovieDetails, TMDBShowDetails, TMDBCast, TMDBVideo } from '@/types'
+import { downloadsSupported, buildFileName, downloadVideo } from '@/services/downloads'
+import { resolveMegaEmbed } from '@/services/streams'
+import type { TMDBMovieDetails, TMDBShowDetails, TMDBVideo, DownloadItem, MediaType } from '@/types'
 
 const Details = () => {
   const { type, id } = useParams<{ type: 'movie' | 'tv' | 'anime'; id: string }>()
   const navigate = useNavigate()
-  const { addFavorite, removeFavorite, isFavorite } = useAppStore()
+  const {
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    audioOption,
+    setAudioOption,
+    addDownload,
+  } = useAppStore()
 
   const isMovie = type === 'movie'
   const mediaId = Number(id)
 
-  // Cache instantâneo pré-carregado: se já foi visitado ou salvo em cache, carrega em 0ms sem spinner!
+  // Cache instantâneo pré-carregado em 0ms
   const cachedInitialMovie = isMovie ? getCachedMediaDetails<TMDBMovieDetails>(mediaId, 'movie') : null
   const cachedInitialShow = !isMovie ? getCachedMediaDetails<TMDBShowDetails>(mediaId, type || 'tv') : null
 
   const [movieData, setMovieData] = useState<TMDBMovieDetails | null>(cachedInitialMovie)
   const [showData, setShowData] = useState<TMDBShowDetails | null>(cachedInitialShow)
   const [loading, setLoading] = useState(!cachedInitialMovie && !cachedInitialShow)
-  const [activeTab, setActiveTab] = useState<'overview' | 'cast' | 'seasons'>('overview')
   const [imgError, setImgError] = useState(false)
-  const [trailerOpen, setTrailerOpen] = useState(false)
 
-  const playBtnRef = useRef<HTMLButtonElement | null>(null)
+  // Estado YouCine
+  const [selectedSeason, setSelectedSeason] = useState(1)
+  const [selectedEpisode, setSelectedEpisode] = useState(1)
+  const [isOverviewExpanded, setIsOverviewExpanded] = useState(false)
+  const [idiomaModalOpen, setIdiomaModalOpen] = useState(false)
+  const [resolucaoModalOpen, setResolucaoModalOpen] = useState(false)
+  const [selectedResolution, setSelectedResolution] = useState('1080p')
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const fullscreenBtnRef = useRef<HTMLButtonElement | null>(null)
 
   useEffect(() => {
     if (!id || !type) return
     let isCancelled = false
 
-    // Se já temos os dados no cache instantâneo, não bloqueamos com spinner de tela cheia
     if (!cachedInitialMovie && !cachedInitialShow) {
       setLoading(true)
     }
 
-    const fetch = async () => {
+    const fetchDetails = async () => {
       try {
         if (isMovie) {
           const data = await getMovieDetails(mediaId)
@@ -62,41 +77,30 @@ const Details = () => {
         if (!isCancelled) setLoading(false)
       }
     }
-    fetch()
+    fetchDetails()
 
     return () => {
       isCancelled = true
     }
   }, [id, type, isMovie, mediaId, cachedInitialMovie, cachedInitialShow])
 
-  // Foco automático e prioritário no botão "Assistir Agora" para controle remoto de TV
+  // Foco automático inicial no botão "Tela cheia" estilo YouCine
   useEffect(() => {
     if (!loading && (movieData || showData)) {
-      const focusPlay = () => {
-        if (doesFocusableExist('details-play')) {
-          setFocus('details-play')
+      const focusFullscreen = () => {
+        if (doesFocusableExist('details-fullscreen')) {
+          setFocus('details-fullscreen')
         }
-        playBtnRef.current?.focus()
+        fullscreenBtnRef.current?.focus()
       }
-      const t1 = setTimeout(focusPlay, 40)
-      const t2 = setTimeout(focusPlay, 160)
-      const t3 = setTimeout(focusPlay, 400)
+      const t1 = setTimeout(focusFullscreen, 50)
+      const t2 = setTimeout(focusFullscreen, 200)
       return () => {
         clearTimeout(t1)
         clearTimeout(t2)
-        clearTimeout(t3)
       }
     }
   }, [loading, movieData, showData, id])
-
-  useEffect(() => {
-    if (!trailerOpen) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setTrailerOpen(false)
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [trailerOpen])
 
   if (loading) {
     return (
@@ -116,19 +120,39 @@ const Details = () => {
     )
   }
 
-  const title = isMovie ? movieData!.title : showData!.name
-  const overview = data.overview
-  const rating = data.vote_average
+  const baseTitle = isMovie ? movieData!.title : showData!.name
+  const seasons = !isMovie ? showData?.seasons?.filter((s) => s.season_number > 0) || [] : []
+  const currentSeasonData = seasons.find((s) => s.season_number === selectedSeason) || seasons[0]
+  const episodeCount = currentSeasonData ? Math.max(1, currentSeasonData.episode_count) : 12
+
+  // Título exibido: no YouCine exibe "A Ilha do Tesouro Temp.1"
+  const displayTitle = !isMovie && seasons.length > 0
+    ? `${baseTitle} Temp.${selectedSeason}`
+    : baseTitle
+
+  const country =
+    showData?.origin_country?.[0] ||
+    movieData?.production_countries?.[0]?.name ||
+    'United States of America'
+
   const releaseDate = isMovie ? movieData!.release_date : showData!.first_air_date
-  const year = releaseDate ? new Date(releaseDate).getFullYear() : ''
-  const genres = data.genres
-  const posterPath = data.poster_path
-  const backdropPath = data.backdrop_path
-  const runtime = isMovie ? movieData!.runtime : null
-  const tagline = isMovie ? movieData!.tagline : showData!.tagline
-  const cast: TMDBCast[] = (data.credits?.cast || []).slice(0, 20)
-  const numSeasons = !isMovie ? showData!.number_of_seasons : null
-  const numEpisodes = !isMovie ? showData!.number_of_episodes : null
+  const originalTitle = isMovie ? movieData!.original_title : showData!.original_name
+  const rating = data.vote_average
+  const genres = data.genres || []
+  const directors =
+    data.credits?.crew
+      ?.filter((c) => c.job === 'Director')
+      .map((c) => c.name)
+      .slice(0, 3) || []
+
+  const castNames =
+    data.credits?.cast
+      ?.slice(0, 5)
+      .map((c) => c.name)
+      .join(', ') || ''
+
+  const overview = data.overview || 'Sem sinopse disponível no momento.'
+  const backdropPath = data.backdrop_path || data.poster_path
 
   const favorite = isFavorite(mediaId)
   const videos: TMDBVideo[] = data?.videos?.results ?? []
@@ -141,524 +165,532 @@ const Details = () => {
       addFavorite({
         id: mediaId,
         type: type!,
-        title,
-        posterPath,
+        title: baseTitle,
+        posterPath: data.poster_path,
         rating,
         addedAt: Date.now(),
       })
     }
   }
 
-  const handlePlay = () => {
-    navigate(`/watch/${type}/${id}`)
+  const handlePlayFullscreen = (ep = selectedEpisode) => {
+    if (isMovie) {
+      navigate(`/watch/movie/${mediaId}`)
+    } else {
+      navigate(`/watch/${type}/${mediaId}?season=${selectedSeason}&episode=${ep}`)
+    }
+  }
+
+  const handleSelectSeason = (seasonNum: number) => {
+    setSelectedSeason(seasonNum)
+    setSelectedEpisode(1)
+  }
+
+  const handlePrevEpisode = () => {
+    if (selectedEpisode > 1) {
+      setSelectedEpisode((prev) => prev - 1)
+    }
+  }
+
+  const handleNextEpisode = () => {
+    if (selectedEpisode < episodeCount) {
+      setSelectedEpisode((prev) => prev + 1)
+    }
+  }
+
+  const handleDownload = async () => {
+    if (!downloadsSupported()) {
+      alert('Downloads estão disponíveis no aplicativo Android.')
+      return
+    }
+    setIsDownloading(true)
+    try {
+      const resolved = await resolveMegaEmbed(
+        mediaId,
+        isMovie ? 'movie' : 'tv',
+        selectedSeason,
+        selectedEpisode
+      )
+      if (!resolved.dubbedMp4) {
+        alert('Fonte direta não disponível para download no momento.')
+        return
+      }
+      const base: DownloadItem = {
+        id: mediaId,
+        type: type as MediaType,
+        title: displayTitle,
+        posterPath: data.poster_path,
+        season: isMovie ? undefined : selectedSeason,
+        episode: isMovie ? undefined : selectedEpisode,
+        url: resolved.dubbedMp4,
+        path: '',
+        createdAt: Date.now(),
+      }
+      const path = await downloadVideo(resolved.dubbedMp4, buildFileName(base))
+      addDownload({ ...base, path })
+      alert('Download iniciado com sucesso!')
+    } catch {
+      alert('Não foi possível iniciar o download.')
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   return (
-    <motion.div
-      className="min-h-screen bg-bg-primary page-enter"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      {/* Hero backdrop */}
-      <div className="relative h-[55vh] md:h-[65vh] overflow-hidden">
+    <div className="relative min-h-screen w-full bg-[#0a0a12] text-white overflow-x-hidden select-none font-sans">
+      {/* Imagem de Fundo (Backdrop) com Gradientes Cinematográficos Estilo YouCine */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {backdropPath && !imgError ? (
           <img
             src={getBackdropUrl(backdropPath, 'original')}
-            alt={title}
-            className="w-full h-full object-cover"
+            alt={displayTitle}
+            className="w-full h-full object-cover object-center opacity-30 filter blur-[1px] scale-105 transform"
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full bg-bg-card" />
+          <div className="w-full h-full bg-[#0a0a14]" />
         )}
-        {/* Multiple gradient layers for cinematic effect */}
-        <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-bg-primary/80 via-transparent to-transparent" />
-
-        {/* Back button */}
-        <Focusable
-          focusKey="details-back"
-          onEnterPress={() => navigate(-1)}
-          onArrowPress={(dir) => {
-            if (dir === 'down' || dir === 'right') {
-              if (doesFocusableExist('details-play')) {
-                setFocus('details-play')
-                playBtnRef.current?.focus()
-                return false
-              }
-            }
-            return true
-          }}
-          className="absolute top-24 left-4 md:left-8 z-10 rounded-lg"
-        >
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/30 backdrop-blur-sm px-3 py-2 rounded-lg outline-none"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </button>
-        </Focusable>
+        {/* Camadas de gradiente escuro fiéis ao YouCine */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-[#0a0a14]/80 to-[#0a0a14]/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a14] via-[#0a0a14]/90 to-transparent" />
       </div>
 
-      {/* Main content */}
-      <div className="max-w-screen-xl mx-auto px-4 md:px-8 -mt-48 relative z-10 pb-20">
-        <div className="flex flex-col md:flex-row gap-6 md:gap-10">
-
-          {/* Poster */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15 }}
-            className="flex-shrink-0 w-40 md:w-60 lg:w-72 mx-auto md:mx-0"
+      {/* Conteúdo Principal */}
+      <div className="relative z-10 flex flex-col min-h-screen px-4 sm:px-8 md:px-12 pt-6 pb-12">
+        {/* Botão Superior Voltar */}
+        <div className="flex items-center justify-between mb-4">
+          <Focusable
+            focusKey="details-back"
+            onEnterPress={() => navigate(-1)}
+            className="rounded-xl"
           >
-            <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/10 aspect-[2/3]">
-              <img
-                src={getPosterUrl(posterPath, 'w500')}
-                alt={title}
-                className="w-full h-full object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-poster.svg' }}
-              />
-            </div>
-          </motion.div>
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/90 rounded-xl backdrop-blur-md transition-all text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-400"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Voltar</span>
+            </button>
+          </Focusable>
+        </div>
 
-          {/* Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex-1 space-y-4"
-          >
-            {tagline && (
-              <p className="text-accent-gold text-sm italic opacity-80">{tagline}</p>
-            )}
-            <h1 className="font-display font-black text-3xl md:text-4xl lg:text-5xl text-white leading-tight">
-              {title}
+        {/* Linha Superior: Coluna Esquerda (Informações) e Coluna Direita (Mini-Player de Preview) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* Coluna Esquerda: Informações fiéis à foto do YouCine */}
+          <div className="lg:col-span-7 flex flex-col space-y-2.5">
+            {/* Título Principal */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+              {displayTitle}
             </h1>
 
-            {/* Meta info */}
-            <div className="flex flex-wrap items-center gap-3 text-sm text-white/70">
-              {rating > 0 && (
-                <span className="flex items-center gap-1.5 bg-accent-gold/20 text-accent-gold border border-accent-gold/30 px-3 py-1 rounded-full font-bold">
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  {rating.toFixed(1)}
+            {/* Linha de Metadados: País | Data | Título Original */}
+            <p className="text-xs sm:text-sm text-white/70 font-medium">
+              <span>{country}</span>
+              {releaseDate && <span> | {releaseDate}</span>}
+              {originalTitle && <span> | Título original : {originalTitle}</span>}
+            </p>
+
+            {/* Avaliação em Destaque Dourado e Upado por */}
+            <div className="flex items-center gap-3 text-xs sm:text-sm">
+              <span className="text-amber-400 font-extrabold text-base sm:text-lg flex items-center gap-1 drop-shadow-sm">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400 inline" />
+                {rating > 0 ? rating.toFixed(1) : '5.0'}
+              </span>
+              <span className="text-white/80 flex items-center gap-1.5 font-medium">
+                <span>Upado por :</span>
+                <span className="inline-flex items-center gap-1 text-red-400 font-semibold bg-red-950/40 px-2 py-0.5 rounded border border-red-500/20">
+                  📁 CineBG Stream
                 </span>
-              )}
-              {year && (
-                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full">
-                  <Calendar className="h-3.5 w-3.5" />
-                  {year}
-                </span>
-              )}
-              {runtime && (
-                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full">
-                  <Clock className="h-3.5 w-3.5" />
-                  {runtime} min
-                </span>
-              )}
-              {numSeasons && (
-                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full">
-                  <Tv className="h-3.5 w-3.5" />
-                  {numSeasons} temporada{numSeasons > 1 ? 's' : ''}
-                </span>
-              )}
-              {numEpisodes && (
-                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full">
-                  <Film className="h-3.5 w-3.5" />
-                  {numEpisodes} episódios
-                </span>
-              )}
-              <span className="flex items-center gap-1.5 bg-accent-red/20 text-accent-red border border-accent-red/30 px-3 py-1 rounded-full text-xs font-bold uppercase">
-                {type === 'movie' ? 'Filme' : type === 'anime' ? 'Anime' : 'Série'}
               </span>
             </div>
 
-            {/* Genres */}
-            {genres && genres.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {genres.map(g => <GenreBadge key={g.id} name={g.name} />)}
+            {/* Gêneros com Chips Arredondados estilo YouCine */}
+            {genres.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                <span className="text-xs sm:text-sm text-white/80 font-semibold">Gênero :</span>
+                {genres.map((g) => (
+                  <span
+                    key={g.id}
+                    className="px-3 py-0.5 rounded-full border border-white/20 bg-white/5 text-white/90 text-xs font-semibold backdrop-blur-sm shadow-sm"
+                  >
+                    {g.name}
+                  </span>
+                ))}
               </div>
             )}
 
-            {/* Action buttons */}
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Focusable
-                focusKey="details-play"
-                onEnterPress={handlePlay}
-                onArrowPress={(dir) => {
-                  if (dir === 'up') {
-                    if (doesFocusableExist('details-back')) {
-                      setFocus('details-back')
-                      return false
-                    }
-                  } else if (dir === 'right') {
-                    if (doesFocusableExist('details-fav')) {
-                      setFocus('details-fav')
-                      return false
-                    }
-                  } else if (dir === 'down') {
-                    if (doesFocusableExist('details-tab-overview')) {
-                      setFocus('details-tab-overview')
-                      return false
-                    }
-                  }
-                  return true
-                }}
-                className="rounded-xl"
-              >
-                <motion.button
-                  ref={playBtnRef}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={handlePlay}
-                  className="flex items-center gap-3 bg-accent-red hover:bg-red-600 text-white font-extrabold px-8 py-3.5 rounded-xl shadow-lg glow-red transition-all text-base outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105"
-                >
-                  <Play className="h-5 w-5 fill-white" />
-                  {isMovie ? 'Assistir Agora' : 'Assistir Episódio'}
-                </motion.button>
-              </Focusable>
+            {/* Direção */}
+            {directors.length > 0 && (
+              <p className="text-xs sm:text-sm text-white/80 line-clamp-1">
+                <span className="font-semibold text-white/90">Direção : </span>
+                <span className="text-white/70">{directors.join(', ')}</span>
+              </p>
+            )}
 
-              <Focusable
-                focusKey="details-fav"
-                onEnterPress={handleToggleFav}
-                onArrowPress={(dir) => {
-                  if (dir === 'left') {
-                    if (doesFocusableExist('details-play')) {
-                      setFocus('details-play')
-                      playBtnRef.current?.focus()
-                      return false
-                    }
-                  } else if (dir === 'right') {
-                    if (trailer && doesFocusableExist('details-trailer')) {
-                      setFocus('details-trailer')
-                      return false
-                    }
-                  } else if (dir === 'up') {
-                    if (doesFocusableExist('details-back')) {
-                      setFocus('details-back')
-                      return false
-                    }
-                  } else if (dir === 'down') {
-                    if (doesFocusableExist('details-tab-overview')) {
-                      setFocus('details-tab-overview')
-                      return false
-                    }
-                  }
-                  return true
-                }}
-                className="rounded-xl"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={handleToggleFav}
-                  className={`flex items-center gap-2 font-semibold px-5 py-3.5 rounded-xl border transition-all outline-none ${
-                    favorite
-                      ? 'bg-red-500/20 border-red-400/40 text-red-400'
-                      : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10'
-                  }`}
-                >
-                  <Heart className={`h-5 w-5 ${favorite ? 'fill-current' : ''}`} />
-                  {favorite ? 'Nos Favoritos' : 'Favoritar'}
-                </motion.button>
-              </Focusable>
+            {/* Elenco */}
+            {castNames && (
+              <p className="text-xs sm:text-sm text-white/80 line-clamp-1">
+                <span className="font-semibold text-white/90">Elenco : </span>
+                <span className="text-white/70">{castNames}</span>
+              </p>
+            )}
 
-              {trailer && (
-                <Focusable
-                  focusKey="details-trailer"
-                  onEnterPress={() => setTrailerOpen(true)}
-                  onArrowPress={(dir) => {
-                    if (dir === 'left') {
-                      if (doesFocusableExist('details-fav')) {
-                        setFocus('details-fav')
-                        return false
-                      }
-                    } else if (dir === 'up') {
-                      if (doesFocusableExist('details-back')) {
-                        setFocus('details-back')
-                        return false
-                      }
-                    } else if (dir === 'down') {
-                      if (doesFocusableExist('details-tab-overview')) {
-                        setFocus('details-tab-overview')
-                        return false
-                      }
-                    }
-                    return true
-                  }}
-                  className="rounded-xl"
+            {/* Sinopse com botão Mais expansível */}
+            <div className="text-xs sm:text-sm text-white/70 leading-relaxed pt-1">
+              <span className="font-semibold text-white/90">Sinopse : </span>
+              <span>
+                {isOverviewExpanded
+                  ? overview
+                  : overview.length > 180
+                  ? `${overview.slice(0, 180)}...`
+                  : overview}
+              </span>
+              {overview.length > 180 && (
+                <button
+                  type="button"
+                  onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
+                  className="ml-1 text-amber-400 font-bold hover:underline outline-none"
                 >
-                  <motion.button
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => setTrailerOpen(true)}
-                    className="flex items-center gap-2 font-semibold px-5 py-3.5 rounded-xl border bg-white/5 border-white/20 text-white/80 hover:bg-white/10 transition-all outline-none"
-                  >
-                    <Play className="h-5 w-5" />
-                    Trailer
-                  </motion.button>
-                </Focusable>
+                  {isOverviewExpanded ? ' Menos' : ' Mais'}
+                </button>
               )}
             </div>
-          </motion.div>
-        </div>
+          </div>
 
-        {/* Tabs */}
-        <div className="mt-10 border-b border-white/10">
-          <div className="flex gap-2">
-            {(['overview', 'cast', ...(isMovie ? [] : ['seasons'])] as const).map((tab) => (
-              <Focusable
-                key={tab}
-                focusKey={`details-tab-${tab}`}
-                onEnterPress={() => setActiveTab(tab as typeof activeTab)}
-                onArrowPress={(dir) => {
-                  if (dir === 'up') {
-                    if (doesFocusableExist('details-play')) {
-                      setFocus('details-play')
-                      playBtnRef.current?.focus()
-                      return false
-                    }
-                  } else if (dir === 'down') {
-                    if (activeTab === 'seasons' && showData?.seasons?.length) {
-                      const firstSeason = showData.seasons.find(s => s.season_number > 0)
-                      if (firstSeason && doesFocusableExist(`season-${firstSeason.id}`)) {
-                        setFocus(`season-${firstSeason.id}`)
-                        return false
-                      }
-                    } else if (activeTab === 'cast' && cast.length > 0) {
-                      if (doesFocusableExist(`cast-${cast[0].id}`)) {
-                        setFocus(`cast-${cast[0].id}`)
-                        return false
-                      }
-                    }
-                  }
-                  return true
-                }}
-                className="rounded-t-lg"
+          {/* Coluna Direita: Mini-player de Preview 16:9 Estilo YouCine */}
+          <div className="lg:col-span-5 flex flex-col items-center lg:items-end justify-center">
+            <div className="relative w-full max-w-[460px] aspect-video rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black/80 group">
+              {trailer ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1&controls=0&loop=1&playlist=${trailer.key}&playsinline=1`}
+                  title={`Preview de ${displayTitle}`}
+                  allow="autoplay; encrypted-media"
+                  className="w-full h-full object-cover border-0 pointer-events-none"
+                />
+              ) : (
+                <div className="w-full h-full relative">
+                  <img
+                    src={getBackdropUrl(backdropPath, 'w780')}
+                    alt={displayTitle}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-accent-red/90 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                      <Play className="w-7 h-7 fill-white ml-1" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Botões laterais < e > sobre o preview */}
+              <button
+                type="button"
+                onClick={handlePrevEpisode}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-all z-20 backdrop-blur-sm"
+                aria-label="Episódio anterior"
               >
-                <button
-                  onClick={() => setActiveTab(tab as typeof activeTab)}
-                  className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all outline-none tv-focusable ${
-                    activeTab === tab
-                      ? 'border-accent-red text-white'
-                      : 'border-transparent text-white/50 hover:text-white/80'
-                  }`}
-                >
-                  {tab === 'overview' ? 'Sinopse' : tab === 'cast' ? 'Elenco' : 'Temporadas'}
-                </button>
-              </Focusable>
-            ))}
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleNextEpisode}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-all z-20 backdrop-blur-sm"
+                aria-label="Próximo episódio"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              {/* Clique no preview abre em tela cheia */}
+              <button
+                type="button"
+                onClick={() => handlePlayFullscreen()}
+                className="absolute inset-0 w-full h-full z-10 cursor-pointer focus:outline-none"
+                aria-label="Assistir em tela cheia"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Tab content */}
-        <AnimatePresence mode="wait">
-          {activeTab === 'overview' && (
-            <motion.div
-              key="overview"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-6 max-w-3xl"
+        {/* Barra Horizontal de Botões de Ação do YouCine */}
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-6 md:mt-8 z-20">
+          {/* Botão: Tela cheia */}
+          <Focusable
+            focusKey="details-fullscreen"
+            onEnterPress={() => handlePlayFullscreen()}
+            className="rounded-xl"
+          >
+            <motion.button
+              ref={fullscreenBtnRef}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => handlePlayFullscreen()}
+              className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-extrabold text-sm sm:text-base border border-white/15 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 focus:shadow-xl focus:shadow-amber-500/30"
             >
-              <p className="text-white/80 leading-relaxed text-base md:text-lg">
-                {overview || 'Sem descrição disponível para este título.'}
-              </p>
+              <Maximize2 className="w-5 h-5" />
+              <span>Tela cheia</span>
+            </motion.button>
+          </Focusable>
 
-              {/* Additional info for movies */}
-              {isMovie && movieData && (
-                <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {movieData.budget > 0 && (
-                    <div className="glass rounded-xl p-4">
-                      <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Orçamento</p>
-                      <p className="text-white font-semibold">${(movieData.budget / 1e6).toFixed(0)}M</p>
-                    </div>
-                  )}
-                  {movieData.revenue > 0 && (
-                    <div className="glass rounded-xl p-4">
-                      <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Bilheteira</p>
-                      <p className="text-white font-semibold">${(movieData.revenue / 1e6).toFixed(0)}M</p>
-                    </div>
-                  )}
-                  {movieData.status && (
-                    <div className="glass rounded-xl p-4">
-                      <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Status</p>
-                      <p className="text-white font-semibold">{movieData.status}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Show info */}
-              {!isMovie && showData && (
-                <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {showData.status && (
-                    <div className="glass rounded-xl p-4">
-                      <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Status</p>
-                      <p className="text-white font-semibold">{showData.status}</p>
-                    </div>
-                  )}
-                  {showData.networks?.length > 0 && (
-                    <div className="glass rounded-xl p-4">
-                      <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Rede</p>
-                      <p className="text-white font-semibold">{showData.networks[0].name}</p>
-                    </div>
-                  )}
-                  {showData.created_by?.length > 0 && (
-                    <div className="glass rounded-xl p-4">
-                      <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Criado por</p>
-                      <p className="text-white font-semibold">{showData.created_by[0].name}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {activeTab === 'cast' && (
-            <motion.div
-              key="cast"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-6"
+          {/* Botão: Idioma */}
+          <Focusable
+            focusKey="details-idioma"
+            onEnterPress={() => setIdiomaModalOpen(true)}
+            className="rounded-xl"
+          >
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setIdiomaModalOpen(true)}
+              className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-extrabold text-sm sm:text-base border border-white/15 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 focus:shadow-xl focus:shadow-amber-500/30"
             >
-              {cast.length === 0 ? (
-                <p className="text-white/40">Elenco não disponível.</p>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {cast.map((actor) => (
-                    <Focusable
-                      key={actor.id}
-                      focusKey={`cast-${actor.id}`}
-                      className="rounded-xl"
-                    >
-                      <motion.div
-                        whileHover={{ y: -4 }}
-                        className="text-center group p-1 rounded-xl"
-                      >
-                        <div className="aspect-[2/3] rounded-xl overflow-hidden bg-bg-card mb-2">
-                          <img
-                            src={getProfileUrl(actor.profile_path)}
-                            alt={actor.name}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/placeholder-avatar.svg'
-                            }}
-                          />
-                        </div>
-                        <p className="text-white text-xs font-semibold line-clamp-1">{actor.name}</p>
-                        <p className="text-white/40 text-xs line-clamp-1 mt-0.5">{actor.character}</p>
-                      </motion.div>
-                    </Focusable>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          )}
+              <MessageSquare className="w-5 h-5" />
+              <span>Idioma ({audioOption === 'dub' ? 'Dublado' : 'Legendado'})</span>
+            </motion.button>
+          </Focusable>
 
-          {activeTab === 'seasons' && !isMovie && showData && (
-            <motion.div
-              key="seasons"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-6 space-y-3 max-w-2xl"
+          {/* Botão: Resolução */}
+          <Focusable
+            focusKey="details-resolucao"
+            onEnterPress={() => setResolucaoModalOpen(true)}
+            className="rounded-xl"
+          >
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setResolucaoModalOpen(true)}
+              className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-extrabold text-sm sm:text-base border border-white/15 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 focus:shadow-xl focus:shadow-amber-500/30"
             >
-              {showData.seasons
-                .filter(s => s.season_number > 0)
-                .map((season) => (
+              <Sliders className="w-5 h-5" />
+              <span>Resolução ({selectedResolution})</span>
+            </motion.button>
+          </Focusable>
+
+          {/* Botão: Favorito */}
+          <Focusable
+            focusKey="details-fav"
+            onEnterPress={handleToggleFav}
+            className="rounded-xl"
+          >
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleToggleFav}
+              className={`flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-extrabold text-sm sm:text-base border transition-all outline-none backdrop-blur-md focus:bg-amber-400 focus:text-black focus:border-amber-400 focus:shadow-xl focus:shadow-amber-500/30 ${
+                favorite
+                  ? 'bg-red-500/25 border-red-500 text-red-400'
+                  : 'bg-white/10 border-white/15 text-white hover:bg-white/20'
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${favorite ? 'fill-current' : ''}`} />
+              <span>{favorite ? 'Favoritado' : 'Favorito'}</span>
+            </motion.button>
+          </Focusable>
+
+          {/* Botão: Download */}
+          <Focusable
+            focusKey="details-download"
+            onEnterPress={handleDownload}
+            className="rounded-xl"
+          >
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-extrabold text-sm sm:text-base border border-white/15 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 focus:shadow-xl focus:shadow-amber-500/30 disabled:opacity-50"
+            >
+              <Download className="w-5 h-5" />
+              <span>{isDownloading ? 'Baixando...' : 'Download'}</span>
+            </motion.button>
+          </Focusable>
+        </div>
+
+        {/* Seção Inferior: Temporadas e Lista Horizontal de Episódios (Para Séries/Anime) */}
+        {!isMovie && seasons.length > 0 && (
+          <div className="mt-8 md:mt-10 space-y-4">
+            {/* Cabeçalho da Temporada estilo YouCine */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="font-extrabold text-lg sm:text-xl text-white">
+                Temporada {selectedSeason}
+              </span>
+              <span className="text-xs text-amber-400 font-bold bg-amber-400/10 px-2.5 py-0.5 rounded border border-amber-400/30">
+                {selectedSeason}-{seasons.length}
+              </span>
+              <span className="text-xs text-white/50 font-medium">
+                Disponível até {seasons.length}
+              </span>
+            </div>
+
+            {/* Seletor de Temporadas (quando há mais de uma) */}
+            {seasons.length > 1 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                {seasons.map((s) => (
                   <Focusable
-                    key={season.id}
-                    focusKey={`season-${season.id}`}
-                    onEnterPress={() => navigate(`/watch/${type}/${id}?season=${season.season_number}`)}
-                    className="rounded-xl w-full"
-                  >
-                    <motion.button
-                      whileHover={{ x: 4 }}
-                      onClick={() => navigate(`/watch/${type}/${id}?season=${season.season_number}`)}
-                      className="w-full flex items-center gap-4 glass rounded-xl p-4 text-left hover:border-accent-red/40 border border-transparent transition-all outline-none"
-                    >
-                      <div className="w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-bg-card">
-                        <img
-                          src={getPosterUrl(season.poster_path, 'w185')}
-                          alt={season.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-poster.svg' }}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-white font-semibold">{season.name}</h4>
-                        <p className="text-white/50 text-sm mt-0.5">{season.episode_count} episódios</p>
-                        {season.air_date && (
-                          <p className="text-white/40 text-xs mt-1">{new Date(season.air_date).getFullYear()}</p>
-                        )}
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-white/30 flex-shrink-0" />
-                    </motion.button>
-                  </Focusable>
-                ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Trailer Modal */}
-      <AnimatePresence>
-        {trailerOpen && trailer && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[80] bg-black/85 backdrop-blur-md"
-              onClick={() => setTrailerOpen(false)}
-            />
-            <div className="fixed inset-0 z-[90] flex items-center justify-center p-2 sm:p-4 md:p-6 pointer-events-none">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 15 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                transition={{ duration: 0.2 }}
-                className="pointer-events-auto relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-bg-card/95 border border-white/15 rounded-2xl overflow-hidden shadow-2xl"
-              >
-                {/* Header do Modal com título e botão de fechar acessível */}
-                <div className="flex items-center justify-between px-4 py-2.5 sm:py-3 bg-black/70 border-b border-white/10 flex-shrink-0">
-                  <div className="flex items-center gap-2 text-white font-medium text-xs sm:text-sm md:text-base truncate pr-2">
-                    <Play className="h-4 w-4 text-accent-red fill-accent-red flex-shrink-0" />
-                    <span className="truncate">{title} — Trailer Oficial</span>
-                  </div>
-                  <Focusable
-                    focusKey="trailer-close"
-                    onEnterPress={() => setTrailerOpen(false)}
-                    className="rounded-full flex-shrink-0"
+                    key={`season-pill-${s.season_number}`}
+                    focusKey={`season-pill-${s.season_number}`}
+                    onEnterPress={() => handleSelectSeason(s.season_number)}
+                    className="rounded-xl flex-shrink-0"
                   >
                     <button
-                      onClick={() => setTrailerOpen(false)}
-                      className="p-1.5 sm:p-2 bg-white/10 hover:bg-white/25 active:bg-white/35 rounded-full text-white transition-colors outline-none flex items-center justify-center min-w-[36px] min-h-[36px]"
-                      aria-label="Fechar trailer"
+                      onClick={() => handleSelectSeason(s.season_number)}
+                      className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 ${
+                        selectedSeason === s.season_number
+                          ? 'bg-accent-red text-white border-accent-red shadow-lg shadow-red-950/40'
+                          : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/15'
+                      }`}
                     >
-                      <X className="h-5 w-5" />
+                      {s.name || `Temporada ${s.season_number}`}
                     </button>
                   </Focusable>
-                </div>
+                ))}
+              </div>
+            )}
 
-                {/* Container responsivo do Iframe 16:9 */}
-                <div className="relative w-full aspect-video bg-black flex-1 min-h-0 overflow-hidden">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0&playsinline=1&modestbranding=1`}
-                    title={`Trailer de ${title}`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="absolute inset-0 w-full h-full border-0"
-                  />
-                </div>
-              </motion.div>
+            {/* Grade Horizontal de Episódios Numerados do YouCine [ ▶ 1 ] [ ▶ 2 ] ... */}
+            <div className="flex items-center gap-3 overflow-x-auto py-2 px-0.5 scrollbar-thin scrollbar-thumb-white/20">
+              {Array.from({ length: episodeCount }, (_, i) => i + 1).map((epNum) => {
+                const isSelected = selectedEpisode === epNum
+                return (
+                  <Focusable
+                    key={`ep-${selectedSeason}-${epNum}`}
+                    focusKey={`ep-${selectedSeason}-${epNum}`}
+                    onEnterPress={() => handlePlayFullscreen(epNum)}
+                    className="rounded-xl flex-shrink-0"
+                  >
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handlePlayFullscreen(epNum)}
+                      className={`w-16 sm:w-20 h-14 sm:h-16 rounded-xl flex items-center justify-center gap-1.5 font-black text-base sm:text-lg border transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 focus:shadow-xl focus:shadow-amber-500/40 focus:scale-110 ${
+                        isSelected
+                          ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
+                          : 'bg-white/10 text-white/90 border-white/10 hover:bg-white/20'
+                      }`}
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                      <span>{epNum}</span>
+                    </motion.button>
+                  </Focusable>
+                )
+              })}
             </div>
-          </>
+          </div>
+        )}
+      </div>
+
+      {/* Modal de Idioma (YouCine) */}
+      <AnimatePresence>
+        {idiomaModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-[#13141f] border border-white/15 rounded-2xl p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-amber-400" />
+                  <span>Selecione o Idioma</span>
+                </h3>
+                <button
+                  onClick={() => setIdiomaModalOpen(false)}
+                  className="p-1 rounded-lg text-white/60 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAudioOption('dub')
+                    setIdiomaModalOpen(false)
+                  }}
+                  className={`w-full flex items-center justify-between p-4 rounded-xl border text-sm font-bold transition-all outline-none ${
+                    audioOption === 'dub'
+                      ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
+                      : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                  }`}
+                >
+                  <span>Áudio Dublado (Português)</span>
+                  {audioOption === 'dub' && <Check className="w-5 h-5 stroke-[3]" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAudioOption('orig')
+                    setIdiomaModalOpen(false)
+                  }}
+                  className={`w-full flex items-center justify-between p-4 rounded-xl border text-sm font-bold transition-all outline-none ${
+                    audioOption === 'orig'
+                      ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
+                      : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                  }`}
+                >
+                  <span>Áudio Original (com Legenda PT-BR)</span>
+                  {audioOption === 'orig' && <Check className="w-5 h-5 stroke-[3]" />}
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
-    </motion.div>
+
+      {/* Modal de Resolução (YouCine) */}
+      <AnimatePresence>
+        {resolucaoModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-[#13141f] border border-white/15 rounded-2xl p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-amber-400" />
+                  <span>Qualidade de Transmissão</span>
+                </h3>
+                <button
+                  onClick={() => setResolucaoModalOpen(false)}
+                  className="p-1 rounded-lg text-white/60 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-2.5">
+                {[
+                  { id: '1080p', label: 'Full HD (1080p) — Alta Qualidade' },
+                  { id: '720p', label: 'HD (720p) — Conexão Padrão' },
+                  { id: 'auto', label: 'Automático — Ajuste Dinâmico' },
+                ].map((res) => (
+                  <button
+                    key={res.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedResolution(res.id)
+                      setResolucaoModalOpen(false)
+                    }}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border text-sm font-bold transition-all outline-none ${
+                      selectedResolution === res.id
+                        ? 'bg-amber-400 text-black border-amber-400 shadow-lg shadow-amber-500/20'
+                        : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <span>{res.label}</span>
+                    {selectedResolution === res.id && <Check className="w-5 h-5 stroke-[3]" />}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
