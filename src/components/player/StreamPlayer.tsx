@@ -764,12 +764,22 @@ const StreamPlayer = ({
     seekBy(85)
   }
 
-  const handleFullscreen = () => {
+  const handleFullscreen = async () => {
     if (containerRef.current) {
       if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {})
+        if (typeof screen !== 'undefined' && screen.orientation && 'unlock' in screen.orientation) {
+          try {
+            screen.orientation.unlock()
+          } catch {}
+        }
+        await document.exitFullscreen().catch(() => {})
       } else {
-        containerRef.current.requestFullscreen().catch(() => {})
+        await containerRef.current.requestFullscreen().catch(() => {})
+        if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
+          try {
+            await (screen.orientation as any).lock('landscape').catch(() => {})
+          } catch {}
+        }
       }
     }
     // Ao alternar tela cheia, esconde os controles rapidamente após 800ms

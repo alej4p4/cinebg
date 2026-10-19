@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792416792.6621552,
-    "seen": 1792417132.9546013,
-    "ast_hash": "f7fd838b4e8d33d9069a9f392528f4ff",
+    "mtime": 1792417776.9820952,
+    "seen": 1792418130.4774582,
+    "ast_hash": "4ab96db43f1eb7c7b65690ec41a6ab40",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792416887.9894474,
-    "seen": 1792417132.9546099,
+    "mtime": 1792417925.7651312,
+    "seen": 1792418130.4774702,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792416887.9894474,
-    "seen": 1792417132.9546347,
+    "mtime": 1792417925.7641313,
+    "seen": 1792418130.4775062,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -72,9 +72,9 @@
     "semantic_hash": "e6a5711fca159c8793e07440a22147be"
   },
   "package.json": {
-    "mtime": 1792416772.1901906,
-    "seen": 1792417132.9546566,
-    "ast_hash": "cdab266418993249662a4d2a2c2aa941",
+    "mtime": 1792417800.2230198,
+    "seen": 1792418130.4775376,
+    "ast_hash": "c7c63be53b3ea82214da5799d16f798e",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1792416767.4556956,
-    "seen": 1792417132.9546676,
-    "ast_hash": "0183148568122c74d3a5202c7119231a",
+    "mtime": 1792417803.7280643,
+    "seen": 1792418130.4775531,
+    "ast_hash": "aa817757c53811f4d72c1de0af37320d",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1792409423.4945235,
-    "seen": 1792413329.588272,
-    "ast_hash": "3b0f73e711bf8778b9cced74271f10b4",
+    "mtime": 1792417788.95476,
+    "seen": 1792418130.477608,
+    "ast_hash": "c4a8f428f77e2560ae157d5bcc662550",
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
@@ -330,9 +330,9 @@
     "semantic_hash": ""
   },
   "src/pages/Watch.tsx": {
-    "mtime": 1792364981.304948,
-    "seen": 1792366121.0883896,
-    "ast_hash": "d288b86f9b8dc39e292ee509ddb55862",
+    "mtime": 1792417796.4646182,
+    "seen": 1792418130.4778035,
+    "ast_hash": "5f90df12a894ea7d3097821175dcb317",
     "semantic_hash": ""
   },
   "src/services/downloads.ts": {
@@ -372,9 +372,9 @@
     "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1792416762.6885154,
-    "seen": 1792417132.9548795,
-    "ast_hash": "b256daf74cfa0e13f87022bf33559115",
+    "mtime": 1792417815.8261635,
+    "seen": 1792418130.4778647,
+    "ast_hash": "0b58557b2b2f064a8e44f450ca2cc4a5",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -678,9 +678,9 @@
     "semantic_hash": ""
   },
   "src/components/ui/SplashScreen.tsx": {
-    "mtime": 1792416784.279671,
-    "seen": 1792417132.9547648,
-    "ast_hash": "b1357df9c1024dedbd6f41974613ee71",
+    "mtime": 1792417810.269758,
+    "seen": 1792418130.4776947,
+    "ast_hash": "6ffdbe87cc03ab719f713d254516d6e7",
     "semantic_hash": ""
   },
   "src/services/mercadoPago.ts": {
@@ -744,8 +744,8 @@
     "semantic_hash": ""
   },
   "android/app/src/main/java/com/barrasoft/cinebg/AppInstallerPlugin.java": {
-    "mtime": 1792416756.0242753,
-    "seen": 1792417132.9546196,
+    "mtime": 1792417181.0080924,
+    "seen": 1792418130.477484,
     "ast_hash": "065cfd0f735354e937c6a6bcefc6a565",
     "semantic_hash": ""
   },
