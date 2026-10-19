@@ -190,7 +190,7 @@ const Search = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-bg-primary pt-24 pb-12"
+      className="min-h-screen bg-bg-primary pt-[calc(5rem+env(safe-area-inset-top,0px))] pb-12 pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]"
       variants={PAGE_VARIANTS}
       initial="initial"
       animate="animate"

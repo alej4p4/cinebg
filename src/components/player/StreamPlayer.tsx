@@ -1657,7 +1657,7 @@ const StreamPlayer = ({
         onClick={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
-        className={`absolute top-0 left-0 right-0 z-40 p-4 sm:p-6 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between transition-opacity duration-300 ${
+        className={`absolute top-0 left-0 right-0 z-40 p-4 sm:p-6 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-[max(1rem,env(safe-area-inset-top,0px))] bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between transition-opacity duration-300 ${
           showHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
@@ -1704,7 +1704,7 @@ const StreamPlayer = ({
         {doubleTapFeedback && doubleTapFeedback.direction === 'left' && (
           <div
             key={`dt-left-${doubleTapFeedback.key}`}
-            className="absolute left-6 sm:left-16 top-1/2 -translate-y-1/2 z-50 pointer-events-none flex flex-col items-center justify-center animate-in fade-in zoom-in duration-150"
+            className="absolute left-[max(1.5rem,env(safe-area-inset-left,0px))] top-1/2 -translate-y-1/2 z-50 pointer-events-none flex flex-col items-center justify-center animate-in fade-in zoom-in duration-150"
           >
             <div className="relative flex flex-col items-center justify-center w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-black/85 backdrop-blur-md border border-white/20 shadow-2xl">
               <span className="absolute inset-0 rounded-full bg-yellow-400/20 animate-ping pointer-events-none" />
@@ -1723,7 +1723,7 @@ const StreamPlayer = ({
         {doubleTapFeedback && doubleTapFeedback.direction === 'right' && (
           <div
             key={`dt-right-${doubleTapFeedback.key}`}
-            className="absolute right-6 sm:right-16 top-1/2 -translate-y-1/2 z-50 pointer-events-none flex flex-col items-center justify-center animate-in fade-in zoom-in duration-150"
+            className="absolute right-[max(1.5rem,env(safe-area-inset-right,0px))] top-1/2 -translate-y-1/2 z-50 pointer-events-none flex flex-col items-center justify-center animate-in fade-in zoom-in duration-150"
           >
             <div className="relative flex flex-col items-center justify-center w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-black/85 backdrop-blur-md border border-white/20 shadow-2xl">
               <span className="absolute inset-0 rounded-full bg-yellow-400/20 animate-ping pointer-events-none" />
@@ -1748,7 +1748,7 @@ const StreamPlayer = ({
             }}
             onTouchStart={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
-            className="absolute top-16 right-4 z-40 bg-yellow-400 hover:bg-yellow-300 text-black px-3.5 py-2 rounded-full text-xs font-black flex items-center gap-1.5 shadow-2xl active:scale-95 transition-all animate-bounce"
+            className="absolute top-[calc(4.5rem+env(safe-area-inset-top,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-40 bg-yellow-400 hover:bg-yellow-300 text-black px-3.5 py-2 rounded-full text-xs font-black flex items-center gap-1.5 shadow-2xl active:scale-95 transition-all animate-bounce"
             title="Girar para tela cheia na horizontal"
           >
             <RotateCw className="w-4 h-4" />
@@ -1758,7 +1758,7 @@ const StreamPlayer = ({
 
         {/* Botão de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
         {directSrc && !isTv && !isTVDevice() && !tvMode && (
-          <div className="absolute top-3 left-3 z-40">
+          <div className="absolute top-[max(0.75rem,env(safe-area-inset-top,0px))] left-[max(0.75rem,env(safe-area-inset-left,0px))] z-40">
             <button
               onClick={toggleLock}
               className={`p-2.5 rounded-full transition-all duration-200 backdrop-blur-md ${
@@ -2032,7 +2032,7 @@ const StreamPlayer = ({
 
         {/* Barra Inferior HUD Integrada (Linha do Tempo + Ações Estilo YuCine) */}
         <div
-          className={`absolute bottom-0 inset-x-0 z-40 bg-gradient-to-t from-black/95 via-black/80 to-transparent pt-12 pb-6 px-4 sm:px-8 transition-opacity duration-300 ${
+          className={`absolute bottom-0 inset-x-0 z-40 bg-gradient-to-t from-black/95 via-black/80 to-transparent pt-12 pb-6 px-4 sm:px-8 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] transition-opacity duration-300 ${
             showHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
           onClick={(e) => {
