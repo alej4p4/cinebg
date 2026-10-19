@@ -39,8 +39,8 @@ type UpdateStage = 'idle' | 'downloading' | 'installing' | 'error'
 const UpdateModal = ({
   visible,
   downloadUrl = 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk',
-  currentVersion = '1.2.52',
-  latestVersion = '1.2.52',
+  currentVersion = '1.2.53',
+  latestVersion = '1.2.53',
   hasUpdate = false,
   isChecking = false,
   onDismiss,
