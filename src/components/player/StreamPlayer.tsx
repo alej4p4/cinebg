@@ -462,31 +462,37 @@ const StreamPlayer = ({
     if (stallTimerRef.current) clearTimeout(stallTimerRef.current)
     stallTimerRef.current = setTimeout(() => {
       if (!loadedRef.current) {
-        console.warn('[StreamPlayer] Vídeo estagnado na rede. Avançando para próxima opção...')
+        console.warn('[StreamPlayer] Vídeo estagnado na rede (12s). Avançando para próxima opção...')
         handleDirectMediaError()
       }
-    }, 4500)
+    }, 12000)
   }
 
   useEffect(() => {
+    // Se ainda está consultando a API para descobrir fontes diretas, aguarda resolução sem abortar
+    if (resolvingDirect) return
+
+    // Se não há fonte direta nem espelho ativo, não inicia contagem regressiva
+    if (!directSrc && !allowIframe) return
+
     loadedRef.current = false
     setLoaded(false)
     setError(false)
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout de segurança: 6s por fonte/candidato direto ou iframe. Nunca fica preso infinitamente.
+    // Timeout de segurança generoso para conexões residenciais e TV Boxes: 14s para buffer inicial
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
-      console.warn(`[StreamPlayer] Timeout de carregamento (6s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
+      console.warn(`[StreamPlayer] Timeout de carregamento (14s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
       handleDirectMediaError()
-    }, 6000)
+    }, 14000)
 
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, tmdbId, season, episode, audioOption, activeMirror, candidateIndex, directSrc])
+  }, [key, tmdbId, season, episode, audioOption, activeMirror, candidateIndex, directSrc, resolvingDirect, allowIframe])
 
   // Verificação e resolução inteligente de áudio:
   // Ao entrar em um filme ou episódio, verifica se tem em português (dublado).
