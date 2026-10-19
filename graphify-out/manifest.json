@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792413230.490639,
-    "seen": 1792413329.5882037,
-    "ast_hash": "2af8af48e047c690295e61e4ce8fc332",
+    "mtime": 1792416792.6621552,
+    "seen": 1792417132.9546013,
+    "ast_hash": "f7fd838b4e8d33d9069a9f392528f4ff",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792413104.9597404,
-    "seen": 1792413329.5882125,
+    "mtime": 1792416887.9894474,
+    "seen": 1792417132.9546099,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -18,8 +18,8 @@
     "semantic_hash": "c777a4127ae7213f7da22c4105bdfeab"
   },
   "android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java": {
-    "mtime": 1792413236.700117,
-    "seen": 1792413329.5882246,
+    "mtime": 1792413381.7114575,
+    "seen": 1792417132.9546232,
     "ast_hash": "bc9aa6f6b7be4b920c92ad414848b192",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792413104.9587395,
-    "seen": 1792413329.588232,
+    "mtime": 1792416887.9894474,
+    "seen": 1792417132.9546347,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -72,9 +72,9 @@
     "semantic_hash": "e6a5711fca159c8793e07440a22147be"
   },
   "package.json": {
-    "mtime": 1792409423.4925249,
-    "seen": 1792413329.5882447,
-    "ast_hash": "80e9adcb8cc4bd20145518238b99af1f",
+    "mtime": 1792416772.1901906,
+    "seen": 1792417132.9546566,
+    "ast_hash": "cdab266418993249662a4d2a2c2aa941",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1792413013.676228,
-    "seen": 1792413329.5882509,
-    "ast_hash": "28bc719ed8d72946fcc5a84d5ddd8338",
+    "mtime": 1792416767.4556956,
+    "seen": 1792417132.9546676,
+    "ast_hash": "0183148568122c74d3a5202c7119231a",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -372,9 +372,9 @@
     "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1792413006.0329094,
-    "seen": 1792413329.5883703,
-    "ast_hash": "4c8e40dca9da110a9e66684c0f85e920",
+    "mtime": 1792416762.6885154,
+    "seen": 1792417132.9548795,
+    "ast_hash": "b256daf74cfa0e13f87022bf33559115",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -396,8 +396,8 @@
     "semantic_hash": "daf39070d68a6d84e543ed362e3ef333"
   },
   "src/utils/tv.ts": {
-    "mtime": 1792412959.5057118,
-    "seen": 1792413329.5883787,
+    "mtime": 1792413381.7429485,
+    "seen": 1792417132.9548938,
     "ast_hash": "e8f2e6d08a25c396e90241382d175130",
     "semantic_hash": ""
   },
@@ -678,9 +678,9 @@
     "semantic_hash": ""
   },
   "src/components/ui/SplashScreen.tsx": {
-    "mtime": 1792409423.4945235,
-    "seen": 1792413329.5883067,
-    "ast_hash": "58e9fecccbd06aa7555ae21f6ef6b42b",
+    "mtime": 1792416784.279671,
+    "seen": 1792417132.9547648,
+    "ast_hash": "b1357df9c1024dedbd6f41974613ee71",
     "semantic_hash": ""
   },
   "src/services/mercadoPago.ts": {
@@ -744,9 +744,9 @@
     "semantic_hash": ""
   },
   "android/app/src/main/java/com/barrasoft/cinebg/AppInstallerPlugin.java": {
-    "mtime": 1792326357.0403838,
-    "seen": 1792327391.0420249,
-    "ast_hash": "3c47a0026f90f4ab74b77e1be9bd3e99",
+    "mtime": 1792416756.0242753,
+    "seen": 1792417132.9546196,
+    "ast_hash": "065cfd0f735354e937c6a6bcefc6a565",
     "semantic_hash": ""
   },
   "src/services/appUpdater.ts": {

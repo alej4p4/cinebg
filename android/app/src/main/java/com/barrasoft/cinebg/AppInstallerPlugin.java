@@ -92,33 +92,15 @@ public class AppInstallerPlugin extends Plugin {
                     targetFile.delete();
                 }
 
-                String currentUrl = downloadUrl;
-                HttpURLConnection conn = null;
-                int redirects = 0;
+                HttpURLConnection conn = connectWithRedirects(downloadUrl);
 
-                // Segue redirecionamentos (HTTP 301, 302, 307, 308 - essencial para releases GitHub / S3)
-                while (redirects < 6) {
-                    URL u = new URL(currentUrl);
-                    conn = (HttpURLConnection) u.openConnection();
-                    conn.setInstanceFollowRedirects(false);
-                    conn.setRequestProperty("User-Agent", "CineBG-AppUpdater/1.0 (Android)");
-                    conn.setConnectTimeout(25000);
-                    conn.setReadTimeout(30000);
-                    conn.connect();
-
-                    int status = conn.getResponseCode();
-                    if (status == HttpURLConnection.HTTP_MOVED_TEMP
-                            || status == HttpURLConnection.HTTP_MOVED_PERM
-                            || status == 307
-                            || status == 308) {
-                        String location = conn.getHeaderField("Location");
-                        conn.disconnect();
-                        if (location == null) break;
-                        currentUrl = location;
-                        redirects++;
-                        continue;
+                // Fallback automático para CineBG-release.apk se a URL de flavor retornar 404
+                if ((conn == null || conn.getResponseCode() == 404) && (downloadUrl.contains("-Mobile-") || downloadUrl.contains("-Tv-"))) {
+                    if (conn != null) {
+                        try { conn.disconnect(); } catch (Exception ignored) {}
                     }
-                    break;
+                    String fallbackUrl = downloadUrl.replace("-Mobile-", "-").replace("-Tv-", "-");
+                    conn = connectWithRedirects(fallbackUrl);
                 }
 
                 if (conn == null || conn.getResponseCode() < 200 || conn.getResponseCode() >= 300) {
@@ -173,6 +155,37 @@ public class AppInstallerPlugin extends Plugin {
                 call.reject("Falha no download da atualização: " + e.getMessage(), e);
             }
         }).start();
+    }
+
+    private HttpURLConnection connectWithRedirects(String initialUrl) throws Exception {
+        String currentUrl = initialUrl;
+        HttpURLConnection conn = null;
+        int redirects = 0;
+
+        while (redirects < 6) {
+            URL u = new URL(currentUrl);
+            conn = (HttpURLConnection) u.openConnection();
+            conn.setInstanceFollowRedirects(false);
+            conn.setRequestProperty("User-Agent", "CineBG-AppUpdater/1.0 (Android)");
+            conn.setConnectTimeout(25000);
+            conn.setReadTimeout(30000);
+            conn.connect();
+
+            int status = conn.getResponseCode();
+            if (status == HttpURLConnection.HTTP_MOVED_TEMP
+                    || status == HttpURLConnection.HTTP_MOVED_PERM
+                    || status == 307
+                    || status == 308) {
+                String location = conn.getHeaderField("Location");
+                conn.disconnect();
+                if (location == null) break;
+                currentUrl = location;
+                redirects++;
+                continue;
+            }
+            break;
+        }
+        return conn;
     }
 
     private void launchInstaller(File apkFile) {
