@@ -14,7 +14,7 @@
 
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-            android:screenOrientation="sensor"
+            android:screenOrientation="${screenOrientation}"
             android:resizeableActivity="true"
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
@@ -50,6 +50,6 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-    <uses-feature android:name="android.software.leanback" android:required="false" />
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <uses-feature android:name="android.software.leanback" android:required="${isLeanbackRequired}" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="${isTouchscreenRequired}" />
 </manifest>

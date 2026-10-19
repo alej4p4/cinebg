@@ -28,77 +28,14 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        int keyCode = event.getKeyCode();
-        int action = event.getAction();
-
-        // Teclas direcionais de controle remoto (D-Pad), Enter e Menu
-        String keyName = null;
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_UP:
-                keyName = "ArrowUp";
-                break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-                keyName = "ArrowDown";
-                break;
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-                keyName = "ArrowLeft";
-                break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                keyName = "ArrowRight";
-                break;
-            case KeyEvent.KEYCODE_DPAD_CENTER:
-            case KeyEvent.KEYCODE_ENTER:
-            case KeyEvent.KEYCODE_NUMPAD_ENTER:
-            case KeyEvent.KEYCODE_BUTTON_A:
-            case KeyEvent.KEYCODE_BUTTON_SELECT:
-                keyName = "Enter";
-                break;
-            case KeyEvent.KEYCODE_MENU:
-                keyName = "ContextMenu";
-                break;
-            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                keyName = "MediaPlayPause";
-                break;
-            case KeyEvent.KEYCODE_MEDIA_PLAY:
-                keyName = "MediaPlay";
-                break;
-            case KeyEvent.KEYCODE_MEDIA_PAUSE:
-                keyName = "MediaPause";
-                break;
-            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
-                keyName = "MediaFastForward";
-                break;
-            case KeyEvent.KEYCODE_MEDIA_REWIND:
-                keyName = "MediaRewind";
-                break;
-        }
-
-        if (keyName != null) {
-            final String jsKey = keyName;
-            final String eventType = (action == KeyEvent.ACTION_DOWN) ? "keydown" : "keyup";
-            final int jsCode = keyCode;
-
-            if (getBridge() != null && getBridge().getWebView() != null) {
-                getBridge().getWebView().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            String js = "window.dispatchEvent(new KeyboardEvent('" + eventType + "', {" +
-                                "key: '" + jsKey + "'," +
-                                "code: '" + jsKey + "'," +
-                                "keyCode: " + jsCode + "," +
-                                "which: " + jsCode + "," +
-                                "bubbles: true," +
-                                "cancelable: true" +
-                            "}));";
-                            getBridge().getWebView().evaluateJavascript(js, null);
-                        } catch (Exception ignored) {}
-                    }
-                });
-                return true;
+        // Assegura que o WebView receba o foco e processe teclas direcionais e D-Pad nativamente
+        // sem atrasos ou engasgos de evaluateJavascript que travam TV Boxes
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            WebView webView = getBridge().getWebView();
+            if (!webView.hasFocus()) {
+                webView.requestFocus();
             }
         }
-
         return super.dispatchKeyEvent(event);
     }
 
@@ -184,8 +121,17 @@ public class MainActivity extends BridgeActivity {
                     webView.getSettings().setDatabaseEnabled(true);
                     webView.getSettings().setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH);
                     webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
-                    // Disfarça User-Agent para Chrome completo sem "Version/4.0" nem "; wv;", impedindo detecção de WebView
-                    webView.getSettings().setUserAgentString("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+                    boolean isTv = getPackageName().endsWith(".tv") ||
+                        "tv".equals(BuildConfig.FLAVOR) ||
+                        getPackageManager().hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK);
+
+                    String customUa = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+                    if (isTv) {
+                        customUa += " CineBG-TV";
+                    } else {
+                        customUa += " CineBG-Mobile";
+                    }
+                    webView.getSettings().setUserAgentString(customUa);
                 }
 
                 if (!adBlockerInstalled) {
