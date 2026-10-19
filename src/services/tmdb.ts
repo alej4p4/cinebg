@@ -63,21 +63,47 @@ export const getProfileUrl = (path: string | null | undefined): string => {
 const requestCache = new Map<string, { data: unknown; expiresAt: number }>()
 const inflightMap = new Map<string, Promise<unknown>>()
 
-const STORAGE_PREFIX = 'cinebg_tmdb_cache_'
+const STORAGE_PREFIX = 'cinebg_tmdb_v3_'
 const DEFAULT_CATALOG_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas para catálogos
 const DETAILS_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 dias para detalhes de filmes/séries
+
+// Purga automática de chaves legadas ou com colisão de versões anteriores
+try {
+  if (typeof window !== 'undefined') {
+    const legacyKeys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && (k.startsWith('cinebg_tmdb_cache_') || k.startsWith('cinebg_tmdb_v2_'))) {
+        legacyKeys.push(k)
+      }
+    }
+    legacyKeys.forEach((k) => localStorage.removeItem(k))
+  }
+} catch {}
 
 const buildCacheKey = (method: string, url: string, params?: Record<string, unknown>) => {
   const p = params ? JSON.stringify(params) : ''
   return `${method.toUpperCase()}:${url}:${p}`
 }
 
-const getStorageKey = (key: string): string => {
-  try {
-    return STORAGE_PREFIX + btoa(unescape(encodeURIComponent(key))).slice(0, 48)
-  } catch {
-    return STORAGE_PREFIX + key.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 48)
+// Algoritmo de hash cyrb53 determinístico e não-colidente para chaves de tamanho arbitrário
+const hashString = (str: string): string => {
+  let h1 = 0xdeadbeef
+  let h2 = 0x41c6ce57
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i)
+    h1 = Math.imul(h1 ^ ch, 2654435761)
+    h2 = Math.imul(h2 ^ ch, 1597334677)
   }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)
+}
+
+const getStorageKey = (key: string): string => {
+  const hash = hashString(key)
+  const cleanEndpoint = key.split(':')[1]?.replace(/[^a-zA-Z0-9]/g, '_') || 'tmdb'
+  return `${STORAGE_PREFIX}${cleanEndpoint}_${hash}`
 }
 
 const saveToLocalStorage = (key: string, data: unknown, ttlMs: number) => {
