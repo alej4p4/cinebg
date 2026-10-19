@@ -218,10 +218,11 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
             Deseja estender sua assinatura?
           </div>
         ) : (
-          <div className="bg-red-500/15 border border-red-500/30 rounded-xl px-4 py-2 text-red-200 text-sm max-w-lg mx-auto">
+          <div className="bg-amber-500/15 border border-amber-500/30 rounded-xl px-4 py-2.5 text-amber-200 text-sm max-w-lg mx-auto">
             ⏳ <strong>Seu período de teste de 3 dias encerrou.</strong>
-            <br />
-            Escolha um plano VIP abaixo e desbloqueie o aplicativo instantaneamente via Pix Mercado Pago!
+            <p className="text-white/80 text-xs mt-1">
+              Os canais de TV aberta (SBT, Record, Band, Cultura, etc.) continuam 100% liberados e gratuitos! Escolha um plano VIP abaixo para desbloquear todos os Filmes, Séries e canais fechados via Pix Mercado Pago.
+            </p>
           </div>
         )}
       </div>
@@ -481,6 +482,20 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Botão de retorno para TV Aberta Gratuita */}
+      <div className="mt-4 text-center">
+        <button
+          type="button"
+          onClick={() => {
+            if (onClose) onClose()
+          }}
+          className="w-full py-2.5 px-4 rounded-xl border border-amber-400/30 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+        >
+          <Tv className="w-4 h-4 text-amber-400" />
+          <span>Continuar Assistindo TV Aberta Grátis (SBT, Record, Band, Cultura...)</span>
+        </button>
       </div>
 
       {/* Rodapé com ID do Dispositivo */}

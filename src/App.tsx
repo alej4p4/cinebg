@@ -35,11 +35,21 @@ const PageFallback = () => (
   </div>
 )
 
-const AnimatedRoutes = () => {
+const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { tvMode } = useAppStore()
+  const { tvMode, setVipModalOpen } = useAppStore()
   useSpatialNavigation(tvMode || isTVDevice(), location.pathname)
+
+  // Quando o período de teste de 3 dias expira e o usuário não possui plano VIP:
+  // A aba TV ao Vivo (/live) permanece 100% liberada e gratuita (canais abertos).
+  // As demais rotas de filmes e séries redirecionam para /live abrindo o modal VIP.
+  useEffect(() => {
+    if (!isVipActive && location.pathname !== '/live' && location.pathname !== '/profiles') {
+      navigate('/live', { replace: true })
+      setVipModalOpen(true)
+    }
+  }, [isVipActive, location.pathname, navigate, setVipModalOpen])
 
   // Tratamento universal do botao Voltar do controle remoto e do Android
   useEffect(() => {
@@ -155,15 +165,13 @@ function App() {
         <div className="min-h-screen bg-bg-primary flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-white/10 border-t-accent-red rounded-full animate-spin" />
         </div>
-      ) : !isLicensed && !isTrial ? (
-        <LicenseGate />
       ) : (
         <BrowserRouter>
           <ErrorBoundary>
             <div className="min-h-screen bg-bg-primary text-text-primary">
               <Navbar />
               <main>
-                <AnimatedRoutes />
+                <AnimatedRoutes isVipActive={isLicensed || isTrial} />
               </main>
               <TvCursorOverlay />
             </div>

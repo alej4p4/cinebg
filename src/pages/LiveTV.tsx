@@ -17,6 +17,8 @@ import {
   saveLastLiveChannelId,
   toggleLiveFavorite,
 } from '@/services/liveFavorites'
+import { useLicense } from '@/hooks/useLicense'
+import { useAppStore } from '@/store/useAppStore'
 
 const LiveTV = () => {
   const [channels, setChannels] = useState<LiveChannel[]>([])
@@ -27,6 +29,8 @@ const LiveTV = () => {
   const [showSchedule, setShowSchedule] = useState(false)
   const [favorites, setFavorites] = useState<Set<string>>(() => loadLiveFavorites())
   const [lastChannelId, setLastChannelId] = useState<string | null>(() => loadLastLiveChannelId())
+  const { isLicensed, isTrial } = useLicense()
+  const { setVipModalOpen } = useAppStore()
 
   useEffect(() => {
     let alive = true
@@ -127,6 +131,28 @@ const LiveTV = () => {
               setFavorites(toggleLiveFavorite(favorites, selected.id))
             }
           />
+        )}
+
+        {/* Banner Informativo quando o teste encerrou: Canais Abertos Liberados */}
+        {!isLicensed && !isTrial && (
+          <div className="mb-4 p-3 sm:p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent border border-amber-400/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center gap-2.5 text-xs sm:text-sm text-amber-200">
+              <span className="text-xl flex-shrink-0">📺</span>
+              <div>
+                <p className="font-bold text-white">Modo TV Aberta Gratuita Ativo</p>
+                <p className="text-amber-200/70 text-xs">Os canais de TV aberta (SBT, Record, Band, Cultura, etc.) continuam 100% liberados e gratuitos para você!</p>
+              </div>
+            </div>
+            <Focusable onEnterPress={() => setVipModalOpen(true)}>
+              <button
+                type="button"
+                onClick={() => setVipModalOpen(true)}
+                className="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-extrabold px-4 py-2 rounded-xl text-xs transition-all shadow-md active:scale-95 flex-shrink-0"
+              >
+                👑 Liberar Filmes e Séries VIP
+              </button>
+            </Focusable>
+          </div>
         )}
 
         {/* Categorias Estilo YuCine (Pilulas arredondadas com destaque em dourado/vermelho) */}
