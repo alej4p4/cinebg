@@ -150,8 +150,8 @@ export const useAppStore = create<AppState>()(
       setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
       isCheckingUpdate: false,
       updateInfo: {
-        currentVersion: '1.2.38',
-        latestVersion: '1.2.38',
+        currentVersion: '1.2.39',
+        latestVersion: '1.2.39',
         hasUpdate: false,
         downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-release.apk',
         mandatory: false,

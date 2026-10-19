@@ -182,6 +182,8 @@ public class MainActivity extends BridgeActivity {
                     webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
                     webView.getSettings().setDomStorageEnabled(true);
                     webView.getSettings().setDatabaseEnabled(true);
+                    webView.getSettings().setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH);
+                    webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
                     // Disfarça User-Agent para Chrome completo sem "Version/4.0" nem "; wv;", impedindo detecção de WebView
                     webView.getSettings().setUserAgentString("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
                 }

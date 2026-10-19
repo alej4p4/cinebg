@@ -72,7 +72,7 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
   })
 
   const year = item.releaseDate ? new Date(item.releaseDate).getFullYear() : ''
-  const posterUrl = getPosterUrl(item.posterPath)
+  const posterUrl = getPosterUrl(item.posterPath, 'w342')
 
   return (
     <motion.div
@@ -88,7 +88,8 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
       }}
       style={{ transform: 'translateZ(0)' }}
       ref={ref}
-      className={`group cursor-pointer relative select-none ${
+      tabIndex={0}
+      className={`group cursor-pointer relative select-none tv-focusable rounded-xl ${
         focused ? 'tv-focused' : ''
       }`}
       onClick={handleClick}

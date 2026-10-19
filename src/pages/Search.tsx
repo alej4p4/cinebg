@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search as SearchIcon, X, SlidersHorizontal, Sparkles, Mic, MicOff, Radio } from 'lucide-react'
+import { Search as SearchIcon, X, SlidersHorizontal, Sparkles, Mic, Keyboard, Delete } from 'lucide-react'
 import useSpeechRecognition from '@/hooks/useSpeechRecognition'
 import MovieCard from '@/components/ui/MovieCard'
 import { SkeletonGrid } from '@/components/ui/SkeletonCard'
@@ -9,6 +9,7 @@ import { EmptySearch } from '@/components/ui/EmptyState'
 import { searchMulti } from '@/services/tmdb'
 import { MOVIE_GENRES, TV_GENRES, type MediaItem } from '@/types'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
+import { isTVDevice } from '@/utils/tv'
 
 const ALL_GENRES = { ...MOVIE_GENRES, ...TV_GENRES }
 
@@ -23,6 +24,15 @@ const POPULAR_SEARCH_TAGS = [
   { label: '⭐ Clássicos', query: 'Clássico' },
 ]
 
+const KEYBOARD_LAYOUT = [
+  ['A', 'B', 'C', 'D', 'E', 'F'],
+  ['G', 'H', 'I', 'J', 'K', 'L'],
+  ['M', 'N', 'O', 'P', 'Q', 'R'],
+  ['S', 'T', 'U', 'V', 'W', 'X'],
+  ['Y', 'Z', '0', '1', '2', '3'],
+  ['4', '5', '6', '7', '8', '9'],
+]
+
 const Search = () => {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MediaItem[]>([])
@@ -33,6 +43,7 @@ const Search = () => {
   const [selectedYear, setSelectedYear] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [voiceToast, setVoiceToast] = useState<string | null>(null)
+  const [showTvKeyboard, setShowTvKeyboard] = useState(() => isTVDevice())
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleVoiceResult = (spokenText: string) => {
@@ -98,8 +109,8 @@ const Search = () => {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar filmes, séries, anime..."
             className={`w-full bg-[#13131c] border border-white/8 text-white placeholder-white/30 rounded-2xl pl-12 ${
-              query ? 'pr-24' : 'pr-14'
-            } py-4 text-base focus:border-accent-red/50 focus:ring-2 focus:ring-accent-red/20 transition-all outline-none`}
+              query ? 'pr-32' : 'pr-24'
+            } py-4 text-base focus:border-accent-red/50 focus:ring-2 focus:ring-accent-red/20 transition-all outline-none tv-focusable`}
           />
 
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -112,7 +123,7 @@ const Search = () => {
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.15 }}
                   onClick={() => setQuery('')}
-                  className="p-1.5 text-white/40 hover:text-white transition-colors"
+                  className="p-1.5 text-white/40 hover:text-white transition-colors tv-focusable rounded-lg"
                   title="Limpar pesquisa"
                 >
                   <X className="h-4 w-4" />
@@ -120,11 +131,25 @@ const Search = () => {
               )}
             </AnimatePresence>
 
+            {/* Alternador Teclado Virtual TV */}
+            <button
+              type="button"
+              onClick={() => setShowTvKeyboard(!showTvKeyboard)}
+              className={`p-2 rounded-xl transition-all tv-focusable ${
+                showTvKeyboard
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                  : 'text-white/50 hover:text-white hover:bg-white/10'
+              }`}
+              title="Teclado Virtual de TV"
+            >
+              <Keyboard className="h-4 w-4" />
+            </button>
+
             {/* Botão de Busca por Voz */}
             <button
               type="button"
               onClick={isListening ? stopListening : startListening}
-              className={`p-2 rounded-xl transition-all relative ${
+              className={`p-2 rounded-xl transition-all relative tv-focusable ${
                 isListening
                   ? 'bg-accent-red text-white shadow-lg shadow-red-900/50 scale-110 animate-pulse'
                   : 'text-white/50 hover:text-white hover:bg-white/10'
@@ -144,6 +169,56 @@ const Search = () => {
             </button>
           </div>
         </div>
+
+        {/* Teclado Virtual On-Screen para Controle Remoto de TV */}
+        <AnimatePresence>
+          {showTvKeyboard && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="max-w-md mx-auto mb-6 p-3.5 bg-[#14141e] border border-white/10 rounded-2xl shadow-2xl"
+            >
+              <div className="grid grid-cols-6 gap-2 mb-2">
+                {KEYBOARD_LAYOUT.flat().map((char) => (
+                  <button
+                    key={char}
+                    type="button"
+                    onClick={() => setQuery((prev) => prev + char)}
+                    className="h-10 rounded-xl bg-white/5 hover:bg-white/15 text-white font-bold text-sm border border-white/10 tv-focusable transition-transform active:scale-95 flex items-center justify-center outline-none"
+                  >
+                    {char}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setQuery((prev) => prev + ' ')}
+                  className="h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 tv-focusable flex items-center justify-center gap-1.5 outline-none"
+                >
+                  ESPAÇO
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQuery((prev) => prev.slice(0, -1))}
+                  className="h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 tv-focusable flex items-center justify-center gap-1.5 outline-none"
+                >
+                  <Delete className="h-4 w-4" />
+                  APAGAR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  className="h-10 rounded-xl bg-accent-red/20 hover:bg-accent-red/30 text-red-400 border border-accent-red/30 font-semibold text-xs tv-focusable flex items-center justify-center gap-1.5 outline-none"
+                >
+                  <X className="h-4 w-4" />
+                  LIMPAR
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Modal / Overlay Flutuante de Escuta por Voz */}
         <AnimatePresence>
@@ -317,8 +392,9 @@ const Search = () => {
               {POPULAR_SEARCH_TAGS.map((tag) => (
                 <button
                   key={tag.label}
+                  tabIndex={0}
                   onClick={() => setQuery(tag.query)}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white text-xs sm:text-sm font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white text-xs sm:text-sm font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 tv-focusable outline-none"
                 >
                   <span>{tag.label}</span>
                 </button>

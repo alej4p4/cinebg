@@ -91,12 +91,15 @@ export const isTvRemoteKey = (e: KeyboardEvent): boolean => {
  * Se o elemento já estiver visível na tela, NÃO causa rolagem desnecessária.
  * Se precisar rolar, usa 'nearest' e rolagem direta para não sobrecarregar a CPU da TV.
  */
-export const scrollTvElementIntoView = (el: HTMLElement | null) => {
+export const scrollTvElementIntoView = (
+  el: HTMLElement | null,
+  inlineOption: ScrollLogicalPosition = 'center'
+) => {
   if (!el || typeof el.getBoundingClientRect !== 'function') return
 
   const rect = el.getBoundingClientRect()
-  const marginX = 48
-  const marginY = 54
+  const marginX = 64
+  const marginY = 64
 
   // Se já está visível dentro do viewport, evita qualquer reflow ou rolagem desnecessária
   const isVisibleHorizontally =
@@ -112,7 +115,7 @@ export const scrollTvElementIntoView = (el: HTMLElement | null) => {
     el.scrollIntoView({
       behavior: 'auto',
       block: 'nearest',
-      inline: 'nearest',
+      inline: inlineOption,
     })
   } catch {
     try {

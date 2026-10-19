@@ -418,6 +418,19 @@ const Details = () => {
                       playBtnRef.current?.focus()
                       return false
                     }
+                  } else if (dir === 'down') {
+                    if (activeTab === 'seasons' && showData?.seasons?.length) {
+                      const firstSeason = showData.seasons.find(s => s.season_number > 0)
+                      if (firstSeason && doesFocusableExist(`season-${firstSeason.id}`)) {
+                        setFocus(`season-${firstSeason.id}`)
+                        return false
+                      }
+                    } else if (activeTab === 'cast' && cast.length > 0) {
+                      if (doesFocusableExist(`cast-${cast[0].id}`)) {
+                        setFocus(`cast-${cast[0].id}`)
+                        return false
+                      }
+                    }
                   }
                   return true
                 }}
@@ -425,7 +438,7 @@ const Details = () => {
               >
                 <button
                   onClick={() => setActiveTab(tab as typeof activeTab)}
-                  className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all outline-none ${
+                  className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all outline-none tv-focusable ${
                     activeTab === tab
                       ? 'border-accent-red text-white'
                       : 'border-transparent text-white/50 hover:text-white/80'
@@ -515,24 +528,29 @@ const Details = () => {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {cast.map((actor) => (
-                    <motion.div
+                    <Focusable
                       key={actor.id}
-                      whileHover={{ y: -4 }}
-                      className="text-center group"
+                      focusKey={`cast-${actor.id}`}
+                      className="rounded-xl"
                     >
-                      <div className="aspect-[2/3] rounded-xl overflow-hidden bg-bg-card mb-2">
-                        <img
-                          src={getProfileUrl(actor.profile_path)}
-                          alt={actor.name}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/placeholder-avatar.svg'
-                          }}
-                        />
-                      </div>
-                      <p className="text-white text-xs font-semibold line-clamp-1">{actor.name}</p>
-                      <p className="text-white/40 text-xs line-clamp-1 mt-0.5">{actor.character}</p>
-                    </motion.div>
+                      <motion.div
+                        whileHover={{ y: -4 }}
+                        className="text-center group p-1 rounded-xl"
+                      >
+                        <div className="aspect-[2/3] rounded-xl overflow-hidden bg-bg-card mb-2">
+                          <img
+                            src={getProfileUrl(actor.profile_path)}
+                            alt={actor.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/placeholder-avatar.svg'
+                            }}
+                          />
+                        </div>
+                        <p className="text-white text-xs font-semibold line-clamp-1">{actor.name}</p>
+                        <p className="text-white/40 text-xs line-clamp-1 mt-0.5">{actor.character}</p>
+                      </motion.div>
+                    </Focusable>
                   ))}
                 </div>
               )}
