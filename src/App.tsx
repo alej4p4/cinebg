@@ -198,7 +198,7 @@ function App() {
       ) : (
         <BrowserRouter>
           <ErrorBoundary>
-            <div className="min-h-screen bg-bg-primary text-text-primary pb-16 md:pb-0">
+            <div className="min-h-screen bg-bg-primary text-text-primary pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
               <Navbar />
               <main>
                 <AnimatedRoutes isVipActive={isLicensed || isTrial} />
