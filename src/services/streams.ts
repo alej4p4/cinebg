@@ -31,7 +31,7 @@ export const MIRRORS: StreamMirror[] = [
     flagEmoji: '🚀',
     quality: 'FHD 1080p',
     type: 'multi_sub',
-    sandboxed: true,
+    sandboxed: false,
     getMovieUrl: (tmdbId) =>
       `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
