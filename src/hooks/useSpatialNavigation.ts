@@ -31,7 +31,7 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
           right: [39, 22, 'ArrowRight', 'Right'],
           up: [38, 19, 'ArrowUp', 'Up'],
           down: [40, 20, 'ArrowDown', 'Down'],
-          enter: [13, 23, 66, 160, 96, 'Enter', 'Select', 'OK', 'Space'],
+          enter: [13, 23, 'Enter', 'Select', 'OK'],
         })
         setThrottle({ throttle: 20 })
         isInitialized = true
