@@ -33,16 +33,5 @@
   "31": "eslint.config.js",
   "32": "vite.config.ts",
   "33": "capacitor.config.ts",
-  "34": "UpdateModal.tsx",
-  "35": "react",
-  "36": "isMobileDevice",
-  "37": "streams.ts",
-  "38": "index.ts",
-  "39": "Search.tsx",
-  "40": "Watch.tsx",
-  "41": "subtitles.ts",
-  "42": "ErrorBoundary",
-  "43": "EpisodeSelector.tsx",
-  "44": "Details.tsx",
-  "45": "SplashScreen.tsx"
+  "34": "UpdateModal.tsx"
 }

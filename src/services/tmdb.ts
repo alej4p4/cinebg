@@ -214,6 +214,11 @@ export const showToMediaItem = (show: TMDBShow, type: MediaType = 'tv'): MediaIt
   genreIds: show.genre_ids,
 })
 
+const parseRawCatalogItem = (item: any, defaultType: 'movie' | 'tv' = 'movie'): MediaItem => {
+  const isTv = item.media_type === 'tv' || (!item.title && !!item.name) || defaultType === 'tv'
+  return isTv ? showToMediaItem(item as TMDBShow, 'tv') : movieToMediaItem(item as TMDBMovie)
+}
+
 // Recupera lista de filmes ou séries sincronamente em 0ms se já estiverem em cache
 export const getCachedCatalogItems = (
   endpoint: string,
@@ -228,7 +233,7 @@ export const getCachedCatalogItems = (
     const inMem = requestCache.get(key)
     if (inMem && inMem.expiresAt > now && (inMem.data as any)?.results) {
       const results = (inMem.data as any).results as any[]
-      const mapped = results.map((item) => (type === 'movie' ? movieToMediaItem(item) : showToMediaItem(item)))
+      const mapped = results.map((item) => parseRawCatalogItem(item, type))
       return forKids(mapped)
     }
 
@@ -237,7 +242,7 @@ export const getCachedCatalogItems = (
     if (fromStorage && fromStorage.results) {
       requestCache.set(key, { data: fromStorage, expiresAt: now + DEFAULT_CATALOG_TTL_MS })
       const results = fromStorage.results as any[]
-      const mapped = results.map((item) => (type === 'movie' ? movieToMediaItem(item) : showToMediaItem(item)))
+      const mapped = results.map((item) => parseRawCatalogItem(item, type))
       return forKids(mapped)
     }
   } catch {}
@@ -255,10 +260,7 @@ export const getTrending = async (
     `/trending/${mediaType}/${timeWindow}`
   )
   return forKids(
-    data.results.map((item) => {
-      if ('title' in item) return movieToMediaItem(item as TMDBMovie)
-      return showToMediaItem(item as TMDBShow)
-    })
+    data.results.map((item) => parseRawCatalogItem(item, mediaType === 'tv' ? 'tv' : 'movie'))
   )
 }
 

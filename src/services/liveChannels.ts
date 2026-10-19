@@ -222,6 +222,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
       'http://181.78.197.59:8000/play/a07d/index.m3u8',
       'http://181.78.197.59:8000/play/a07e/index.m3u8',
       'http://181.78.197.59:8000/play/a07f/index.m3u8',
+      'http://181.78.197.59:8000/play/a07g/index.m3u8',
+      'http://181.78.197.59:8000/play/a07h/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -235,8 +237,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'filmes',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a07d/index.m3u8',
       'http://181.78.197.59:8000/play/a07h/index.m3u8',
+      'http://181.78.197.59:8000/play/a07d/index.m3u8',
       'http://181.78.197.59:8000/play/a07e/index.m3u8',
     ],
     quality: '1080p',
@@ -317,7 +319,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     sources: [
       'http://181.78.197.59:8000/play/a08f/index.m3u8',
       'http://181.78.197.59:8000/play/a084/index.m3u8',
-      'http://181.78.197.59:8000/play/a09e/index.m3u8',
+      'http://45.162.64.114/SPACE/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -586,7 +588,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'discovery-kids',
     name: 'Discovery Kids',
-    logo: 'https://i.imgur.com/YwN9p0a.png',
+    logo: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Discovery_Kids_2021_2D_sin_wordmark.svg/960px-Discovery_Kids_2021_2D_sin_wordmark.svg.png',
     cardBg: 'discovery-kids',
     category: 'infantil',
     country: 'BR',
@@ -746,7 +748,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   {
     id: 'natgeo-hd',
     name: 'National Geographic',
-    logo: 'https://i.imgur.com/9O0mK1w.png',
+    logo: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Natgeologo.svg/960px-Natgeologo.svg.png',
     cardBg: 'natgeo',
     category: 'variedades',
     country: 'BR',
@@ -829,36 +831,6 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     quality: '1080p',
     geoBlocked: false,
     genres: ['Reality', 'Culinária', '24h', 'Entretenimento'],
-  },
-  {
-    id: 'tv-cultura-hd',
-    name: 'TV Cultura HD',
-    logo: 'https://i.ibb.co/nm0jXMM/cultura-3x.png',
-    cardBg: 'cultura-hd',
-    category: 'abertos',
-    country: 'BR',
-    sources: [
-      'https://fpa-gateway.tvcultura.com.br:8181/memfs/606caef0-a290-413d-9f1f-8fcdb3a73831.m3u8',
-      'http://45.162.64.114/TV_CULTURA/index.m3u8',
-    ],
-    quality: '720p',
-    geoBlocked: false,
-    genres: ['Educativo', 'Cultura', 'Infantil', 'Jornalismo'],
-  },
-  {
-    id: 'record-news-hd',
-    name: 'Record News HD',
-    logo: 'https://i.imgur.com/HZDRG0K.png',
-    cardBg: 'record-news',
-    category: 'noticias',
-    country: 'BR',
-    sources: [
-      'http://45.162.64.114/RECORD_NEWS/index.m3u8',
-      'https://jmp2.uk/plu-6102e04e9ab1db0007a980a1.m3u8',
-    ],
-    quality: '720p',
-    geoBlocked: false,
-    genres: ['Notícias', 'Jornalismo', 'Ao Vivo', 'Informação'],
   },
 ]
 
