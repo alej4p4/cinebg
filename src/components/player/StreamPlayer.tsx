@@ -45,6 +45,7 @@ import EpisodeSelector from './EpisodeSelector'
 import PlaybackSettingsModal from './PlaybackSettingsModal'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
 import { isTVDevice, isMobileDevice } from '@/utils/tv'
+import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
 interface StreamPlayerProps {
   tmdbId: number
@@ -75,11 +76,32 @@ const StreamPlayer = ({
   onBack,
   onDownload,
 }: StreamPlayerProps) => {
-  const { audioOption, subtitleOption, setAudioOption, favorites, addFavorite, removeFavorite, tvMode } = useAppStore()
+  const {
+    audioOption,
+    subtitleOption,
+    setAudioOption,
+    setSubtitleOption,
+    favorites,
+    addFavorite,
+    removeFavorite,
+    tvMode,
+  } = useAppStore()
   const isTv = isTVDevice() || tvMode || !isMobileDevice()
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Pausa a navegação espacial externa enquanto o player de vídeo estiver aberto
+  useEffect(() => {
+    try {
+      SpatialNavigation.pause()
+    } catch {}
+    return () => {
+      try {
+        SpatialNavigation.resume()
+      } catch {}
+    }
+  }, [])
 
   const isFavorite = favorites.some((f) => f.id === tmdbId)
   const handleToggleFavorite = () => {
@@ -101,7 +123,9 @@ const StreamPlayer = ({
 
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [subDelay, setSubDelay] = useState(0)
-  const [subLang, setSubLang] = useState<'off' | 'pt' | 'en'>('pt')
+  const [subLang, setSubLang] = useState<'off' | 'pt' | 'en'>(() => {
+    return subtitleOption || 'pt'
+  })
   const [subStyle, setSubStyle] = useState<'white' | 'yellow' | 'boxed'>('boxed')
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -878,14 +902,22 @@ const StreamPlayer = ({
     setSubsOpen(false)
     if (index >= 0) {
       const selected = video.textTracks[index]
+      const label = (selected?.label || selected?.language || '').toLowerCase()
+      const inferredLang: 'off' | 'pt' | 'en' =
+        label.includes('eng') || label.includes('en') ? 'en' : 'pt'
+      setSubLang(inferredLang)
+      setSubtitleOption(inferredLang)
       showFeedback(`Legenda: ${selected?.label || 'Ativada 🇧🇷'}`)
     } else {
+      setSubLang('off')
+      setSubtitleOption('off')
       showFeedback('Legendas: Desativadas 🚫')
     }
   }
 
   const applySubtitleLang = useCallback((lang: 'off' | 'pt' | 'en') => {
     setSubLang(lang)
+    setSubtitleOption(lang)
     const video = videoRef.current
     if (!video) return
 
@@ -934,7 +966,7 @@ const StreamPlayer = ({
     } else {
       showFeedback(lang === 'pt' ? 'Legendas: Português 🇧🇷' : 'Legendas: Inglês 🇺🇸')
     }
-  }, [])
+  }, [setSubtitleOption])
 
   const cycleSubtitles = useCallback(() => {
     setSubLang((prev) => {
@@ -1168,19 +1200,31 @@ const StreamPlayer = ({
       const key = e.key
       const code = e.keyCode || e.which
 
-      // Qualquer tecla no controle remoto reativa e exibe o HUD por 3.5 segundos
-      resetHudTimer()
-
       // Teclas especiais de Back no Android TV (keycode 4, Escape, GoBack)
       if (key === 'Escape' || key === 'GoBack' || key === 'Backspace' || code === 4) {
         if (settingsModalOpen) {
           e.preventDefault()
           setSettingsModalOpen(false)
+          setTimeout(() => {
+            const btn = document.getElementById('hud-btn-settings')
+            btn?.focus()
+          }, 50)
           return
         }
         if (episodesDrawerOpen) {
           e.preventDefault()
           setEpisodesDrawerOpen(false)
+          setTimeout(() => {
+            const btn = document.getElementById('hud-btn-episodes')
+            btn?.focus()
+          }, 50)
+          return
+        }
+        if (showHud) {
+          e.preventDefault()
+          setShowHud(false)
+          const activeEl = document.activeElement as HTMLElement | null
+          activeEl?.blur()
           return
         }
         if (onBack) {
@@ -1195,33 +1239,130 @@ const StreamPlayer = ({
         return
       }
 
-      if (key === 'ArrowRight' || key === 'MediaFastForward') {
-        if (document.activeElement?.tagName !== 'BUTTON') {
+      // Qualquer tecla no controle remoto reativa e exibe o HUD por 4.5 segundos
+      resetHudTimer()
+
+      // Lista de botões focáveis do HUD
+      const getHudButtons = (): HTMLElement[] => {
+        if (!containerRef.current) return []
+        return Array.from(
+          containerRef.current.querySelectorAll<HTMLElement>(
+            'button[data-hud-btn="true"]:not([disabled])'
+          )
+        )
+      }
+
+      // Tecla D-Pad Para Baixo
+      if (key === 'ArrowDown' || code === 40 || code === 20) {
+        if (!showHud) {
           e.preventDefault()
-          seekBy(10)
+          setShowHud(true)
+          setTimeout(() => {
+            const subBtn = document.getElementById('hud-btn-subtitles') || document.getElementById('hud-btn-play')
+            subBtn?.focus()
+          }, 50)
+          return
         }
-      } else if (key === 'ArrowLeft' || key === 'MediaRewind') {
+
+        const currentFocused = document.activeElement as HTMLElement | null
+        if (!currentFocused || !currentFocused.matches('button[data-hud-btn="true"]')) {
+          e.preventDefault()
+          const subBtn = document.getElementById('hud-btn-subtitles') || document.getElementById('hud-btn-play')
+          subBtn?.focus()
+          return
+        }
+      }
+
+      // Tecla D-Pad Para Cima
+      if (key === 'ArrowUp' || code === 38 || code === 19) {
+        if (!showHud) {
+          e.preventDefault()
+          setShowHud(true)
+          setTimeout(() => {
+            const scrubber = document.getElementById('hud-scrubber') || document.getElementById('hud-btn-back')
+            scrubber?.focus()
+          }, 50)
+          return
+        }
+
+        const currentFocused = document.activeElement as HTMLElement | null
+        if (currentFocused && currentFocused.matches('button[data-hud-btn="true"]')) {
+          e.preventDefault()
+          const scrubber = document.getElementById('hud-scrubber') || document.getElementById('hud-btn-back')
+          scrubber?.focus()
+          return
+        }
+      }
+
+      // Tecla D-Pad Para a Esquerda
+      if (key === 'ArrowLeft' || code === 37 || code === 21) {
+        if (showHud) {
+          const btns = getHudButtons()
+          const activeIndex = btns.indexOf(document.activeElement as HTMLElement)
+          if (activeIndex > 0) {
+            e.preventDefault()
+            btns[activeIndex - 1].focus()
+            return
+          } else if (activeIndex === -1 && btns.length > 0) {
+            e.preventDefault()
+            const subBtn = document.getElementById('hud-btn-subtitles') || btns[0]
+            subBtn?.focus()
+            return
+          }
+        }
         if (document.activeElement?.tagName !== 'BUTTON') {
           e.preventDefault()
           seekBy(-10)
         }
-      } else if (key === 'ArrowUp') {
-        if (document.activeElement?.tagName !== 'BUTTON') {
-          e.preventDefault()
-          if (videoRef.current) {
-            videoRef.current.volume = Math.min(1, Number((videoRef.current.volume + 0.1).toFixed(2)))
-            showFeedback(`Vol ${Math.round(videoRef.current.volume * 100)}%`)
+        return
+      }
+
+      // Tecla D-Pad Para a Direita
+      if (key === 'ArrowRight' || code === 39 || code === 22) {
+        if (showHud) {
+          const btns = getHudButtons()
+          const activeIndex = btns.indexOf(document.activeElement as HTMLElement)
+          if (activeIndex >= 0 && activeIndex < btns.length - 1) {
+            e.preventDefault()
+            btns[activeIndex + 1].focus()
+            return
+          } else if (activeIndex === -1 && btns.length > 0) {
+            e.preventDefault()
+            const subBtn = document.getElementById('hud-btn-subtitles') || btns[0]
+            subBtn?.focus()
+            return
           }
         }
-      } else if (key === 'ArrowDown') {
         if (document.activeElement?.tagName !== 'BUTTON') {
           e.preventDefault()
-          if (videoRef.current) {
-            videoRef.current.volume = Math.max(0, Number((videoRef.current.volume - 0.1).toFixed(2)))
-            showFeedback(`Vol ${Math.round(videoRef.current.volume * 100)}%`)
-          }
+          seekBy(10)
         }
-      } else if (
+        return
+      }
+
+      // Tecla Enter / OK / D-Pad Center
+      if (key === 'Enter' || code === 13 || code === 23 || code === 66) {
+        if (!showHud) {
+          e.preventDefault()
+          setShowHud(true)
+          setTimeout(() => {
+            const subBtn = document.getElementById('hud-btn-subtitles') || document.getElementById('hud-btn-play')
+            subBtn?.focus()
+          }, 50)
+          return
+        }
+
+        const currentFocused = document.activeElement as HTMLElement | null
+        if (!currentFocused || currentFocused === document.body || currentFocused.tagName === 'VIDEO') {
+          e.preventDefault()
+          const subBtn = document.getElementById('hud-btn-subtitles') || document.getElementById('hud-btn-play')
+          subBtn?.focus()
+          return
+        }
+      }
+
+      // Teclas de atalho para Teclados / Remotos com teclas dedicadas:
+      if (
         key === ' ' ||
         key === 'k' ||
         key === 'K' ||
@@ -1229,11 +1370,6 @@ const StreamPlayer = ({
         key === 'MediaPause' ||
         key === 'MediaPlayPause'
       ) {
-        if (document.activeElement?.tagName !== 'BUTTON') {
-          e.preventDefault()
-          togglePlay()
-        }
-      } else if (key === 'Enter' || code === 23 || code === 66) {
         if (document.activeElement?.tagName !== 'BUTTON') {
           e.preventDefault()
           togglePlay()
@@ -1273,7 +1409,7 @@ const StreamPlayer = ({
     return () => {
       window.removeEventListener('keydown', handleGlobalRemoteKey)
     }
-  }, [settingsModalOpen, episodesDrawerOpen, onBack, audioOption, type, onNextEpisode, cycleSubtitles])
+  }, [settingsModalOpen, episodesDrawerOpen, onBack, audioOption, type, onNextEpisode, cycleSubtitles, showHud])
 
   const handleVideoDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isLocked) {
@@ -1334,6 +1470,8 @@ const StreamPlayer = ({
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
+            id="hud-btn-back"
+            data-hud-btn="true"
             onClick={onBack ? onBack : () => window.history.back()}
             className="flex items-center gap-2 bg-black/60 hover:bg-black/90 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold backdrop-blur-md border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-lg"
             title="Voltar"
@@ -1650,6 +1788,8 @@ const StreamPlayer = ({
             <div className="flex items-center gap-3 sm:gap-4 mb-4">
               <button
                 type="button"
+                id="hud-btn-play"
+                data-hud-btn="true"
                 onClick={togglePlay}
                 className="p-2 sm:p-2.5 bg-yellow-400 hover:bg-yellow-300 text-black rounded-full font-bold transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400"
                 title={isPlaying ? 'Pausar' : 'Reproduzir'}
@@ -1663,6 +1803,7 @@ const StreamPlayer = ({
 
               <div className="relative flex-1 flex items-center group py-2">
                 <input
+                  id="hud-scrubber"
                   type="range"
                   min={0}
                   max={duration || 100}
@@ -1685,6 +1826,8 @@ const StreamPlayer = ({
               {/* 1. Tela cheia */}
               <button
                 type="button"
+                id="hud-btn-fullscreen"
+                data-hud-btn="true"
                 onClick={handleFullscreen}
                 className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
               >
@@ -1695,6 +1838,8 @@ const StreamPlayer = ({
               {/* 2. Áudio 1-Click (Dublado / Legendado - Estilo YuCine) */}
               <button
                 type="button"
+                id="hud-btn-audio"
+                data-hud-btn="true"
                 onClick={() => {
                   const nextOpt = audioOption === 'dub' ? 'orig' : 'dub'
                   switchAudio(nextOpt)
@@ -1710,6 +1855,8 @@ const StreamPlayer = ({
               {/* 3. Legendas 1-Click (Ativar / Desativar / Alternar no controle remoto) */}
               <button
                 type="button"
+                id="hud-btn-subtitles"
+                data-hud-btn="true"
                 onClick={cycleSubtitles}
                 className="flex items-center justify-center gap-1.5 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
                 title="Clique ou pressione S no controle para alternar legendas"
@@ -1721,6 +1868,8 @@ const StreamPlayer = ({
               {/* 4. Ajustes de Reprodução (Abre o modal) */}
               <button
                 type="button"
+                id="hud-btn-settings"
+                data-hud-btn="true"
                 onClick={() => setSettingsModalOpen(true)}
                 className={`flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
                   settingsModalOpen
@@ -1736,6 +1885,8 @@ const StreamPlayer = ({
               {/* 3. Resolução / Opção de Servidor */}
               <button
                 type="button"
+                id="hud-btn-server"
+                data-hud-btn="true"
                 onClick={handleDirectMediaError}
                 className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
                 title="Alternar servidor ou resolução"
@@ -1748,6 +1899,8 @@ const StreamPlayer = ({
               {type !== 'movie' && seasons && seasons.length > 0 && onSelectEpisode && (
                 <button
                   type="button"
+                  id="hud-btn-episodes"
+                  data-hud-btn="true"
                   onClick={() => setEpisodesDrawerOpen((prev) => !prev)}
                   className={`flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
                     episodesDrawerOpen
@@ -1764,6 +1917,8 @@ const StreamPlayer = ({
               {/* 5. Favorito */}
               <button
                 type="button"
+                id="hud-btn-favorite"
+                data-hud-btn="true"
                 onClick={handleToggleFavorite}
                 className={`flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
                   isFavorite
@@ -1778,6 +1933,8 @@ const StreamPlayer = ({
               {/* 6. Baixar */}
               <button
                 type="button"
+                id="hud-btn-download"
+                data-hud-btn="true"
                 onClick={() => {
                   if (onDownload) {
                     onDownload()
@@ -1800,6 +1957,8 @@ const StreamPlayer = ({
               {directSrc && (
                 <button
                   type="button"
+                  id="hud-btn-fit"
+                  data-hud-btn="true"
                   onClick={toggleFitMode}
                   className={`p-2.5 rounded-xl text-xs font-bold transition-all border border-white/10 focus:outline-none focus:ring-4 focus:ring-yellow-400 ${
                     fitMode === 'cover'
@@ -1815,6 +1974,8 @@ const StreamPlayer = ({
               {/* Recarregar Stream */}
               <button
                 type="button"
+                id="hud-btn-refresh"
+                data-hud-btn="true"
                 onClick={handleManualRefresh}
                 className="p-2.5 bg-[#171824]/90 hover:bg-[#232538] rounded-xl text-white/80 hover:text-white transition-all border border-white/10 focus:outline-none focus:ring-4 focus:ring-yellow-400"
                 title="Recarregar"
@@ -1826,6 +1987,8 @@ const StreamPlayer = ({
               {onNextEpisode && type !== 'movie' && (
                 <button
                   type="button"
+                  id="hud-btn-next-ep"
+                  data-hud-btn="true"
                   onClick={() => {
                     cancelAutoNext()
                     onNextEpisode()
