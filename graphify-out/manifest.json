@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792429436.6117437,
-    "seen": 1792430441.2674682,
-    "ast_hash": "d31adbf70257e7ca9596181664beddbc",
+    "mtime": 1792440961.460591,
+    "seen": 1792441328.4403925,
+    "ast_hash": "9fe3e019159a29b42366863558c5029b",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792440734.8885355,
-    "seen": 1792440764.5367942,
+    "mtime": 1792441069.0822165,
+    "seen": 1792441328.4404078,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792440734.8875363,
-    "seen": 1792440764.536814,
+    "mtime": 1792441069.0822165,
+    "seen": 1792441328.4404492,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -72,9 +72,9 @@
     "semantic_hash": "e6a5711fca159c8793e07440a22147be"
   },
   "package.json": {
-    "mtime": 1792429436.6281123,
-    "seen": 1792430441.2675548,
-    "ast_hash": "7409c78c84e102de70445d8f71dbf7ef",
+    "mtime": 1792440955.6788986,
+    "seen": 1792441328.440486,
+    "ast_hash": "de56e7ffef4c760d8822ed9a5251c36e",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -138,8 +138,8 @@
     "semantic_hash": ""
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1792440604.4517567,
-    "seen": 1792440764.5369282,
+    "mtime": 1792440823.3341246,
+    "seen": 1792441328.4405446,
     "ast_hash": "94dc7b0531f583ccfc00ca2c08c68e57",
     "semantic_hash": ""
   },
@@ -342,8 +342,8 @@
     "semantic_hash": "15ef51d42b94cd3178b58fa8215f6db2"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1792440566.1746345,
-    "seen": 1792440764.5371826,
+    "mtime": 1792440823.3391197,
+    "seen": 1792441328.4407232,
     "ast_hash": "5ebf19904c477cc91fa524c13ec802bc",
     "semantic_hash": ""
   },
@@ -366,8 +366,8 @@
     "semantic_hash": ""
   },
   "src/services/tmdb.ts": {
-    "mtime": 1792440511.4053435,
-    "seen": 1792440764.5372152,
+    "mtime": 1792440823.3401191,
+    "seen": 1792441328.440745,
     "ast_hash": "5aad793cdc716c8ed0bd027c15d04106",
     "semantic_hash": ""
   },
