@@ -164,12 +164,14 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
         </AnimatePresence>
 
         {/* Rating badge */}
-        <div className="absolute top-2 left-2 z-10">
-          <span className="rating-badge shadow-md">
-            <Star className="h-2.5 w-2.5 fill-black" />
-            {item.rating.toFixed(1)}
-          </span>
-        </div>
+        {typeof item.rating === 'number' && item.rating > 0 && (
+          <div className="absolute top-2 left-2 z-10">
+            <span className="rating-badge shadow-md">
+              <Star className="h-2.5 w-2.5 fill-black" />
+              {item.rating.toFixed(1)}
+            </span>
+          </div>
+        )}
 
         {/* Type badge */}
         <div className="absolute top-2 right-2 z-10">

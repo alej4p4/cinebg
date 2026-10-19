@@ -20,9 +20,12 @@ import {
   discoverShows,
   getTurkishShows,
   getCachedCatalogItems,
+  getMovieDetails,
+  getShowDetails,
+  getCachedMediaDetails,
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
-import type { MediaItem } from '@/types'
+import type { MediaItem, TMDBMovieDetails, TMDBShowDetails } from '@/types'
 
 const Home = () => {
   const [trending, setTrending] = useState<MediaItem[]>(() => getCachedCatalogItems('/trending/all/week', {}, 'movie'))
@@ -44,7 +47,32 @@ const Home = () => {
   const [turkishShows, setTurkishShows] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(() => trending.length === 0)
 
-  const { history, favorites } = useAppStore()
+  const { history, favorites, updateHistoryRating } = useAppStore()
+
+  // Enriquecimento de avaliações (estrelas) para itens históricos antigos
+  useEffect(() => {
+    const unrated = history.filter((h) => !h.rating)
+    if (unrated.length === 0 || !updateHistoryRating) return
+    let active = true
+    unrated.slice(0, 10).forEach(async (h) => {
+      try {
+        if (h.type === 'movie') {
+          const data = await getMovieDetails(h.id)
+          if (active && data?.vote_average && updateHistoryRating) {
+            updateHistoryRating(h.id, data.vote_average)
+          }
+        } else {
+          const data = await getShowDetails(h.id)
+          if (active && data?.vote_average && updateHistoryRating) {
+            updateHistoryRating(h.id, data.vote_average)
+          }
+        }
+      } catch {}
+    })
+    return () => {
+      active = false
+    }
+  }, [history, updateHistoryRating])
 
   useEffect(() => {
     const load = async () => {
@@ -128,20 +156,31 @@ const Home = () => {
     }
   }, [loading])
 
-  const historyItems: MediaItem[] = history
-    .slice(0, 12)
-    .map((h) => ({
-      id: h.id,
-      title: h.season ? `${h.title} (S${h.season}E${h.episode})` : h.title,
-      overview: '',
-      posterPath: h.posterPath,
-      backdropPath: null,
-      releaseDate: '',
-      rating: 0,
-      voteCount: 0,
-      type: h.type,
-      genreIds: [],
-    }))
+  const historyItems: MediaItem[] = useMemo(() => {
+    return history
+      .slice(0, 12)
+      .map((h) => {
+        let rating = h.rating || 0
+        if (!rating) {
+          const cached = getCachedMediaDetails<TMDBMovieDetails | TMDBShowDetails>(h.id, h.type)
+          if (cached?.vote_average) {
+            rating = cached.vote_average
+          }
+        }
+        return {
+          id: h.id,
+          title: h.season ? `${h.title} (S${h.season}E${h.episode})` : h.title,
+          overview: '',
+          posterPath: h.posterPath,
+          backdropPath: null,
+          releaseDate: '',
+          rating,
+          voteCount: 0,
+          type: h.type,
+          genreIds: [],
+        }
+      })
+  }, [history])
 
   const progressMap = useMemo(() => {
     const map = new Map<string, number>()

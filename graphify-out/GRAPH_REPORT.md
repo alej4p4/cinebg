@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-19)
 
 ## Corpus Check
-- 93 files · ~394,778 words
+- 93 files · ~395,053 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 647 nodes · 1613 edges · 33 communities (21 shown, 12 thin omitted)
+- 647 nodes · 1621 edges · 33 communities (21 shown, 12 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a77dc157`
+- Built from commit: `d74dc91c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -47,8 +47,8 @@
 3. `framer-motion` - 32 edges
 4. `lucide-react` - 29 edges
 5. `isMobileDevice()` - 25 edges
-6. `Focusable()` - 22 edges
-7. `Home()` - 21 edges
+6. `Home()` - 24 edges
+7. `Focusable()` - 22 edges
 8. `@noriginmedia/norigin-spatial-navigation` - 20 edges
 9. `AnimatedRoutes()` - 20 edges
 10. `forKids()` - 19 edges
@@ -76,7 +76,7 @@ Nodes (13): useEpisodeNotifications(), checkForNewEpisodes(), daysAgoISO(), ensu
 
 ### Community 1 - "index.ts"
 Cohesion: 0.10
-Nodes (54): Carousel(), HeroBanner(), ProgressBar(), ProgressBarProps, HeroSkeleton(), SkeletonCard(), SkeletonCarousel(), SkeletonHero() (+46 more)
+Nodes (55): Carousel(), HeroBanner(), ProgressBar(), ProgressBarProps, HeroSkeleton(), SkeletonCard(), SkeletonCarousel(), SkeletonHero() (+47 more)
 
 ### Community 2 - "react"
 Cohesion: 0.07
@@ -128,7 +128,7 @@ Nodes (5): ExampleInstrumentedTest, MainActivity, BridgeWebViewClient, WebChrome
 
 ### Community 21 - "useAppStore.ts"
 Cohesion: 0.09
-Nodes (43): @capacitor/filesystem, zustand, GenreBadge(), GenreBadgeProps, LoadingSpinner(), useAppUpdate(), Details(), Downloads() (+35 more)
+Nodes (42): @capacitor/filesystem, zustand, GenreBadge(), GenreBadgeProps, LoadingSpinner(), useAppUpdate(), Details(), Downloads() (+34 more)
 
 ### Community 26 - "bug_fix.md"
 Cohesion: 0.33
@@ -167,9 +167,9 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _10 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.10218253968253968 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10048076923076923 - nodes in this community are weakly interconnected._
 - **Why does `framer-motion` connect `react` to `index.ts`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `App.tsx`, `useAppStore.ts`?**
-  _High betweenness centrality (0.053) - this node is a cross-community bridge._
+  _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **Should `react` be split into smaller, more focused modules?**
   _Cohesion score 0.0745945945945946 - nodes in this community are weakly interconnected._
 - **Why does `lucide-react` connect `react` to `index.ts`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `LicenseGate.tsx`, `App.tsx`, `useAppStore.ts`?**

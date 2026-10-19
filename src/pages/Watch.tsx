@@ -82,6 +82,7 @@ const Watch = () => {
             posterPath: data.poster_path,
             watchedAt: Date.now(),
             progress: lastWatched?.progress,
+            rating: data.vote_average,
           })
         } else {
           const data = await getShowDetails(Number(id))
@@ -107,6 +108,7 @@ const Watch = () => {
             season: targetSeason,
             episode: targetEpisode,
             progress: sameEpisode ? lastWatched?.progress : undefined,
+            rating: data.vote_average,
           })
         }
       } catch (err) {
@@ -133,6 +135,7 @@ const Watch = () => {
         season: s,
         episode: e,
         progress: 0,
+        rating: showData.vote_average,
       })
     }
   }
@@ -216,6 +219,7 @@ const Watch = () => {
   const genres = isMovie ? movieData?.genres : showData?.genres
   const runtime = isMovie ? movieData?.runtime : null
   const posterPath = isMovie ? movieData?.poster_path : showData?.poster_path
+  const originalLanguage = isMovie ? movieData?.original_language : showData?.original_language
   const alreadyDownloaded = isDownloaded(
     Number(id),
     isMovie ? undefined : season,
@@ -235,6 +239,7 @@ const Watch = () => {
         season={season}
         episode={episode}
         title={title || ''}
+        originalLanguage={originalLanguage}
         onNextEpisode={type !== 'movie' ? handleNextEpisode : undefined}
         startAt={resumeAt}
         onProgress={handleProgress}
