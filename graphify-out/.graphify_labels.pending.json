@@ -20,10 +20,11 @@
   "18": "capacitor.build.gradle",
   "19": "android/build.gradle",
   "20": "capacitor.settings.gradle",
-  "21": "useAppStore.ts",
+  "21": "Details.tsx",
   "22": "variables.gradle",
   "23": "postcss.config.js",
   "24": "vite-env.d.ts",
+  "25": "useAppStore",
   "26": "bug_fix.md",
   "27": "PULL_REQUEST_TEMPLATE.md",
   "28": "feature_request.md",
@@ -31,5 +32,11 @@
   "30": "scripts",
   "31": "eslint.config.js",
   "32": "vite.config.ts",
-  "33": "capacitor.config.ts"
+  "33": "capacitor.config.ts",
+  "34": "index.ts",
+  "35": "EmptyState.tsx",
+  "36": "subtitles.ts",
+  "37": "ErrorBoundary",
+  "38": "EpisodeSelector.tsx",
+  "39": "GenreBadge.tsx"
 }

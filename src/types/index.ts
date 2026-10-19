@@ -73,6 +73,7 @@ export interface TMDBShowDetails extends TMDBShow {
   next_episode_to_air?: TMDBEpisode | null
   networks: { id: number; name: string; logo_path: string | null }[]
   created_by: { id: number; name: string; profile_path: string | null }[]
+  production_countries?: { iso_3166_1: string; name: string }[]
   credits?: TMDBCredits
   videos?: { results: TMDBVideo[] }
 }
@@ -86,6 +87,7 @@ export interface TMDBMovieDetails extends TMDBMovie {
   budget: number
   revenue: number
   production_companies: { id: number; name: string; logo_path: string | null }[]
+  production_countries?: { iso_3166_1: string; name: string }[]
   belongs_to_collection: {
     id: number
     name: string
