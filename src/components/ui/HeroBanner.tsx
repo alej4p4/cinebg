@@ -18,17 +18,12 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
   const navigate = useNavigate()
   const [current, setCurrent] = useState(0)
   const [direction, setDirection] = useState(0)
+  const [touchStartX, setTouchStartX] = useState<number | null>(null)
 
   const featured = items.slice(0, 6)
 
-  useEffect(() => {
-    if (featured.length === 0) return
-    const timer = setInterval(() => {
-      setDirection(1)
-      setCurrent((c) => (c + 1) % featured.length)
-    }, 7000)
-    return () => clearInterval(timer)
-  }, [featured.length])
+  // Banners mantidos fixos sem carrossel automático por timer (estilo YuCine / TV)
+  // Navegação apenas manual frente/trás por controle remoto ou toque no celular
 
   const goTo = (idx: number) => {
     setDirection(idx > current ? 1 : -1)
@@ -43,6 +38,23 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
   const next = () => {
     setDirection(1)
     setCurrent((c) => (c + 1) % featured.length)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX)
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return
+    const diffX = e.changedTouches[0].clientX - touchStartX
+    if (Math.abs(diffX) > 40) {
+      if (diffX > 0) {
+        prev()
+      } else {
+        next()
+      }
+    }
+    setTouchStartX(null)
   }
 
   if (loading || featured.length === 0) {
@@ -65,7 +77,11 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
   }
 
   return (
-    <div className="relative h-[75vh] min-h-[520px] overflow-hidden">
+    <div
+      className="relative h-[75vh] min-h-[520px] overflow-hidden select-none"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Backdrop */}
       <AnimatePresence mode="wait" custom={direction}>
         <motion.div
@@ -142,6 +158,10 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                         setFocus('nav-item-0')
                         return false
                       }
+                      if (dir === 'left') {
+                        prev()
+                        return false
+                      }
                       if (dir === 'right') {
                         setFocus('hero-details-btn')
                         return false
@@ -182,6 +202,10 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                         setFocus('hero-watch-btn')
                         return false
                       }
+                      if (dir === 'right') {
+                        next()
+                        return false
+                      }
                       if (dir === 'down') {
                         if (doesFocusableExist('card-0-0')) {
                           setFocus('card-0-0')
@@ -209,36 +233,38 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
         </div>
       </div>
 
-      {/* Nav arrows */}
+      {/* Nav arrows visíveis no mobile e TV para controle total */}
       <Focusable
         focusKey="hero-prev-btn"
         onEnterPress={prev}
-        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 hidden md:block"
+        className="absolute left-3 top-1/2 -translate-y-1/2 z-30"
       >
         <motion.button
           whileHover={{ scale: 1.1, x: -2 }}
           whileTap={{ scale: 0.92 }}
           transition={SPRING_SNAPPY}
           onClick={prev}
-          className="p-2.5 bg-black/40 hover:bg-black/70 rounded-full text-white glass"
+          aria-label="Anterior"
+          className="p-2.5 sm:p-3 bg-black/50 hover:bg-black/80 rounded-full text-white glass border border-white/10"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
         </motion.button>
       </Focusable>
 
       <Focusable
         focusKey="hero-next-btn"
         onEnterPress={next}
-        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 hidden md:block"
+        className="absolute right-3 top-1/2 -translate-y-1/2 z-30"
       >
         <motion.button
           whileHover={{ scale: 1.1, x: 2 }}
           whileTap={{ scale: 0.92 }}
           transition={SPRING_SNAPPY}
           onClick={next}
-          className="p-2.5 bg-black/40 hover:bg-black/70 rounded-full text-white glass"
+          aria-label="Próximo"
+          className="p-2.5 sm:p-3 bg-black/50 hover:bg-black/80 rounded-full text-white glass border border-white/10"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
         </motion.button>
       </Focusable>
 

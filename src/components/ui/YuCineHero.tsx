@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Filter, Sparkles, Clapperboard, Layers, Star, Play, Award } from 'lucide-react'
+import { Filter, Sparkles, Clapperboard, Layers, Star, Play, Award, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { MediaItem } from '@/types'
 import { getBackdropUrl, getPosterUrl } from '@/services/tmdb'
 import Focusable from '@/components/tv/Focusable'
+import { setFocus } from '@noriginmedia/norigin-spatial-navigation'
 
 interface YuCineHeroProps {
   type: 'movie' | 'tv'
@@ -31,22 +32,41 @@ const YuCineHero = ({
 }: YuCineHeroProps) => {
   const navigate = useNavigate()
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [touchStartX, setTouchStartX] = useState<number | null>(null)
 
-  // Carousel com os 5 primeiros itens populares
+  // Itens em destaque (até 5)
   const carouselItems = items.slice(0, 5)
   const currentItem = carouselItems[currentIndex] || items[0]
   // 2 itens laterais verticais (posições 5 e 6)
   const sideItem1 = items[5] || items[1]
   const sideItem2 = items[6] || items[2]
 
-  // Auto-avanço do banner principal estilo YuCine
-  useEffect(() => {
-    if (carouselItems.length <= 1) return
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % carouselItems.length)
-    }, 6000)
-    return () => clearInterval(timer)
-  }, [carouselItems.length])
+  // Banners mantidos fixos sem carrossel automático por timer
+  // Somente atualização manual frente/trás por controle remoto ou toque no celular
+  const prev = () => {
+    setCurrentIndex((prev) => (prev - 1 + carouselItems.length) % carouselItems.length)
+  }
+
+  const next = () => {
+    setCurrentIndex((prev) => (prev + 1) % carouselItems.length)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX)
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return
+    const diffX = e.changedTouches[0].clientX - touchStartX
+    if (Math.abs(diffX) > 40) {
+      if (diffX > 0) {
+        prev()
+      } else {
+        next()
+      }
+    }
+    setTouchStartX(null)
+  }
 
   // Preload do próximo slide em background para transição instantânea sem engasgos na TV
   useEffect(() => {
@@ -86,10 +106,27 @@ const YuCineHero = ({
           <Focusable
             focusKey="yucine-hero-banner"
             onEnterPress={() => navigate(`/watch/${currentItem.type}/${currentItem.id}`)}
+            onArrowPress={(dir) => {
+              if (dir === 'left') {
+                prev()
+                return false
+              }
+              if (dir === 'right') {
+                next()
+                return false
+              }
+              if (dir === 'up') {
+                setFocus('nav-item-0')
+                return false
+              }
+              return true
+            }}
             className="w-full"
           >
             <div
               onClick={() => navigate(`/details/${currentItem.type}/${currentItem.id}`)}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
               className="relative aspect-[16/9] md:aspect-[21/10] rounded-2xl overflow-hidden cursor-pointer group border border-white/10 shadow-2xl transition-all duration-300 hover:border-amber-400"
             >
               <AnimatePresence mode="wait">
@@ -109,6 +146,33 @@ const YuCineHero = ({
               {/* Vinhetas e Gradientes de Contraste estilo YuCine */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-black/40 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0f]/80 via-transparent to-transparent" />
+
+              {/* Botões manuais de navegação Anterior / Próximo (Controle e Toque) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  prev()
+                }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-black/60 hover:bg-black/90 rounded-full text-white border border-white/20 transition-all hover:scale-110 active:scale-95 shadow-lg flex items-center justify-center"
+                title="Banner Anterior"
+                aria-label="Anterior"
+              >
+                <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  next()
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-black/60 hover:bg-black/90 rounded-full text-white border border-white/20 transition-all hover:scale-110 active:scale-95 shadow-lg flex items-center justify-center"
+                title="Próximo Banner"
+                aria-label="Próximo"
+              >
+                <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
 
               {/* Informações do Filme/Série */}
               <div className="absolute bottom-5 left-5 right-24 z-10 space-y-2">
