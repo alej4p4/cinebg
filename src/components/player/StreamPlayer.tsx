@@ -43,6 +43,7 @@ import type { TMDBSeason } from '@/types'
 import EpisodeSelector from './EpisodeSelector'
 import PlaybackSettingsModal from './PlaybackSettingsModal'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
+import { isTVDevice, isMobileDevice } from '@/utils/tv'
 
 interface StreamPlayerProps {
   tmdbId: number
@@ -73,7 +74,8 @@ const StreamPlayer = ({
   onBack,
   onDownload,
 }: StreamPlayerProps) => {
-  const { audioOption, subtitleOption, setAudioOption, favorites, addFavorite, removeFavorite } = useAppStore()
+  const { audioOption, subtitleOption, setAudioOption, favorites, addFavorite, removeFavorite, tvMode } = useAppStore()
+  const isTv = isTVDevice() || tvMode || !isMobileDevice()
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -762,13 +764,17 @@ const StreamPlayer = ({
   )
 
   const handleLockTap = () => {
-    if (!isLocked) return
+    if (!isLocked || isTv) return
     setShowLockPrompt(true)
     if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
     lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
   }
 
   const toggleLock = () => {
+    if (isTv) {
+      setIsLocked(false)
+      return
+    }
     setIsLocked((prev) => {
       const next = !prev
       if (next) {
@@ -1038,7 +1044,9 @@ const StreamPlayer = ({
       case 'l':
       case 'L':
         e.preventDefault()
-        toggleLock()
+        if (!isTv) {
+          toggleLock()
+        }
         break
       case 'a':
       case 'A':
@@ -1286,8 +1294,8 @@ const StreamPlayer = ({
           </div>
         )}
 
-        {/* Botão de Bloqueio de Tela (Modo YuCine para Mobile / Tablet) */}
-        {directSrc && (
+        {/* Botão de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
+        {directSrc && !isTv && (
           <div className="absolute top-3 left-3 z-40">
             <button
               onClick={toggleLock}
@@ -1303,8 +1311,8 @@ const StreamPlayer = ({
           </div>
         )}
 
-        {/* Overlay de Bloqueio de Tela */}
-        {isLocked && (
+        {/* Overlay de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
+        {isLocked && !isTv && (
           <div
             onClick={handleLockTap}
             className="absolute inset-0 z-30 cursor-pointer flex items-center justify-center bg-transparent select-none"
