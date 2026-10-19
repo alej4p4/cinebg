@@ -10,7 +10,7 @@ import { EmptySearch } from '@/components/ui/EmptyState'
 import { searchMulti } from '@/services/tmdb'
 import { MOVIE_GENRES, TV_GENRES, type MediaItem } from '@/types'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
-import { isTVDevice } from '@/utils/tv'
+import { isTVDevice, isMobileDevice } from '@/utils/tv'
 import { useAppStore } from '@/store/useAppStore'
 import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
 
@@ -38,7 +38,8 @@ const KEYBOARD_LAYOUT = [
 
 const Search = () => {
   const { tvMode } = useAppStore()
-  const isTv = isTVDevice() || tvMode
+  const isMobile = isMobileDevice() || (typeof window !== 'undefined' && window.innerWidth < 850)
+  const isTv = !isMobile && (isTVDevice() || tvMode)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -48,7 +49,7 @@ const Search = () => {
   const [selectedYear, setSelectedYear] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [voiceToast, setVoiceToast] = useState<string | null>(null)
-  const [showTvKeyboard, setShowTvKeyboard] = useState(() => isTVDevice() || useAppStore.getState().tvMode)
+  const [showTvKeyboard, setShowTvKeyboard] = useState(() => isTv)
   const inputRef = useRef<HTMLInputElement>(null)
   const lastInputTimeRef = useRef(0)
 
@@ -93,7 +94,7 @@ const Search = () => {
     stopListening,
   } = useSpeechRecognition(handleVoiceResult)
 
-  // Posicionamento de foco inicial inteligente (TV = Tecla 'A' do teclado virtual; Mobile/Desktop = input de busca)
+  // Posicionamento de foco inicial inteligente (TV = Tecla 'A' do teclado virtual; Desktop = input; Mobile = foco ao tocar)
   useEffect(() => {
     if (isTv) {
       setShowTvKeyboard(true)
@@ -106,12 +107,17 @@ const Search = () => {
       }, 150)
       return () => clearTimeout(timer)
     } else {
-      inputRef.current?.focus()
+      setShowTvKeyboard(false)
+      if (!isMobile) {
+        inputRef.current?.focus()
+      }
     }
-  }, [isTv])
+  }, [isTv, isMobile])
 
   // Suporte global a digitação direta via controle remoto com teclado físico ou mini-teclado USB na TV
   useEffect(() => {
+    if (!isTv) return
+
     const handlePhysicalKeyDown = (e: KeyboardEvent) => {
       // Se estiver focado no input de texto nativo, deixa o navegador processar
       if (document.activeElement === inputRef.current) return
@@ -199,10 +205,21 @@ const Search = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                inputRef.current?.blur()
+              }
+            }}
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck="false"
             placeholder="Buscar filmes, séries, anime..."
             className={`w-full bg-[#13131c] border border-white/8 text-white placeholder-white/30 rounded-2xl pl-12 ${
-              query ? 'pr-32' : 'pr-24'
-            } py-4 text-base focus:border-accent-red/50 focus:ring-2 focus:ring-accent-red/20 transition-all outline-none tv-focusable`}
+              query ? (isTv ? 'pr-32' : 'pr-24') : (isTv ? 'pr-24' : 'pr-16')
+            } py-3.5 sm:py-4 text-sm sm:text-base focus:border-accent-red/50 focus:ring-2 focus:ring-accent-red/20 transition-all outline-none ${
+              isTv ? 'tv-focusable' : ''
+            }`}
           />
 
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -223,19 +240,21 @@ const Search = () => {
               )}
             </AnimatePresence>
 
-            {/* Alternador Teclado Virtual TV */}
-            <button
-              type="button"
-              onClick={() => setShowTvKeyboard(!showTvKeyboard)}
-              className={`p-2 rounded-xl transition-all tv-focusable ${
-                showTvKeyboard
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                  : 'text-white/50 hover:text-white hover:bg-white/10'
-              }`}
-              title="Teclado Virtual de TV"
-            >
-              <Keyboard className="h-4 w-4" />
-            </button>
+            {/* Alternador Teclado Virtual TV (Exclusivo para TV) */}
+            {isTv && (
+              <button
+                type="button"
+                onClick={() => setShowTvKeyboard(!showTvKeyboard)}
+                className={`p-2 rounded-xl transition-all tv-focusable ${
+                  showTvKeyboard
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                    : 'text-white/50 hover:text-white hover:bg-white/10'
+                }`}
+                title="Teclado Virtual de TV"
+              >
+                <Keyboard className="h-4 w-4" />
+              </button>
+            )}
 
             {/* Botão de Busca por Voz */}
             <button
@@ -262,9 +281,9 @@ const Search = () => {
           </div>
         </div>
 
-        {/* Teclado Virtual On-Screen para Controle Remoto de TV */}
+        {/* Teclado Virtual On-Screen para Controle Remoto de TV (Apenas em TV) */}
         <AnimatePresence>
-          {showTvKeyboard && (
+          {isTv && showTvKeyboard && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
