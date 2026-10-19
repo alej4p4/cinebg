@@ -88,7 +88,7 @@ const Carousel = ({
               {items.map((item, i) => (
                 <div
                   key={item.id}
-                  className="w-40 md:w-44 flex-shrink-0"
+                  className="w-32 sm:w-36 md:w-44 flex-shrink-0"
                 >
                   <MovieCard
                     item={item}

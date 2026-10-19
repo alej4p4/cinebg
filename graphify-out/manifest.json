@@ -6,8 +6,8 @@
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792439208.200205,
-    "seen": 1792439233.5848982,
+    "mtime": 1792439741.7043223,
+    "seen": 1792439785.329623,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792439208.200205,
-    "seen": 1792439233.5849211,
+    "mtime": 1792439741.7043223,
+    "seen": 1792439785.3296416,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": ""
   },
@@ -102,8 +102,8 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1792439005.601426,
-    "seen": 1792439233.584945,
+    "mtime": 1792439297.45541,
+    "seen": 1792439785.329666,
     "ast_hash": "8148f1cb82558c72f7f8045415f30460",
     "semantic_hash": ""
   },
@@ -126,8 +126,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/Navbar.tsx": {
-    "mtime": 1792439027.3771996,
-    "seen": 1792439233.5849555,
+    "mtime": 1792439297.4574275,
+    "seen": 1792439785.329676,
     "ast_hash": "5737cd97cc1ef5546fbbfd3aed635a5f",
     "semantic_hash": ""
   },
@@ -144,8 +144,8 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1792439104.8906014,
-    "seen": 1792439233.584964,
+    "mtime": 1792439297.4634233,
+    "seen": 1792439785.3296854,
     "ast_hash": "594b1de8735732838ecc559aaa9e2ca7",
     "semantic_hash": ""
   },
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "src/components/ui/Carousel.tsx": {
-    "mtime": 1792429436.6368785,
-    "seen": 1792430441.2676663,
-    "ast_hash": "cce2d77019e3d617875d73f94cbaa810",
+    "mtime": 1792439527.2499907,
+    "seen": 1792439785.3296964,
+    "ast_hash": "961bcf040a7ff2424fdd764cd7481db4",
     "semantic_hash": ""
   },
   "src/components/ui/EmptyState.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": "7b49bb9d167a046a558eef893e1baed8"
   },
   "src/components/ui/HeroBanner.tsx": {
-    "mtime": 1792437270.739639,
-    "seen": 1792437788.7639883,
-    "ast_hash": "b78d068b645d65870bf1bf30de35706c",
+    "mtime": 1792439625.9163015,
+    "seen": 1792439785.3297076,
+    "ast_hash": "68322c8bb8f16df769bab7186b254911",
     "semantic_hash": ""
   },
   "src/components/ui/LazyImage.tsx": {
@@ -216,10 +216,10 @@
     "semantic_hash": "15db3a84a67a72d4f4d17cbc1464381c"
   },
   "src/components/ui/SkeletonCard.tsx": {
-    "mtime": 1792086739.303557,
-    "seen": 1792158340.1035051,
-    "ast_hash": "ccafdfbf436b0dcabc812bbaa8fa3c79",
-    "semantic_hash": "ccafdfbf436b0dcabc812bbaa8fa3c79"
+    "mtime": 1792439541.571732,
+    "seen": 1792439785.3297198,
+    "ast_hash": "61b9d152cbafe2e97f21f108b5f65179",
+    "semantic_hash": ""
   },
   "src/hooks/useAppUpdate.ts": {
     "mtime": 1792254208.2707841,
@@ -294,9 +294,9 @@
     "semantic_hash": ""
   },
   "src/pages/LiveTV.tsx": {
-    "mtime": 1792431911.883093,
-    "seen": 1792433140.0098283,
-    "ast_hash": "be7dd79c26286d1d3c658ed5f56b3b26",
+    "mtime": 1792439638.8911254,
+    "seen": 1792439785.3297517,
+    "ast_hash": "2e86718f89739a5b3661a9722a59b0cf",
     "semantic_hash": ""
   },
   "src/pages/Movies.tsx": {
@@ -318,8 +318,8 @@
     "semantic_hash": ""
   },
   "src/pages/Search.tsx": {
-    "mtime": 1792439117.266581,
-    "seen": 1792439233.5850396,
+    "mtime": 1792439297.4684188,
+    "seen": 1792439785.32976,
     "ast_hash": "3ef0f4a4a1fa6fb77f32c2971e6039e7",
     "semantic_hash": ""
   },
@@ -666,9 +666,9 @@
     "semantic_hash": ""
   },
   "src/components/ui/YuCineHero.tsx": {
-    "mtime": 1792437270.739639,
-    "seen": 1792437788.7640193,
-    "ast_hash": "d4e05838bc81f515384ecfe25cf9d9ad",
+    "mtime": 1792439587.6779578,
+    "seen": 1792439785.3297238,
+    "ast_hash": "547be9385d76d0facf7c44dd940e3e1a",
     "semantic_hash": ""
   },
   "src/components/ui/CineBGLogo.tsx": {
@@ -804,8 +804,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/BottomNav.tsx": {
-    "mtime": 1792439041.5217469,
-    "seen": 1792439233.5849533,
+    "mtime": 1792439297.455922,
+    "seen": 1792439785.329674,
     "ast_hash": "584d6a819d65149522240cbbfc042cae",
     "semantic_hash": ""
   }

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 
 export const SkeletonCard = () => (
-  <div className="flex-shrink-0 w-40 md:w-44 select-none">
+  <div className="flex-shrink-0 w-32 sm:w-36 md:w-44 select-none">
     <div className="skeleton skeleton-card aspect-[2/3] w-full border border-white/5" />
     <div className="skeleton skeleton-text h-3.5 rounded-md mt-2.5 w-3/4" />
     <div className="skeleton skeleton-text h-2.5 rounded-md mt-1.5 w-1/2 opacity-70" />

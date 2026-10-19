@@ -85,7 +85,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
 
   return (
     <div
-      className="relative h-[75vh] min-h-[520px] overflow-hidden select-none"
+      className="relative h-[65vh] sm:h-[70vh] md:h-[75vh] min-h-[440px] sm:min-h-[480px] md:min-h-[520px] overflow-hidden select-none"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -113,7 +113,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
       </AnimatePresence>
 
       {/* Content */}
-      <div className="absolute inset-0 flex items-end pb-20 md:pb-24">
+      <div className="absolute inset-0 flex items-end pb-16 sm:pb-20 md:pb-24">
         <div className="max-w-screen-2xl mx-auto px-4 md:px-8 w-full">
           <div className="max-w-xl">
             <AnimatePresence mode="wait">
@@ -123,7 +123,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                className="space-y-3"
+                className="space-y-2.5 sm:space-y-3"
               >
                 <motion.span
                   initial={{ opacity: 0, scale: 0.85 }}
@@ -134,7 +134,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                   {item.type === 'movie' ? 'FILME' : item.type === 'anime' ? 'ANIME' : 'SÉRIE'}
                 </motion.span>
 
-                <h1 className="font-display font-black text-3xl md:text-5xl text-white leading-tight drop-shadow-2xl">
+                <h1 className="font-display font-black text-2xl sm:text-4xl md:text-5xl text-white leading-tight drop-shadow-2xl line-clamp-2">
                   {item.title}
                 </h1>
 
@@ -149,7 +149,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                   </span>
                 </div>
 
-                <p className="text-sm md:text-base text-white/75 line-clamp-3 leading-relaxed">
+                <p className="text-xs sm:text-sm md:text-base text-white/75 line-clamp-2 sm:line-clamp-3 leading-relaxed">
                   {item.overview || 'Sem descrição disponível.'}
                 </p>
 
@@ -187,7 +187,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                       whileTap={{ scale: 0.96 }}
                       transition={SPRING_SNAPPY}
                       onClick={() => navigate(`/watch/${item.type}/${item.id}`)}
-                      className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-xl shadow-xl glow-red"
+                      className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white font-semibold px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base shadow-xl glow-red"
                     >
                       <Play className="h-5 w-5 fill-white" />
                       Assistir
@@ -227,7 +227,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                       whileTap={{ scale: 0.96 }}
                       transition={SPRING_SNAPPY}
                       onClick={() => navigate(`/details/${item.type}/${item.id}`)}
-                      className="flex items-center gap-2 glass hover:bg-white/10 text-white font-medium px-5 py-3 rounded-xl transition-all"
+                      className="flex items-center gap-2 glass hover:bg-white/10 text-white font-medium px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base transition-all"
                     >
                       <Info className="h-4 w-4" />
                       Detalhes
