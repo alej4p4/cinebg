@@ -91,7 +91,10 @@ public class MainActivity extends BridgeActivity {
         String lower = url.toLowerCase();
 
         // NUNCA bloquear provedores de streaming, CDNs ou scripts de players legítimos
-        if (lower.contains("mgeb.site") || lower.contains("megaembed") ||
+        if (lower.contains(".m3u8") || lower.contains(".ts") ||
+            lower.contains(".mp4") || lower.contains(".aac") ||
+            lower.contains(".m4s") ||
+            lower.contains("mgeb.site") || lower.contains("megaembed") ||
             lower.contains("fontedecanais") || lower.contains("dramasfree") ||
             lower.contains("vidlink") || lower.contains("vidsrc") ||
             lower.contains("vsembed") || lower.contains("multiembed") ||
