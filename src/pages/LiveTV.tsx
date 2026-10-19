@@ -1,6 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import {
+  setFocus,
+  doesFocusableExist,
+  ROOT_FOCUS_KEY,
+  SpatialNavigation,
+} from '@noriginmedia/norigin-spatial-navigation'
 import { Tv, Search as SearchIcon, X, Loader2, Calendar, Clock, ChevronDown, ChevronUp, Sparkles, Radio } from 'lucide-react'
 import LivePlayer from '@/components/player/LivePlayer'
 import YuCineChannelCard from '@/components/tv/YuCineChannelCard'
@@ -22,6 +28,7 @@ import { useLicense } from '@/hooks/useLicense'
 import { useAppStore } from '@/store/useAppStore'
 
 const LiveTV = () => {
+  const navigate = useNavigate()
   const [channels, setChannels] = useState<LiveChannel[]>([])
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState<string>('todos')
@@ -96,6 +103,82 @@ const LiveTV = () => {
     setSelected(filtered[prevIdx])
   }
 
+  // Restaura o foco D-Pad no card do canal quando o player fecha
+  const handleClosePlayer = useCallback(() => {
+    const lastId = selected?.id
+    setSelected(null)
+    setTimeout(() => {
+      try {
+        SpatialNavigation.updateAllLayouts().catch(() => {})
+        if (lastId && doesFocusableExist(`channel-${lastId}`)) {
+          setFocus(`channel-${lastId}`)
+        } else if (filtered.length > 0 && doesFocusableExist(`channel-${filtered[0].id}`)) {
+          setFocus(`channel-${filtered[0].id}`)
+        } else {
+          setFocus(ROOT_FOCUS_KEY).catch(() => {})
+        }
+      } catch {}
+    }, 80)
+  }, [selected, filtered])
+
+  // Tratamento da tecla Voltar do controle remoto quando está na grade de canais (sem player ativo)
+  useEffect(() => {
+    if (selected) return // Quando o player está aberto, o LivePlayer intercepta o voltar
+
+    const handleGridBackKey = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        if (e.key === 'Escape') {
+          ;(e.target as HTMLElement).blur()
+          return
+        }
+      }
+
+      const code = e.keyCode || e.which
+      if (
+        e.key === 'Escape' ||
+        e.key === 'GoBack' ||
+        e.key === 'Backspace' ||
+        code === 27 ||
+        code === 8 ||
+        code === 4 ||
+        code === 10009 ||
+        code === 461 ||
+        code === 283
+      ) {
+        if (query) {
+          e.preventDefault()
+          e.stopPropagation()
+          setQuery('')
+          return
+        }
+        e.preventDefault()
+        e.stopPropagation()
+        navigate('/')
+      }
+    }
+
+    window.addEventListener('keydown', handleGridBackKey)
+    return () => window.removeEventListener('keydown', handleGridBackKey)
+  }, [selected, query, navigate])
+
+  // Foco automático inicial nos cards de canais ao carregar
+  useEffect(() => {
+    if (!loading && channels.length > 0 && !selected) {
+      const timer = setTimeout(() => {
+        try {
+          SpatialNavigation.updateAllLayouts().catch(() => {})
+          const targetId = lastChannelId || channels[0]?.id
+          if (targetId && doesFocusableExist(`channel-${targetId}`)) {
+            setFocus(`channel-${targetId}`)
+          } else {
+            setFocus(ROOT_FOCUS_KEY).catch(() => {})
+          }
+        } catch {}
+      }, 120)
+      return () => clearTimeout(timer)
+    }
+  }, [loading, channels, selected, lastChannelId])
+
   return (
     <motion.div
       className="min-h-screen bg-bg-primary pt-20 page-enter select-none"
@@ -135,7 +218,7 @@ const LiveTV = () => {
         {selected && (
           <LivePlayer
             channel={selected}
-            onClose={() => setSelected(null)}
+            onClose={handleClosePlayer}
             onNextChannel={handleNextChannel}
             onPrevChannel={handlePrevChannel}
             isFavorite={favorites.has(selected.id)}

@@ -72,8 +72,20 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
       .catch(() => {})
 
     const handleWebBackKey = (e: KeyboardEvent) => {
-      // Teclas Voltar / Escape de controle remoto ou teclado
-      if (e.key === 'Escape' || e.key === 'GoBack' || e.keyCode === 27 || e.keyCode === 4) {
+      // Se a tecla já foi tratada por um player em tela cheia, modal ou input, não altera rota
+      if (e.defaultPrevented) return
+
+      const code = e.keyCode || e.which
+      // Teclas Voltar / Escape de controle remoto ou teclado (Android TV, Tizen, LG WebOS)
+      if (
+        e.key === 'Escape' ||
+        e.key === 'GoBack' ||
+        code === 27 ||
+        code === 4 ||
+        code === 10009 ||
+        code === 461 ||
+        code === 283
+      ) {
         if (location.pathname !== '/') {
           e.preventDefault()
           navigate(-1)

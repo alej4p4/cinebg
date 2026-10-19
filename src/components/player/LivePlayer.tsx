@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import Hls from 'hls.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   AlertCircle,
@@ -127,15 +128,29 @@ const LivePlayer = ({
           e.preventDefault()
           setSourceIndex((prev) => (prev + 1) % channel.sources.length)
         }
-      } else if (e.key === 'Escape' || e.key === 'Backspace' || e.keyCode === 27 || e.keyCode === 4) {
-        e.preventDefault()
-        onClose?.()
-      } else if (e.key === 'm' || e.key === 'M') {
-        toggleMute()
-      } else if (e.key === 'f' || e.key === 'F') {
-        handleFullscreen()
-      } else if (e.key === 'Enter') {
-        setShowOsd((prev) => !prev)
+      } else {
+        const code = e.keyCode || e.which
+        if (
+          e.key === 'Escape' ||
+          e.key === 'Backspace' ||
+          e.key === 'GoBack' ||
+          code === 27 ||
+          code === 8 ||
+          code === 4 ||
+          code === 10009 ||
+          code === 461 ||
+          code === 283
+        ) {
+          e.preventDefault()
+          e.stopPropagation()
+          onClose?.()
+        } else if (e.key === 'm' || e.key === 'M') {
+          toggleMute()
+        } else if (e.key === 'f' || e.key === 'F') {
+          handleFullscreen()
+        } else if (e.key === 'Enter') {
+          setShowOsd((prev) => !prev)
+        }
       }
     }
 
@@ -158,6 +173,40 @@ const LivePlayer = ({
     setError(false)
     setStatusMessage(initIdx > 0 ? `Sintonizando Sinal ${initIdx + 1}...` : 'Sintonizando sinal...')
   }, [channel.id])
+
+  const markPlaying = useCallback(() => {
+    loadedRef.current = true
+    playingRef.current = true
+    setLoaded(true)
+    setError(false)
+    if (watchdogRef.current) {
+      clearTimeout(watchdogRef.current)
+      watchdogRef.current = null
+    }
+    try {
+      sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
+    } catch {}
+  }, [channel.id, sourceIndex])
+
+  const tryPlay = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    const p = video.play()
+    if (p !== undefined) {
+      p.then(() => {
+        markPlaying()
+      }).catch(() => {
+        // Se a política de autoplay barrar som inicial, muta e reproduz imediatamente
+        if (video) {
+          video.muted = true
+          setMuted(true)
+          video.play().then(() => {
+            markPlaying()
+          }).catch(() => {})
+        }
+      })
+    }
+  }, [markPlaying])
 
   // Anexa o stream HLS atual com fallback automático, auto-recuperação e áudio PT
   useEffect(() => {
@@ -184,7 +233,7 @@ const LivePlayer = ({
     )
 
     let cancelled = false
-    let hlsInstance: { destroy: () => void; loadSource: (u: string) => void; startLoad: () => void } | null = null
+    let hlsInstance: Hls | null = null
 
     const goNext = () => {
       if (cancelled) return
@@ -199,179 +248,168 @@ const LivePlayer = ({
       }
     }
 
-    const markPlaying = () => {
-      if (cancelled) return
-      loadedRef.current = true
-      playingRef.current = true
-      setLoaded(true)
-      setError(false)
+    const resetWatchdog = (ms = 18000) => {
       if (watchdogRef.current) {
         clearTimeout(watchdogRef.current)
-        watchdogRef.current = null
       }
-      try {
-        sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
-      } catch {}
+      watchdogRef.current = setTimeout(() => {
+        if (cancelled) return
+        if (loadedRef.current || playingRef.current) return
+        const v = videoRef.current
+        if (v && !v.paused && v.currentTime > 0) {
+          markPlaying()
+          return
+        }
+        goNext()
+      }, ms)
     }
 
-    // Watchdog de segurança seguro usando refs: se não reproduzir após 12s, tenta o próximo sinal
-    watchdogRef.current = setTimeout(() => {
-      if (cancelled) return
-      if (loadedRef.current || playingRef.current) return
-      const v = videoRef.current
-      if (v && !v.paused && v.currentTime > 0) {
-        markPlaying()
-        return
+    resetWatchdog(18000)
+
+    const tryNativeHls = () => {
+      if (cancelled || !video) return
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        try {
+          video.src = src
+          video.load()
+          video.play().then(markPlaying).catch(() => {
+            video.muted = true
+            setMuted(true)
+            video.play().then(markPlaying).catch(() => goNext())
+          })
+          return
+        } catch {}
       }
       goNext()
-    }, 12000)
+    }
 
-    void import('hls.js').then((mod) => {
-      if (cancelled) return
-      const Hls = mod.default
+    if (Hls.isSupported()) {
+      const hls = new Hls({
+        enableWorker: false, // Desativa worker para evitar engasgos em Android TV / WebViews
+        liveDurationInfinity: true,
+        lowLatencyMode: false,
+        backBufferLength: 10,
+        maxBufferLength: 10,
+        maxMaxBufferLength: 20,
+        maxBufferSize: 30 * 1000 * 1000,
+        liveSyncDurationCount: 2, // 2 segmentos (~4-8s) de margem rápida para início imediato
+        liveMaxLatencyDurationCount: 10,
+        manifestLoadingTimeOut: 15000,
+        manifestLoadingMaxRetry: 4,
+        levelLoadingTimeOut: 15000,
+        levelLoadingMaxRetry: 4,
+        fragLoadingTimeOut: 20000,
+        fragLoadingMaxRetry: 6,
+        nudgeOffset: 0.2,
+        nudgeMaxRetry: 5,
+        maxFragLookUpTolerance: 0.3,
+        autoStartLoad: true,
+      })
 
-      if (Hls.isSupported()) {
-        const hls = new Hls({
-          enableWorker: false, // Desativa worker para evitar engasgos em Android TV / WebViews
-          liveDurationInfinity: true,
-          lowLatencyMode: false,
-          backBufferLength: 15,
-          maxBufferLength: 20,
-          maxMaxBufferLength: 40,
-          maxBufferSize: 50 * 1000 * 1000,
-          liveSyncDurationCount: 4, // 4 segmentos (~12s) de margem segura para IPTV estável sem travamento
-          liveMaxLatencyDurationCount: 15,
-          manifestLoadingTimeOut: 15000,
-          manifestLoadingMaxRetry: 4,
-          levelLoadingTimeOut: 15000,
-          levelLoadingMaxRetry: 4,
-          fragLoadingTimeOut: 20000,
-          fragLoadingMaxRetry: 6,
-          nudgeOffset: 0.2,
-          nudgeMaxRetry: 5,
-          maxFragLookUpTolerance: 0.3,
-          autoStartLoad: true,
+      hlsInstance = hls
+      hls.loadSource(src)
+      hls.attachMedia(video)
+
+      let networkRetryCount = 0
+
+      // Seleção automática do áudio em Português / Dublado
+      const selectPortugueseAudio = () => {
+        if (!hls.audioTracks || hls.audioTracks.length <= 1) return
+        const ptIdx = hls.audioTracks.findIndex((t) => {
+          const l = (t.lang || '').toLowerCase()
+          const n = (t.name || '').toLowerCase()
+          return (
+            l.startsWith('por') ||
+            l.startsWith('pt') ||
+            n.includes('por') ||
+            n.includes('dub') ||
+            n.includes('brasil')
+          )
         })
-
-        hlsInstance = hls
-        hls.loadSource(src)
-        hls.attachMedia(video)
-
-        let networkRetryCount = 0
-
-        const tryPlay = () => {
-          if (cancelled || !video) return
-          const p = video.play()
-          if (p !== undefined) {
-            p.then(() => {
-              markPlaying()
-            }).catch(() => {
-              // Se o navegador barrar o áudio por política de autoplay, silencia e reproduz imediatamente
-              if (!cancelled && video) {
-                video.muted = true
-                setMuted(true)
-                video.play().then(() => {
-                  markPlaying()
-                }).catch(() => {})
-              }
-            })
-          }
+        if (ptIdx !== -1 && hls.audioTrack !== ptIdx) {
+          hls.audioTrack = ptIdx
         }
+      }
 
-        // Seleção automática do áudio em Português / Dublado
-        const selectPortugueseAudio = () => {
-          if (!hls.audioTracks || hls.audioTracks.length <= 1) return
-          const ptIdx = hls.audioTracks.findIndex((t) => {
-            const l = (t.lang || '').toLowerCase()
-            const n = (t.name || '').toLowerCase()
-            return (
-              l.startsWith('por') ||
-              l.startsWith('pt') ||
-              n.includes('por') ||
-              n.includes('dub') ||
-              n.includes('brasil')
-            )
-          })
-          if (ptIdx !== -1 && hls.audioTrack !== ptIdx) {
-            hls.audioTrack = ptIdx
-          }
-        }
+      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, selectPortugueseAudio)
 
-        hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, selectPortugueseAudio)
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        selectPortugueseAudio()
+        tryPlay()
+      })
 
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          selectPortugueseAudio()
-          tryPlay()
-        })
+      hls.on(Hls.Events.FRAG_LOADING, () => {
+        resetWatchdog(18000)
+      })
 
-        hls.on(Hls.Events.FRAG_LOADED, markPlaying)
-        hls.on(Hls.Events.FRAG_PARSED, markPlaying)
-        hls.on(Hls.Events.FRAG_BUFFERED, markPlaying)
+      hls.on(Hls.Events.FRAG_LOADED, () => {
+        tryPlay()
+        markPlaying()
+      })
 
-        hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
-          if (cancelled) return
-          const payload = data as { fatal?: boolean; type?: string; details?: string }
+      hls.on(Hls.Events.FRAG_PARSED, () => {
+        tryPlay()
+        markPlaying()
+      })
 
-          // Se houver um stall transitório no buffer, apenas garante carregamento ativo sem salto destrutivo
-          if (!payload.fatal) {
-            if (
-              payload.details === 'bufferStalledError' ||
-              payload.details === 'bufferNudgeOnStall'
-            ) {
-              try {
-                hls.startLoad()
-              } catch {}
-            }
-            return
-          }
+      hls.on(Hls.Events.FRAG_BUFFERED, () => {
+        tryPlay()
+        markPlaying()
+      })
 
-          // Se o sub-manifesto temporário expirar, recarrega o master para obter o novo token dinâmico
-          if (payload.details === 'levelLoadError' || payload.details === 'levelLoadTimeOut') {
+      hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
+        if (cancelled) return
+        const payload = data as { fatal?: boolean; type?: string; details?: string }
+
+        // Se houver um stall transitório no buffer, apenas garante carregamento ativo sem salto destrutivo
+        if (!payload.fatal) {
+          if (
+            payload.details === 'bufferStalledError' ||
+            payload.details === 'bufferNudgeOnStall'
+          ) {
             try {
-              hls.loadSource(src)
               hls.startLoad()
-              return
             } catch {}
           }
+          return
+        }
 
-          if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
-            try {
-              hls.recoverMediaError()
-              return
-            } catch {
-              /* prossegue para o próximo sinal se falhar recuperação de mídia */
-            }
+        // Se o sub-manifesto temporário expirar, recarrega o master para obter o novo token dinâmico
+        if (payload.details === 'levelLoadError' || payload.details === 'levelLoadTimeOut') {
+          try {
+            hls.loadSource(src)
+            hls.startLoad()
+            return
+          } catch {}
+        }
+
+        if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          try {
+            hls.recoverMediaError()
+            return
+          } catch {
+            /* prossegue para o próximo sinal se falhar recuperação de mídia */
           }
+        }
 
-          if (payload.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            if (networkRetryCount < 1) {
-              networkRetryCount++
-              setTimeout(() => {
-                if (!cancelled && hlsInstance) {
-                  hls.startLoad()
-                }
-              }, 1000)
-              return
-            }
+        if (payload.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          if (networkRetryCount < 1) {
+            networkRetryCount++
+            setTimeout(() => {
+              if (!cancelled && hlsInstance) {
+                hls.startLoad()
+              }
+            }, 1000)
+            return
           }
+        }
 
-          hls.destroy()
-          goNext()
-        })
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Safari / iOS reproduz HLS nativamente quando Hls.js não é suportado
-        video.src = src
-        video.play().catch(() => {
-          video.muted = true
-          setMuted(true)
-          video.play().catch(() => {})
-        })
-        const onErr = () => goNext()
-        video.addEventListener('error', onErr)
-      } else {
-        setError(true)
-      }
-    })
+        hls.destroy()
+        tryNativeHls()
+      })
+    } else {
+      tryNativeHls()
+    }
 
     return () => {
       cancelled = true
@@ -381,7 +419,7 @@ const LivePlayer = ({
       }
       if (hlsInstance) hlsInstance.destroy()
     }
-  }, [channel.id, channel.sources, sourceIndex, mountKey])
+  }, [channel.id, channel.sources, sourceIndex, mountKey, markPlaying, tryPlay])
 
   const reload = () => {
     setSourceIndex(0)
@@ -517,28 +555,18 @@ const LivePlayer = ({
         autoPlay
         playsInline
         className="w-full h-full object-contain bg-black cursor-pointer"
+        onLoadedMetadata={() => {
+          tryPlay()
+        }}
+        onCanPlay={() => {
+          tryPlay()
+          markPlaying()
+        }}
         onLoadedData={() => {
-          loadedRef.current = true
-          setLoaded(true)
-          if (watchdogRef.current) {
-            clearTimeout(watchdogRef.current)
-            watchdogRef.current = null
-          }
-          try {
-            sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
-          } catch {}
+          markPlaying()
         }}
         onPlaying={() => {
-          loadedRef.current = true
-          playingRef.current = true
-          setLoaded(true)
-          if (watchdogRef.current) {
-            clearTimeout(watchdogRef.current)
-            watchdogRef.current = null
-          }
-          try {
-            sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
-          } catch {}
+          markPlaying()
         }}
         onTimeUpdate={() => {
           const v = videoRef.current
