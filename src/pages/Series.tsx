@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Sparkles, Filter } from 'lucide-react'
 import YuCineHero from '@/components/ui/YuCineHero'
@@ -206,6 +206,23 @@ const Series = () => {
     setSelectedGenreId(null)
   }
 
+  // Slides da aba Séries: Estritamente SÉRIES, priorizando lançamentos em exibição e populares
+  const seriesHeroItems = useMemo(() => {
+    const pool = [...airingToday, ...popular, ...topRated]
+    const seen = new Set<string>()
+    const unique: MediaItem[] = []
+
+    for (const item of pool) {
+      if (!item || !item.id || !item.backdropPath || item.type !== 'tv') continue
+      const key = `tv-${item.id}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      unique.push(item)
+    }
+
+    return unique.length > 0 ? unique.slice(0, 10) : popular
+  }, [airingToday, popular, topRated])
+
   return (
     <>
       <ProgressBar isLoading={loading || filterLoading} />
@@ -219,7 +236,7 @@ const Series = () => {
         {/* Banner Hero no Estilo YuCine (Imagem 1) */}
         <YuCineHero
           type="tv"
-          items={popular}
+          items={seriesHeroItems}
           loading={loading}
           activeFilter={activeFilter}
           onFilterGenre={handleToggleGenreBar}
