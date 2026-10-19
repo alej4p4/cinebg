@@ -45,6 +45,8 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
         setFocus('details-play')
       } else if (doesFocusableExist('hero-watch-btn')) {
         setFocus('hero-watch-btn')
+      } else if (doesFocusableExist('yucine-hero-banner')) {
+        setFocus('yucine-hero-banner')
       } else if (doesFocusableExist('card-0-0')) {
         setFocus('card-0-0')
       } else if (doesFocusableExist('nav-item-0')) {

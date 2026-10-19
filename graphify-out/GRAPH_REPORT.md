@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-18)
 
 ## Corpus Check
-- 91 files · ~385,771 words
+- 91 files · ~386,089 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 20 file(s) not represented in the graph (top: .xml 9, (none) 3, .properties 2)
 
 ## Summary
-- 630 nodes · 1500 edges · 34 communities (23 shown, 11 thin omitted)
+- 630 nodes · 1501 edges · 34 communities (23 shown, 11 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `93497747`
+- Built from commit: `3c988ed0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -184,4 +184,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `lucide-react` connect `index.ts` to `App.tsx`, `index.ts`, `StreamPlayer.tsx`, `package.json`, `LiveTV.tsx`, `useAppStore.ts`, `EmptyState.tsx`, `Watch.tsx`, `LicenseGate.tsx`?**
   _High betweenness centrality (0.055) - this node is a cross-community bridge._
 - **Should `index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05910364145658263 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05938375350140056 - nodes in this community are weakly interconnected._

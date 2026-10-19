@@ -101,180 +101,168 @@ const Navbar = () => {
         scrolled ? 'navbar-blur border-b border-white/5' : 'bg-gradient-to-b from-black/80 to-transparent'
       }`}
     >
-      <div className="max-w-screen-2xl mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
-        {/* Logo */}
-        <Focusable
-          focusKey="nav-logo"
-          onEnterPress={() => navigate('/')}
-          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
-          className="flex-shrink-0"
-        >
-          <Link to="/" className="flex items-center">
-            <CineBGLogo size="sm" showSubtitle={false} />
-          </Link>
-        </Focusable>
-
-        {/* Desktop Nav Estilo YuCine */}
-        <nav className="hidden md:flex items-center gap-1.5 ml-4">
-          {NAV_LINKS.map(({ to, label }, index) => {
-            const active = location.pathname === to
-            return (
-              <Focusable
-                key={to}
-                focusKey={`nav-item-${index}`}
-                onEnterPress={() => navigate(to)}
-                onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
-              >
-                <Link
-                  to={to}
-                  className={`block px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
-                    active
-                      ? 'border border-amber-400 bg-amber-400/10 text-white shadow-[0_0_12px_rgba(251,191,36,0.3)] scale-[1.03]'
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {label}
-                </Link>
-              </Focusable>
-            )
-          })}
-        </nav>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Mobile Grade Button */}
-        <button
-          type="button"
-          onClick={() => setGridMenuOpen(true)}
-          className="md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-400 hover:bg-white/10 text-xs font-bold transition-all active:scale-95 flex-shrink-0"
-          title="Grade de Categorias"
-        >
-          <LayoutGrid className="h-4 w-4 text-amber-400" />
-          <span className="text-white text-[11px] font-bold">Grade</span>
-        </button>
-
-        {/* Search */}
-        <div className="relative flex items-center">
-          {/* Botão de busca Mobile: navega diretamente para /search com teclado pronto */}
-          <button
-            type="button"
-            onClick={() => navigate('/search')}
-            className="md:hidden p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors"
-            title="Buscar filmes e séries"
+      <div className="w-full max-w-screen-2xl mx-auto px-3 sm:px-6 md:px-8 h-16 flex items-center justify-between gap-2 overflow-x-auto scroll-hide">
+        {/* Left Section: Logo + Nav Links */}
+        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          {/* Logo */}
+          <Focusable
+            focusKey="nav-logo"
+            onEnterPress={() => navigate('/')}
+            onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+            className="flex-shrink-0"
           >
-            <Search className="h-4 w-4" />
-          </button>
+            <Link to="/" className="flex items-center">
+              <CineBGLogo size="sm" showSubtitle={false} />
+            </Link>
+          </Focusable>
 
-          {/* Busca Desktop expandível */}
-          <form onSubmit={handleSearch} className="hidden md:block relative">
-            <div
-              className={`flex items-center gap-2 rounded-full transition-all duration-300 border ${
-                searchFocused
-                  ? 'bg-bg-card border-white/20 w-48 md:w-64'
-                  : 'bg-white/5 border-white/10 w-9'
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  if (!searchFocused) setSearchFocused(true)
-                  else handleSearch({ preventDefault: () => {} } as any)
-                }}
-                className="p-2 flex-shrink-0 text-white/70 hover:text-white"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                placeholder="Buscar..."
-                className={`bg-transparent text-sm text-white placeholder:text-white/40 transition-all duration-300 pr-3 ${
-                  searchFocused ? 'w-full' : 'w-0 opacity-0'
-                }`}
-              />
-            </div>
-          </form>
+          {/* Desktop Nav Estilo YuCine */}
+          <nav className="hidden md:flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+            {NAV_LINKS.map(({ to, label }, index) => {
+              const active = location.pathname === to
+              return (
+                <Focusable
+                  key={to}
+                  focusKey={`nav-item-${index}`}
+                  onEnterPress={() => navigate(to)}
+                  onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+                >
+                  <Link
+                    to={to}
+                    className={`block px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                      active
+                        ? 'border border-amber-400 bg-amber-400/10 text-white shadow-[0_0_12px_rgba(251,191,36,0.3)] scale-[1.03]'
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                </Focusable>
+              )
+            })}
+          </nav>
         </div>
 
-        {/* Favorites */}
-        <Focusable
-          focusKey="nav-fav"
-          onEnterPress={() => navigate('/favorites')}
-          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
-          className="hidden sm:block"
-        >
-          <Link
-            to="/favorites"
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex"
-          >
-            <Heart className="h-4 w-4" />
-          </Link>
-        </Focusable>
-
-        {/* History */}
-        <Focusable
-          focusKey="nav-history"
-          onEnterPress={() => navigate('/history')}
-          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
-          className="hidden sm:block"
-        >
-          <Link
-            to="/history"
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex"
-          >
-            <Clock className="h-4 w-4" />
-          </Link>
-        </Focusable>
-
-        {/* Downloads */}
-        <Focusable
-          focusKey="nav-downloads"
-          onEnterPress={() => navigate('/downloads')}
-          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
-          className="hidden sm:block"
-        >
-          <Link
-            to="/downloads"
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex"
-          >
-            <Download className="h-4 w-4" />
-          </Link>
-        </Focusable>
-
-        {/* Botão VIP */}
-        <Focusable
-          focusKey="nav-vip"
-          onEnterPress={() => setVipModalOpen(true)}
-          onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
-        >
+        {/* Right Section: All top action icons strictly visible without cut-off */}
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-shrink-0">
+          {/* Mobile Grade Button */}
           <button
             type="button"
-            onClick={() => setVipModalOpen(true)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-              isLicensed
-                ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-400/50 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.25)] hover:bg-amber-500/30'
-                : isTrial
-                ? 'bg-gradient-to-r from-amber-500/20 to-red-500/20 border border-amber-400/40 text-amber-200 hover:border-amber-400'
-                : 'bg-accent-red text-white hover:bg-red-600 shadow-md shadow-red-900/40'
-            }`}
-            title="Planos VIP CineBG"
+            onClick={() => setGridMenuOpen(true)}
+            className="md:hidden flex items-center gap-1 px-2 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-400 hover:bg-white/10 text-xs font-bold transition-all active:scale-95 flex-shrink-0"
+            title="Grade de Categorias"
           >
-            <Crown className="h-3.5 w-3.5 text-amber-400" />
-            <span className="hidden sm:inline">
-              {isLicensed ? `VIP (${licenseDaysLeft}d)` : isTrial ? `Teste (${trialDaysLeft}d)` : 'Seja VIP'}
-            </span>
-            <span className="sm:hidden">
-              {isLicensed ? 'VIP' : 'Planos'}
-            </span>
+            <LayoutGrid className="h-4 w-4 text-amber-400" />
+            <span className="text-white text-[11px] font-bold">Grade</span>
           </button>
-        </Focusable>
 
-        {/* Perfil ativo */}
-        <div className="relative">
+          {/* Search Button (Navega para a tela /search com teclado D-pad completo) */}
+          <Focusable
+            focusKey="nav-search"
+            onEnterPress={() => navigate('/search')}
+            onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          >
+            <button
+              type="button"
+              onClick={() => navigate('/search')}
+              className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors flex items-center justify-center"
+              title="Buscar filmes e séries"
+            >
+              <Search className="h-4 w-4" />
+            </button>
+          </Focusable>
+
+          {/* Favorites */}
+          <Focusable
+            focusKey="nav-fav"
+            onEnterPress={() => navigate('/favorites')}
+            onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          >
+            <Link
+              to="/favorites"
+              className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex items-center justify-center"
+              title="Favoritos"
+            >
+              <Heart className="h-4 w-4" />
+            </Link>
+          </Focusable>
+
+          {/* History */}
+          <Focusable
+            focusKey="nav-history"
+            onEnterPress={() => navigate('/history')}
+            onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          >
+            <Link
+              to="/history"
+              className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex items-center justify-center"
+              title="Histórico"
+            >
+              <Clock className="h-4 w-4" />
+            </Link>
+          </Focusable>
+
+          {/* Downloads */}
+          <Focusable
+            focusKey="nav-downloads"
+            onEnterPress={() => navigate('/downloads')}
+            onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          >
+            <Link
+              to="/downloads"
+              className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex items-center justify-center"
+              title="Downloads"
+            >
+              <Download className="h-4 w-4" />
+            </Link>
+          </Focusable>
+
+          {/* Botão VIP */}
+          <Focusable
+            focusKey="nav-vip"
+            onEnterPress={() => setVipModalOpen(true)}
+            onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          >
+            <button
+              type="button"
+              onClick={() => setVipModalOpen(true)}
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                isLicensed
+                  ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-400/50 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.25)] hover:bg-amber-500/30'
+                  : isTrial
+                  ? 'bg-gradient-to-r from-amber-500/20 to-red-500/20 border border-amber-400/40 text-amber-200 hover:border-amber-400'
+                  : 'bg-accent-red text-white hover:bg-red-600 shadow-md shadow-red-900/40'
+              }`}
+              title="Planos VIP CineBG"
+            >
+              <Crown className="h-3.5 w-3.5 text-amber-400" />
+              <span className="hidden sm:inline">
+                {isLicensed ? `VIP (${licenseDaysLeft}d)` : isTrial ? `Teste (${trialDaysLeft}d)` : 'VIP'}
+              </span>
+              <span className="sm:hidden">
+                VIP
+              </span>
+            </button>
+          </Focusable>
+
+          {/* Configurações (Acesso direto no topo para TV e Mobile) */}
+          <Focusable
+            focusKey="nav-settings"
+            onEnterPress={() => setSettingsOpen(true)}
+            onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+          >
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors flex items-center justify-center"
+              title="Configurações"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+          </Focusable>
+
+          {/* Perfil ativo */}
+          <div className="relative">
           <Focusable
             focusKey="nav-profile"
             onEnterPress={() => setProfileOpen((v) => !v)}
@@ -425,6 +413,8 @@ const Navbar = () => {
           </AnimatePresence>
         </div>
 
+        </div>
+
         {/* Settings Modal */}
       <AnimatePresence>
         {settingsOpen && (
@@ -446,17 +436,18 @@ const Navbar = () => {
                   <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Idioma</p>
                   <div className="flex gap-2">
                     {([['pt', 'Português'], ['en', 'English']] as const).map(([lang, label]) => (
-                      <button
-                        key={lang}
-                        onClick={() => setLanguage(lang)}
-                        className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          language === lang
-                            ? 'bg-accent-red text-white'
-                            : 'bg-white/5 text-white/60 hover:bg-white/10'
-                        }`}
-                      >
-                        {label}
-                      </button>
+                      <Focusable key={lang} onEnterPress={() => setLanguage(lang)} className="flex-1">
+                        <button
+                          onClick={() => setLanguage(lang)}
+                          className={`w-full py-2 rounded-lg text-sm font-semibold transition-all ${
+                            language === lang
+                              ? 'bg-accent-red text-white'
+                              : 'bg-white/5 text-white/60 hover:bg-white/10'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      </Focusable>
                     ))}
                   </div>
                 </div>
@@ -465,17 +456,18 @@ const Navbar = () => {
                   <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Áudio Padrão</p>
                   <div className="flex gap-2">
                     {([['dub', 'Dublado'], ['orig', 'Original']] as const).map(([opt, label]) => (
-                      <button
-                        key={opt}
-                        onClick={() => setAudioOption(opt)}
-                        className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          audioOption === opt
-                            ? 'bg-accent-red text-white'
-                            : 'bg-white/5 text-white/60 hover:bg-white/10'
-                        }`}
-                      >
-                        {label}
-                      </button>
+                      <Focusable key={opt} onEnterPress={() => setAudioOption(opt)} className="flex-1">
+                        <button
+                          onClick={() => setAudioOption(opt)}
+                          className={`w-full py-2 rounded-lg text-sm font-semibold transition-all ${
+                            audioOption === opt
+                              ? 'bg-accent-red text-white'
+                              : 'bg-white/5 text-white/60 hover:bg-white/10'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      </Focusable>
                     ))}
                   </div>
                 </div>
@@ -487,27 +479,36 @@ const Navbar = () => {
                       <p className="text-white text-sm font-bold">CineBG v{updateInfo.currentVersion}</p>
                       <p className="text-white/40 text-xs">Compilação Oficial APK</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
+                    <Focusable
+                      onEnterPress={() => {
                         setSettingsOpen(false)
                         checkForUpdates(true)
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-red hover:bg-red-600 text-white text-xs font-bold transition-colors shadow-md shadow-red-900/40"
                     >
-                      <Download className="h-3.5 w-3.5" />
-                      Atualizar
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettingsOpen(false)
+                          checkForUpdates(true)
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-red hover:bg-red-600 text-white text-xs font-bold transition-colors shadow-md shadow-red-900/40"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Atualizar
+                      </button>
+                    </Focusable>
                   </div>
                 </div>
               </div>
 
-              <button
-                onClick={() => setSettingsOpen(false)}
-                className="w-full mt-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold transition-colors"
-              >
-                Fechar
-              </button>
+              <Focusable onEnterPress={() => setSettingsOpen(false)}>
+                <button
+                  onClick={() => setSettingsOpen(false)}
+                  className="w-full mt-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold transition-colors"
+                >
+                  Fechar
+                </button>
+              </Focusable>
             </motion.div>
           </>
         )}
