@@ -41,6 +41,11 @@ const Watch = () => {
     }
 
     return () => {
+      if (typeof screen !== 'undefined' && screen.orientation && 'unlock' in screen.orientation) {
+        try {
+          screen.orientation.unlock()
+        } catch {}
+      }
       if (document.fullscreenElement && document.exitFullscreen) {
         document.exitFullscreen().catch(() => {})
       }
