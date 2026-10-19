@@ -167,6 +167,7 @@ const Navbar = () => {
             focusKey="nav-fav"
             onEnterPress={() => navigate('/favorites')}
             onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+            className="hidden sm:flex"
           >
             <Link
               to="/favorites"
@@ -182,6 +183,7 @@ const Navbar = () => {
             focusKey="nav-history"
             onEnterPress={() => navigate('/history')}
             onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+            className="hidden sm:flex"
           >
             <Link
               to="/history"
@@ -197,6 +199,7 @@ const Navbar = () => {
             focusKey="nav-downloads"
             onEnterPress={() => navigate('/downloads')}
             onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+            className="hidden sm:flex"
           >
             <Link
               to="/downloads"
