@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
 import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
+import { isMobileDevice } from '@/utils/tv'
 
 import CineBGLogo from '@/components/ui/CineBGLogo'
 
@@ -465,8 +466,19 @@ const Navbar = () => {
                   <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Versão do Aplicativo</p>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
                     <div>
-                      <p className="text-white text-sm font-bold">CineBG v{updateInfo.currentVersion}</p>
-                      <p className="text-white/40 text-xs">Compilação Oficial APK</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-white text-sm font-bold">CineBG v{updateInfo.currentVersion}</p>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          isMobileDevice()
+                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        }`}>
+                          {isMobileDevice() ? '📱 Mobile' : '📺 TV'}
+                        </span>
+                      </div>
+                      <p className="text-white/40 text-xs">
+                        {isMobileDevice() ? 'Instalação Mobile' : 'Instalação Smart TV'}
+                      </p>
                     </div>
                     <Focusable
                       onEnterPress={() => {
@@ -693,9 +705,18 @@ const Navbar = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
-                <span className="text-[11px] text-white/40 font-mono">
-                  CineBG v{updateInfo.currentVersion}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-white/40 font-mono">
+                    CineBG v{updateInfo.currentVersion}
+                  </span>
+                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                    isMobileDevice()
+                      ? 'bg-blue-500/20 text-blue-400'
+                      : 'bg-amber-500/20 text-amber-400'
+                  }`}>
+                    {isMobileDevice() ? 'Mobile' : 'TV'}
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={() => {

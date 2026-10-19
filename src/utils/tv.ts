@@ -6,7 +6,7 @@ export const isMobileDevice = (): boolean => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
 
   const ua = navigator.userAgent
-  if (ua.includes('CineBG-Mobile')) return true
+  if (ua.includes('DeviceType/Mobile') || ua.includes('CineBG-Mobile')) return true
 
   // Indicador explícito de smartphone / celular no User Agent
   const isPhoneUa = /iPhone|iPod|Android.*Mobile|Mobile.*Android|BlackBerry|IEMobile|Opera Mini/i.test(ua)
@@ -29,7 +29,7 @@ export const isMobileDevice = (): boolean => {
     return true
   }
 
-  // Dispositivo com toque e sem características de Android TV / SmartTV
+  // Dispositivo com tela de toque e sem características de Android TV / SmartTV
   const hasTouchScreen = (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || 'ontouchstart' in window
   if (hasTouchScreen && !isDedicatedTvUa) {
     return true
@@ -54,8 +54,8 @@ export const isTVDevice = (): boolean => {
 
   const ua = navigator.userAgent
   // Identificação oficial dos sabores CineBG TV e Mobile
-  if (ua.includes('CineBG-TV')) return true
-  if (ua.includes('CineBG-Mobile')) return false
+  if (ua.includes('DeviceType/TV') || ua.includes('CineBG-TV')) return true
+  if (ua.includes('DeviceType/Mobile') || ua.includes('CineBG-Mobile')) return false
 
   // Se o modo TV foi ativado previamente ou marcado pelo usuário em dispositivo compatível
   if (

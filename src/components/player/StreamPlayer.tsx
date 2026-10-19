@@ -1507,7 +1507,7 @@ const StreamPlayer = ({
         )}
 
         {/* Botão de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
-        {directSrc && !isTv && (
+        {directSrc && !isTv && !isTVDevice() && !tvMode && (
           <div className="absolute top-3 left-3 z-40">
             <button
               onClick={toggleLock}
@@ -1524,7 +1524,7 @@ const StreamPlayer = ({
         )}
 
         {/* Overlay de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
-        {isLocked && !isTv && (
+        {isLocked && !isTv && !isTVDevice() && !tvMode && (
           <div
             onClick={handleLockTap}
             className="absolute inset-0 z-30 cursor-pointer flex items-center justify-center bg-transparent select-none"

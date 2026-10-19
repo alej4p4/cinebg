@@ -402,9 +402,16 @@ const Profiles = () => {
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/80 border border-white/10">
                     v{updateInfo.currentVersion}
                   </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    isMobileDevice()
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                      : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  }`}>
+                    {isMobileDevice() ? '📱 Mobile' : '📺 TV'}
+                  </span>
                 </div>
                 <p className="text-text-secondary text-xs mt-0.5">
-                  CineBG para Android & Smart TV • Mantenha seu aplicativo sempre atualizado.
+                  {isMobileDevice() ? 'CineBG para Celulares Android' : 'CineBG para Smart TV & TV Box'} • Mantenha seu aplicativo sempre atualizado.
                 </p>
               </div>
             </div>

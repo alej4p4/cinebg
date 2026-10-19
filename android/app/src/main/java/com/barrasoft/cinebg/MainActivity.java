@@ -1,5 +1,9 @@
 package com.barrasoft.cinebg;
 
+import android.app.UiModeManager;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
@@ -18,6 +22,27 @@ import com.getcapacitor.BridgeWebViewClient;
 import java.io.ByteArrayInputStream;
 
 public class MainActivity extends BridgeActivity {
+    public static boolean isRealTelevisionDevice(Context context) {
+        if (context == null) return false;
+        try {
+            UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+            if (uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+                return true;
+            }
+            PackageManager pm = context.getPackageManager();
+            if (pm != null) {
+                if (pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK)) {
+                    return true;
+                }
+                // Se NÃO tiver touchscreen, é um dispositivo fixo / TV Box
+                if (!pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)) {
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(AppInstallerPlugin.class);
@@ -29,7 +54,8 @@ public class MainActivity extends BridgeActivity {
         if (getBridge() != null && getBridge().getWebView() != null) {
             WebView webView = getBridge().getWebView();
             String currentUa = webView.getSettings().getUserAgentString();
-            String flavorTag = getPackageName().endsWith(".tv") ? " CineBG-TV" : " CineBG-Mobile";
+            boolean isTv = isRealTelevisionDevice(this);
+            String flavorTag = isTv ? " CineBG-TV DeviceType/TV" : " CineBG-Mobile DeviceType/Mobile";
             if (!currentUa.contains("CineBG-")) {
                 webView.getSettings().setUserAgentString(currentUa + flavorTag);
             }
@@ -134,16 +160,10 @@ public class MainActivity extends BridgeActivity {
                     webView.getSettings().setDatabaseEnabled(true);
                     webView.getSettings().setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH);
                     webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
-                    boolean isTv = getPackageName().endsWith(".tv") ||
-                        "tv".equals(BuildConfig.FLAVOR) ||
-                        getPackageManager().hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK);
-
-                    String customUa = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
-                    if (isTv) {
-                        customUa += " CineBG-TV";
-                    } else {
-                        customUa += " CineBG-Mobile";
-                    }
+                    boolean isTv = isRealTelevisionDevice(MainActivity.this);
+                    String customUa = isTv
+                        ? "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 CineBG-TV DeviceType/TV"
+                        : "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36 CineBG-Mobile DeviceType/Mobile";
                     webView.getSettings().setUserAgentString(customUa);
                 }
 
