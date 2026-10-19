@@ -10,6 +10,7 @@ import {
   PictureInPicture2,
   X,
   RotateCcw,
+  RotateCw,
   Lock,
   Unlock,
   Layers,
@@ -318,12 +319,94 @@ const StreamPlayer = ({
   const hasSkippedIntroRef = useRef(false)
   const lockPromptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // ===== Orientação Mobile (Retrato / Paisagem) =====
+  const [isPortrait, setIsPortrait] = useState(
+    typeof window !== 'undefined' ? window.innerHeight > window.innerWidth : false
+  )
+
   // ===== Estado do HUD / Controles Imersivos Estilo YuCine =====
   const [showHud, setShowHud] = useState(true)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const hudTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ===== Gestos Touch & Toque Duplo (Avançar/Voltar 10s) =====
+  const [doubleTapFeedback, setDoubleTapFeedback] = useState<{
+    direction: 'left' | 'right'
+    seconds: number
+    key: number
+  } | null>(null)
+
+  const isTouchRef = useRef(false)
+  const touchStartRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 })
+  const lastTapRef = useRef<{ time: number; x: number; side: 'left' | 'right' } | null>(null)
+  const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const doubleTapAccumulatorRef = useRef<{
+    side: 'left' | 'right'
+    seconds: number
+    timer: ReturnType<typeof setTimeout> | null
+  }>({
+    side: 'right',
+    seconds: 0,
+    timer: null,
+  })
+
+  // Monitora redimensionamento e orientação da tela para adaptar celular
+  useEffect(() => {
+    const handleOrientationCheck = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleOrientationCheck)
+    window.addEventListener('orientationchange', handleOrientationCheck)
+    if (typeof screen !== 'undefined' && screen.orientation) {
+      screen.orientation.addEventListener('change', handleOrientationCheck)
+    }
+
+    // Se estiver em dispositivo móvel, tenta travar em horizontal na inicialização
+    if (isMobileDevice() || (typeof window !== 'undefined' && window.innerWidth < 850)) {
+      if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
+        try {
+          (screen.orientation as any).lock('landscape').catch(() => {})
+        } catch {}
+      }
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleOrientationCheck)
+      window.removeEventListener('orientationchange', handleOrientationCheck)
+      if (typeof screen !== 'undefined' && screen.orientation) {
+        screen.orientation.removeEventListener('change', handleOrientationCheck)
+      }
+    }
+  }, [])
+
+  // Alterna manualmente a orientação no celular
+  const handleToggleOrientation = async () => {
+    try {
+      const isCurrentlyLandscape = window.innerWidth > window.innerHeight
+      if (isCurrentlyLandscape) {
+        if (typeof screen !== 'undefined' && screen.orientation) {
+          if ('unlock' in screen.orientation) {
+            screen.orientation.unlock()
+          }
+          if ('lock' in screen.orientation) {
+            await (screen.orientation as any).lock('portrait').catch(() => {})
+          }
+        }
+        showFeedback('Retrato 📱')
+      } else {
+        if (containerRef.current && !document.fullscreenElement) {
+          await containerRef.current.requestFullscreen().catch(() => {})
+        }
+        if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
+          await (screen.orientation as any).lock('landscape').catch(() => {})
+        }
+        showFeedback('Paisagem / Tela Cheia 🔄')
+      }
+    } catch {}
+  }
 
   const resetHudTimer = useCallback(() => {
     setShowHud(true)
@@ -870,12 +953,14 @@ const StreamPlayer = ({
     feedbackTimerRef.current = setTimeout(() => setFeedback(null), 700)
   }
 
-  const seekBy = (delta: number) => {
+  const seekBy = (delta: number, showDefaultFeedback = true) => {
     const video = videoRef.current
     if (!video) return
     const max = Number.isFinite(video.duration) ? video.duration : Infinity
     video.currentTime = Math.max(0, Math.min(max, video.currentTime + delta))
-    showFeedback(delta > 0 ? `+${delta}s` : `${delta}s`)
+    if (showDefaultFeedback) {
+      showFeedback(delta > 0 ? `+${delta}s` : `${delta}s`)
+    }
   }
 
   const togglePlay = () => {
@@ -1411,17 +1496,100 @@ const StreamPlayer = ({
     }
   }, [settingsModalOpen, episodesDrawerOpen, onBack, audioOption, type, onNextEpisode, cycleSubtitles, showHud])
 
-  const handleVideoDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Tratamento inteligente de toque mobile e cliques na tela do player
+  const handlePlayerTap = (clientX: number, _clientY: number) => {
     if (isLocked) {
       handleLockTap()
       return
     }
-    setSpeedOpen(false)
-    setSubsOpen(false)
+
+    if (settingsModalOpen || episodesDrawerOpen || speedOpen || subsOpen || qualityOpen) {
+      setSettingsModalOpen(false)
+      setEpisodesDrawerOpen(false)
+      setSpeedOpen(false)
+      setSubsOpen(false)
+      setQualityOpen(false)
+      return
+    }
+
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return
-    const x = e.clientX - rect.left
-    seekBy(x < rect.width / 2 ? -10 : 10)
+
+    const relativeX = clientX - rect.left
+    const width = rect.width
+    const ratio = relativeX / width
+
+    // Zonas de toque: Esquerda (< 35%: Voltar 10s), Direita (> 65%: Avançar 10s), Centro (35% a 65%: Controles)
+    let side: 'left' | 'right' | 'center' = 'center'
+    if (ratio < 0.35) side = 'left'
+    else if (ratio > 0.65) side = 'right'
+
+    const now = Date.now()
+    const last = lastTapRef.current
+    const isDoubleTap = (side === 'left' || side === 'right') && last && last.side === side && now - last.time < 350
+
+    if ((side === 'left' || side === 'right') && isDoubleTap) {
+      const activeSide: 'left' | 'right' = side
+      // Cancelar qualquer timer de toque único para não piscar os controles da HUD
+      if (singleTapTimerRef.current) {
+        clearTimeout(singleTapTimerRef.current)
+        singleTapTimerRef.current = null
+      }
+
+      const delta = activeSide === 'left' ? -10 : 10
+      seekBy(delta, false) // busca rápida sem feedback central genérico
+
+      // Acumula segundos no feedback de toque duplo (+10s, +20s, +30s...)
+      if (doubleTapAccumulatorRef.current.timer) {
+        clearTimeout(doubleTapAccumulatorRef.current.timer)
+      }
+
+      if (doubleTapAccumulatorRef.current.side === activeSide) {
+        doubleTapAccumulatorRef.current.seconds += 10
+      } else {
+        doubleTapAccumulatorRef.current.side = activeSide
+        doubleTapAccumulatorRef.current.seconds = 10
+      }
+
+      const totalSecs = doubleTapAccumulatorRef.current.seconds
+      setDoubleTapFeedback({
+        direction: activeSide,
+        seconds: totalSecs,
+        key: Date.now(),
+      })
+
+      doubleTapAccumulatorRef.current.timer = setTimeout(() => {
+        setDoubleTapFeedback(null)
+        doubleTapAccumulatorRef.current.seconds = 0
+        doubleTapAccumulatorRef.current.timer = null
+      }, 750)
+
+      lastTapRef.current = { time: now, x: clientX, side: activeSide }
+    } else {
+      // Primeiro toque em uma lateral ou toque no centro
+      lastTapRef.current = side !== 'center' ? { time: now, x: clientX, side: side as 'left' | 'right' } : null
+
+      if (side === 'center') {
+        if (singleTapTimerRef.current) {
+          clearTimeout(singleTapTimerRef.current)
+          singleTapTimerRef.current = null
+        }
+        setShowHud((prev) => {
+          if (!prev) resetHudTimer()
+          return !prev
+        })
+      } else {
+        // Aguarda 280ms para confirmar se é toque único ou se virá um segundo toque
+        if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current)
+        singleTapTimerRef.current = setTimeout(() => {
+          setShowHud((prev) => {
+            if (!prev) resetHudTimer()
+            return !prev
+          })
+          singleTapTimerRef.current = null
+        }, 280)
+      }
+    }
   }
 
   const audioLabels = {
@@ -1447,22 +1615,48 @@ const StreamPlayer = ({
     <div
       ref={containerRef}
       tabIndex={0}
-      onClick={() => {
-        // Clicar ou tocar na tela cheia alterna a exibição dos textos/HUD
-        setShowHud((prev) => {
-          if (!prev) resetHudTimer()
-          return !prev
-        })
+      onTouchStart={(e) => {
+        resetHudTimer()
+        if (e.touches.length > 0) {
+          touchStartRef.current = {
+            time: Date.now(),
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+          }
+        }
+      }}
+      onTouchEnd={(e) => {
+        if (e.changedTouches.length === 0) return
+        const touch = e.changedTouches[0]
+        const deltaX = Math.abs(touch.clientX - touchStartRef.current.x)
+        const deltaY = Math.abs(touch.clientY - touchStartRef.current.y)
+        const duration = Date.now() - touchStartRef.current.time
+
+        // Se foi um movimento de arrastar/swipe longo (> 25px ou > 500ms), não trata como toque
+        if (deltaX > 25 || deltaY > 25 || duration > 500) {
+          return
+        }
+
+        isTouchRef.current = true
+        handlePlayerTap(touch.clientX, touch.clientY)
+      }}
+      onClick={(e) => {
+        if (isTouchRef.current) {
+          isTouchRef.current = false
+          return
+        }
+        handlePlayerTap(e.clientX, e.clientY)
       }}
       onKeyDown={handleKeyDown}
       onMouseMove={resetHudTimer}
-      onTouchStart={resetHudTimer}
       style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
       className="player-container relative w-full h-full min-h-screen bg-black overflow-hidden flex flex-col justify-between outline-none ring-0 border-0 select-none cursor-pointer"
     >
       {/* ====== BARRA SUPERIOR HUD (Estilo YuCine TV) ====== */}
       <div
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
         className={`absolute top-0 left-0 right-0 z-40 p-4 sm:p-6 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between transition-opacity duration-300 ${
           showHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
@@ -1504,6 +1698,62 @@ const StreamPlayer = ({
               {feedback}
             </span>
           </div>
+        )}
+
+        {/* Feedback visual de Toque Duplo (Voltar 10s à Esquerda) */}
+        {doubleTapFeedback && doubleTapFeedback.direction === 'left' && (
+          <div
+            key={`dt-left-${doubleTapFeedback.key}`}
+            className="absolute left-6 sm:left-16 top-1/2 -translate-y-1/2 z-50 pointer-events-none flex flex-col items-center justify-center animate-in fade-in zoom-in duration-150"
+          >
+            <div className="relative flex flex-col items-center justify-center w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-black/85 backdrop-blur-md border border-white/20 shadow-2xl">
+              <span className="absolute inset-0 rounded-full bg-yellow-400/20 animate-ping pointer-events-none" />
+              <RotateCcw className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 mb-1" />
+              <span className="text-white font-black text-sm sm:text-base tracking-wide drop-shadow-md">
+                -{doubleTapFeedback.seconds}s
+              </span>
+              <span className="text-[10px] text-yellow-400/90 font-bold uppercase tracking-wider">
+                Voltar
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Feedback visual de Toque Duplo (Avançar 10s à Direita) */}
+        {doubleTapFeedback && doubleTapFeedback.direction === 'right' && (
+          <div
+            key={`dt-right-${doubleTapFeedback.key}`}
+            className="absolute right-6 sm:right-16 top-1/2 -translate-y-1/2 z-50 pointer-events-none flex flex-col items-center justify-center animate-in fade-in zoom-in duration-150"
+          >
+            <div className="relative flex flex-col items-center justify-center w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-black/85 backdrop-blur-md border border-white/20 shadow-2xl">
+              <span className="absolute inset-0 rounded-full bg-yellow-400/20 animate-ping pointer-events-none" />
+              <RotateCw className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 mb-1" />
+              <span className="text-white font-black text-sm sm:text-base tracking-wide drop-shadow-md">
+                +{doubleTapFeedback.seconds}s
+              </span>
+              <span className="text-[10px] text-yellow-400/90 font-bold uppercase tracking-wider">
+                Avançar
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Botão de Rotação Rápida para Celular (se segurando em pé/retrato) */}
+        {!isTv && !isTVDevice() && !tvMode && isPortrait && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleToggleOrientation()
+            }}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            className="absolute top-16 right-4 z-40 bg-yellow-400 hover:bg-yellow-300 text-black px-3.5 py-2 rounded-full text-xs font-black flex items-center gap-1.5 shadow-2xl active:scale-95 transition-all animate-bounce"
+            title="Girar para tela cheia na horizontal"
+          >
+            <RotateCw className="w-4 h-4" />
+            <span>Girar Tela</span>
+          </button>
         )}
 
         {/* Botão de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
@@ -1719,7 +1969,14 @@ const StreamPlayer = ({
             onStalled={handleStall}
             onError={handleDirectMediaError}
             onEnded={handleEnded}
-            onPlay={() => setIsPlaying(true)}
+            onPlay={() => {
+              setIsPlaying(true)
+              if (isMobileDevice() && typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
+                try {
+                  (screen.orientation as any).lock('landscape').catch(() => {})
+                } catch {}
+              }
+            }}
             onPause={() => setIsPlaying(false)}
           >
             {externalSubs.map((sub) => (
@@ -1782,6 +2039,13 @@ const StreamPlayer = ({
             e.stopPropagation()
             resetHudTimer()
           }}
+          onTouchStart={(e) => {
+            e.stopPropagation()
+            resetHudTimer()
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation()
+          }}
         >
           {/* Linha do Tempo / Scrubber */}
           {directSrc && duration > 0 && (
@@ -1834,6 +2098,21 @@ const StreamPlayer = ({
                 <Expand className="w-4 h-4 text-yellow-400 group-focus:text-black" />
                 <span>Tela cheia</span>
               </button>
+
+              {/* Botão de Orientação / Girar Tela (exclusivo para celular) */}
+              {!isTv && !isTVDevice() && !tvMode && (
+                <button
+                  type="button"
+                  id="hud-btn-rotate"
+                  data-hud-btn="true"
+                  onClick={handleToggleOrientation}
+                  className="flex items-center justify-center gap-1.5 bg-[#171824]/90 hover:bg-[#232538] text-white px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 shadow-md"
+                  title="Alternar orientação Paisagem/Retrato"
+                >
+                  <RotateCw className="w-4 h-4 text-yellow-400" />
+                  <span>Girar</span>
+                </button>
+              )}
 
               {/* 2. Áudio 1-Click (Dublado / Legendado - Estilo YuCine) */}
               <button

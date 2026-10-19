@@ -27,7 +27,7 @@ const Watch = () => {
   const [downloading, setDownloading] = useState(false)
   const [_downloadProgress, setDownloadProgress] = useState(0)
 
-  // Ao dar o Play e entrar na rota /watch, entra em tela cheia imediata (estilo YuCine)
+  // Ao dar o Play e entrar na rota /watch, entra em tela cheia imediata e trava em paisagem (estilo YuCine)
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       import('@capacitor/status-bar')
@@ -38,6 +38,11 @@ const Watch = () => {
     }
     if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {})
+    }
+    if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
+      try {
+        (screen.orientation as any).lock('landscape').catch(() => {})
+      } catch {}
     }
 
     return () => {
