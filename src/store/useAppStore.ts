@@ -152,10 +152,10 @@ export const useAppStore = create<AppState>()(
       setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
       isCheckingUpdate: false,
       updateInfo: {
-        currentVersion: '1.2.55',
-        latestVersion: '1.2.55',
+        currentVersion: '1.2.56',
+        latestVersion: '1.2.56',
         hasUpdate: false,
-        downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk',
+        downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk',
         mandatory: false,
       },
       checkForUpdates: async (manual = false) => {
@@ -163,7 +163,7 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const currentVersion = get().updateInfo.currentVersion || '1.2.55'
+          const currentVersion = get().updateInfo.currentVersion || '1.2.56'
           const candidateUrls = [
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,
@@ -189,14 +189,26 @@ export const useAppStore = create<AppState>()(
 
           if (data) {
             const remoteVersion = data.version || currentVersion
-            const isMobile = isMobileDevice()
-            const isTv = !isMobile && (
-              navigator.userAgent.includes('CineBG-TV') ||
-              isTVDevice()
-            )
-            const downloadUrl = (isTv && data.downloadUrlTv)
-              ? data.downloadUrlTv
-              : (data.downloadUrl || 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk')
+            const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+            const isExplicitMobile =
+              typeof window !== 'undefined' &&
+              window.innerHeight > window.innerWidth &&
+              /iPhone|iPod|Android.*Mobile|Mobile.*Android|BlackBerry|IEMobile/i.test(ua)
+
+            const isTv =
+              !isExplicitMobile &&
+              (ua.includes('CineBG-TV') ||
+                ua.includes('DeviceType/TV') ||
+                isTVDevice() ||
+                get().tvMode ||
+                localStorage.getItem('cinebg_tv_mode') === 'true' ||
+                (typeof window !== 'undefined' &&
+                  window.innerWidth > window.innerHeight &&
+                  !/iPhone|iPod|Android.*Mobile|Mobile.*Android/i.test(ua)))
+
+            const downloadUrl = isTv
+              ? (data.downloadUrlTv || data.downloadUrl || 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk')
+              : ((data as any).downloadUrlMobile || data.downloadUrl || 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk')
             const hasUpdate = remoteVersion !== currentVersion
             set({
               updateInfo: {

@@ -21,7 +21,7 @@ import {
   type DownloadProgress,
 } from '@/services/appUpdater'
 import { Capacitor } from '@capacitor/core'
-import { isMobileDevice } from '@/utils/tv'
+import { isMobileDevice, isTVDevice } from '@/utils/tv'
 
 interface UpdateModalProps {
   visible: boolean
@@ -38,19 +38,43 @@ type UpdateStage = 'idle' | 'downloading' | 'installing' | 'error'
 
 const UpdateModal = ({
   visible,
-  downloadUrl = 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk',
-  currentVersion = '1.2.53',
-  latestVersion = '1.2.53',
+  downloadUrl = 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk',
+  currentVersion = '1.2.56',
+  latestVersion = '1.2.56',
   hasUpdate = false,
   isChecking = false,
   onDismiss,
   onCheckAgain,
 }: UpdateModalProps) => {
-  const isMobile = isMobileDevice()
-  const flavorLabel = isMobile ? 'CineBG Mobile' : 'CineBG TV'
-  const deviceConfirmText = isMobile
-    ? 'O instalador de pacotes do Android foi acionado. Confirme na tela do seu celular para concluir a atualização.'
-    : 'O instalador de pacotes do Android foi acionado. Confirme na tela da sua TV para concluir a atualização.'
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+  const isExplicitMobile =
+    typeof window !== 'undefined' &&
+    window.innerHeight > window.innerWidth &&
+    /iPhone|iPod|Android.*Mobile|Mobile.*Android|BlackBerry|IEMobile/i.test(ua)
+
+  const isTv =
+    !isExplicitMobile &&
+    (ua.includes('CineBG-TV') ||
+      ua.includes('DeviceType/TV') ||
+      isTVDevice() ||
+      !isMobileDevice() ||
+      (typeof window !== 'undefined' &&
+        window.innerWidth > window.innerHeight &&
+        !/iPhone|iPod|Android.*Mobile|Mobile.*Android/i.test(ua)))
+
+  const isMobile = !isTv
+  const flavorLabel = isTv ? 'CineBG TV' : 'CineBG Mobile'
+  const deviceConfirmText = isTv
+    ? 'O instalador de pacotes do Android foi acionado. Confirme na tela da sua TV para concluir a atualização.'
+    : 'O instalador de pacotes do Android foi acionado. Confirme na tela do seu celular para concluir a atualização.'
+
+  // Se for TV e a downloadUrl fornecida for a de Mobile por engano, força a URL de TV!
+  const effectiveDownloadUrl =
+    isTv && downloadUrl.includes('-Mobile-')
+      ? downloadUrl.replace('-Mobile-', '-Tv-')
+      : !isTv && downloadUrl.includes('-Tv-')
+      ? downloadUrl.replace('-Tv-', '-Mobile-')
+      : downloadUrl
 
   const [stage, setStage] = useState<UpdateStage>('idle')
   const [progress, setProgress] = useState<DownloadProgress>({
@@ -105,7 +129,7 @@ const UpdateModal = ({
     }
 
     try {
-      const result = await startAppUpdate(downloadUrl, (p) => {
+      const result = await startAppUpdate(effectiveDownloadUrl, (p) => {
         setProgress(p)
         if (p.percent >= 99) {
           setStage('installing')
@@ -128,14 +152,14 @@ const UpdateModal = ({
   const handleOpenBrowserFallback = () => {
     try {
       const a = document.createElement('a')
-      a.href = downloadUrl
+      a.href = effectiveDownloadUrl
       a.target = '_blank'
       a.rel = 'noopener noreferrer'
       document.body.appendChild(a)
       a.click()
       setTimeout(() => document.body.removeChild(a), 500)
     } catch {
-      window.location.href = downloadUrl
+      window.location.href = effectiveDownloadUrl
     }
   }
 
