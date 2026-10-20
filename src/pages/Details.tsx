@@ -497,10 +497,10 @@ const Details = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => handlePlayFullscreen()}
-              className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-extrabold text-sm sm:text-base border border-white/15 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all outline-none focus:bg-amber-400 focus:text-black focus:border-amber-400 focus:shadow-xl focus:shadow-amber-500/30"
+              className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-black text-sm sm:text-base bg-amber-400 hover:bg-amber-300 text-black shadow-lg shadow-amber-400/25 transition-all outline-none focus:ring-4 focus:ring-white focus:scale-105 active:scale-95"
             >
-              <Maximize2 className="w-5 h-5" />
-              <span>Tela cheia</span>
+              <Play className="w-5 h-5 fill-black" />
+              <span>Assistir</span>
             </motion.button>
           </Focusable>
 
