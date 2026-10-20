@@ -256,11 +256,8 @@ public class MainActivity extends BridgeActivity {
                                 if (url.startsWith("intent:") || url.startsWith("market:") || isAdUrl(url)) {
                                     return true;
                                 }
-                                if (!url.contains("localhost") && !url.contains("127.0.0.1") && !url.startsWith("capacitor:")) {
-                                    return true; // Protege WebView em versões legadas do Android
-                                }
                             }
-                            return super.shouldOverrideUrlLoading(view, url);
+                            return false;
                         }
 
                         @Override

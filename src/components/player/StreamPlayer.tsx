@@ -738,11 +738,24 @@ const StreamPlayer = ({
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
   }
 
+  const attemptPlay = useCallback(() => {
+    const video = videoRef.current
+    if (video && video.paused) {
+      const p = video.play()
+      if (p !== undefined) {
+        p.catch((err) => {
+          console.warn('[StreamPlayer] Autoplay aguardando interação ou restrito pelo WebView:', err)
+        })
+      }
+    }
+  }, [])
+
   const handleDirectMediaReady = () => {
     loadedRef.current = true
     setLoaded(true)
     setError(false)
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
+    attemptPlay()
   }
 
   // Anexa o HLS (m3u8) ao <video> via hls.js (CORS garantido pelo proxy do MegaEmbed).
@@ -783,7 +796,10 @@ const StreamPlayer = ({
       hls.loadSource(directSrc)
       hls.attachMedia(video)
       hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => refreshTextTracks())
-      hls.on(Hls.Events.MANIFEST_PARSED, () => window.setTimeout(() => refreshTextTracks(), 300))
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        window.setTimeout(() => refreshTextTracks(), 300)
+        attemptPlay()
+      })
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (data.fatal) {
           switch (data.type) {
@@ -810,6 +826,15 @@ const StreamPlayer = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [directSrc, directKind])
+
+  // Autoplay ativo ao conectar directSrc
+  useEffect(() => {
+    if (!directSrc) return
+    const timer = setTimeout(() => {
+      attemptPlay()
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [directSrc, attemptPlay])
 
   // Aplica a velocidade escolhida (inclusive ao trocar de fonte).
   useEffect(() => {
@@ -1150,6 +1175,7 @@ const StreamPlayer = ({
       }
     }
     resumedRef.current = true
+    attemptPlay()
   }
 
   // Salva a posição a cada ~5s de reprodução e gerencia o botão Pular Abertura.
@@ -1424,12 +1450,19 @@ const StreamPlayer = ({
 
       // Tecla Enter / OK / D-Pad Center
       if (key === 'Enter' || code === 13 || code === 23 || code === 66) {
+        const video = videoRef.current
+        if (video && (video.paused || !isPlaying)) {
+          e.preventDefault()
+          togglePlay()
+          return
+        }
+
         if (!showHud) {
           e.preventDefault()
           setShowHud(true)
           setTimeout(() => {
-            const subBtn = document.getElementById('hud-btn-subtitles') || document.getElementById('hud-btn-play')
-            subBtn?.focus()
+            const playBtn = document.getElementById('hud-btn-play') || document.getElementById('hud-btn-subtitles')
+            playBtn?.focus()
           }, 50)
           return
         }
@@ -1437,8 +1470,8 @@ const StreamPlayer = ({
         const currentFocused = document.activeElement as HTMLElement | null
         if (!currentFocused || currentFocused === document.body || currentFocused.tagName === 'VIDEO') {
           e.preventDefault()
-          const subBtn = document.getElementById('hud-btn-subtitles') || document.getElementById('hud-btn-play')
-          subBtn?.focus()
+          const playBtn = document.getElementById('hud-btn-play') || document.getElementById('hud-btn-subtitles')
+          playBtn?.focus()
           return
         }
       }
@@ -1987,14 +2020,17 @@ const StreamPlayer = ({
 
         {/* Indicador Central de Play / Pause */}
         {!isPlaying && directSrc && !error && (
-          <div
+          <button
+            type="button"
+            id="central-play-button"
             onClick={togglePlay}
-            className="absolute inset-0 flex items-center justify-center z-30 cursor-pointer bg-black/35 backdrop-blur-[2px]"
+            aria-label="Reproduzir vídeo"
+            className="absolute inset-0 w-full h-full flex items-center justify-center z-30 cursor-pointer bg-black/35 backdrop-blur-[2px] border-none outline-none focus:ring-4 focus:ring-amber-400"
           >
-            <div className="w-20 h-20 rounded-full bg-yellow-400 text-black flex items-center justify-center shadow-2xl shadow-yellow-400/50 transform transition-transform hover:scale-110 active:scale-95">
+            <div className="w-20 h-20 rounded-full bg-amber-400 text-black flex items-center justify-center shadow-2xl shadow-amber-400/50 transform transition-transform hover:scale-110 active:scale-95 group-focus:scale-110">
               <Play className="w-10 h-10 fill-black ml-1" />
             </div>
-          </div>
+          </button>
         )}
 
         {/* Toast Flutuante de Retomada Inteligente */}

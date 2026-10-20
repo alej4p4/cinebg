@@ -6,6 +6,13 @@ export const isMobileDevice = (): boolean => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
 
   const ua = navigator.userAgent
+  // Identificação oficial de TV ou modo TV explícito: NUNCA é mobile
+  if (ua.includes('DeviceType/TV') || ua.includes('CineBG-TV')) return false
+  try {
+    if (localStorage.getItem('cinebg_tv_mode') === 'true') return false
+  } catch {}
+
+  // Identificação oficial de celular/tablet CineBG
   if (ua.includes('DeviceType/Mobile') || ua.includes('CineBG-Mobile')) return true
 
   // Indicador explícito de smartphone / celular no User Agent
@@ -19,19 +26,19 @@ export const isMobileDevice = (): boolean => {
     return true
   }
 
-  // Dispositivo em orientação retrato (típico de celulares e tablets; Smart TVs são estritamente 16:9 horizontais)
-  if (window.innerHeight > window.innerWidth) {
+  // Dispositivo em orientação retrato estrito (típico de celulares e tablets em pé; Smart TVs são estritamente 16:9 horizontais)
+  if (window.innerHeight > window.innerWidth && !isDedicatedTvUa) {
     return true
   }
 
-  // Telas menores que 850px de largura
-  if (window.innerWidth < 850) {
+  // Telas menores que 600px de largura
+  if (window.innerWidth < 600 && !isDedicatedTvUa) {
     return true
   }
 
-  // Dispositivo com tela de toque e sem características de Android TV / SmartTV
+  // Dispositivo móvel com tela de toque e proporção vertical/estreita
   const hasTouchScreen = (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || 'ontouchstart' in window
-  if (hasTouchScreen && !isDedicatedTvUa) {
+  if (hasTouchScreen && !isDedicatedTvUa && window.innerWidth < 850 && window.innerHeight >= window.innerWidth) {
     return true
   }
 
@@ -200,4 +207,3 @@ export const scrollTvElementIntoView = (
     } catch {}
   }
 }
-

@@ -68,7 +68,30 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
         }
       }
 
-      if (doesFocusableExist('details-play')) {
+      // Na tela de detalhes, foca no botão principal de reprodução
+      if (routeKey.startsWith('/details')) {
+        if (doesFocusableExist('details-fullscreen')) {
+          setFocus('details-fullscreen')
+          return
+        }
+        if (doesFocusableExist('details-play')) {
+          setFocus('details-play')
+          return
+        }
+      }
+
+      // Na tela de canais ao vivo (LiveTV)
+      if (routeKey === '/live') {
+        if (doesFocusableExist('cat-all')) {
+          setFocus('cat-all')
+          return
+        }
+      }
+
+      // Ordem geral de prioridade de foco
+      if (doesFocusableExist('details-fullscreen')) {
+        setFocus('details-fullscreen')
+      } else if (doesFocusableExist('details-play')) {
         setFocus('details-play')
       } else if (doesFocusableExist('hero-watch-btn')) {
         setFocus('hero-watch-btn')
@@ -76,10 +99,10 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
         setFocus('yucine-hero-banner')
       } else if (doesFocusableExist('card-0-0')) {
         setFocus('card-0-0')
+      } else if (doesFocusableExist('cat-all')) {
+        setFocus('cat-all')
       } else if (doesFocusableExist('nav-item-0')) {
         setFocus('nav-item-0')
-      } else {
-        setFocus(ROOT_FOCUS_KEY).catch(() => {})
       }
     }
 
@@ -125,7 +148,7 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
       window.removeEventListener('touchstart', handlePointerDown)
       window.removeEventListener('mousedown', handlePointerDown)
     }
-  }, [explicitEnabled])
+  }, [explicitEnabled, routeKey])
 
   // Recalcular layouts e reposicionar foco nas trocas de tela
   useEffect(() => {
@@ -140,7 +163,25 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
           explicitEnabled ||
           isTVDevice()
         ) {
-          setFocus(ROOT_FOCUS_KEY).catch(() => {})
+          if (routeKey === '/' || !routeKey) {
+            if (doesFocusableExist('hero-watch-btn')) {
+              setFocus('hero-watch-btn')
+            } else if (doesFocusableExist('card-0-0')) {
+              setFocus('card-0-0')
+            }
+          } else if (routeKey.startsWith('/details')) {
+            if (doesFocusableExist('details-fullscreen')) {
+              setFocus('details-fullscreen')
+            } else if (doesFocusableExist('details-play')) {
+              setFocus('details-play')
+            }
+          } else if (routeKey === '/search') {
+            if (doesFocusableExist('tvkey-A')) {
+              setFocus('tvkey-A')
+            }
+          } else if (doesFocusableExist('card-0-0')) {
+            setFocus('card-0-0')
+          }
         }
       } catch {}
     }, 300)
