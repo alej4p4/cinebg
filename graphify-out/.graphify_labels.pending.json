@@ -1,5 +1,6 @@
 {
   "0": "LicenseGate.tsx",
+  "1": "EmptyState.tsx",
   "2": "react",
   "3": "StreamPlayer.tsx",
   "4": "package.json",
@@ -38,5 +39,6 @@
   "37": "ref_playwright_test",
   "38": "commitlint.config.js",
   "39": "GenreBadge.tsx",
-  "45": "LiveTV.tsx"
+  "40": "eslint.config.js",
+  "45": "epg.ts"
 }

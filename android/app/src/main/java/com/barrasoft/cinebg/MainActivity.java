@@ -2,6 +2,7 @@ package com.barrasoft.cinebg;
 
 import android.app.UiModeManager;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -47,10 +48,25 @@ public class MainActivity extends BridgeActivity {
         return false;
     }
 
+    private boolean isVideoPlayerLandscape = false;
+
+    private void applyDeviceOrientation() {
+        try {
+            boolean isTv = isRealTelevisionDevice(this);
+            if (isTv || isVideoPlayerLandscape) {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+            } else {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            }
+        } catch (Exception ignored) {}
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        applyDeviceOrientation();
         registerPlugin(AppInstallerPlugin.class);
         super.onCreate(savedInstanceState);
+        applyDeviceOrientation();
         setupImmersiveMode();
         setupTvFocus();
 
@@ -82,6 +98,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
+        applyDeviceOrientation();
         setupTvFocus();
     }
 
@@ -89,6 +106,7 @@ public class MainActivity extends BridgeActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
+            applyDeviceOrientation();
             setupImmersiveMode();
             setupTvFocus();
         }
@@ -189,6 +207,15 @@ public class MainActivity extends BridgeActivity {
                         @android.webkit.JavascriptInterface
                         public boolean isMobile() {
                             return !isRealTelevisionDevice(MainActivity.this);
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public void setPlayerLandscape(final boolean landscape) {
+                            isVideoPlayerLandscape = landscape;
+                            runOnUiThread(() -> {
+                                applyDeviceOrientation();
+                                setupImmersiveMode();
+                            });
                         }
                     }, "CineBGNative");
 
@@ -321,6 +348,9 @@ public class MainActivity extends BridgeActivity {
         Window window = getWindow();
         if (window == null) return;
 
+        boolean isTv = isRealTelevisionDevice(this);
+        boolean shouldHideSystemBars = isTv || isVideoPlayerLandscape;
+
         // Permite desenhar de ponta a ponta na tela (Edge-to-Edge) e cobrir a área do notch/câmera
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.getAttributes().layoutInDisplayCutoutMode =
@@ -333,7 +363,21 @@ public class MainActivity extends BridgeActivity {
             window.setStatusBarColor(android.graphics.Color.BLACK);
         }
 
-        // Esconde barra de navegação virtual (<, O, |||) e barra de status em modo imersivo sticky
+        if (!shouldHideSystemBars) {
+            // Em celulares fora do player de vídeo, mantém a tela em retrato normal com barras do sistema visíveis
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowInsetsController controller = window.getInsetsController();
+                if (controller != null) {
+                    controller.show(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                }
+            } else {
+                View decorView = window.getDecorView();
+                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            }
+            return;
+        }
+
+        // Na TV ou dentro do player de vídeo em tela cheia, esconde barras em modo imersivo sticky
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowInsetsController controller = window.getInsetsController();
             if (controller != null) {

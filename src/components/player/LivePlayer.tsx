@@ -19,7 +19,7 @@ import { categoryLabel } from '@/services/liveChannels'
 import { getLiveChannelEPG } from '@/services/epg'
 import Focusable from '@/components/tv/Focusable'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
-import { markBackHandled } from '@/utils/tv'
+import { markBackHandled, setNativePlayerLandscape } from '@/utils/tv'
 
 interface LivePlayerProps {
   channel: LiveChannel
@@ -84,6 +84,7 @@ const LivePlayer = ({
 
   // Ao abrir o canal, entra em tela cheia imediata (estilo YuCine)
   useEffect(() => {
+    setNativePlayerLandscape(true)
     if (Capacitor.isNativePlatform()) {
       import('@capacitor/status-bar')
         .then(({ StatusBar }) => {
@@ -98,6 +99,7 @@ const LivePlayer = ({
     resetOsdTimer()
 
     return () => {
+      setNativePlayerLandscape(false)
       if (osdTimerRef.current) clearTimeout(osdTimerRef.current)
       if (document.fullscreenElement && document.exitFullscreen) {
         document.exitFullscreen().catch(() => {})
