@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Build & Release CineBG APK
+    name: Build & Release CineBG APK (Mobile + TV)
     runs-on: ubuntu-latest
 
     steps:
@@ -75,28 +75,47 @@ jobs:
       - name: Grant Execute Permission for Gradlew
         run: chmod +x android/gradlew
 
-      - name: Assemble Release APK
+      - name: Assemble Mobile Release APK
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleMobileRelease --no-daemon
 
-      - name: Prepare APK Asset
+      - name: Assemble TV Release APK
         run: |
-          cp android/app/build/outputs/apk/release/CineBG-release.apk ./CineBG-release.apk
-          ls -la ./CineBG-release.apk
+          cd android
+          ./gradlew assembleTvRelease --no-daemon
 
-      - name: Upload APK Artifact
+      - name: Prepare Mobile APK Asset
+        run: |
+          cp android/app/build/outputs/apk/mobile/release/CineBG-Mobile-release.apk ./CineBG-Mobile-release.apk
+          ls -la ./CineBG-Mobile-release.apk
+
+      - name: Prepare TV APK Asset
+        run: |
+          cp android/app/build/outputs/apk/tv/release/CineBG-Tv-release.apk ./CineBG-Tv-release.apk
+          ls -la ./CineBG-Tv-release.apk
+
+      - name: Upload Mobile APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CineBG-release
-          path: ./CineBG-release.apk
+          name: CineBG-Mobile-release
+          path: ./CineBG-Mobile-release.apk
+          if-no-files-found: error
+
+      - name: Upload TV APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CineBG-Tv-release
+          path: ./CineBG-Tv-release.apk
           if-no-files-found: error
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          files: ./CineBG-release.apk
+          files: |
+            ./CineBG-Mobile-release.apk
+            ./CineBG-Tv-release.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
