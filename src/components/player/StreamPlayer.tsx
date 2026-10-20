@@ -46,6 +46,7 @@ import EpisodeSelector from './EpisodeSelector'
 import PlaybackSettingsModal from './PlaybackSettingsModal'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
 import { isTVDevice, isMobileDevice } from '@/utils/tv'
+import { trackStreamPlayback } from '@/services/observability'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
 interface StreamPlayerProps {
@@ -569,6 +570,13 @@ const StreamPlayer = ({
 
   const handleManualRefresh = () => {
     loadedRef.current = false
+    trackStreamPlayback({
+      action: 'stream_start',
+      tmdbId,
+      mediaType: type,
+      sourceName: candidates[candidateIndex]?.label || `Mirror-${activeMirror}`,
+      audioOption,
+    })
     lastCheckedMediaRef.current = ''
     userManualAudioRef.current = null
     setAllowIframe(false)
@@ -606,6 +614,13 @@ const StreamPlayer = ({
     if (!directSrc && !allowIframe) return
 
     loadedRef.current = false
+    trackStreamPlayback({
+      action: 'stream_start',
+      tmdbId,
+      mediaType: type,
+      sourceName: candidates[candidateIndex]?.label || `Mirror-${activeMirror}`,
+      audioOption,
+    })
     setLoaded(false)
     setError(false)
 

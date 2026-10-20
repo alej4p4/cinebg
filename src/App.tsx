@@ -3,13 +3,15 @@ import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from
 import { AnimatePresence } from 'framer-motion'
 import Navbar from '@/components/layout/Navbar'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { SkeletonCarousel } from '@/components/ui/SkeletonCard'
+import ProgressBar from '@/components/ui/ProgressBar'
 import SplashScreen from '@/components/ui/SplashScreen'
 import { useEpisodeNotifications } from '@/hooks/useEpisodeNotifications'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
 import { useAppStore } from '@/store/useAppStore'
 import { isTVDevice, isMobileDevice } from '@/utils/tv'
+import { trackRouteView } from '@/services/observability'
 import UpdateModal from '@/components/UpdateModal'
 import { useLicense } from '@/hooks/useLicense'
 import LicenseGate from '@/components/LicenseGate'
@@ -32,8 +34,10 @@ const Profiles = lazy(() => import('@/pages/Profiles'))
 const Downloads = lazy(() => import('@/pages/Downloads'))
 
 const PageFallback = () => (
-  <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-    <LoadingSpinner size="lg" label="Carregando..." />
+  <div className="min-h-screen bg-bg-primary pt-24 space-y-8">
+    <ProgressBar isLoading={true} />
+    <SkeletonCarousel count={6} />
+    <SkeletonCarousel count={6} />
   </div>
 )
 
@@ -42,6 +46,10 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
   const navigate = useNavigate()
   const { tvMode, setVipModalOpen } = useAppStore()
   useSpatialNavigation(tvMode || isTVDevice(), location.pathname)
+
+  useEffect(() => {
+    trackRouteView(location.pathname)
+  }, [location.pathname])
 
   // Quando o período de teste de 3 dias expira e o usuário não possui plano VIP:
   // A aba TV ao Vivo (/live) permanece 100% liberada e gratuita (canais abertos).

@@ -4,7 +4,7 @@ import { X, Sparkles, Filter } from 'lucide-react'
 import YuCineHero from '@/components/ui/YuCineHero'
 import Carousel from '@/components/ui/Carousel'
 import MovieCard from '@/components/ui/MovieCard'
-import { SkeletonCarousel } from '@/components/ui/SkeletonCard'
+import { SkeletonCarousel, SkeletonGrid } from '@/components/ui/SkeletonCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import ErrorState from '@/components/ui/ErrorState'
 import {
@@ -363,11 +363,7 @@ const Series = () => {
               )}
 
               {filterLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="aspect-[2/3] bg-white/5 rounded-xl animate-pulse" />
-                  ))}
-                </div>
+                <SkeletonGrid count={12} />
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {filteredList.map((item, index) => (
