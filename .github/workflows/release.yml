@@ -44,10 +44,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 34
-          ndk-version: r27c
-          cmdline-tools-version: 11.0
-          licenses: all
+          cmdline-tools-version: '11.0'
+          accept-android-sdk-licenses: 'true'
+          packages: 'platforms;android-34 build-tools;34.0.0'
 
       - name: Install Dependencies
         run: npm ci
