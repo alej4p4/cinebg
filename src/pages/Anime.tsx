@@ -8,6 +8,7 @@ import Focusable from '@/components/tv/Focusable'
 import { discoverShows } from '@/services/tmdb'
 import type { MediaItem } from '@/types'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
+import PremiumContentGate from '@/components/PremiumContentGate'
 import { setFocus, doesFocusableExist, SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
 const Anime = () => {
@@ -61,7 +62,7 @@ const Anime = () => {
   }
 
   return (
-    <>
+    <PremiumContentGate contentType="anime">
       <ProgressBar isLoading={loading || loadingMore} />
       <motion.div
         className="min-h-screen bg-bg-primary pt-24 pb-12"
@@ -116,7 +117,7 @@ const Anime = () => {
           )}
         </div>
       </motion.div>
-    </>
+    </PremiumContentGate>
   )
 }
 

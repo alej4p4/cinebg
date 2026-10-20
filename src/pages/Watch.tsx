@@ -7,6 +7,7 @@ import { getMovieDetails, getShowDetails, getCachedMediaDetails } from '@/servic
 import { resolveMegaEmbed } from '@/services/streams'
 import { buildFileName, downloadVideo, downloadsSupported } from '@/services/downloads'
 import { useAppStore } from '@/store/useAppStore'
+import PremiumContentGate from '@/components/PremiumContentGate'
 import { markBackHandled, setNativePlayerLandscape } from '@/utils/tv'
 import type { DownloadItem, MediaType, TMDBMovieDetails, TMDBShowDetails } from '@/types'
 
@@ -254,35 +255,37 @@ const Watch = () => {
 
   // Renderiza o StreamPlayer imediatamente em 0ms ao clicar em Play (sem bloquear no fetch do TMDB)
   return (
-    <div className="fixed inset-0 z-50 w-screen h-screen bg-black overflow-hidden select-none">
-      <ProgressBar
-        isLoading={loading || downloading}
-        progress={downloading ? downloadProgress * 100 : undefined}
-      />
-      <StreamPlayer
-        tmdbId={mediaId}
-        type={type as 'movie' | 'tv' | 'anime'}
-        season={season}
-        episode={episode}
-        title={title || initialLastWatched?.title || 'Carregando...'}
-        originalLanguage={originalLanguage}
-        onNextEpisode={type !== 'movie' ? handleNextEpisode : undefined}
-        startAt={resumeAt}
-        onProgress={handleProgress}
-        seasons={showData?.seasons}
-        onSelectEpisode={handleEpisodeSelect}
-        onBack={() => {
-          markBackHandled()
-          const historyIdx = window.history.state?.idx ?? 0
-          if (historyIdx > 0) {
-            navigate(-1)
-          } else {
-            navigate(`/details/${type}/${mediaId}`, { replace: true })
-          }
-        }}
-        onDownload={handleDownload}
-      />
-    </div>
+    <PremiumContentGate contentType={type === 'tv' ? 'tv' : type === 'anime' ? 'anime' : 'movie'} variant="fullscreen">
+      <div className="fixed inset-0 z-50 w-screen h-screen bg-black overflow-hidden select-none">
+        <ProgressBar
+          isLoading={loading || downloading}
+          progress={downloading ? downloadProgress * 100 : undefined}
+        />
+        <StreamPlayer
+          tmdbId={mediaId}
+          type={type as 'movie' | 'tv' | 'anime'}
+          season={season}
+          episode={episode}
+          title={title || initialLastWatched?.title || 'Carregando...'}
+          originalLanguage={originalLanguage}
+          onNextEpisode={type !== 'movie' ? handleNextEpisode : undefined}
+          startAt={resumeAt}
+          onProgress={handleProgress}
+          seasons={showData?.seasons}
+          onSelectEpisode={handleEpisodeSelect}
+          onBack={() => {
+            markBackHandled()
+            const historyIdx = window.history.state?.idx ?? 0
+            if (historyIdx > 0) {
+              navigate(-1)
+            } else {
+              navigate(`/details/${type}/${mediaId}`, { replace: true })
+            }
+          }}
+          onDownload={handleDownload}
+        />
+      </div>
+    </PremiumContentGate>
   )
 }
 
