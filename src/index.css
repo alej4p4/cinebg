@@ -484,6 +484,21 @@ input:focus {
   padding-right: var(--safe-right);
 }
 
+/* ===== OTIMIZACAO PROFUNDA DE GPU E MEMORIA PARA SMART TV / FIRE TV ===== */
+.tv-mode .hero-backdrop {
+  animation: none !important;
+  transform: none !important;
+}
+
+.tv-mode .animate-pulse {
+  animation: none !important;
+}
+
+.carousel-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 310px;
+}
+
 /* Fullscreen e safe-area para orientacao paisagem no Android */
 html, body {
   min-height: 100%;

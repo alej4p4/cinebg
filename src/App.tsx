@@ -17,7 +17,7 @@ import { useLicense } from '@/hooks/useLicense'
 import LicenseGate from '@/components/LicenseGate'
 import TvCursorOverlay from '@/components/tv/TvCursorOverlay'
 import BottomNav from '@/components/layout/BottomNav'
-import { setFocus, doesFocusableExist, SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
+import { setFocus, doesFocusableExist, getCurrentFocusKey, SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Movies = lazy(() => import('@/pages/Movies'))
@@ -173,6 +173,10 @@ function App() {
     const focusHome = () => {
       try {
         SpatialNavigation.updateAllLayouts().catch(() => {})
+        const current = getCurrentFocusKey()
+        if (current && current !== 'SN:ROOT' && doesFocusableExist(current)) {
+          return
+        }
         if (doesFocusableExist('hero-watch-btn')) {
           setFocus('hero-watch-btn')
         } else if (doesFocusableExist('card-0-0')) {
@@ -182,10 +186,8 @@ function App() {
     }
 
     focusHome()
-    setTimeout(focusHome, 80)
-    setTimeout(focusHome, 300)
-    setTimeout(focusHome, 800)
-    setTimeout(focusHome, 1600)
+    setTimeout(focusHome, 120)
+    setTimeout(focusHome, 450)
   }, [])
 
   return (

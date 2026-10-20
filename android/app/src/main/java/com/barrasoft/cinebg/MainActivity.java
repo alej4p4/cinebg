@@ -270,6 +270,31 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception ignored) {}
     }
 
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        try {
+            if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    getBridge().getWebView().clearCache(false);
+                }
+                System.gc();
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        try {
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                getBridge().getWebView().clearCache(false);
+                getBridge().getWebView().freeMemory();
+            }
+            System.gc();
+        } catch (Exception ignored) {}
+    }
+
     private void setupImmersiveMode() {
         Window window = getWindow();
         if (window == null) return;

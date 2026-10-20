@@ -101,7 +101,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
           className="absolute inset-0"
         >
           <img
-            src={getBackdropUrl(item.backdropPath, 'original')}
+            src={getBackdropUrl(item.backdropPath, 'w1280')}
             alt={item.title}
             className="hero-backdrop w-full h-full object-cover object-top"
             decoding="async"
@@ -157,7 +157,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                   <Focusable
                     focusKey="hero-watch-btn"
                     onFocus={() => {
-                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                      window.scrollTo({ top: 0, behavior: 'auto' })
                     }}
                     onEnterPress={() => navigate(`/watch/${item.type}/${item.id}`)}
                     onArrowPress={(dir) => {
@@ -197,7 +197,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                   <Focusable
                     focusKey="hero-details-btn"
                     onFocus={() => {
-                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                      window.scrollTo({ top: 0, behavior: 'auto' })
                     }}
                     onEnterPress={() => navigate(`/details/${item.type}/${item.id}`)}
                     onArrowPress={(dir) => {

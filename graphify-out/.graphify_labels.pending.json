@@ -1,11 +1,11 @@
 {
-  "0": "useAppStore",
+  "0": "UpdateModal.tsx",
   "1": "index.ts",
   "2": "react",
   "3": "StreamPlayer.tsx",
   "4": "package.json",
-  "5": "epg.ts",
-  "6": "LicenseGate.tsx",
+  "5": "LiveTV.tsx",
+  "6": "notifications.ts",
   "7": "App.tsx",
   "8": "compilerOptions",
   "9": "dependencies",
@@ -38,5 +38,6 @@
   "36": "knip.json",
   "37": "ref_playwright_test",
   "38": "commitlint.config.js",
-  "39": "GenreBadge.tsx"
+  "39": "GenreBadge.tsx",
+  "40": "eslint.config.js"
 }
