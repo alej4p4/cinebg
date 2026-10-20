@@ -98,3 +98,54 @@ test('8. Fluxo de Sinopse YouCine e Proteção do Botão Voltar na TV (sem pular
   const heroContent = fs.readFileSync(path.join(ROOT, 'src/components/ui/YuCineHero.tsx'), 'utf8')
   assert.ok(!heroContent.includes('`/watch/'), 'YuCineHero deve sempre abrir a tela de sinopse (/details) antes do player')
 })
+
+test('9. Varredura de Links de Filmes/Séries e Motor HLS na Smart TV (Sem Fontes IP-Locked e Hls.isSupported Prioritário)', () => {
+  const streamsContent = fs.readFileSync(path.join(ROOT, 'src/services/streams.ts'), 'utf8')
+  assert.match(streamsContent, /BROKEN_IP_LOCKED_HOSTS/, 'streams.ts deve filtrar hosts com token travado por IP (streamtape.com / 97bf1.com)')
+  assert.match(streamsContent, /DUBBED_HOST_HINTS/, 'streams.ts deve reconhecer todos os CDNs dublados PT-BR (MP4 e HLS)')
+  assert.match(streamsContent, /RESOLVED_CACHE_TTL_MS/, 'streams.ts deve aplicar TTL de expiração no cache de fontes resolvidas')
+
+  const playerContent = fs.readFileSync(path.join(ROOT, 'src/components/player/StreamPlayer.tsx'), 'utf8')
+  assert.match(playerContent, /if \(Hls\.isSupported\(\)\)/, 'StreamPlayer.tsx deve priorizar Hls.isSupported() antes de video.canPlayType no Android TV')
+  assert.match(playerContent, /enableWorker: false/, 'StreamPlayer.tsx deve desativar Web Worker do hls.js para evitar travamentos em TV Box')
+  assert.match(playerContent, /handleCycleServerOption/, 'StreamPlayer.tsx deve permitir alternância cíclica entre opções de servidor')
+})
+
+test('10. Separação Estrita de Downloads OTA: Mobile (Celular) vs Smart TV em Web e Android Nativo', () => {
+  const tvContent = fs.readFileSync(path.join(ROOT, 'src/utils/tv.ts'), 'utf8')
+  assert.match(tvContent, /getDeviceFlavor/, 'tv.ts deve exportar getDeviceFlavor para distinguir estritamente mobile e tv')
+  assert.match(tvContent, /getDeviceUpdateUrl/, 'tv.ts deve exportar getDeviceUpdateUrl para rotear URLs de APK por dispositivo')
+  assert.match(tvContent, /getDeviceApkFilename/, 'tv.ts deve exportar getDeviceApkFilename')
+  assert.match(tvContent, /CineBGNative/, 'tv.ts deve consultar a ponte nativa CineBGNative do Android')
+
+  const storeContent = fs.readFileSync(path.join(ROOT, 'src/store/useAppStore.ts'), 'utf8')
+  assert.match(storeContent, /getDeviceUpdateUrl/, 'useAppStore.ts deve resolver a URL de atualização via getDeviceUpdateUrl')
+
+  const modalContent = fs.readFileSync(path.join(ROOT, 'src/components/UpdateModal.tsx'), 'utf8')
+  assert.match(modalContent, /getDeviceUpdateUrl/, 'UpdateModal.tsx deve resolver a URL de download via getDeviceUpdateUrl')
+  assert.match(modalContent, /getDeviceFlavor/, 'UpdateModal.tsx deve identificar o dispositivo via getDeviceFlavor')
+
+  const updaterContent = fs.readFileSync(path.join(ROOT, 'src/services/appUpdater.ts'), 'utf8')
+  assert.match(updaterContent, /getDeviceUpdateUrl/, 'appUpdater.ts deve normalizar a URL de download via getDeviceUpdateUrl')
+  assert.match(updaterContent, /getDeviceApkFilename/, 'appUpdater.ts deve definir o nome do arquivo específico (Mobile vs TV)')
+
+  const installerJava = fs.readFileSync(
+    path.join(ROOT, 'android/app/src/main/java/com/barrasoft/cinebg/AppInstallerPlugin.java'),
+    'utf8'
+  )
+  assert.match(
+    installerJava,
+    /MainActivity\.isRealTelevisionDevice/,
+    'AppInstallerPlugin.java deve validar o hardware real (TV vs Celular) antes de baixar o APK'
+  )
+  assert.match(
+    installerJava,
+    /CineBG-Mobile-release\.apk/,
+    'AppInstallerPlugin.java deve forçar CineBG-Mobile-release.apk em celulares'
+  )
+  assert.match(
+    installerJava,
+    /CineBG-Tv-release\.apk/,
+    'AppInstallerPlugin.java deve forçar CineBG-Tv-release.apk em Smart TVs e TV Boxes'
+  )
+})

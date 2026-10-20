@@ -4,7 +4,6 @@ import type { Language, AudioOption } from '@/store/useAppStore'
 // =========================================================================
 // MOTOR DE STREAMING NATIVO CINEBG (ESTILO YUCINE - ZERO PROPAGANDAS / ZERO ADS)
 // Prioridade absoluta para extração e reprodução nativa de fontes diretas MP4 e HLS.
-// Sandboxing estrito ativado em todos os mirrors externos para erradicar anúncios e pop-ups.
 // =========================================================================
 
 export interface StreamMirror {
@@ -94,9 +93,6 @@ export const MIRRORS: StreamMirror[] = [
   },
 ]
 
-// Ordem de fallback dependente do áudio escolhido.
-// Dublado: começa no MegaEmbed (áudio PT), cai para os vidsrc (original+legenda PT).
-// Original/Legendado: começa nos vidsrc (legenda PT) e deixa o MegaEmbed por último.
 export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'dub'): string => {
   const sequence =
     audio === 'dub'
@@ -110,12 +106,10 @@ export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'd
   return sequence[currentIndex + 1]
 }
 
-// O espelho inicial sempre começa no MegaEmbed para extração direta de fontes nativas (MP4/HLS) sem anúncios (estilo YuCine).
 export const getInitialMirrorForAudio = (_audio: AudioOption = 'dub'): string => {
   return 'megaembed'
 }
 
-// Indica se o espelho deve ser renderizado dentro de um iframe com `sandbox`.
 export const isMirrorSandboxed = (mirrorId: string): boolean => {
   const mirror = MIRRORS.find((m) => m.id === mirrorId)
   return mirror ? mirror.sandboxed : false
@@ -146,16 +140,29 @@ export const buildShowUrl = (
 }
 
 // =========================================================================
-// SELEÇÃO INTELIGENTE DE FONTE DUBLADA (MegaEmbed)
-// -------------------------------------------------------------------------
-// O player do MegaEmbed reproduz sempre a PRIMEIRA fonte da lista, que nem
-// sempre é a dublada (em muitas séries a 1ª é um HLS original em inglês).
-// A página de embed libera CORS (`Access-Control-Allow-Origin: *`), então
-// lemos a lista `var sources = [...]` e escolhemos o MP4 dublado PT-BR,
-// servido pelo CDN "fontedecanais-live" (validado com títulos dublados).
+// SELEÇÃO INTELIGENTE DE FONTES DIRETAS (MegaEmbed)
 // =========================================================================
 const MEGAEMBED_EMBED_BASE = 'https://mgeb.site/embed'
-const DUBBED_SOURCE_HOST_HINT = 'fontedecanais'
+
+// Hosts confirmados com áudio Dublado PT-BR no MegaEmbed
+const DUBBED_HOST_HINTS = [
+  'fontedecanais',
+  'gviudclrb.com',
+  'mgeb.space/cache/hls',
+  '123flmsfree.com',
+  '321moviesfree.com',
+  '123pelicula.com',
+  'flixlat.com',
+  'onfilom.com',
+  'cuevana4br.com',
+  'playspelis.com',
+]
+
+// Hosts com token travado por IP do servidor backend (retornam text/html ou 404 no cliente)
+const BROKEN_IP_LOCKED_HOSTS = [
+  'streamtape.com',
+  '97bf1.com',
+]
 
 interface MegaEmbedSource {
   file?: string
@@ -189,9 +196,21 @@ export interface MegaEmbedResolved {
   candidates: DirectCandidate[]
 }
 
-// Cache em memória de fontes resolvidas com limite LRU (50 entradas) para TV Boxes
+// Cache em memória de fontes resolvidas com limite LRU (50 entradas) e TTL de 15 minutos
+// (evita reutilizar tokens de CDN expirados caso o usuário pause/retorne depois)
 const MAX_RESOLVED_CACHE = 50
-const resolvedSourcesCache = new Map<string, MegaEmbedResolved>()
+const RESOLVED_CACHE_TTL_MS = 15 * 60 * 1000
+const resolvedSourcesCache = new Map<string, { data: MegaEmbedResolved; timestamp: number }>()
+
+const getValidCachedEntry = (key: string): MegaEmbedResolved | null => {
+  const entry = resolvedSourcesCache.get(key)
+  if (!entry) return null
+  if (Date.now() - entry.timestamp > RESOLVED_CACHE_TTL_MS) {
+    resolvedSourcesCache.delete(key)
+    return null
+  }
+  return entry.data
+}
 
 const setResolvedCache = (key: string, value: MegaEmbedResolved) => {
   if (resolvedSourcesCache.has(key)) {
@@ -202,18 +221,30 @@ const setResolvedCache = (key: string, value: MegaEmbedResolved) => {
       resolvedSourcesCache.delete(oldestKey)
     }
   }
-  resolvedSourcesCache.set(key, value)
+  resolvedSourcesCache.set(key, { data: value, timestamp: Date.now() })
 }
 
-// Normaliza URLs de CDN para HTTPS e remove portas obsoletas
+// Normaliza URLs de CDN para HTTPS e remove portas obsoletas (:80)
 export const formatDirectStreamUrl = (url: string | null): string | null => {
   if (!url) return null
   let clean = url.trim()
-  // Normaliza URLs de CDN para HTTPS e remove portas obsoletas (:80) para evitar bloqueio de Mixed Content (HTTP em HTTPS)
   if (clean.startsWith('http://') && !clean.includes('localhost') && !clean.includes('127.0.0.1')) {
     clean = clean.replace('http://', 'https://').replace(':80/', '/')
   }
   return clean
+}
+
+// Extrai chave canônica sem parâmetros de token dinâmico para deduplicar mirrors idênticos
+const getCanonicalMediaKey = (url: string): string => {
+  try {
+    const u = new URL(url)
+    if (u.pathname.includes('/includes/hls.php')) {
+      return `${u.hostname}${u.pathname}?url=${u.searchParams.get('url') || ''}`
+    }
+    return `${u.hostname}${u.pathname}`
+  } catch {
+    return url
+  }
 }
 
 // Devolve as fontes diretas do MegaEmbed com suporte a CapacitorHttp nativo e retry
@@ -227,7 +258,7 @@ const fetchMegaEmbedSources = async (
     mediaType === 'movie' ? `${tmdbId}` : `${tmdbId}/${season}/${episode}`
   const targetUrl = `https://mgeb.site/embed/${targetPath}`
 
-  // 1. No app nativo Android (Capacitor), usa CapacitorHttp com timeout seguro de 12s
+  // 1. No app nativo Android (Capacitor), usa CapacitorHttp com timeout seguro de 8s
   if (Capacitor.isNativePlatform()) {
     try {
       const httpPromise = CapacitorHttp.get({
@@ -238,11 +269,11 @@ const fetchMegaEmbedSources = async (
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         },
-        connectTimeout: 12000,
-        readTimeout: 12000,
+        connectTimeout: 8000,
+        readTimeout: 8000,
       })
       const timeoutPromise = new Promise<null>((resolve) =>
-        setTimeout(() => resolve(null), 12000)
+        setTimeout(() => resolve(null), 8500)
       )
       const resp = await Promise.race([httpPromise, timeoutPromise])
 
@@ -269,7 +300,7 @@ const fetchMegaEmbedSources = async (
   for (const url of endpoints) {
     try {
       const controller = new AbortController()
-      const tId = setTimeout(() => controller.abort(), 3500)
+      const tId = setTimeout(() => controller.abort(), 5000)
       const res = await fetch(url, {
         credentials: 'omit',
         referrerPolicy: 'no-referrer',
@@ -299,7 +330,7 @@ export const getCachedMegaEmbed = (
   episode = 1
 ): MegaEmbedResolved | null => {
   const cacheKey = `${mediaType}-${tmdbId}-${season}-${episode}`
-  return resolvedSourcesCache.get(cacheKey) || null
+  return getValidCachedEntry(cacheKey)
 }
 
 export const resolveMegaEmbed = async (
@@ -309,57 +340,78 @@ export const resolveMegaEmbed = async (
   episode = 1
 ): Promise<MegaEmbedResolved> => {
   const cacheKey = `${mediaType}-${tmdbId}-${season}-${episode}`
-  if (resolvedSourcesCache.has(cacheKey)) {
-    return resolvedSourcesCache.get(cacheKey)!
+  const cached = getValidCachedEntry(cacheKey)
+  if (cached) {
+    return cached
   }
 
   const resolveLogic = async (): Promise<MegaEmbedResolved> => {
     const rawSources = await fetchMegaEmbedSources(tmdbId, mediaType, season, episode)
     const candidates: DirectCandidate[] = []
+    const seenCanonicalKeys = new Set<string>()
 
     for (let i = 0; i < rawSources.length; i++) {
       const s = rawSources[i]
       const file = s.file || ''
       if (!file || typeof file !== 'string') continue
-      // Descarta se for iframe externo ou página com anúncios
       if (s.type === 'iframe') continue
-      if (file.includes('embed') && !file.includes('get_video')) continue
+      if (file.includes('/embed')) continue
 
       const cleanUrl = formatDirectStreamUrl(file)
       if (!cleanUrl) continue
 
-      const isFontedecanais = cleanUrl.includes(DUBBED_SOURCE_HOST_HINT)
+      const lowerUrl = cleanUrl.toLowerCase()
+      // Filtra servidores com token travado no IP do servidor backend (ex: streamtape get_video que retorna text/html e 97bf1 que retorna 404)
+      if (BROKEN_IP_LOCKED_HOSTS.some((badHost) => lowerUrl.includes(badHost))) {
+        continue
+      }
+
+      // Deduplica fontes que apontam para o mesmo arquivo de mídia no mesmo CDN
+      const canonicalKey = getCanonicalMediaKey(cleanUrl)
+      if (seenCanonicalKeys.has(canonicalKey)) {
+        continue
+      }
+      seenCanonicalKeys.add(canonicalKey)
+
       const isHls =
         s.type === 'hls' ||
-        cleanUrl.includes('.m3u8') ||
-        cleanUrl.includes('/hls') ||
-        cleanUrl.includes('/includes/hls.php')
+        lowerUrl.includes('.m3u8') ||
+        lowerUrl.includes('/hls') ||
+        lowerUrl.includes('/includes/hls.php')
 
+      const isKnownDubbedHost = DUBBED_HOST_HINTS.some((hint) => lowerUrl.includes(hint))
       const isDubbed =
-        isFontedecanais ||
+        isKnownDubbedHost ||
         /dub/i.test(s.label || '') ||
-        cleanUrl.toLowerCase().includes('dublado') ||
-        cleanUrl.toLowerCase().includes('audio-pt') ||
-        cleanUrl.toLowerCase().includes('-dub')
+        lowerUrl.includes('dublado') ||
+        lowerUrl.includes('audio-pt') ||
+        lowerUrl.includes('-dub')
 
       candidates.push({
         url: cleanUrl,
         kind: isHls ? 'hls' : 'mp4',
-        label: s.label || (isDubbed ? `Opção Dublada ${i + 1}` : `Opção ${i + 1}`),
+        label: isDubbed
+          ? `Opção Dublada ${candidates.length + 1}`
+          : `Opção ${candidates.length + 1}`,
         isDubbedHint: isDubbed,
       })
     }
 
     // Ordenação inteligente estilo YuCine:
-    // 1. Fontes com áudio dublado confirmado (fontedecanais / dublado) primeiro
-    // 2. MP4s diretos (reprodução nativa fluida sem buffer)
-    // 3. HLS streams
+    // 1. Fontes com áudio dublado confirmado primeiro
+    // 2. Dentro das dubladas: MP4 direto ('fontedecanais' / 'gviudclrb') antes de HLS ('mgeb.space' / '123flmsfree')
+    // 3. Fontes HLS multi-áudio/legendadas ('playercdnx.workers.dev') com legenda PT-BR nativa
     candidates.sort((a, b) => {
       if (a.isDubbedHint && !b.isDubbedHint) return -1
       if (!a.isDubbedHint && b.isDubbedHint) return 1
       if (a.kind === 'mp4' && b.kind === 'hls') return -1
       if (a.kind === 'hls' && b.kind === 'mp4') return 1
       return 0
+    })
+
+    // Renumera os rótulos na ordem final limpa (Opção 1, Opção 2...)
+    candidates.forEach((c, idx) => {
+      c.label = c.isDubbedHint ? `Opção ${idx + 1} (Dublado)` : `Opção ${idx + 1}`
     })
 
     const dubbed =
@@ -385,7 +437,6 @@ export const resolveMegaEmbed = async (
     return result
   }
 
-  // Timeout geral de 14s para conexões lentas de TV com carregamento em background
   const fallbackEmpty: MegaEmbedResolved = {
     dubbedMp4: null,
     hlsProxy: null,
@@ -393,7 +444,7 @@ export const resolveMegaEmbed = async (
   }
 
   const timeoutPromise = new Promise<MegaEmbedResolved>((resolve) =>
-    setTimeout(() => resolve(fallbackEmpty), 14000)
+    setTimeout(() => resolve(fallbackEmpty), 10000)
   )
 
   return Promise.race([resolveLogic(), timeoutPromise])

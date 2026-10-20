@@ -1,4 +1,5 @@
 import { Capacitor, registerPlugin } from '@capacitor/core'
+import { getDeviceUpdateUrl, getDeviceApkFilename } from '@/utils/tv'
 
 export interface DownloadProgress {
   percent: number
@@ -48,6 +49,9 @@ export const startAppUpdate = async (
   downloadUrl: string,
   onProgress?: (progress: DownloadProgress) => void
 ): Promise<UpdateExecutionResult> => {
+  const resolvedUrl = getDeviceUpdateUrl(downloadUrl)
+  const resolvedFilename = getDeviceApkFilename()
+
   if (Capacitor.isNativePlatform()) {
     try {
       let listenerHandle: { remove: () => void } | null = null
@@ -58,8 +62,8 @@ export const startAppUpdate = async (
       }
 
       await AppInstaller.downloadAndInstall({
-        url: downloadUrl,
-        filename: 'CineBG-release.apk',
+        url: resolvedUrl,
+        filename: resolvedFilename,
       })
 
       if (listenerHandle) {
@@ -77,11 +81,11 @@ export const startAppUpdate = async (
     }
   }
 
-  // Fallback para Web / Navegador desktop
+  // Fallback para Web / Navegador desktop ou mobile
   try {
     const a = document.createElement('a')
-    a.href = downloadUrl
-    a.download = 'CineBG-release.apk'
+    a.href = resolvedUrl
+    a.download = resolvedFilename
     a.target = '_blank'
     a.rel = 'noopener noreferrer'
     document.body.appendChild(a)

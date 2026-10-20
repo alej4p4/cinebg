@@ -31,6 +31,8 @@ const Details = () => {
     isFavorite,
     audioOption,
     setAudioOption,
+    setSubtitleOption,
+    getLastWatched,
     addDownload,
   } = useAppStore()
 
@@ -46,9 +48,10 @@ const Details = () => {
   const [loading, setLoading] = useState(!cachedInitialMovie && !cachedInitialShow)
   const [imgError, setImgError] = useState(false)
 
-  // Estado YouCine
-  const [selectedSeason, setSelectedSeason] = useState(1)
-  const [selectedEpisode, setSelectedEpisode] = useState(1)
+  // Estado YouCine (hidrata última temporada/episódio assistido da série)
+  const lastWatchedEntry = !isMovie ? getLastWatched(mediaId) : undefined
+  const [selectedSeason, setSelectedSeason] = useState(() => lastWatchedEntry?.season || 1)
+  const [selectedEpisode, setSelectedEpisode] = useState(() => lastWatchedEntry?.episode || 1)
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false)
   const [idiomaModalOpen, setIdiomaModalOpen] = useState(false)
   const [resolucaoModalOpen, setResolucaoModalOpen] = useState(false)
@@ -66,6 +69,14 @@ const Details = () => {
       navigate('/')
     }
   }
+
+  useEffect(() => {
+    if (!isMovie && mediaId) {
+      const lw = getLastWatched(mediaId)
+      setSelectedSeason(lw?.season || 1)
+      setSelectedEpisode(lw?.episode || 1)
+    }
+  }, [mediaId, isMovie, getLastWatched])
 
   // Pré-resolve a fonte direta do filme/episódio em background (estilo YouCine, sem trailer do YouTube e sem ocupar o MediaCodec antes do Play)
   useEffect(() => {
@@ -441,23 +452,27 @@ const Details = () => {
                 className="w-full h-full object-cover pointer-events-none"
               />
 
-              {/* Botões laterais < e > sobre o preview */}
-              <button
-                type="button"
-                onClick={handlePrevEpisode}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-all z-20 backdrop-blur-sm"
-                aria-label="Episódio anterior"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={handleNextEpisode}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-all z-20 backdrop-blur-sm"
-                aria-label="Próximo episódio"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
+              {/* Botões laterais < e > sobre o preview (apenas para séries com múltiplos episódios) */}
+              {!isMovie && episodeCount > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePrevEpisode}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-all z-20 backdrop-blur-sm"
+                    aria-label="Episódio anterior"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextEpisode}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-all z-20 backdrop-blur-sm"
+                    aria-label="Próximo episódio"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
 
               {/* Clique no preview abre em tela cheia */}
               <button
@@ -839,6 +854,7 @@ const Details = () => {
                   focusKey="modal-idioma-dub"
                   onEnterPress={() => {
                     setAudioOption('dub')
+                    setSubtitleOption('off')
                     setIdiomaModalOpen(false)
                     setTimeout(() => setFocus('details-idioma'), 50)
                   }}
@@ -858,6 +874,7 @@ const Details = () => {
                     type="button"
                     onClick={() => {
                       setAudioOption('dub')
+                      setSubtitleOption('off')
                       setIdiomaModalOpen(false)
                       setTimeout(() => setFocus('details-idioma'), 50)
                     }}
@@ -876,6 +893,7 @@ const Details = () => {
                   focusKey="modal-idioma-orig"
                   onEnterPress={() => {
                     setAudioOption('orig')
+                    setSubtitleOption('pt')
                     setIdiomaModalOpen(false)
                     setTimeout(() => setFocus('details-idioma'), 50)
                   }}
@@ -891,6 +909,7 @@ const Details = () => {
                     type="button"
                     onClick={() => {
                       setAudioOption('orig')
+                      setSubtitleOption('pt')
                       setIdiomaModalOpen(false)
                       setTimeout(() => setFocus('details-idioma'), 50)
                     }}

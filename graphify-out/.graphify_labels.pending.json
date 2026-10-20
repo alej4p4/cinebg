@@ -1,11 +1,10 @@
 {
   "0": "LicenseGate.tsx",
-  "1": "index.ts",
   "2": "react",
   "3": "StreamPlayer.tsx",
   "4": "package.json",
   "5": "react",
-  "6": "Details.tsx",
+  "6": "index.ts",
   "7": "App.tsx",
   "8": "compilerOptions",
   "9": "dependencies",
@@ -39,10 +38,5 @@
   "37": "ref_playwright_test",
   "38": "commitlint.config.js",
   "39": "GenreBadge.tsx",
-  "40": "eslint.config.js",
-  "41": "streams.ts",
-  "42": "useAppStore.ts",
-  "43": "EmptyState.tsx",
-  "44": "ExampleInstrumentedTest.java",
-  "45": "epg.ts"
+  "45": "LiveTV.tsx"
 }

@@ -5,6 +5,8 @@ import { ArrowLeft, Download, Play, Trash2, WifiOff } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { deleteVideo, downloadsSupported, getPlayableUrl } from '@/services/downloads'
 import { getPosterUrl } from '@/services/tmdb'
+import Focusable from '@/components/tv/Focusable'
+import LazyImage from '@/components/ui/LazyImage'
 import type { DownloadItem } from '@/types'
 
 const Downloads = () => {
@@ -30,13 +32,19 @@ const Downloads = () => {
       animate={{ opacity: 1 }}
     >
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white/70 hover:text-white mt-4 mb-4 transition-colors w-fit"
+        <Focusable
+          focusKey="downloads-back-btn"
+          onEnterPress={() => navigate(-1)}
+          className="inline-block mt-4 mb-4 rounded-lg"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors w-fit px-2 py-1"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </button>
+        </Focusable>
 
         <div className="py-2 mb-4">
           <h1 className="font-display font-black text-3xl text-white flex items-center gap-2">
@@ -64,12 +72,14 @@ const Downloads = () => {
                   ? ` — T${playing.item.season} E${playing.item.episode}`
                   : ''}
               </span>
-              <button
-                onClick={() => setPlaying(null)}
-                className="text-white/60 hover:text-white text-xs font-bold"
-              >
-                Fechar
-              </button>
+              <Focusable focusKey="downloads-close-player" onEnterPress={() => setPlaying(null)} className="rounded">
+                <button
+                  onClick={() => setPlaying(null)}
+                  className="text-white/60 hover:text-white text-xs font-bold px-2 py-1"
+                >
+                  Fechar
+                </button>
+              </Focusable>
             </div>
           </div>
         )}
@@ -86,15 +96,15 @@ const Downloads = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {downloads.map((item) => (
+            {downloads.map((item, idx) => (
               <div
                 key={`${item.id}-${item.season}-${item.episode}`}
                 className="glass rounded-xl p-3 flex items-center gap-4"
               >
-                <img
+                <LazyImage
                   src={getPosterUrl(item.posterPath, 'w185')}
                   alt={item.title}
-                  className="w-12 h-18 rounded-lg object-cover flex-shrink-0"
+                  className="w-12 h-18 rounded-lg flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-semibold truncate">{item.title}</p>
@@ -104,20 +114,32 @@ const Downloads = () => {
                       : 'Filme'}
                   </p>
                 </div>
-                <button
-                  onClick={() => handlePlay(item)}
-                  className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-shrink-0"
+                <Focusable
+                  focusKey={`download-play-${idx}`}
+                  onEnterPress={() => handlePlay(item)}
+                  className="rounded-lg flex-shrink-0"
                 >
-                  <Play className="h-4 w-4 fill-white" />
-                  Assistir
-                </button>
-                <button
-                  onClick={() => handleDelete(item)}
-                  className="p-2 text-white/40 hover:text-red-400 transition-colors flex-shrink-0"
-                  title="Remover download"
+                  <button
+                    onClick={() => handlePlay(item)}
+                    className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-shrink-0"
+                  >
+                    <Play className="h-4 w-4 fill-white" />
+                    Assistir
+                  </button>
+                </Focusable>
+                <Focusable
+                  focusKey={`download-del-${idx}`}
+                  onEnterPress={() => handleDelete(item)}
+                  className="rounded-lg flex-shrink-0"
                 >
-                  <Trash2 className="h-5 w-5" />
-                </button>
+                  <button
+                    onClick={() => handleDelete(item)}
+                    className="p-2 text-white/40 hover:text-red-400 transition-colors flex-shrink-0"
+                    title="Remover download"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </Focusable>
               </div>
             ))}
           </div>

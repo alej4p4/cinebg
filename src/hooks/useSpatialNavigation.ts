@@ -91,6 +91,86 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
         }
       }
 
+      if (routeKey === '/movies') {
+        if (doesFocusableExist('movie-card-0')) {
+          setFocus('movie-card-0')
+          return
+        }
+        if (doesFocusableExist('movies-platform-all')) {
+          setFocus('movies-platform-all')
+          return
+        }
+      }
+
+      if (routeKey === '/series') {
+        if (doesFocusableExist('series-card-0')) {
+          setFocus('series-card-0')
+          return
+        }
+        if (doesFocusableExist('series-platform-all')) {
+          setFocus('series-platform-all')
+          return
+        }
+      }
+
+      if (routeKey === '/anime') {
+        if (doesFocusableExist('anime-card-0')) {
+          setFocus('anime-card-0')
+          return
+        }
+      }
+
+      if (routeKey === '/favorites') {
+        if (doesFocusableExist('fav-card-0')) {
+          setFocus('fav-card-0')
+          return
+        }
+        if (doesFocusableExist('empty-state-action')) {
+          setFocus('empty-state-action')
+          return
+        }
+      }
+
+      if (routeKey === '/my-list') {
+        if (doesFocusableExist('mylist-card-0')) {
+          setFocus('mylist-card-0')
+          return
+        }
+        if (doesFocusableExist('empty-state-action')) {
+          setFocus('empty-state-action')
+          return
+        }
+      }
+
+      if (routeKey === '/history') {
+        if (doesFocusableExist('history-play-0')) {
+          setFocus('history-play-0')
+          return
+        }
+        if (doesFocusableExist('empty-state-action')) {
+          setFocus('empty-state-action')
+          return
+        }
+      }
+
+      if (routeKey === '/downloads') {
+        if (doesFocusableExist('download-play-0')) {
+          setFocus('download-play-0')
+          return
+        }
+        if (doesFocusableExist('downloads-back-btn')) {
+          setFocus('downloads-back-btn')
+          return
+        }
+      }
+
+      if (routeKey === '/profiles') {
+        if (doesFocusableExist('profile-card-0')) {
+          setFocus('profile-card-0')
+          return
+        }
+      }
+
       if (doesFocusableExist('details-fullscreen')) {
         setFocus('details-fullscreen')
       } else if (doesFocusableExist('details-play')) {

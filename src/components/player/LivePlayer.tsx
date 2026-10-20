@@ -318,6 +318,10 @@ const LivePlayer = ({
           video.muted = true
           setMuted(true)
           video.play().then(() => {
+            try {
+              video.muted = false
+              setMuted(false)
+            } catch {}
             markPlaying()
           }).catch(() => {})
         }

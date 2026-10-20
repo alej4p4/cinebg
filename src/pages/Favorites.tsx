@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import MovieCard from '@/components/ui/MovieCard'
 import { useAppStore } from '@/store/useAppStore'
@@ -7,6 +8,7 @@ import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
 import { EmptyFavorites } from '@/components/ui/EmptyState'
 
 const Favorites = () => {
+  const navigate = useNavigate()
   const { favorites } = useAppStore()
 
   const items: MediaItem[] = favorites.map((f) => ({
@@ -39,9 +41,10 @@ const Favorites = () => {
               {items.length} {items.length === 1 ? 'título' : 'títulos'}
             </span>
           )}
-        </div>        {items.length === 0 ? (
+        </div>
+        {items.length === 0 ? (
           <EmptyFavorites
-            onAction={() => {}}
+            onAction={() => navigate('/')}
             actionLabel="Explorar catálogo"
           />
         ) : (
@@ -64,4 +67,3 @@ const Favorites = () => {
 }
 
 export default Favorites
-

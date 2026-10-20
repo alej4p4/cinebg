@@ -100,9 +100,10 @@ const Profiles = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {profiles.map((profile) => (
+          {profiles.map((profile, idx) => (
             <ProfileCard
               key={profile.id}
+              index={idx}
               profile={profile}
               active={profile.id === activeProfileId}
               canRemove={profiles.length > 1}
@@ -142,14 +143,20 @@ const Profiles = () => {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setVipModalOpen(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 self-stretch sm:self-auto justify-center"
+            <Focusable
+              focusKey="profiles-vip-btn"
+              onEnterPress={() => setVipModalOpen(true)}
+              className="rounded-xl self-stretch sm:self-auto"
             >
-              <QrCode className="h-4 w-4" />
-              <span>{isLicensed ? 'Renovar / Estender VIP' : 'Ver Planos & Pagar via Pix'}</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setVipModalOpen(true)}
+                className="w-full flex items-center gap-2 bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 justify-center"
+              >
+                <QrCode className="h-4 w-4" />
+                <span>{isLicensed ? 'Renovar / Estender VIP' : 'Ver Planos & Pagar via Pix'}</span>
+              </button>
+            </Focusable>
           </div>
         </div>
 
@@ -241,17 +248,23 @@ const Profiles = () => {
               <p className="text-white/60 text-xs font-semibold mb-2">Áudio</p>
               <div className="flex flex-wrap gap-2">
                 {(['dub', 'sub', 'orig'] as const).map((opt) => (
-                  <button
+                  <Focusable
                     key={opt}
-                    onClick={() => setAudioOption(opt)}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-                      audioOption === opt
-                        ? 'bg-accent-red text-white'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10'
-                    }`}
+                    focusKey={`profile-audio-${opt}`}
+                    onEnterPress={() => setAudioOption(opt)}
+                    className="rounded-lg"
                   >
-                    {opt === 'dub' ? '🇧🇷 Dublado' : opt === 'sub' ? '🇧🇷 Legendado' : '🌐 Original'}
-                  </button>
+                    <button
+                      onClick={() => setAudioOption(opt)}
+                      className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+                        audioOption === opt
+                          ? 'bg-accent-red text-white'
+                          : 'bg-white/5 text-white/70 hover:bg-white/10'
+                      }`}
+                    >
+                      {opt === 'dub' ? '🇧🇷 Dublado' : opt === 'sub' ? '🇧🇷 Legendado' : '🌐 Original'}
+                    </button>
+                  </Focusable>
                 ))}
               </div>
             </div>
@@ -260,17 +273,23 @@ const Profiles = () => {
               <p className="text-white/60 text-xs font-semibold mb-2">Legendas</p>
               <div className="flex flex-wrap gap-2">
                 {(['off', 'pt', 'en'] as const).map((opt) => (
-                  <button
+                  <Focusable
                     key={opt}
-                    onClick={() => setSubtitleOption(opt)}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-                      subtitleOption === opt
-                        ? 'bg-accent-red text-white'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10'
-                    }`}
+                    focusKey={`profile-sub-${opt}`}
+                    onEnterPress={() => setSubtitleOption(opt)}
+                    className="rounded-lg"
                   >
-                    {opt === 'off' ? '🚫 Desativado' : opt === 'pt' ? '🇧🇷 Português' : '🇺🇸 Inglês'}
-                  </button>
+                    <button
+                      onClick={() => setSubtitleOption(opt)}
+                      className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+                        subtitleOption === opt
+                          ? 'bg-accent-red text-white'
+                          : 'bg-white/5 text-white/70 hover:bg-white/10'
+                      }`}
+                    >
+                      {opt === 'off' ? '🚫 Desativado' : opt === 'pt' ? '🇧🇷 Português' : '🇺🇸 Inglês'}
+                    </button>
+                  </Focusable>
                 ))}
               </div>
             </div>
@@ -286,17 +305,23 @@ const Profiles = () => {
             Receba avisos quando um episódio novo de uma série favorita for lançado. Funciona no
             aplicativo Android (requer permissão de notificações).
           </p>
-          <button
-            onClick={handleToggleNotifications}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              notificationsEnabled
-                ? 'bg-white/10 text-white hover:bg-white/15'
-                : 'bg-accent-red text-white hover:bg-red-600 shadow-lg shadow-red-900/40'
-            }`}
+          <Focusable
+            focusKey="profile-notifications-btn"
+            onEnterPress={handleToggleNotifications}
+            className="inline-block rounded-xl"
           >
-            {notificationsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-            {notificationsEnabled ? 'Notificações ativadas' : 'Ativar notificações'}
-          </button>
+            <button
+              onClick={handleToggleNotifications}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+                notificationsEnabled
+                  ? 'bg-white/10 text-white hover:bg-white/15'
+                  : 'bg-accent-red text-white hover:bg-red-600 shadow-lg shadow-red-900/40'
+              }`}
+            >
+              {notificationsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+              {notificationsEnabled ? 'Notificações ativadas' : 'Ativar notificações'}
+            </button>
+          </Focusable>
         </div>
 
         {/* Modo TV & Navegação por Controle Remoto (Oculto em dispositivos móveis) */}
@@ -312,16 +337,22 @@ const Profiles = () => {
                   Ativa a interface para Smart TV e TV Box (D-Pad). Em aparelhos de TV é detectado automaticamente.
                 </p>
               </div>
-              <button
-                onClick={() => setTvMode(!tvMode)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors flex-shrink-0 ${
-                  tvMode
-                    ? 'bg-white/10 text-white hover:bg-white/15'
-                    : 'bg-accent-red text-white hover:bg-red-600 shadow-lg shadow-red-900/40'
-                }`}
+              <Focusable
+                focusKey="profile-tvmode-btn"
+                onEnterPress={() => setTvMode(!tvMode)}
+                className="rounded-xl flex-shrink-0"
               >
-                {tvMode ? 'Modo TV ativado' : 'Ativar modo TV'}
-              </button>
+                <button
+                  onClick={() => setTvMode(!tvMode)}
+                  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors flex-shrink-0 ${
+                    tvMode
+                      ? 'bg-white/10 text-white hover:bg-white/15'
+                      : 'bg-accent-red text-white hover:bg-red-600 shadow-lg shadow-red-900/40'
+                  }`}
+                >
+                  {tvMode ? 'Modo TV ativado' : 'Ativar modo TV'}
+                </button>
+              </Focusable>
             </div>
 
             {/* Opção para Cursor Virtual de Mouse na TV */}
@@ -338,16 +369,22 @@ const Profiles = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setVirtualCursor(!virtualCursor)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${
-                  virtualCursor
-                    ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20'
-                    : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/10'
-                }`}
+              <Focusable
+                focusKey="profile-cursor-btn"
+                onEnterPress={() => setVirtualCursor(!virtualCursor)}
+                className="rounded-xl flex-shrink-0"
               >
-                {virtualCursor ? '✓ Cursor Ativado' : 'Ativar Cursor Virtual'}
-              </button>
+                <button
+                  onClick={() => setVirtualCursor(!virtualCursor)}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${
+                    virtualCursor
+                      ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20'
+                      : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/10'
+                  }`}
+                >
+                  {virtualCursor ? '✓ Cursor Ativado' : 'Ativar Cursor Virtual'}
+                </button>
+              </Focusable>
             </div>
           </div>
         )}
@@ -439,34 +476,64 @@ const Profiles = () => {
   )
 }
 
-const ProfileCard = ({ profile, active, canRemove, onSelect, onRemove }: { profile: UserProfile; active: boolean; canRemove: boolean; onSelect: () => void; onRemove: () => void }) => (
-  <motion.div
-    whileHover={{ y: -4 }}
-    className={`relative rounded-xl p-5 cursor-pointer border transition-all ${
-      active ? 'border-accent-red bg-white/10' : 'border-white/5 bg-bg-card hover:border-white/20'
-    }`}
-    onClick={onSelect}
+const ProfileCard = ({
+  profile,
+  index,
+  active,
+  canRemove,
+  onSelect,
+  onRemove,
+}: {
+  profile: UserProfile
+  index: number
+  active: boolean
+  canRemove: boolean
+  onSelect: () => void
+  onRemove: () => void
+}) => (
+  <Focusable
+    focusKey={`profile-card-${index}`}
+    onEnterPress={onSelect}
+    className="rounded-xl"
   >
-    {active && (
-      <span className="absolute top-2 right-2 flex items-center gap-1 bg-accent-red text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-        <Check className="h-3 w-3" /> Ativo
-      </span>
-    )}
-    {canRemove && (
-      <button onClick={(e) => { e.stopPropagation(); onRemove() }} className="absolute bottom-2 right-2 p-1.5 text-white/30 hover:text-red-400 transition-colors" title="Remover perfil">
-        <Trash2 className="h-4 w-4" />
-      </button>
-    )}
-    <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-3" style={{ backgroundColor: `${profile.color}33`, border: `2px solid ${profile.color}` }}>
-      {profile.emoji}
-    </div>
-    <p className="text-white font-bold truncate">{profile.name}</p>
-    {profile.kids && (
-      <span className="inline-flex items-center gap-1 text-[10px] text-white/50 mt-1">
-        <Baby className="h-3 w-3" /> Infantil
-      </span>
-    )}
-  </motion.div>
+    <motion.div
+      whileHover={{ y: -4 }}
+      className={`relative rounded-xl p-5 cursor-pointer border transition-all ${
+        active ? 'border-accent-red bg-white/10' : 'border-white/5 bg-bg-card hover:border-white/20'
+      }`}
+      onClick={onSelect}
+    >
+      {active && (
+        <span className="absolute top-2 right-2 flex items-center gap-1 bg-accent-red text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+          <Check className="h-3 w-3" /> Ativo
+        </span>
+      )}
+      {canRemove && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove()
+          }}
+          className="absolute bottom-2 right-2 p-1.5 text-white/30 hover:text-red-400 transition-colors"
+          title="Remover perfil"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
+      <div
+        className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-3"
+        style={{ backgroundColor: `${profile.color}33`, border: `2px solid ${profile.color}` }}
+      >
+        {profile.emoji}
+      </div>
+      <p className="text-white font-bold truncate">{profile.name}</p>
+      {profile.kids && (
+        <span className="inline-flex items-center gap-1 text-[10px] text-white/50 mt-1">
+          <Baby className="h-3 w-3" /> Infantil
+        </span>
+      )}
+    </motion.div>
+  </Focusable>
 )
 
 export default Profiles

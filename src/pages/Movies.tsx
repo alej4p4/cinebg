@@ -4,6 +4,8 @@ import { X, Sparkles, Filter } from 'lucide-react'
 import YuCineHero from '@/components/ui/YuCineHero'
 import Carousel from '@/components/ui/Carousel'
 import MovieCard from '@/components/ui/MovieCard'
+import Focusable from '@/components/tv/Focusable'
+import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
 import { SkeletonCarousel, SkeletonGrid } from '@/components/ui/SkeletonCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import ErrorState from '@/components/ui/ErrorState'
@@ -175,7 +177,15 @@ const Movies = () => {
 
   // Filtro "Gênero"
   const handleToggleGenreBar = () => {
-    setShowGenreBar((prev) => !prev)
+    setShowGenreBar((prev) => {
+      const next = !prev
+      if (next) {
+        setTimeout(() => {
+          if (doesFocusableExist('movie-genre-28')) setFocus('movie-genre-28')
+        }, 80)
+      }
+      return next
+    })
     setActiveFilter('genre')
     setFilterTitle('Filtrar por Gênero')
   }
@@ -251,18 +261,24 @@ const Movies = () => {
             {STREAMING_PLATFORMS.map((platform) => {
               const active = activeFilter === `platform-${platform.id}`
               return (
-                <button
+                <Focusable
                   key={platform.id}
-                  onClick={() => handleFilterPlatform(platform)}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex-shrink-0 border ${
-                    active
-                      ? 'bg-white text-black border-white shadow-lg shadow-white/20 scale-105'
-                      : 'bg-white/5 text-white/80 hover:bg-white/10 border-white/10 hover:border-white/20'
-                  }`}
+                  focusKey={`movie-platform-${platform.id}`}
+                  onEnterPress={() => handleFilterPlatform(platform)}
+                  className="rounded-full flex-shrink-0"
                 >
-                  <span>{platform.emoji}</span>
-                  <span>{platform.name}</span>
-                </button>
+                  <button
+                    onClick={() => handleFilterPlatform(platform)}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex-shrink-0 border outline-none focus:ring-2 focus:ring-amber-400 ${
+                      active
+                        ? 'bg-white text-black border-white shadow-lg shadow-white/20 scale-105'
+                        : 'bg-white/5 text-white/80 hover:bg-white/10 border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <span>{platform.emoji}</span>
+                    <span>{platform.name}</span>
+                  </button>
+                </Focusable>
               )
             })}
           </div>
@@ -293,17 +309,23 @@ const Movies = () => {
 
                 <div className="flex flex-wrap gap-2">
                   {MOVIE_GENRES.map((g) => (
-                    <button
+                    <Focusable
                       key={g.id}
-                      onClick={() => handleSelectGenre(g.id, g.name)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                        selectedGenreId === g.id
-                          ? 'bg-[#ff4081] text-white shadow-lg shadow-pink-900/50 scale-105'
-                          : 'bg-white/5 text-white/70 hover:bg-white/15 hover:text-white border border-white/5'
-                      }`}
+                      focusKey={`movie-genre-${g.id}`}
+                      onEnterPress={() => handleSelectGenre(g.id, g.name)}
+                      className="rounded-full"
                     >
-                      {g.name}
-                    </button>
+                      <button
+                        onClick={() => handleSelectGenre(g.id, g.name)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all outline-none focus:ring-2 focus:ring-amber-400 ${
+                          selectedGenreId === g.id
+                            ? 'bg-[#ff4081] text-white shadow-lg shadow-pink-900/50 scale-105'
+                            : 'bg-white/5 text-white/70 hover:bg-white/15 hover:text-white border border-white/5'
+                        }`}
+                      >
+                        {g.name}
+                      </button>
+                    </Focusable>
                   ))}
                 </div>
               </div>
@@ -321,13 +343,15 @@ const Movies = () => {
                   <span className="text-white font-black text-lg">{filterTitle}</span>
                   <span className="text-white/40 text-xs">({filteredList.length} títulos)</span>
                 </div>
-                <button
-                  onClick={handleFilterAll}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                  Ver todos os carrosséis
-                </button>
+                <Focusable focusKey="movie-clear-filter" onEnterPress={handleFilterAll} className="rounded-xl">
+                  <button
+                    onClick={handleFilterAll}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors outline-none focus:ring-2 focus:ring-amber-400"
+                  >
+                    <X className="h-4 w-4" />
+                    Ver todos os carrosséis
+                  </button>
+                </Focusable>
               </div>
 
               {/* Filtro por Década para Clássicos */}
@@ -343,17 +367,23 @@ const Movies = () => {
                     { id: '90s', label: 'Anos 90' },
                     { id: '00s', label: 'Anos 2000' },
                   ].map((d) => (
-                    <button
+                    <Focusable
                       key={d.id}
-                      onClick={() => handleFilterClassics(d.id)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex-shrink-0 ${
-                        selectedDecade === d.id
-                          ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/30 font-black scale-105'
-                          : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
-                      }`}
+                      focusKey={`movie-decade-${d.id}`}
+                      onEnterPress={() => handleFilterClassics(d.id)}
+                      className="rounded-full flex-shrink-0"
                     >
-                      {d.label}
-                    </button>
+                      <button
+                        onClick={() => handleFilterClassics(d.id)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex-shrink-0 outline-none focus:ring-2 focus:ring-amber-400 ${
+                          selectedDecade === d.id
+                            ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/30 font-black scale-105'
+                            : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    </Focusable>
                   ))}
                 </div>
               )}

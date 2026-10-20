@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { isTVDevice, isMobileDevice } from '@/utils/tv'
+import { isMobileDevice, getDeviceUpdateUrl, type UpdateUrlPayload } from '@/utils/tv'
 import type { DownloadItem, FavoriteItem, WatchHistoryItem } from '@/types'
 
 export type Language = 'pt' | 'en'
@@ -152,10 +152,10 @@ export const useAppStore = create<AppState>()(
       setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
       isCheckingUpdate: false,
       updateInfo: {
-        currentVersion: '1.2.60',
-        latestVersion: '1.2.60',
+        currentVersion: '1.2.61',
+        latestVersion: '1.2.61',
         hasUpdate: false,
-        downloadUrl: 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk',
+        downloadUrl: getDeviceUpdateUrl(),
         mandatory: false,
       },
       checkForUpdates: async (manual = false) => {
@@ -163,13 +163,13 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const currentVersion = get().updateInfo.currentVersion || '1.2.60'
+          const currentVersion = get().updateInfo.currentVersion || '1.2.61'
           const candidateUrls = [
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,
           ]
 
-          let data: { version?: string; downloadUrl?: string; downloadUrlTv?: string; mandatory?: boolean } | null = null
+          let data: (UpdateUrlPayload & { version?: string; mandatory?: boolean }) | null = null
 
           for (const url of candidateUrls) {
             try {
@@ -189,26 +189,7 @@ export const useAppStore = create<AppState>()(
 
           if (data) {
             const remoteVersion = data.version || currentVersion
-            const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
-            const isExplicitMobile =
-              typeof window !== 'undefined' &&
-              window.innerHeight > window.innerWidth &&
-              /iPhone|iPod|Android.*Mobile|Mobile.*Android|BlackBerry|IEMobile/i.test(ua)
-
-            const isTv =
-              !isExplicitMobile &&
-              (ua.includes('CineBG-TV') ||
-                ua.includes('DeviceType/TV') ||
-                isTVDevice() ||
-                get().tvMode ||
-                localStorage.getItem('cinebg_tv_mode') === 'true' ||
-                (typeof window !== 'undefined' &&
-                  window.innerWidth > window.innerHeight &&
-                  !/iPhone|iPod|Android.*Mobile|Mobile.*Android/i.test(ua)))
-
-            const downloadUrl = isTv
-              ? (data.downloadUrlTv || data.downloadUrl || 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk')
-              : ((data as any).downloadUrlMobile || data.downloadUrl || 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk')
+            const downloadUrl = getDeviceUpdateUrl(data)
             const hasUpdate = remoteVersion !== currentVersion
             set({
               updateInfo: {
@@ -232,6 +213,7 @@ export const useAppStore = create<AppState>()(
           updateModalOpen: manual ? true : state.updateModalOpen,
           updateInfo: {
             ...state.updateInfo,
+            downloadUrl: getDeviceUpdateUrl(state.updateInfo.downloadUrl),
             lastChecked: Date.now(),
           },
         }))
