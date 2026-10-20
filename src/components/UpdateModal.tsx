@@ -22,6 +22,8 @@ import {
 } from '@/services/appUpdater'
 import { Capacitor } from '@capacitor/core'
 import { getDeviceFlavor, getDeviceUpdateUrl, getDeviceApkFilename } from '@/utils/tv'
+import { App as CapApp } from '@capacitor/app'
+import { getNativeAppVersion } from '@/utils/tv'
 
 interface UpdateModalProps {
   visible: boolean
@@ -125,19 +127,15 @@ const UpdateModal = ({
         setErrorMessage(result.error || 'Não foi possível concluir o download ou a instalação.')
       } else {
         setStage('installing')
-        // Auto-dismiss após atualização bem-sucedida (nativo retorna sucesso ao abrir instalador)
-        // Aguarda um pouco para o usuário ver "Download Concluído" e depois fecha o modal
-        setTimeout(() => {
-          onDismiss()
-          onUpdateComplete?.()
-        }, 2500)
+        // NÃO auto-dismiss aqui - aguarda o usuário confirmar a instalação no dialog do Android
+        // O listener de appStateChange abaixo detecta quando o usuário retorna do instalador
       }
     } catch (e: unknown) {
       const err = e as { message?: string }
       setStage('error')
       setErrorMessage(err?.message || 'Erro inesperado durante a atualização.')
     }
-  }, [effectiveDownloadUrl, onDismiss, onUpdateComplete])
+  }, [effectiveDownloadUrl])
 
   const handleOpenBrowserFallback = useCallback(() => {
     try {
@@ -215,6 +213,43 @@ const UpdateModal = ({
       clearTimeout(t3)
     }
   }, [visible, stage, hasUpdate, focusCurrentAction])
+
+  // Listener para detectar quando o usuário retorna do instalador do Android
+  // Verifica se a nova versão foi instalada ao retomar o app
+  useEffect(() => {
+    if (!visible || stage !== 'installing' || !Capacitor.isNativePlatform()) return
+
+    let isInstalled = false
+
+    const checkUpdate = () => {
+      if (isInstalled) return
+      try {
+        const currentVer = getNativeAppVersion()
+        const expectedVer = latestVersion
+        if (currentVer === expectedVer) {
+          isInstalled = true
+          console.info('[UpdateModal] Nova versão detectada:', currentVer)
+          onDismiss()
+          onUpdateComplete?.()
+        }
+      } catch {}
+    }
+
+    // Listener para quando o app volta ao foreground (usuário voltou do instalador)
+    let listenerHandle: { remove: () => void } | null = null
+    CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        // Pequeno delay para garantir que o sistema terminou a instalação
+        setTimeout(checkUpdate, 500)
+      }
+    }).then((handle) => {
+      listenerHandle = handle
+    })
+
+    return () => {
+      listenerHandle?.remove()
+    }
+  }, [visible, stage, latestVersion, onDismiss, onUpdateComplete])
 
   // Captura direta de teclas de controle remoto da TV (D-Pad, Enter, OK e Voltar)
   useEffect(() => {
