@@ -10,7 +10,7 @@ import { useEpisodeNotifications } from '@/hooks/useEpisodeNotifications'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
 import { useAppStore } from '@/store/useAppStore'
-import { isTVDevice, isMobileDevice } from '@/utils/tv'
+import { isTVDevice, isMobileDevice, markBackHandled, wasBackRecentlyHandled } from '@/utils/tv'
 import { trackRouteView } from '@/services/observability'
 import UpdateModal from '@/components/UpdateModal'
 import { useLicense } from '@/hooks/useLicense'
@@ -61,18 +61,44 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
     }
   }, [isVipActive, location.pathname, navigate, setVipModalOpen])
 
-  // Tratamento universal do botao Voltar do controle remoto e do Android
+  // Tratamento universal do botao Voltar do controle remoto e do Android (Sem disparo duplo e sem pular para a Home)
   useEffect(() => {
+    const performSafeBack = () => {
+      if (wasBackRecentlyHandled(600)) return
+      markBackHandled()
+
+      if (location.pathname === '/') {
+        return
+      }
+
+      // Se estiver no player (/watch/:type/:id), volta sempre para a tela de Sinopse/Detalhes (/details/:type/:id)
+      if (location.pathname.startsWith('/watch/')) {
+        const historyIdx = window.history.state?.idx ?? 0
+        if (historyIdx > 0) {
+          navigate(-1)
+        } else {
+          navigate(location.pathname.replace('/watch/', '/details/'), { replace: true })
+        }
+        return
+      }
+
+      const historyIdx = window.history.state?.idx ?? 0
+      if (historyIdx > 0) {
+        navigate(-1)
+      } else {
+        navigate('/', { replace: true })
+      }
+    }
+
     let removeListener: (() => void) | null = null
     import('@capacitor/app')
       .then(({ App: CapApp }) => {
-        const handle = CapApp.addListener('backButton', ({ canGoBack }) => {
+        const handle = CapApp.addListener('backButton', () => {
+          if (wasBackRecentlyHandled(600)) return
           if (location.pathname === '/') {
             CapApp.exitApp()
-          } else if (canGoBack) {
-            navigate(-1)
           } else {
-            navigate('/')
+            performSafeBack()
           }
         })
         handle.then((h) => {
@@ -83,7 +109,7 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
 
     const handleWebBackKey = (e: KeyboardEvent) => {
       // Se a tecla já foi tratada por um player em tela cheia, modal ou input, não altera rota
-      if (e.defaultPrevented) return
+      if (e.defaultPrevented || wasBackRecentlyHandled(600)) return
 
       const code = e.keyCode || e.which
       // Teclas Voltar / Escape de controle remoto ou teclado (Android TV, Tizen, LG WebOS)
@@ -98,7 +124,7 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
       ) {
         if (location.pathname !== '/') {
           e.preventDefault()
-          navigate(-1)
+          performSafeBack()
         }
       }
     }

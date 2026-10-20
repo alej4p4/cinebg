@@ -82,3 +82,19 @@ test('7. Correções YouCine TV: D-Pad nos botões sem alterar volume/avançar v
   const streamsContent = fs.readFileSync(path.join(ROOT, 'src/services/streams.ts'), 'utf8')
   assert.match(streamsContent, /autoplay=/, 'Espelhos em streams.ts devem incluir parâmetro autoplay para início imediato')
 })
+
+test('8. Fluxo de Sinopse YouCine e Proteção do Botão Voltar na TV (sem pular para Tela Inicial)', () => {
+  const tvContent = fs.readFileSync(path.join(ROOT, 'src/utils/tv.ts'), 'utf8')
+  assert.match(tvContent, /markBackHandled/, 'tv.ts deve exportar markBackHandled para evitar duplo disparo do botão Voltar')
+  assert.match(tvContent, /wasBackRecentlyHandled/, 'tv.ts deve exportar wasBackRecentlyHandled')
+
+  const appContent = fs.readFileSync(path.join(ROOT, 'src/App.tsx'), 'utf8')
+  assert.match(appContent, /wasBackRecentlyHandled/, 'App.tsx deve proteger o listener global de Voltar contra eventos duplicados')
+  assert.match(appContent, /location\.pathname\.replace\('\/watch\/', '\/details\/'\)/, 'App.tsx deve garantir que Voltar no /watch retorne para /details')
+
+  const cardContent = fs.readFileSync(path.join(ROOT, 'src/components/ui/MovieCard.tsx'), 'utf8')
+  assert.ok(!cardContent.includes('`/watch/${item.type}/${item.id}`'), 'MovieCard deve sempre abrir a tela de sinopse (/details) antes do player')
+
+  const heroContent = fs.readFileSync(path.join(ROOT, 'src/components/ui/YuCineHero.tsx'), 'utf8')
+  assert.ok(!heroContent.includes('`/watch/'), 'YuCineHero deve sempre abrir a tela de sinopse (/details) antes do player')
+})

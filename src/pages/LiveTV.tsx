@@ -27,6 +27,7 @@ import {
 import { useLicense } from '@/hooks/useLicense'
 import { useAppStore } from '@/store/useAppStore'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
+import { markBackHandled } from '@/utils/tv'
 
 const LiveTV = () => {
   const navigate = useNavigate()
@@ -189,11 +190,13 @@ const LiveTV = () => {
         if (query) {
           e.preventDefault()
           e.stopPropagation()
+          markBackHandled()
           setQuery('')
           return
         }
         e.preventDefault()
         e.stopPropagation()
+        markBackHandled()
         navigate('/')
       }
     }

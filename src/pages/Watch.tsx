@@ -7,6 +7,7 @@ import { getMovieDetails, getShowDetails, getCachedMediaDetails } from '@/servic
 import { resolveMegaEmbed } from '@/services/streams'
 import { buildFileName, downloadVideo, downloadsSupported } from '@/services/downloads'
 import { useAppStore } from '@/store/useAppStore'
+import { markBackHandled } from '@/utils/tv'
 import type { DownloadItem, MediaType, TMDBMovieDetails, TMDBShowDetails } from '@/types'
 
 const Watch = () => {
@@ -247,7 +248,15 @@ const Watch = () => {
         onProgress={handleProgress}
         seasons={showData?.seasons}
         onSelectEpisode={handleEpisodeSelect}
-        onBack={() => navigate(-1)}
+        onBack={() => {
+          markBackHandled()
+          const historyIdx = window.history.state?.idx ?? 0
+          if (historyIdx > 0) {
+            navigate(-1)
+          } else {
+            navigate(`/details/${type}/${mediaId}`, { replace: true })
+          }
+        }}
         onDownload={handleDownload}
       />
     </div>

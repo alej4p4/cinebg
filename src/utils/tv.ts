@@ -205,3 +205,14 @@ export const scrollTvElementIntoView = (
     } catch {}
   }
 }
+
+// Controle global de debounce do botão Voltar do controle remoto (evita disparo duplo entre keydown e Capacitor backButton)
+let lastBackHandledTimestamp = 0
+
+export const markBackHandled = () => {
+  lastBackHandledTimestamp = Date.now()
+}
+
+export const wasBackRecentlyHandled = (windowMs = 600): boolean => {
+  return Date.now() - lastBackHandledTimestamp < windowMs
+}

@@ -46,7 +46,7 @@ import type { TMDBSeason } from '@/types'
 import EpisodeSelector from './EpisodeSelector'
 import PlaybackSettingsModal from './PlaybackSettingsModal'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
-import { isTVDevice, isMobileDevice } from '@/utils/tv'
+import { isTVDevice, isMobileDevice, markBackHandled } from '@/utils/tv'
 import { trackStreamPlayback } from '@/services/observability'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
@@ -612,10 +612,10 @@ const StreamPlayer = ({
     if (stallTimerRef.current) clearTimeout(stallTimerRef.current)
     stallTimerRef.current = setTimeout(() => {
       if (!loadedRef.current) {
-        console.warn('[StreamPlayer] Vídeo estagnado na rede (12s). Avançando para próxima opção...')
+        console.warn('[StreamPlayer] Vídeo estagnado na rede (7s). Avançando para próxima opção...')
         handleDirectMediaError()
       }
-    }, 12000)
+    }, 7000)
   }
 
   useEffect(() => {
@@ -638,12 +638,12 @@ const StreamPlayer = ({
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout de segurança generoso para conexões residenciais e TV Boxes: 14s para buffer inicial
+    // Timeout ágil para conexões residenciais e TV Boxes: 8s para buffer inicial antes de pular para a próxima opção
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
-      console.warn(`[StreamPlayer] Timeout de carregamento (14s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
+      console.warn(`[StreamPlayer] Timeout de carregamento (8s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
       handleDirectMediaError()
-    }, 14000)
+    }, 8000)
 
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
@@ -1290,10 +1290,20 @@ const StreamPlayer = ({
       }
 
       // Teclas especiais de Back no Android TV (keycode 4, Escape, GoBack)
-      if (key === 'Escape' || key === 'GoBack' || key === 'Backspace' || code === 4) {
+      // Volta imediatamente para a tela de Sinopse/Detalhes sem disparo duplo e sem pular para a Tela Inicial
+      if (
+        key === 'Escape' ||
+        key === 'GoBack' ||
+        key === 'Backspace' ||
+        code === 4 ||
+        code === 10009 ||
+        code === 461 ||
+        code === 283
+      ) {
+        markBackHandled()
+        e.preventDefault()
+        e.stopPropagation()
         if (settingsModalOpen) {
-          e.preventDefault()
-          e.stopPropagation()
           setSettingsModalOpen(false)
           setTimeout(() => {
             const btn = document.getElementById('hud-btn-settings')
@@ -1302,8 +1312,6 @@ const StreamPlayer = ({
           return
         }
         if (episodesDrawerOpen) {
-          e.preventDefault()
-          e.stopPropagation()
           setEpisodesDrawerOpen(false)
           setTimeout(() => {
             const btn = document.getElementById('hud-btn-episodes')
@@ -1311,17 +1319,7 @@ const StreamPlayer = ({
           }, 50)
           return
         }
-        if (showHud) {
-          e.preventDefault()
-          e.stopPropagation()
-          setShowHud(false)
-          const activeEl = document.activeElement as HTMLElement | null
-          activeEl?.blur()
-          return
-        }
         if (onBack) {
-          e.preventDefault()
-          e.stopPropagation()
           onBack()
           return
         }

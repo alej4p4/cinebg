@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSeasonDetails } from '@/services/tmdb'
 import type { TMDBEpisode, TMDBSeason } from '@/types'
@@ -23,6 +23,7 @@ const EpisodeSelector = ({
   const [selectedSeason, setSelectedSeason] = useState(currentSeason)
   const [episodes, setEpisodes] = useState<TMDBEpisode[]>([])
   const [loading, setLoading] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const realSeasons = seasons.filter((s) => s.season_number > 0)
 
@@ -37,8 +38,46 @@ const EpisodeSelector = ({
       .finally(() => setLoading(false))
   }, [showId, selectedSeason])
 
+  // Foco automático no episódio atual ao abrir a gaveta de episódios na TV
+  useEffect(() => {
+    if (loading || episodes.length === 0) return
+    const timer = setTimeout(() => {
+      const root = containerRef.current
+      if (!root) return
+      const currentBtn =
+        (root.querySelector('[data-current-ep="true"]') as HTMLElement | null) ||
+        (root.querySelector('button') as HTMLElement | null)
+      if (currentBtn) {
+        currentBtn.focus()
+        currentBtn.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }, 60)
+    return () => clearTimeout(timer)
+  }, [loading, episodes])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const root = containerRef.current
+    if (!root) return
+    const buttons = Array.from(root.querySelectorAll('button')) as HTMLElement[]
+    if (buttons.length === 0) return
+    const idx = buttons.indexOf(document.activeElement as HTMLElement)
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault()
+      e.stopPropagation()
+      const next = buttons[(idx + 1) % buttons.length]
+      next?.focus()
+      next?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault()
+      e.stopPropagation()
+      const prev = buttons[(idx - 1 + buttons.length) % buttons.length]
+      prev?.focus()
+      prev?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }
+  }
+
   return (
-    <div className="space-y-3">
+    <div ref={containerRef} onKeyDown={handleKeyDown} className="space-y-3">
       {/* Season selector with animated indicator */}
       <div className="flex flex-wrap gap-2">
         {realSeasons.map((s) => (
@@ -49,7 +88,7 @@ const EpisodeSelector = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={SPRING_SNAPPY}
-            className={`relative px-3 py-1 text-xs font-semibold rounded-full transition-colors border overflow-hidden tv-focusable outline-none ${
+            className={`relative px-3 py-1 text-xs font-semibold rounded-full transition-colors border overflow-hidden tv-focusable outline-none focus:ring-2 focus:ring-amber-400 ${
               selectedSeason === s.season_number
                 ? 'bg-accent-red border-accent-red text-white'
                 : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10'
@@ -87,13 +126,14 @@ const EpisodeSelector = ({
                 <motion.button
                   key={ep.episode_number}
                   tabIndex={0}
+                  data-current-ep={isCurrent ? 'true' : undefined}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.22, delay: i * 0.025, ease: FLUID_EASE }}
                   whileHover={{ x: 3, backgroundColor: 'rgba(255,255,255,0.06)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onSelect(selectedSeason, ep.episode_number)}
-                  className={`flex items-start gap-3 p-2.5 rounded-xl text-left border tv-focusable outline-none ${
+                  className={`flex items-start gap-3 p-2.5 rounded-xl text-left border tv-focusable outline-none focus:ring-2 focus:ring-amber-400 ${
                     isCurrent
                       ? 'bg-accent-red/15 border-accent-red/30 text-white'
                       : 'border-transparent text-white/60 hover:text-white'
