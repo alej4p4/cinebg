@@ -246,8 +246,13 @@ const UpdateModal = ({
       listenerHandle = handle
     })
 
+    // Fallback: verificação periódica a cada 2s enquanto no stage 'installing'
+    // (caso o appStateChange não dispare no Android TV)
+    const intervalId = setInterval(checkUpdate, 2000)
+
     return () => {
       listenerHandle?.remove()
+      clearInterval(intervalId)
     }
   }, [visible, stage, latestVersion, onDismiss, onUpdateComplete])
 
