@@ -178,8 +178,8 @@ const Details = () => {
         }
       }
     }
-    window.addEventListener('keydown', handleModalKeyDown)
-    return () => window.removeEventListener('keydown', handleModalKeyDown)
+    window.addEventListener('keydown', handleModalKeyDown, { capture: true })
+    return () => window.removeEventListener('keydown', handleModalKeyDown, { capture: true })
   }, [idiomaModalOpen, resolucaoModalOpen])
 
   if (loading) {

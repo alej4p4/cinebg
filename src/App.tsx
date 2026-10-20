@@ -113,6 +113,11 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
       // Se a tecla já foi tratada por um player em tela cheia, modal ou input, não altera rota
       if (e.defaultPrevented || wasBackRecentlyHandled(600)) return
 
+      // Detecta se há algum modal/overlay aberto (fixed inset-0 com z-index alto)
+      const hasModalOpen = document.querySelector(
+        '.fixed.inset-0.z-50, .fixed.inset-0.z-\\[10000\\], .fixed.inset-0.z-50.flex, [data-radix-dialog-overlay], .animate-in.fade-in'
+      )
+
       const code = e.keyCode || e.which
       // Teclas Voltar / Escape de controle remoto ou teclado (Android TV, Tizen, LG WebOS)
       if (
@@ -124,6 +129,10 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
         code === 461 ||
         code === 283
       ) {
+        // Se há modal aberto, não intercepta - deixa o modal tratar
+        if (hasModalOpen) {
+          return
+        }
         if (location.pathname !== '/') {
           e.preventDefault()
           performSafeBack()
