@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getCineBGNativeBridge } from '@/utils/tv'
+import {
+  computeTrialWindow,
+  getTrustedNow,
+  logPlanActivated,
+  logTrialEndedOnce,
+  logTrialStartedOnce,
+} from '@/services/trial'
 
 export const TRIAL_DAYS = 3
 const LICENSE_KEY = 'cinebg_license'
@@ -221,16 +228,14 @@ export const useLicense = () => {
       return
     }
 
-    const firstUse = getFirstUse()
-    const trialEnd = firstUse + TRIAL_DAYS * 24 * 60 * 60 * 1000
-    const now = Date.now()
+    // Fonte única do início do teste: timestamp nativo de instalação + localStorage.
+    // getTrustedNow impede estender o teste voltando o relógio do aparelho (sem rede).
+    const trial = computeTrialWindow(getFirstUse(), TRIAL_DAYS, getTrustedNow())
 
-    if (now < trialEnd) {
-      const msLeft = trialEnd - now
-      const days = Math.max(1, Math.ceil(msLeft / (24 * 60 * 60 * 1000)))
-      const hours = Math.max(1, Math.ceil(msLeft / (60 * 60 * 1000)))
-      setTrialDaysLeft(days)
-      setTrialHoursLeft(hours)
+    if (trial.active) {
+      logTrialStartedOnce(trial)
+      setTrialDaysLeft(trial.daysLeft)
+      setTrialHoursLeft(trial.hoursLeft)
       setIsTrial(true)
       setLicense(null)
       setLoading(false)
@@ -238,6 +243,7 @@ export const useLicense = () => {
     }
 
     // Período de teste de 3 dias expirado: força aquisição da versão paga VIP
+    logTrialEndedOnce(trial)
     setIsTrial(false)
     setTrialDaysLeft(0)
     setTrialHoursLeft(0)
@@ -265,6 +271,7 @@ export const useLicense = () => {
           } catch {}
           setLicense(remoteLic)
           setIsTrial(false)
+          logPlanActivated('remote_30d', remoteLic.planName ?? 'Plano Mensal', 30)
           window.dispatchEvent(new CustomEvent(LICENSE_EVENT_NAME))
         }
       })
@@ -329,6 +336,8 @@ export const useLicense = () => {
     setLicense(newLicense)
     setIsTrial(false)
     setLoading(false)
+    // Não registra o código de ativação na telemetria (dado sensível)
+    logPlanActivated(paymentId ? 'mercado_pago' : 'activation_code', newLicense.planName ?? `Plano ${days} Dias`, days)
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(LICENSE_EVENT_NAME))
     }

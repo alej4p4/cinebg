@@ -30,7 +30,7 @@
   "28": "feature_request.md",
   "29": "improvement.md",
   "30": "scripts",
-  "31": "arch-contract.mjs",
+  "31": "qa-audit.test.mjs",
   "32": "vite.config.ts",
   "33": "capacitor.config.ts",
   "34": "stryker.config.json",
@@ -43,5 +43,7 @@
   "41": "Object",
   "42": "MainActivity",
   "43": "ExampleInstrumentedTest.java",
-  "45": "LivePlayer.tsx"
+  "44": "✅ PROBLEMAS CORRIGIDOS",
+  "45": "LivePlayer.tsx",
+  "46": "useSpeechRecognition.ts"
 }
