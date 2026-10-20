@@ -68,3 +68,17 @@ test('6. Otimização de Performance e Memória para Smart TV (RAM, Renderizaç�
   const cursorContent = fs.readFileSync(path.join(ROOT, 'src/components/tv/TvCursorOverlay.tsx'), 'utf8')
   assert.match(cursorContent, /startMoveLoop/, 'TvCursorOverlay.tsx deve rodar requestAnimationFrame apenas sob demanda quando teclas direcionais estiverem pressionadas')
 })
+
+test('7. Correções YouCine TV: D-Pad nos botões sem alterar volume/avançar vídeo, Autoplay sem tela de play e Detalhes sem trailer', () => {
+  const playerContent = fs.readFileSync(path.join(ROOT, 'src/components/player/StreamPlayer.tsx'), 'utf8')
+  assert.ok(!playerContent.includes('videoRef.current.volume ='), 'Setas Cima/Baixo do D-Pad nunca devem alterar o volume do vídeo ao navegar até os botões')
+  assert.ok(!playerContent.includes('id="central-play-button"'), 'StreamPlayer não deve exibir imagem/botão de play central antes de iniciar o filme/série')
+  assert.match(playerContent, /getCachedMegaEmbed/, 'StreamPlayer deve hidratar a fonte direta instantaneamente do cache em 0ms')
+
+  const detailsContent = fs.readFileSync(path.join(ROOT, 'src/pages/Details.tsx'), 'utf8')
+  assert.ok(!detailsContent.includes('youtube.com/embed/'), 'Details.tsx não deve apresentar trailer do YouTube ao entrar no filme ou série (estilo YouCine)')
+  assert.match(detailsContent, /resolveMegaEmbed/, 'Details.tsx deve pré-carregar a fonte direta do filme/episódio ao abrir os detalhes')
+
+  const streamsContent = fs.readFileSync(path.join(ROOT, 'src/services/streams.ts'), 'utf8')
+  assert.match(streamsContent, /autoplay=/, 'Espelhos em streams.ts devem incluir parâmetro autoplay para início imediato')
+})

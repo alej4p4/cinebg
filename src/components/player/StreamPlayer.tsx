@@ -31,6 +31,7 @@ import {
   getInitialMirrorForAudio,
   isMirrorSandboxed,
   resolveMegaEmbed,
+  getCachedMegaEmbed,
   MIRRORS,
   type DirectCandidate,
 } from '@/services/streams'
@@ -139,15 +140,26 @@ const StreamPlayer = ({
   const [subStyle, setSubStyle] = useState<'white' | 'yellow' | 'boxed'>('boxed')
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const initialMediaType: 'movie' | 'tv' = type === 'movie' ? 'movie' : 'tv'
+  const initialCachedStream = getCachedMegaEmbed(tmdbId, initialMediaType, season, episode)
+  const initialFirstCandidate =
+    initialCachedStream?.candidates?.find((c) => c.isDubbedHint) ||
+    initialCachedStream?.candidates?.[0] ||
+    null
+
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
-  // Fonte nativa direta: MP4 dublado (PT-BR) ou HLS proxy do MegaEmbed.
-  const [directSrc, setDirectSrc] = useState<string | null>(null)
-  const [directKind, setDirectKind] = useState<'mp4' | 'hls' | null>(null)
-  // Começa "resolvendo" para não piscar o iframe (com anúncio) antes de tentar o nativo.
-  const [resolvingDirect, setResolvingDirect] = useState(true)
+  // Fonte nativa direta hidratada instantaneamente do cache em 0ms (se já pré-resolvida na tela de Detalhes)
+  const [directSrc, setDirectSrc] = useState<string | null>(
+    initialFirstCandidate?.url || initialCachedStream?.dubbedMp4 || initialCachedStream?.hlsProxy || null
+  )
+  const [directKind, setDirectKind] = useState<'mp4' | 'hls' | null>(
+    initialFirstCandidate?.kind || (initialCachedStream?.dubbedMp4 ? 'mp4' : initialCachedStream?.hlsProxy ? 'hls' : null)
+  )
+  // Se já existe no cache, não exibe tela de resolução intermediária
+  const [resolvingDirect, setResolvingDirect] = useState(!initialCachedStream)
 
-  const [candidates, setCandidates] = useState<DirectCandidate[]>([])
+  const [candidates, setCandidates] = useState<DirectCandidate[]>(initialCachedStream?.candidates || [])
   const [candidateIndex, setCandidateIndex] = useState(0)
 
   // O espelho inicial se ajusta automaticamente ao áudio preferido
@@ -673,14 +685,17 @@ const StreamPlayer = ({
     }
 
     let cancelled = false
-    nativeActiveRef.current = false
-    setDirectSrc(null)
-    setDirectKind(null)
-    setCandidates([])
-    setCandidateIndex(0)
-    setResolvingDirect(true)
-
     const mediaType: 'movie' | 'tv' = type === 'movie' ? 'movie' : 'tv'
+    const cachedNow = getCachedMegaEmbed(tmdbId, mediaType, season, episode)
+    if (!cachedNow) {
+      nativeActiveRef.current = false
+      setDirectSrc(null)
+      setDirectKind(null)
+      setCandidates([])
+      setCandidateIndex(0)
+      setResolvingDirect(true)
+    }
+
     resolveMegaEmbed(tmdbId, mediaType, season, episode)
       .then((resolved) => {
         if (cancelled) return
@@ -770,8 +785,21 @@ const StreamPlayer = ({
             setLoaded(true)
             setIsPlaying(true)
             setError(false)
-          }).catch((err) => {
-            console.warn('[StreamPlayer] Autoplay aguardando interação ou restrito pelo WebView:', err)
+          }).catch(() => {
+            // Fallback imediato de autoplay para WebViews que exigem início mudo antes de liberar áudio
+            try {
+              video.muted = true
+              video
+                .play()
+                .then(() => {
+                  video.muted = false
+                  loadedRef.current = true
+                  setLoaded(true)
+                  setIsPlaying(true)
+                  setError(false)
+                })
+                .catch(() => {})
+            } catch {}
           })
         }
       } else {
@@ -1244,114 +1272,28 @@ const StreamPlayer = ({
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    resetHudTimer()
-    const target = e.target as HTMLElement
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
-    if (!videoRef.current) return
-
-    // Se estiver bloqueado, qualquer tecla (exceto 'L' de desbloqueio) mostra aviso
-    if (isLocked && e.key.toLowerCase() !== 'l') {
-      handleLockTap()
-      return
-    }
-
-    switch (e.key) {
-      case 'ArrowRight':
-        e.preventDefault()
-        seekBy(10)
-        break
-      case 'ArrowLeft':
-        e.preventDefault()
-        seekBy(-10)
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        if (videoRef.current) {
-          videoRef.current.volume = Math.min(1, Number((videoRef.current.volume + 0.1).toFixed(2)))
-          showFeedback(`Vol ${Math.round(videoRef.current.volume * 100)}%`)
-        }
-        break
-      case 'ArrowDown':
-        e.preventDefault()
-        if (videoRef.current) {
-          videoRef.current.volume = Math.max(0, Number((videoRef.current.volume - 0.1).toFixed(2)))
-          showFeedback(`Vol ${Math.round(videoRef.current.volume * 100)}%`)
-        }
-        break
-      case ' ':
-      case 'k':
-      case 'Enter':
-        e.preventDefault()
-        togglePlay()
-        break
-      case 'f':
-      case 'F':
-        handleFullscreen()
-        break
-      case 'm':
-      case 'M':
-        toggleMute()
-        break
-      case 'l':
-      case 'L':
-        e.preventDefault()
-        if (!isTv) {
-          toggleLock()
-        }
-        break
-      case 'a':
-      case 'A':
-        e.preventDefault()
-        {
-          const nextOpt = audioOption === 'dub' ? 'orig' : 'dub'
-          switchAudio(nextOpt)
-          showFeedback(nextOpt === 'dub' ? 'Áudio: Dublado 🇧🇷' : 'Áudio: Legendado / Original 🇺🇸')
-        }
-        break
-      case 's':
-      case 'S':
-        e.preventDefault()
-        cycleSubtitles()
-        break
-      case 'c':
-      case 'C':
-        e.preventDefault()
-        setSettingsModalOpen((prev) => !prev)
-        break
-      case 'z':
-      case 'Z':
-        e.preventDefault()
-        toggleFitMode()
-        break
-      case 'Escape':
-      case 'GoBack':
-        if (settingsModalOpen) {
-          setSettingsModalOpen(false)
-        } else if (episodesDrawerOpen) {
-          setEpisodesDrawerOpen(false)
-        } else if (onBack) {
-          onBack()
-        }
-        break
-      default:
-        break
-    }
-  }
-
-  // Listener Global de Teclas do Controle Remoto (Android TV / TV Box / D-Pad)
+  // Listener Global Unificado de Teclas do Controle Remoto (Android TV / TV Box / D-Pad)
+  // Zero interferência de volume nas setas Cima/Baixo e zero avanço acidental ao navegar entre botões do HUD.
   useEffect(() => {
     const handleGlobalRemoteKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) return
+      if (target?.tagName === 'INPUT' && target.id !== 'hud-scrubber') return
+      if (target?.tagName === 'TEXTAREA' || target?.isContentEditable) return
 
       const key = e.key
       const code = e.keyCode || e.which
+
+      // Se estiver bloqueado no celular, qualquer tecla (exceto 'L') mostra aviso
+      if (isLocked && key.toLowerCase() !== 'l') {
+        handleLockTap()
+        return
+      }
 
       // Teclas especiais de Back no Android TV (keycode 4, Escape, GoBack)
       if (key === 'Escape' || key === 'GoBack' || key === 'Backspace' || code === 4) {
         if (settingsModalOpen) {
           e.preventDefault()
+          e.stopPropagation()
           setSettingsModalOpen(false)
           setTimeout(() => {
             const btn = document.getElementById('hud-btn-settings')
@@ -1361,6 +1303,7 @@ const StreamPlayer = ({
         }
         if (episodesDrawerOpen) {
           e.preventDefault()
+          e.stopPropagation()
           setEpisodesDrawerOpen(false)
           setTimeout(() => {
             const btn = document.getElementById('hud-btn-episodes')
@@ -1370,6 +1313,7 @@ const StreamPlayer = ({
         }
         if (showHud) {
           e.preventDefault()
+          e.stopPropagation()
           setShowHud(false)
           const activeEl = document.activeElement as HTMLElement | null
           activeEl?.blur()
@@ -1377,146 +1321,204 @@ const StreamPlayer = ({
         }
         if (onBack) {
           e.preventDefault()
+          e.stopPropagation()
           onBack()
           return
         }
       }
 
-      // Se um modal ou gaveta de episódios estiver aberto, permite navegação nativa pelos botões focáveis
+      // Se um modal ou gaveta de episódios estiver aberto, permite navegação pelos botões do modal
       if (settingsModalOpen || episodesDrawerOpen) {
         return
       }
 
-      // Qualquer tecla no controle remoto reativa e exibe o HUD por 4.5 segundos
+      // Qualquer tecla no controle remoto reativa e exibe o HUD
       resetHudTimer()
 
-      // Lista de botões focáveis do HUD
-      const getHudButtons = (): HTMLElement[] => {
+      // Lista de botões inferiores do HUD
+      const getBottomHudButtons = (): HTMLElement[] => {
         if (!containerRef.current) return []
         return Array.from(
           containerRef.current.querySelectorAll<HTMLElement>(
             'button[data-hud-btn="true"]:not([disabled])'
           )
-        )
+        ).filter((btn) => btn.id !== 'hud-btn-back' && btn.id !== 'hud-btn-play')
       }
 
-      // Tecla D-Pad Para Baixo
+      const currentFocused = document.activeElement as HTMLElement | null
+      const isFocusedOnBottomBtn =
+        !!currentFocused &&
+        currentFocused.matches('button[data-hud-btn="true"]') &&
+        currentFocused.id !== 'hud-btn-back' &&
+        currentFocused.id !== 'hud-btn-play'
+
+      // Tecla D-Pad Para Baixo (NUNCA altera o volume! Navega exclusivamente até os botões do player)
       if (key === 'ArrowDown' || code === 40 || code === 20) {
+        e.preventDefault()
+        e.stopPropagation()
+        const defaultBottomBtn =
+          document.getElementById('hud-btn-audio') ||
+          document.getElementById('hud-btn-subtitles') ||
+          getBottomHudButtons()[0]
+
         if (!showHud) {
-          e.preventDefault()
           setShowHud(true)
           setTimeout(() => {
-            const subBtn = document.getElementById('hud-btn-subtitles') || document.getElementById('hud-btn-play')
-            subBtn?.focus()
-          }, 50)
+            defaultBottomBtn?.focus()
+          }, 40)
           return
         }
 
-        const currentFocused = document.activeElement as HTMLElement | null
-        if (!currentFocused || !currentFocused.matches('button[data-hud-btn="true"]')) {
-          e.preventDefault()
-          const subBtn = document.getElementById('hud-btn-subtitles') || document.getElementById('hud-btn-play')
-          subBtn?.focus()
-          return
-        }
-      }
-
-      // Tecla D-Pad Para Cima
-      if (key === 'ArrowUp' || code === 38 || code === 19) {
-        if (!showHud) {
-          e.preventDefault()
-          setShowHud(true)
-          setTimeout(() => {
-            const scrubber = document.getElementById('hud-scrubber') || document.getElementById('hud-btn-back')
-            scrubber?.focus()
-          }, 50)
+        if (currentFocused?.id === 'hud-btn-back') {
+          const playOrScrubber =
+            document.getElementById('hud-btn-play') ||
+            document.getElementById('hud-scrubber') ||
+            defaultBottomBtn
+          playOrScrubber?.focus()
           return
         }
 
-        const currentFocused = document.activeElement as HTMLElement | null
-        if (currentFocused && currentFocused.matches('button[data-hud-btn="true"]')) {
-          e.preventDefault()
-          const scrubber = document.getElementById('hud-scrubber') || document.getElementById('hud-btn-back')
-          scrubber?.focus()
-          return
-        }
-      }
-
-      // Tecla D-Pad Para a Esquerda
-      if (key === 'ArrowLeft' || code === 37 || code === 21) {
-        if (showHud) {
-          const btns = getHudButtons()
-          const activeIndex = btns.indexOf(document.activeElement as HTMLElement)
-          if (activeIndex > 0) {
-            e.preventDefault()
-            btns[activeIndex - 1].focus()
-            return
-          } else if (activeIndex === -1 && btns.length > 0) {
-            e.preventDefault()
-            const subBtn = document.getElementById('hud-btn-subtitles') || btns[0]
-            subBtn?.focus()
-            return
-          }
-        }
-        if (document.activeElement?.tagName !== 'BUTTON') {
-          e.preventDefault()
-          seekBy(-10)
+        if (!isFocusedOnBottomBtn) {
+          defaultBottomBtn?.focus()
         }
         return
       }
 
-      // Tecla D-Pad Para a Direita
+      // Tecla D-Pad Para Cima (NUNCA altera o volume! Navega dos botões para a barra de progresso / botão Voltar)
+      if (key === 'ArrowUp' || code === 38 || code === 19) {
+        e.preventDefault()
+        e.stopPropagation()
+        const defaultBottomBtn =
+          document.getElementById('hud-btn-audio') ||
+          document.getElementById('hud-btn-subtitles') ||
+          getBottomHudButtons()[0]
+
+        if (!showHud) {
+          setShowHud(true)
+          setTimeout(() => {
+            defaultBottomBtn?.focus()
+          }, 40)
+          return
+        }
+
+        if (isFocusedOnBottomBtn) {
+          const playOrBack =
+            document.getElementById('hud-btn-play') ||
+            document.getElementById('hud-scrubber') ||
+            document.getElementById('hud-btn-back')
+          playOrBack?.focus()
+          return
+        }
+
+        if (currentFocused?.id === 'hud-btn-play' || currentFocused?.id === 'hud-scrubber') {
+          document.getElementById('hud-btn-back')?.focus()
+          return
+        }
+
+        defaultBottomBtn?.focus()
+        return
+      }
+
+      // Tecla D-Pad Para a Esquerda (Navega entre os botões sem avançar/voltar o vídeo!)
+      if (key === 'ArrowLeft' || code === 37 || code === 21) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        // Só volta -10s se o foco estiver na barra de tempo (#hud-scrubber) ou se o HUD estiver fechado
+        if (currentFocused?.id === 'hud-scrubber' || !showHud) {
+          seekBy(-10)
+          return
+        }
+
+        const bottomBtns = getBottomHudButtons()
+        const activeIndex = bottomBtns.indexOf(currentFocused as HTMLElement)
+        if (activeIndex > 0) {
+          bottomBtns[activeIndex - 1].focus()
+          return
+        }
+        if (activeIndex === 0) {
+          // Já está no primeiro botão da fila: permanece nele sem pular o vídeo
+          bottomBtns[0].focus()
+          return
+        }
+        if (currentFocused?.id === 'hud-scrubber') {
+          document.getElementById('hud-btn-play')?.focus()
+          return
+        }
+        if (bottomBtns.length > 0) {
+          bottomBtns[0].focus()
+        }
+        return
+      }
+
+      // Tecla D-Pad Para a Direita (Navega entre os botões sem acelerar/avançar o vídeo!)
       if (key === 'ArrowRight' || code === 39 || code === 22) {
-        if (showHud) {
-          const btns = getHudButtons()
-          const activeIndex = btns.indexOf(document.activeElement as HTMLElement)
-          if (activeIndex >= 0 && activeIndex < btns.length - 1) {
-            e.preventDefault()
-            btns[activeIndex + 1].focus()
-            return
-          } else if (activeIndex === -1 && btns.length > 0) {
-            e.preventDefault()
-            const subBtn = document.getElementById('hud-btn-subtitles') || btns[0]
-            subBtn?.focus()
+        e.preventDefault()
+        e.stopPropagation()
+
+        // Só avança +10s se o foco estiver na barra de tempo (#hud-scrubber) ou se o HUD estiver fechado
+        if (currentFocused?.id === 'hud-scrubber' || !showHud) {
+          seekBy(10)
+          return
+        }
+
+        if (currentFocused?.id === 'hud-btn-play') {
+          const scrubber = document.getElementById('hud-scrubber')
+          if (scrubber) {
+            scrubber.focus()
             return
           }
         }
-        if (document.activeElement?.tagName !== 'BUTTON') {
-          e.preventDefault()
-          seekBy(10)
+
+        const bottomBtns = getBottomHudButtons()
+        const activeIndex = bottomBtns.indexOf(currentFocused as HTMLElement)
+        if (activeIndex >= 0 && activeIndex < bottomBtns.length - 1) {
+          bottomBtns[activeIndex + 1].focus()
+          return
+        }
+        if (activeIndex === bottomBtns.length - 1 && bottomBtns.length > 0) {
+          // Já está no último botão da fila: permanece nele sem avançar o vídeo
+          bottomBtns[bottomBtns.length - 1].focus()
+          return
+        }
+        if (bottomBtns.length > 0) {
+          bottomBtns[0].focus()
         }
         return
       }
 
       // Tecla Enter / OK / D-Pad Center
       if (key === 'Enter' || code === 13 || code === 23 || code === 66) {
-        const video = videoRef.current
-        if (video && (video.paused || !isPlaying)) {
+        // Se o foco já está em um botão do HUD (Dublado, Sem Legenda, Ajustes, Voltar, etc.),
+        // aciona exclusivamente o clique desse botão sem pausar o filme!
+        if (currentFocused && currentFocused.tagName === 'BUTTON') {
           e.preventDefault()
-          togglePlay()
+          e.stopPropagation()
+          currentFocused.click()
           return
         }
 
         if (!showHud) {
           e.preventDefault()
+          e.stopPropagation()
           setShowHud(true)
           setTimeout(() => {
-            const playBtn = document.getElementById('hud-btn-play') || document.getElementById('hud-btn-subtitles')
-            playBtn?.focus()
-          }, 50)
+            const defaultBtn =
+              document.getElementById('hud-btn-audio') ||
+              document.getElementById('hud-btn-subtitles') ||
+              document.getElementById('hud-btn-play')
+            defaultBtn?.focus()
+          }, 40)
           return
         }
 
-        const currentFocused = document.activeElement as HTMLElement | null
-        if (!currentFocused || currentFocused === document.body || currentFocused.tagName === 'VIDEO') {
-          e.preventDefault()
-          const playBtn = document.getElementById('hud-btn-play') || document.getElementById('hud-btn-subtitles')
-          playBtn?.focus()
-          return
-        }
+        e.preventDefault()
+        e.stopPropagation()
+        togglePlay()
+        return
       }
 
-      // Teclas de atalho para Teclados / Remotos com teclas dedicadas:
+      // Teclas de atalho dedicadas:
       if (
         key === ' ' ||
         key === 'k' ||
@@ -1525,10 +1527,16 @@ const StreamPlayer = ({
         key === 'MediaPause' ||
         key === 'MediaPlayPause'
       ) {
-        if (document.activeElement?.tagName !== 'BUTTON') {
+        if (currentFocused?.tagName !== 'BUTTON') {
           e.preventDefault()
           togglePlay()
         }
+      } else if (key === 'f' || key === 'F') {
+        e.preventDefault()
+        handleFullscreen()
+      } else if (key === 'm' || key === 'M') {
+        e.preventDefault()
+        toggleMute()
       } else if (key === 'a' || key === 'A') {
         e.preventDefault()
         const nextOpt = audioOption === 'dub' ? 'orig' : 'dub'
@@ -1547,6 +1555,9 @@ const StreamPlayer = ({
       } else if (key === 'c' || key === 'C' || key === 'Menu' || code === 82) {
         e.preventDefault()
         setSettingsModalOpen((prev) => !prev)
+      } else if (key === 'z' || key === 'Z') {
+        e.preventDefault()
+        toggleFitMode()
       } else if (key === 'e' || key === 'E') {
         if (type !== 'movie') {
           e.preventDefault()
@@ -1560,11 +1571,11 @@ const StreamPlayer = ({
       }
     }
 
-    window.addEventListener('keydown', handleGlobalRemoteKey)
+    window.addEventListener('keydown', handleGlobalRemoteKey, { capture: true })
     return () => {
-      window.removeEventListener('keydown', handleGlobalRemoteKey)
+      window.removeEventListener('keydown', handleGlobalRemoteKey, { capture: true })
     }
-  }, [settingsModalOpen, episodesDrawerOpen, onBack, audioOption, type, onNextEpisode, cycleSubtitles, showHud])
+  }, [settingsModalOpen, episodesDrawerOpen, onBack, audioOption, type, onNextEpisode, cycleSubtitles, showHud, isLocked])
 
   // Tratamento inteligente de toque mobile e cliques na tela do player
   const handlePlayerTap = (clientX: number, _clientY: number) => {
@@ -1717,7 +1728,6 @@ const StreamPlayer = ({
         }
         handlePlayerTap(e.clientX, e.clientY)
       }}
-      onKeyDown={handleKeyDown}
       onMouseMove={resetHudTimer}
       style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
       className="player-container relative w-full h-full min-h-screen bg-black overflow-hidden flex flex-col justify-between outline-none ring-0 border-0 select-none cursor-pointer"
@@ -2073,21 +2083,6 @@ const StreamPlayer = ({
               />
             ))}
           </video>
-        )}
-
-        {/* Indicador Central de Play / Pause */}
-        {!isPlaying && directSrc && !error && (
-          <button
-            type="button"
-            id="central-play-button"
-            onClick={togglePlay}
-            aria-label="Reproduzir vídeo"
-            className="absolute inset-0 w-full h-full flex items-center justify-center z-30 cursor-pointer bg-black/35 backdrop-blur-[2px] border-none outline-none focus:ring-4 focus:ring-amber-400"
-          >
-            <div className="w-20 h-20 rounded-full bg-amber-400 text-black flex items-center justify-center shadow-2xl shadow-amber-400/50 transform transition-transform hover:scale-110 active:scale-95 group-focus:scale-110">
-              <Play className="w-10 h-10 fill-black ml-1" />
-            </div>
-          </button>
         )}
 
         {/* Toast Flutuante de Retomada Inteligente */}
