@@ -43,6 +43,8 @@ jobs:
           VERSION=${{ steps.get-version.outputs.version }}
           git tag v$VERSION
           git push origin v$VERSION
+          # Wait for tag to be available
+          sleep 5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
