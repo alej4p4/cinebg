@@ -171,3 +171,39 @@ test('10. Separação Estrita de Downloads OTA: Mobile (Celular) vs Smart TV em 
     'MainActivity.java deve expor setPlayerLandscape na ponte CineBGNative'
   )
 })
+
+
+test('11. Persistência de Atualização OTA sem Loop, Bloqueio Estrito de 3 Dias de Teste e Filtro Anti-1xBet/Camrip', () => {
+  const tvContent = fs.readFileSync(path.join(ROOT, 'src/utils/tv.ts'), 'utf8')
+  assert.match(tvContent, /isVersionNewer/, 'tv.ts deve exportar isVersionNewer para impedir downgrade ou loop de atualização por cache de CDN')
+  assert.match(tvContent, /getNativeAppVersion/, 'tv.ts deve exportar getNativeAppVersion lendo a versão real do APK nativo')
+
+  const storeContent = fs.readFileSync(path.join(ROOT, 'src/store/useAppStore.ts'), 'utf8')
+  assert.match(storeContent, /isVersionNewer\(remoteVersion, currentVersion\)/, 'useAppStore.ts deve validar que a versão remota é estritamente superior à atual')
+
+  const licenseContent = fs.readFileSync(path.join(ROOT, 'src/hooks/useLicense.ts'), 'utf8')
+  assert.match(licenseContent, /getFirstInstallTime/, 'useLicense.ts deve sincronizar o início dos 3 dias de teste com o timestamp nativo de instalação do Android')
+  assert.match(licenseContent, /TRIAL_DAYS = 3/, 'useLicense.ts deve definir estritamente 3 dias de teste')
+
+  const appContent = fs.readFileSync(path.join(ROOT, 'src/App.tsx'), 'utf8')
+  assert.match(appContent, /!isVipOrTrialActive[\s\S]*?<LicenseGate isModal=\{false\}/, 'App.tsx deve forçar a tela de ativação paga (LicenseGate) após o vencimento dos 3 dias de teste')
+
+  const gateContent = fs.readFileSync(path.join(ROOT, 'src/components/LicenseGate.tsx'), 'utf8')
+  assert.match(gateContent, /const canDismiss = Boolean\(isModal && onClose && \(isLicensed \|\| isTrial\)\)/, 'LicenseGate.tsx deve impedir o fechamento do paywall quando os 3 dias de teste vencerem')
+
+  const streamsContent = fs.readFileSync(path.join(ROOT, 'src/services/streams.ts'), 'utf8')
+  assert.match(streamsContent, /BANNED_AD_STREAM_HINTS/, 'streams.ts deve definir lista de bloqueio contra streams com propaganda 1xBet (1xbt) e camrips')
+  assert.match(streamsContent, /isAdOrCamripStream/, 'streams.ts deve filtrar streams com marca d-água 1xBet/1xbt ou HDCAM')
+
+  const tmdbContent = fs.readFileSync(path.join(ROOT, 'src/services/tmdb.ts'), 'utf8')
+  assert.match(tmdbContent, /isCleanDigitalCatalogItem/, 'tmdb.ts deve filtrar filmes exclusivos de cinema em janela de CAMRIP/1xBet')
+  assert.match(tmdbContent, /with_release_type:\s*'4\|5\|6'/, 'tmdb.ts deve exigir lançamentos Digitais/VOD (4|5|6) nos catálogos de filmes recentes')
+
+  const mainActivityJava = fs.readFileSync(
+    path.join(ROOT, 'android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java'),
+    'utf8'
+  )
+  assert.match(mainActivityJava, /resolvePersistentFirstInstallTime/, 'MainActivity.java deve persistir o firstInstallTime nativo do Android independente de atualizações')
+  assert.match(mainActivityJava, /clearCache\(true\)/, 'MainActivity.java deve limpar o cache do WebView automaticamente quando o versionCode subir')
+  assert.match(mainActivityJava, /1xbt/, 'MainActivity.java deve bloquear domínios e vídeos 1xbt/1xbet no WebView')
+})

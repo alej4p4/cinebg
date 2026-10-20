@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
+import { getCineBGNativeBridge } from '@/utils/tv'
 
 export const TRIAL_DAYS = 3
 const LICENSE_KEY = 'cinebg_license'
 const FIRST_USE_KEY = 'cinebg_first_use'
 const DEVICE_ID_KEY = 'cinebg_device_id'
+const MIN_VALID_TIMESTAMP = 1577836800000 // 2020-01-01
+const LICENSE_EVENT_NAME = 'cinebg-license-updated'
 
 export interface License {
   code: string
@@ -18,23 +21,92 @@ interface LicenseResponse {
   licenses: string[]
 }
 
+/**
+ * Obtém e sincroniza a data/hora real da primeira instalação do CineBG no aparelho.
+ * Prioriza o timestamp mais antigo entre o PackageManager/SharedPreferences nativo do Android
+ * e o armazenamento local, garantindo que os 3 dias de teste NUNCA zerem ao atualizar o APK.
+ */
 export const getFirstUse = (): number => {
-  const stored = localStorage.getItem(FIRST_USE_KEY)
-  if (stored) return Number(stored)
-  const now = Date.now()
-  localStorage.setItem(FIRST_USE_KEY, String(now))
-  return now
+  let localTs = 0
+  try {
+    const stored = localStorage.getItem(FIRST_USE_KEY)
+    if (stored) {
+      const parsed = Number(stored)
+      if (Number.isFinite(parsed) && parsed > MIN_VALID_TIMESTAMP) {
+        localTs = parsed
+      }
+    }
+  } catch {}
+
+  let nativeTs = 0
+  try {
+    const bridge = getCineBGNativeBridge()
+    if (bridge && typeof bridge.getFirstInstallTime === 'function') {
+      const rawNative = Number(bridge.getFirstInstallTime())
+      if (Number.isFinite(rawNative) && rawNative > MIN_VALID_TIMESTAMP) {
+        nativeTs = rawNative
+      }
+    }
+  } catch {}
+
+  let earliest = Date.now()
+  if (localTs > MIN_VALID_TIMESTAMP && nativeTs > MIN_VALID_TIMESTAMP) {
+    earliest = Math.min(localTs, nativeTs)
+  } else if (nativeTs > MIN_VALID_TIMESTAMP) {
+    earliest = nativeTs
+  } else if (localTs > MIN_VALID_TIMESTAMP) {
+    earliest = localTs
+  }
+
+  try {
+    localStorage.setItem(FIRST_USE_KEY, String(earliest))
+  } catch {}
+
+  try {
+    const bridge = getCineBGNativeBridge()
+    if (bridge && typeof bridge.syncFirstInstallTime === 'function') {
+      const synced = Number(bridge.syncFirstInstallTime(earliest))
+      if (Number.isFinite(synced) && synced > MIN_VALID_TIMESTAMP && synced < earliest) {
+        earliest = synced
+        localStorage.setItem(FIRST_USE_KEY, String(earliest))
+      }
+    }
+  } catch {}
+
+  return earliest
 }
 
 export const getStoredLicense = (): License | null => {
-  const stored = localStorage.getItem(LICENSE_KEY)
-  if (!stored) return null
+  let raw: string | null = null
   try {
-    const license = JSON.parse(stored) as License
+    raw = localStorage.getItem(LICENSE_KEY)
+  } catch {}
+
+  if (!raw) {
+    try {
+      const bridge = getCineBGNativeBridge()
+      if (bridge && typeof bridge.getSavedLicense === 'function') {
+        const nativeRaw = bridge.getSavedLicense()
+        if (nativeRaw && nativeRaw.trim().length > 0) {
+          raw = nativeRaw.trim()
+          try {
+            localStorage.setItem(LICENSE_KEY, raw)
+          } catch {}
+        }
+      }
+    } catch {}
+  }
+
+  if (!raw) return null
+  try {
+    const license = JSON.parse(raw) as License
     if (license && typeof license.expiresAt === 'number' && license.expiresAt > Date.now()) {
       return license
     }
-    localStorage.removeItem(LICENSE_KEY)
+    try {
+      localStorage.removeItem(LICENSE_KEY)
+      getCineBGNativeBridge()?.saveLicense?.('')
+    } catch {}
     return null
   } catch {
     return null
@@ -42,16 +114,35 @@ export const getStoredLicense = (): License | null => {
 }
 
 export const getDeviceId = (): string => {
-  let id = localStorage.getItem(DEVICE_ID_KEY)
+  try {
+    const bridge = getCineBGNativeBridge()
+    if (bridge && typeof bridge.getHardwareDeviceId === 'function') {
+      const hwId = bridge.getHardwareDeviceId()
+      if (hwId && typeof hwId === 'string' && hwId.trim().length > 0 && hwId !== 'cinebg_unknown') {
+        try {
+          localStorage.setItem(DEVICE_ID_KEY, hwId.trim())
+        } catch {}
+        return hwId.trim()
+      }
+    }
+  } catch {}
+
+  let id = ''
+  try {
+    id = localStorage.getItem(DEVICE_ID_KEY) || ''
+  } catch {}
+
   if (!id) {
     id = `cinebg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
-    localStorage.setItem(DEVICE_ID_KEY, id)
+    try {
+      localStorage.setItem(DEVICE_ID_KEY, id)
+    } catch {}
   }
   return id
 }
 
 export const useLicense = () => {
-  const [license, setLicense] = useState<License | null>(null)
+  const [license, setLicense] = useState<License | null>(() => getStoredLicense())
   const [loading, setLoading] = useState(true)
   const [trialDaysLeft, setTrialDaysLeft] = useState(TRIAL_DAYS)
   const [trialHoursLeft, setTrialHoursLeft] = useState(TRIAL_DAYS * 24)
@@ -82,10 +173,11 @@ export const useLicense = () => {
       return
     }
 
-    // Trial expirado
+    // Período de teste de 3 dias expirado: força aquisição da versão paga VIP
     setIsTrial(false)
     setTrialDaysLeft(0)
     setTrialHoursLeft(0)
+    setLicense(null)
 
     // Verifica se há licença ativa no arquivo de licenças remotas
     fetch(`/licenses.json?t=${Date.now()}`)
@@ -94,7 +186,22 @@ export const useLicense = () => {
         const active = data?.licenses ?? []
         const deviceId = getDeviceId()
         if (active.includes(deviceId)) {
-          activateLicense(deviceId, 30, 'Plano Mensal (Ativação Remota)')
+          const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000
+          const remoteLic: License = {
+            code: deviceId,
+            expiresAt,
+            planDays: 30,
+            planName: 'Plano Mensal (Ativação Remota)',
+            activatedAt: Date.now(),
+          }
+          const serialized = JSON.stringify(remoteLic)
+          try {
+            localStorage.setItem(LICENSE_KEY, serialized)
+            getCineBGNativeBridge()?.saveLicense?.(serialized)
+          } catch {}
+          setLicense(remoteLic)
+          setIsTrial(false)
+          window.dispatchEvent(new CustomEvent(LICENSE_EVENT_NAME))
         }
       })
       .catch(() => {})
@@ -104,14 +211,35 @@ export const useLicense = () => {
   useEffect(() => {
     checkStatus()
 
-    // Ouve eventos de atualização de licença entre janelas ou abas
     const handleStorage = (e: StorageEvent) => {
       if (e.key === LICENSE_KEY || e.key === FIRST_USE_KEY) {
         checkStatus()
       }
     }
+    const handleCustomSync = () => {
+      checkStatus()
+    }
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkStatus()
+      }
+    }
+
+    // Revalida periodicamente a cada 60 segundos para detectar o vencimento dos 3 dias em tempo real
+    const intervalId = setInterval(checkStatus, 60_000)
+
     window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+    window.addEventListener(LICENSE_EVENT_NAME, handleCustomSync)
+    window.addEventListener('focus', handleCustomSync)
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      clearInterval(intervalId)
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener(LICENSE_EVENT_NAME, handleCustomSync)
+      window.removeEventListener('focus', handleCustomSync)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [checkStatus])
 
   const activateLicense = (
@@ -129,15 +257,24 @@ export const useLicense = () => {
       paymentId,
       activatedAt: Date.now(),
     }
-    localStorage.setItem(LICENSE_KEY, JSON.stringify(newLicense))
+    const serialized = JSON.stringify(newLicense)
+    try {
+      localStorage.setItem(LICENSE_KEY, serialized)
+      getCineBGNativeBridge()?.saveLicense?.(serialized)
+    } catch {}
     setLicense(newLicense)
     setIsTrial(false)
     setLoading(false)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(LICENSE_EVENT_NAME))
+    }
   }
 
   const resetTrialForTesting = () => {
-    localStorage.removeItem(LICENSE_KEY)
-    localStorage.removeItem(FIRST_USE_KEY)
+    try {
+      localStorage.removeItem(LICENSE_KEY)
+      getCineBGNativeBridge()?.saveLicense?.('')
+    } catch {}
     checkStatus()
   }
 

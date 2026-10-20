@@ -32,16 +32,65 @@ export const tmdb = axios.create({
   },
 })
 
-// ===== Filtro infantil =====
+// ===== Filtro infantil e Filtro Anti-1xBet / Anti-Camrip de Cinema =====
 const KIDS_GENRES = new Set([16, 10751, 10762, 12, 14, 35, 10402, 10765])
+const BANNED_CATALOG_KEYWORDS = [
+  '1xbet',
+  '1xbt',
+  'xbet',
+  'melbet',
+  'mostbet',
+  'linebet',
+  'betwinner',
+  'camrip',
+  'hdcam',
+  'telesync',
+  'tsrip',
+]
+
+// Janela de segurança contra gravações de cinema (HDCAM / 1xBet / 1xbt):
+// Filmes exclusivos de cinema nos primeiros 45 dias antes do lançamento Digital/VOD
+// possuem apenas gravações de câmera com propaganda 1xBet embutida nos servidores externos.
+const THEATER_CAMRIP_WINDOW_MS = 45 * 24 * 60 * 60 * 1000
+
+const getDigitalCutoffDate = (): string =>
+  new Date(Date.now() - THEATER_CAMRIP_WINDOW_MS).toISOString().slice(0, 10)
+
+export const isCleanDigitalCatalogItem = (item: MediaItem): boolean => {
+  if (!item || !item.id || !item.title) return false
+  const textToCheck = `${item.title} ${item.overview || ''}`.toLowerCase()
+  if (BANNED_CATALOG_KEYWORDS.some((kw) => textToCheck.includes(kw))) {
+    return false
+  }
+
+  if (item.type === 'movie') {
+    if (!item.releaseDate) return false
+    const releaseTime = new Date(item.releaseDate).getTime()
+    if (!Number.isFinite(releaseTime)) return false
+    const now = Date.now()
+    // Bloqueia filmes futuros ainda não lançados
+    if (releaseTime > now) return false
+    // Bloqueia filmes exclusivos de cinema dentro da janela de gravação CAMRIP / 1xBet
+    const ageMs = now - releaseTime
+    if (ageMs < THEATER_CAMRIP_WINDOW_MS && (item.voteCount || 0) < 600) {
+      return false
+    }
+  }
+
+  return true
+}
 
 export const isKidsMode = (): boolean => {
   const { profiles, activeProfileId } = useAppStore.getState()
   return profiles.find((p) => p.id === activeProfileId)?.kids ?? false
 }
 
-const forKids = (items: MediaItem[]): MediaItem[] =>
-  isKidsMode() ? items.filter((item) => item.genreIds.some((g) => KIDS_GENRES.has(g))) : items
+const forKids = (items: MediaItem[]): MediaItem[] => {
+  const cleanItems = items.filter(isCleanDigitalCatalogItem)
+  return isKidsMode()
+    ? cleanItems.filter((item) => item.genreIds.some((g) => KIDS_GENRES.has(g)))
+    : cleanItems
+}
 
 // ===== Image URLs (Com Otimização de Memória VRAM para Android TV / Fire TV) =====
 export const getPosterUrl = (
@@ -75,7 +124,7 @@ const MAX_MEMORY_CACHE_ENTRIES = 80
 const requestCache = new Map<string, { data: unknown; expiresAt: number }>()
 const inflightMap = new Map<string, Promise<unknown>>()
 
-const STORAGE_PREFIX = 'cinebg_tmdb_v3_'
+const STORAGE_PREFIX = 'cinebg_tmdb_v4_'
 const DEFAULT_CATALOG_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas para catálogos
 const DETAILS_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 dias para detalhes de filmes/séries
 
@@ -106,7 +155,12 @@ if (typeof window !== 'undefined') {
       const legacyKeys: string[] = []
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i)
-        if (k && (k.startsWith('cinebg_tmdb_cache_') || k.startsWith('cinebg_tmdb_v2_'))) {
+        if (
+          k &&
+          (k.startsWith('cinebg_tmdb_cache_') ||
+            k.startsWith('cinebg_tmdb_v2_') ||
+            k.startsWith('cinebg_tmdb_v3_'))
+        ) {
           legacyKeys.push(k)
         }
       }
@@ -359,7 +413,13 @@ export const getTrending = async (
 }
 
 export const getPopularMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/movie/popular', { page })
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/discover/movie', {
+    page,
+    sort_by: 'popularity.desc',
+    with_release_type: '4|5|6',
+    'primary_release_date.lte': getDigitalCutoffDate(),
+    'vote_count.gte': 50,
+  })
   return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
@@ -369,12 +429,26 @@ export const getTopRatedMovies = async (page = 1): Promise<{ items: MediaItem[];
 }
 
 export const getNowPlayingMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/movie/now_playing', { page })
+  // Retorna lançamentos recentes já disponíveis em formato Digital/Streaming (sem gravações de cinema 1xBet/HDCAM)
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/discover/movie', {
+    page,
+    sort_by: 'popularity.desc',
+    with_release_type: '4|5|6',
+    'primary_release_date.lte': getDigitalCutoffDate(),
+    'vote_count.gte': 80,
+  })
   return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
 export const getUpcomingMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/movie/upcoming', { page })
+  // Retorna lançamentos digitais recentes com áudio e vídeo HD limpos (excluindo títulos inéditos com 1xBet camrip)
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/discover/movie', {
+    page,
+    sort_by: 'primary_release_date.desc',
+    with_release_type: '4|5|6',
+    'primary_release_date.lte': getDigitalCutoffDate(),
+    'vote_count.gte': 100,
+  })
   return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
@@ -393,6 +467,9 @@ export const discoverMovies = async (params: {
     primary_release_year: params.year,
     sort_by: params.sort || 'popularity.desc',
     'vote_average.gte': params.minRating,
+    with_release_type: '4|5|6',
+    'primary_release_date.lte': getDigitalCutoffDate(),
+    'vote_count.gte': 30,
     with_watch_providers: params.withWatchProviders,
     watch_region: params.withWatchProviders ? 'BR' : undefined,
   })

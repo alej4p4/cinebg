@@ -1,19 +1,71 @@
 export const DEFAULT_TV_APK_URL =
-  'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk'
+  'https://github.com/alej4p4/cinebg/releases/download/v1.2.63/CineBG-Tv-release.apk'
 export const DEFAULT_MOBILE_APK_URL =
-  'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk'
+  'https://github.com/alej4p4/cinebg/releases/download/v1.2.63/CineBG-Mobile-release.apk'
 
-interface CineBGNativeBridge {
+export interface CineBGNativeBridge {
   getDeviceType?: () => string
   isTv?: () => boolean
   isMobile?: () => boolean
+  getAppVersion?: () => string
+  getAppVersionCode?: () => number
+  getFirstInstallTime?: () => number
+  syncFirstInstallTime?: (jsTimestamp: number) => number
+  getHardwareDeviceId?: () => string
+  getSavedLicense?: () => string
+  saveLicense?: (licenseJson: string) => void
   setPlayerLandscape?: (landscape: boolean) => void
 }
 
-export const setNativePlayerLandscape = (landscape: boolean) => {
-  if (typeof window === 'undefined') return
+export const getCineBGNativeBridge = (): CineBGNativeBridge | null => {
+  if (typeof window === 'undefined') return null
   try {
-    const bridge = (window as unknown as { CineBGNative?: CineBGNativeBridge }).CineBGNative
+    return (window as unknown as { CineBGNative?: CineBGNativeBridge }).CineBGNative || null
+  } catch {
+    return null
+  }
+}
+
+export const getNativeAppVersion = (fallback = '1.2.63'): string => {
+  try {
+    const bridge = getCineBGNativeBridge()
+    if (bridge && typeof bridge.getAppVersion === 'function') {
+      const v = bridge.getAppVersion()
+      if (v && typeof v === 'string' && v.trim().length > 0) {
+        return v.trim()
+      }
+    }
+  } catch {}
+  return fallback
+}
+
+/**
+ * Compara versões semânticas (ex: "1.2.63" vs "1.2.62").
+ * Retorna true ESTRITAMENTE se remoteVersion for MAIOR que currentVersion,
+ * impedindo que cache de CDN com versão anterior ofereça downgrade ou entre em loop de atualização.
+ */
+export const isVersionNewer = (remoteVersion: string, currentVersion: string): boolean => {
+  if (!remoteVersion || !currentVersion) return false
+  const cleanRemote = remoteVersion.trim().replace(/^v/i, '')
+  const cleanCurrent = currentVersion.trim().replace(/^v/i, '')
+  if (cleanRemote === cleanCurrent) return false
+
+  const rParts = cleanRemote.split('.').map((n) => parseInt(n, 10) || 0)
+  const cParts = cleanCurrent.split('.').map((n) => parseInt(n, 10) || 0)
+  const maxLen = Math.max(rParts.length, cParts.length)
+
+  for (let i = 0; i < maxLen; i++) {
+    const r = rParts[i] ?? 0
+    const c = cParts[i] ?? 0
+    if (r > c) return true
+    if (r < c) return false
+  }
+  return false
+}
+
+export const setNativePlayerLandscape = (landscape: boolean) => {
+  try {
+    const bridge = getCineBGNativeBridge()
     if (bridge && typeof bridge.setPlayerLandscape === 'function') {
       bridge.setPlayerLandscape(landscape)
     }
@@ -21,9 +73,8 @@ export const setNativePlayerLandscape = (landscape: boolean) => {
 }
 
 const getNativeDeviceType = (): 'mobile' | 'tv' | null => {
-  if (typeof window === 'undefined') return null
   try {
-    const bridge = (window as unknown as { CineBGNative?: CineBGNativeBridge }).CineBGNative
+    const bridge = getCineBGNativeBridge()
     if (bridge && typeof bridge.getDeviceType === 'function') {
       const type = bridge.getDeviceType()
       if (type === 'mobile' || type === 'tv') return type
@@ -153,6 +204,7 @@ export const getDeviceFlavor = (): 'mobile' | 'tv' => {
 }
 
 export interface UpdateUrlPayload {
+  version?: string
   downloadUrl?: string
   downloadUrlTv?: string
   downloadUrlMobile?: string
