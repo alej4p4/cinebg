@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Play, Star, Heart,
-  Tv, X, Check, Maximize2, MessageSquare, Sliders, Download,
+  X, Check, MessageSquare, Sliders, Download,
   ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { SkeletonDetailPage } from '@/components/ui/SkeletonCard'
@@ -18,8 +18,8 @@ import {
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
 import { downloadsSupported, buildFileName, downloadVideo } from '@/services/downloads'
-import { resolveMegaEmbed } from '@/services/streams'
-import type { TMDBMovieDetails, TMDBShowDetails, TMDBVideo, DownloadItem, MediaType } from '@/types'
+import { resolveMegaEmbed, getCachedMegaEmbed } from '@/services/streams'
+import type { TMDBMovieDetails, TMDBShowDetails, DownloadItem, MediaType } from '@/types'
 
 const Details = () => {
   const { type, id } = useParams<{ type: 'movie' | 'tv' | 'anime'; id: string }>()
@@ -53,8 +53,28 @@ const Details = () => {
   const [resolucaoModalOpen, setResolucaoModalOpen] = useState(false)
   const [selectedResolution, setSelectedResolution] = useState('1080p')
   const [isDownloading, setIsDownloading] = useState(false)
+  const [previewMp4, setPreviewMp4] = useState<string | null>(() => {
+    if (!mediaId || Number.isNaN(mediaId)) return null
+    return getCachedMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', 1, 1)?.dubbedMp4 || null
+  })
 
   const fullscreenBtnRef = useRef<HTMLButtonElement | null>(null)
+
+  // Pré-resolve a fonte direta do filme/episódio em background (estilo YouCine, sem trailer do YouTube)
+  useEffect(() => {
+    if (!mediaId || Number.isNaN(mediaId)) return
+    let active = true
+    resolveMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', selectedSeason, selectedEpisode)
+      .then((res) => {
+        if (active && res.dubbedMp4) {
+          setPreviewMp4(res.dubbedMp4)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [mediaId, isMovie, selectedSeason, selectedEpisode])
 
   useEffect(() => {
     if (!id || !type) return
@@ -206,8 +226,6 @@ const Details = () => {
   const backdropPath = data.backdrop_path || data.poster_path
 
   const favorite = isFavorite(mediaId)
-  const videos: TMDBVideo[] = data?.videos?.results ?? []
-  const trailer = videos.find((v) => v.site === 'YouTube' && v.type === 'Trailer') ?? videos[0]
 
   const handleToggleFav = () => {
     if (favorite) {
@@ -415,29 +433,27 @@ const Details = () => {
             </div>
           </div>
 
-          {/* Coluna Direita: Mini-player de Preview 16:9 Estilo YouCine */}
+          {/* Coluna Direita: Mini-player de Preview 16:9 Estilo YouCine (Sem Trailer do YouTube e Sem Ícone de Play Intermediário) */}
           <div className="lg:col-span-5 flex flex-col items-center lg:items-end justify-center">
             <div className="relative w-full max-w-[460px] aspect-video rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black/80 group">
-              {trailer ? (
-                <iframe
-                  src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1&controls=0&loop=1&playlist=${trailer.key}&playsinline=1`}
-                  title={`Preview de ${displayTitle}`}
-                  allow="autoplay; encrypted-media"
-                  className="w-full h-full object-cover border-0 pointer-events-none"
+              {previewMp4 ? (
+                <video
+                  key={`preview-${mediaId}-${selectedSeason}-${selectedEpisode}`}
+                  src={previewMp4}
+                  poster={getBackdropUrl(backdropPath, 'w780')}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-cover pointer-events-none"
                 />
               ) : (
-                <div className="w-full h-full relative">
-                  <img
-                    src={getBackdropUrl(backdropPath, 'w780')}
-                    alt={displayTitle}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <div className="w-14 h-14 rounded-full bg-accent-red/90 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-                      <Play className="w-7 h-7 fill-white ml-1" />
-                    </div>
-                  </div>
-                </div>
+                <img
+                  src={getBackdropUrl(backdropPath, 'w780')}
+                  alt={displayTitle}
+                  className="w-full h-full object-cover pointer-events-none"
+                />
               )}
 
               {/* Botões laterais < e > sobre o preview */}

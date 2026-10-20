@@ -33,9 +33,9 @@ export const MIRRORS: StreamMirror[] = [
     type: 'multi_sub',
     sandboxed: false,
     getMovieUrl: (tmdbId) =>
-      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt`,
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt`,
+      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true`,
   },
   {
     id: 'vidsrc-sh',
@@ -44,9 +44,9 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'FHD 1080p',
     type: 'multi_sub',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://vidsrc.sh/embed/movie?tmdb=${tmdbId}&ds_lang=pt`,
+    getMovieUrl: (tmdbId) => `https://vidsrc.sh/embed/movie?tmdb=${tmdbId}&ds_lang=pt&autoplay=1`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://vidsrc.sh/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}&ds_lang=pt`,
+      `https://vidsrc.sh/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}&ds_lang=pt&autoplay=1`,
   },
   {
     id: 'megaembed',
@@ -55,9 +55,9 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'FHD 1080p',
     type: 'dubbed_br',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}`,
+    getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}?autoplay=1`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://mgeb.site/embed/${tmdbId}/${season}/${episode}`,
+      `https://mgeb.site/embed/${tmdbId}/${season}/${episode}?autoplay=1`,
   },
   {
     id: 'vidsrc-io',
@@ -66,9 +66,9 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'FHD 1080p',
     type: 'multi_sub',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://vidsrc.io/embed/movie/${tmdbId}?ds_lang=pt`,
+    getMovieUrl: (tmdbId) => `https://vidsrc.io/embed/movie/${tmdbId}?ds_lang=pt&autoplay=1`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://vidsrc.io/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
+      `https://vidsrc.io/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt&autoplay=1`,
   },
   {
     id: 'vsembed',
@@ -77,9 +77,9 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'FHD 1080p',
     type: 'multi_sub',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://vsembed.ru/embed/movie/${tmdbId}?ds_lang=pt`,
+    getMovieUrl: (tmdbId) => `https://vsembed.ru/embed/movie/${tmdbId}?ds_lang=pt&autoplay=1`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://vsembed.ru/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt`,
+      `https://vsembed.ru/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt&autoplay=1`,
   },
   {
     id: 'multiembed',
@@ -88,9 +88,9 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'FHD 1080p',
     type: 'dubbed_br',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`,
+    getMovieUrl: (tmdbId) => `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&autoplay=1`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`,
+      `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}&autoplay=1`,
   },
 ]
 
@@ -290,6 +290,16 @@ const fetchMegaEmbedSources = async (
   }
 
   return []
+}
+
+export const getCachedMegaEmbed = (
+  tmdbId: number,
+  mediaType: 'movie' | 'tv',
+  season = 1,
+  episode = 1
+): MegaEmbedResolved | null => {
+  const cacheKey = `${mediaType}-${tmdbId}-${season}-${episode}`
+  return resolvedSourcesCache.get(cacheKey) || null
 }
 
 export const resolveMegaEmbed = async (
