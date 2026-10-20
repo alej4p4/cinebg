@@ -6,7 +6,9 @@ import {
   Tv, X, Check, Maximize2, MessageSquare, Sliders, Download,
   ChevronLeft, ChevronRight,
 } from 'lucide-react'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { SkeletonDetailPage } from '@/components/ui/SkeletonCard'
+import ProgressBar from '@/components/ui/ProgressBar'
+import { PAGE_VARIANTS } from '@/utils/motion'
 import Focusable from '@/components/tv/Focusable'
 import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
 import {
@@ -152,9 +154,10 @@ const Details = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
+      <>
+        <ProgressBar isLoading={true} />
+        <SkeletonDetailPage />
+      </>
     )
   }
 
@@ -285,7 +288,8 @@ const Details = () => {
   }
 
   return (
-    <div className="relative min-h-screen w-full bg-[#0a0a12] text-white overflow-x-hidden select-none font-sans">
+    <motion.div variants={PAGE_VARIANTS} initial="initial" animate="animate" exit="exit" className="relative min-h-screen w-full bg-[#0a0a12] text-white overflow-x-hidden select-none font-sans">
+      <ProgressBar isLoading={isDownloading} />
       {/* Imagem de Fundo (Backdrop) com Gradientes Cinematográficos Estilo YouCine */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {backdropPath && !imgError ? (
@@ -1001,7 +1005,7 @@ const Details = () => {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   )
 }
 

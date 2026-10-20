@@ -1,8 +1,10 @@
 {
-  "version": "1.2.56",
+  "version": "1.2.57",
   "downloadUrl": "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk",
   "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk",
   "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk",
   "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-release.apk",
   "mandatory": false
 }

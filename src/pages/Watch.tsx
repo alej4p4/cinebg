@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import StreamPlayer from '@/components/player/StreamPlayer'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { getMovieDetails, getShowDetails } from '@/services/tmdb'
+import ProgressBar from '@/components/ui/ProgressBar'
+import { getMovieDetails, getShowDetails, getCachedMediaDetails } from '@/services/tmdb'
 import { resolveMegaEmbed } from '@/services/streams'
 import { buildFileName, downloadVideo, downloadsSupported } from '@/services/downloads'
 import { useAppStore } from '@/store/useAppStore'
@@ -13,19 +13,33 @@ const Watch = () => {
   const { type, id } = useParams<{ type: 'movie' | 'tv' | 'anime'; id: string }>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { addToHistory, getLastWatched, updateHistoryProgress, addDownload, isDownloaded } = useAppStore()
+  const { addToHistory, getLastWatched, updateHistoryProgress, addDownload } = useAppStore()
 
+  const mediaId = Number(id)
+  const isMovie = type === 'movie'
   const querySeason = Number(searchParams.get('season')) || null
   const queryEpisode = Number(searchParams.get('episode')) || null
-  
-  const [movieData, setMovieData] = useState<TMDBMovieDetails | null>(null)
-  const [showData, setShowData] = useState<TMDBShowDetails | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [season, setSeason] = useState(1)
-  const [episode, setEpisode] = useState(1)
-  const [resumeAt, setResumeAt] = useState<number | undefined>(undefined)
+
+  // Hidratação instantânea via cache em 0ms (sem bloquear a abertura do vídeo)
+  const cachedMovie = isMovie ? getCachedMediaDetails<TMDBMovieDetails>(mediaId, 'movie') : null
+  const cachedShow = !isMovie ? getCachedMediaDetails<TMDBShowDetails>(mediaId, type || 'tv') : null
+  const initialLastWatched = getLastWatched(mediaId)
+
+  const initialSeason = !isMovie ? (querySeason || initialLastWatched?.season || 1) : 1
+  const initialEpisode = !isMovie ? (queryEpisode || initialLastWatched?.episode || 1) : 1
+  const initialSameEpisode =
+    initialLastWatched?.season === initialSeason && initialLastWatched?.episode === initialEpisode
+
+  const [movieData, setMovieData] = useState<TMDBMovieDetails | null>(cachedMovie)
+  const [showData, setShowData] = useState<TMDBShowDetails | null>(cachedShow)
+  const [loading, setLoading] = useState(!cachedMovie && !cachedShow)
+  const [season, setSeason] = useState(initialSeason)
+  const [episode, setEpisode] = useState(initialEpisode)
+  const [resumeAt, setResumeAt] = useState<number | undefined>(
+    isMovie ? initialLastWatched?.progress : initialSameEpisode ? initialLastWatched?.progress : undefined
+  )
   const [downloading, setDownloading] = useState(false)
-  const [_downloadProgress, setDownloadProgress] = useState(0)
+  const [downloadProgress, setDownloadProgress] = useState(0)
 
   // Ao dar o Play e entrar na rota /watch, entra em tela cheia imediata e trava em paisagem (estilo YuCine)
   useEffect(() => {
@@ -41,7 +55,7 @@ const Watch = () => {
     }
     if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
       try {
-        (screen.orientation as any).lock('landscape').catch(() => {})
+        ;(screen.orientation as unknown as { lock: (o: string) => Promise<void> }).lock('landscape').catch(() => {})
       } catch {}
     }
 
@@ -66,12 +80,16 @@ const Watch = () => {
 
   useEffect(() => {
     if (!id || !type) return
-    
+    let active = true
+
     const loadDetails = async () => {
-      setLoading(true)
+      if (!cachedMovie && !cachedShow) {
+        setLoading(true)
+      }
       try {
         if (type === 'movie') {
-          const data = await getMovieDetails(Number(id))
+          const data = await getMovieDetails(mediaId)
+          if (!active) return
           setMovieData(data)
           const lastWatched = getLastWatched(data.id)
           setResumeAt(lastWatched?.progress)
@@ -85,9 +103,10 @@ const Watch = () => {
             rating: data.vote_average,
           })
         } else {
-          const data = await getShowDetails(Number(id))
+          const data = await getShowDetails(mediaId)
+          if (!active) return
           setShowData(data)
-          
+
           // Prioriza o episódio vindo da URL (?season=&episode=), senão continua do histórico
           const lastWatched = getLastWatched(data.id)
           const targetSeason = querySeason || lastWatched?.season || 1
@@ -114,12 +133,15 @@ const Watch = () => {
       } catch (err) {
         console.error('Failed to load media details:', err)
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
-    
+
     loadDetails()
-  }, [id, type, querySeason, queryEpisode, addToHistory, getLastWatched])
+    return () => {
+      active = false
+    }
+  }, [id, type, mediaId, querySeason, queryEpisode, addToHistory, getLastWatched, cachedMovie, cachedShow])
 
   const handleEpisodeSelect = (s: number, e: number) => {
     setSeason(s)
@@ -146,8 +168,12 @@ const Watch = () => {
   }
 
   const handleProgress = (seconds: number) => {
-    updateHistoryProgress(Number(id), Math.floor(seconds))
+    updateHistoryProgress(mediaId, Math.floor(seconds))
   }
+
+  const title = isMovie ? movieData?.title : showData?.name
+  const posterPath = isMovie ? movieData?.poster_path : showData?.poster_path
+  const originalLanguage = isMovie ? movieData?.original_language : showData?.original_language
 
   const handleDownload = async () => {
     if (!downloadsSupported()) {
@@ -158,7 +184,7 @@ const Watch = () => {
     setDownloadProgress(0)
     try {
       const resolved = await resolveMegaEmbed(
-        Number(id),
+        mediaId,
         type === 'movie' ? 'movie' : 'tv',
         season,
         episode,
@@ -168,7 +194,7 @@ const Watch = () => {
         return
       }
       const base: DownloadItem = {
-        id: Number(id),
+        id: mediaId,
         type: type as MediaType,
         title: title || '',
         posterPath: posterPath ?? null,
@@ -191,15 +217,7 @@ const Watch = () => {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
-  if (!movieData && !showData) {
+  if (!id || !type || Number.isNaN(mediaId)) {
     return (
       <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center text-white p-4">
         <h2 className="text-2xl font-bold mb-2">Mídia não encontrada</h2>
@@ -210,35 +228,19 @@ const Watch = () => {
     )
   }
 
-  const isMovie = type === 'movie'
-  const title = isMovie ? movieData?.title : showData?.name
-  const overview = isMovie ? movieData?.overview : showData?.overview
-  const rating = isMovie ? movieData?.vote_average : showData?.vote_average
-  const releaseDate = isMovie ? movieData?.release_date : showData?.first_air_date
-  const year = releaseDate ? new Date(releaseDate).getFullYear() : ''
-  const genres = isMovie ? movieData?.genres : showData?.genres
-  const runtime = isMovie ? movieData?.runtime : null
-  const posterPath = isMovie ? movieData?.poster_path : showData?.poster_path
-  const originalLanguage = isMovie ? movieData?.original_language : showData?.original_language
-  const alreadyDownloaded = isDownloaded(
-    Number(id),
-    isMovie ? undefined : season,
-    isMovie ? undefined : episode,
-  )
-
-  const currentSeasonEpisodeCount = Math.max(
-    1,
-    showData?.seasons?.find((s) => s.season_number === season)?.episode_count || 12
-  )
-
+  // Renderiza o StreamPlayer imediatamente em 0ms ao clicar em Play (sem bloquear no fetch do TMDB)
   return (
     <div className="fixed inset-0 z-50 w-screen h-screen bg-black overflow-hidden select-none">
+      <ProgressBar
+        isLoading={loading || downloading}
+        progress={downloading ? downloadProgress * 100 : undefined}
+      />
       <StreamPlayer
-        tmdbId={Number(id)}
+        tmdbId={mediaId}
         type={type as 'movie' | 'tv' | 'anime'}
         season={season}
         episode={episode}
-        title={title || ''}
+        title={title || initialLastWatched?.title || 'Carregando...'}
         originalLanguage={originalLanguage}
         onNextEpisode={type !== 'movie' ? handleNextEpisode : undefined}
         startAt={resumeAt}

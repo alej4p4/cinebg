@@ -5,6 +5,7 @@ import useSpeechRecognition from '@/hooks/useSpeechRecognition'
 import MovieCard from '@/components/ui/MovieCard'
 import Focusable from '@/components/tv/Focusable'
 import { SkeletonGrid } from '@/components/ui/SkeletonCard'
+import ProgressBar from '@/components/ui/ProgressBar'
 import ErrorState from '@/components/ui/ErrorState'
 import { EmptySearch } from '@/components/ui/EmptyState'
 import { searchMulti } from '@/services/tmdb'
@@ -196,6 +197,7 @@ const Search = () => {
       animate="animate"
       exit="exit"
     >
+      <ProgressBar isLoading={loading} />
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
         {/* Search bar */}
         <div className="relative mb-6 max-w-2xl mx-auto">
