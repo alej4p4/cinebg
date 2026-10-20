@@ -17,8 +17,9 @@ import {
   getCachedMediaDetails,
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
+import { markBackHandled } from '@/utils/tv'
 import { downloadsSupported, buildFileName, downloadVideo } from '@/services/downloads'
-import { resolveMegaEmbed, getCachedMegaEmbed } from '@/services/streams'
+import { resolveMegaEmbed } from '@/services/streams'
 import type { TMDBMovieDetails, TMDBShowDetails, DownloadItem, MediaType } from '@/types'
 
 const Details = () => {
@@ -53,27 +54,23 @@ const Details = () => {
   const [resolucaoModalOpen, setResolucaoModalOpen] = useState(false)
   const [selectedResolution, setSelectedResolution] = useState('1080p')
   const [isDownloading, setIsDownloading] = useState(false)
-  const [previewMp4, setPreviewMp4] = useState<string | null>(() => {
-    if (!mediaId || Number.isNaN(mediaId)) return null
-    return getCachedMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', 1, 1)?.dubbedMp4 || null
-  })
 
   const fullscreenBtnRef = useRef<HTMLButtonElement | null>(null)
 
-  // Pré-resolve a fonte direta do filme/episódio em background (estilo YouCine, sem trailer do YouTube)
+  const handleGoBack = () => {
+    markBackHandled()
+    const historyIdx = window.history.state?.idx ?? 0
+    if (historyIdx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
+  }
+
+  // Pré-resolve a fonte direta do filme/episódio em background (estilo YouCine, sem trailer do YouTube e sem ocupar o MediaCodec antes do Play)
   useEffect(() => {
     if (!mediaId || Number.isNaN(mediaId)) return
-    let active = true
-    resolveMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', selectedSeason, selectedEpisode)
-      .then((res) => {
-        if (active && res.dubbedMp4) {
-          setPreviewMp4(res.dubbedMp4)
-        }
-      })
-      .catch(() => {})
-    return () => {
-      active = false
-    }
+    resolveMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', selectedSeason, selectedEpisode).catch(() => {})
   }, [mediaId, isMovie, selectedSeason, selectedEpisode])
 
   useEffect(() => {
@@ -156,11 +153,13 @@ const Details = () => {
         code === 283
       ) {
         if (idiomaModalOpen) {
+          markBackHandled()
           e.preventDefault()
           e.stopPropagation()
           setIdiomaModalOpen(false)
           setTimeout(() => setFocus('details-idioma'), 50)
         } else if (resolucaoModalOpen) {
+          markBackHandled()
           e.preventDefault()
           e.stopPropagation()
           setResolucaoModalOpen(false)
@@ -331,7 +330,7 @@ const Details = () => {
         <div className="flex items-center justify-between mb-4">
           <Focusable
             focusKey="details-back"
-            onEnterPress={() => navigate(-1)}
+            onEnterPress={handleGoBack}
             onArrowPress={(direction) => {
               if (direction === 'down') {
                 setFocus('details-fullscreen')
@@ -341,7 +340,7 @@ const Details = () => {
             className="rounded-xl"
           >
             <button
-              onClick={() => navigate(-1)}
+              onClick={handleGoBack}
               className="flex items-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/90 rounded-xl backdrop-blur-md transition-all text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-400"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -433,28 +432,14 @@ const Details = () => {
             </div>
           </div>
 
-          {/* Coluna Direita: Mini-player de Preview 16:9 Estilo YouCine (Sem Trailer do YouTube e Sem Ícone de Play Intermediário) */}
+          {/* Coluna Direita: Quadro de Cena 16:9 Estilo YouCine (Sem Trailer do YouTube e Sem Ícone de Play Intermediário) */}
           <div className="lg:col-span-5 flex flex-col items-center lg:items-end justify-center">
             <div className="relative w-full max-w-[460px] aspect-video rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black/80 group">
-              {previewMp4 ? (
-                <video
-                  key={`preview-${mediaId}-${selectedSeason}-${selectedEpisode}`}
-                  src={previewMp4}
-                  poster={getBackdropUrl(backdropPath, 'w780')}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  className="w-full h-full object-cover pointer-events-none"
-                />
-              ) : (
-                <img
-                  src={getBackdropUrl(backdropPath, 'w780')}
-                  alt={displayTitle}
-                  className="w-full h-full object-cover pointer-events-none"
-                />
-              )}
+              <img
+                src={getBackdropUrl(backdropPath, 'w780')}
+                alt={displayTitle}
+                className="w-full h-full object-cover pointer-events-none"
+              />
 
               {/* Botões laterais < e > sobre o preview */}
               <button

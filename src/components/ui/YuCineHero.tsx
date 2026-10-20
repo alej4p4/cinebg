@@ -111,7 +111,7 @@ const YuCineHero = ({
           {/* Banner Grande em Destaque */}
           <Focusable
             focusKey="yucine-hero-banner"
-            onEnterPress={() => navigate(`/watch/${currentItem.type}/${currentItem.id}`)}
+            onEnterPress={() => navigate(`/details/${currentItem.type}/${currentItem.id}`)}
             onArrowPress={(dir) => {
               if (dir === 'left') {
                 prev()
@@ -215,7 +215,7 @@ const YuCineHero = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    navigate(`/watch/${currentItem.type}/${currentItem.id}`)
+                    navigate(`/details/${currentItem.type}/${currentItem.id}`)
                   }}
                   className="p-2.5 sm:p-3 bg-accent-red hover:bg-red-600 text-white rounded-full shadow-xl shadow-red-950/50 hover:scale-110 active:scale-95 transition-all"
                   title="Assistir Agora"
@@ -328,7 +328,7 @@ const YuCineHero = ({
           {/* Card Vertical 1 */}
           {sideItem1 && (
             <Focusable
-              onEnterPress={() => navigate(`/watch/${sideItem1.type}/${sideItem1.id}`)}
+              onEnterPress={() => navigate(`/details/${sideItem1.type}/${sideItem1.id}`)}
               className="h-full"
             >
               <div
@@ -359,7 +359,7 @@ const YuCineHero = ({
           {/* Card Vertical 2 */}
           {sideItem2 && (
             <Focusable
-              onEnterPress={() => navigate(`/watch/${sideItem2.type}/${sideItem2.id}`)}
+              onEnterPress={() => navigate(`/details/${sideItem2.type}/${sideItem2.id}`)}
               className="h-full"
             >
               <div

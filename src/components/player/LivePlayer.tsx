@@ -19,6 +19,7 @@ import { categoryLabel } from '@/services/liveChannels'
 import { getLiveChannelEPG } from '@/services/epg'
 import Focusable from '@/components/tv/Focusable'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
+import { markBackHandled } from '@/utils/tv'
 
 interface LivePlayerProps {
   channel: LiveChannel
@@ -56,6 +57,7 @@ const LivePlayer = ({
   }, [])
 
   const handleClose = useCallback(() => {
+    markBackHandled()
     if (document.fullscreenElement && document.exitFullscreen) {
       document
         .exitFullscreen()

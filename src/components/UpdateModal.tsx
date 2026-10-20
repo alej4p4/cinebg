@@ -39,8 +39,8 @@ type UpdateStage = 'idle' | 'downloading' | 'installing' | 'error'
 const UpdateModal = ({
   visible,
   downloadUrl = 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk',
-  currentVersion = '1.2.57',
-  latestVersion = '1.2.57',
+  currentVersion = '1.2.60',
+  latestVersion = '1.2.60',
   hasUpdate = false,
   isChecking = false,
   onDismiss,

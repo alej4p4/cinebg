@@ -5,7 +5,7 @@
   "3": "StreamPlayer.tsx",
   "4": "package.json",
   "5": "react",
-  "6": "useAppStore.ts",
+  "6": "Details.tsx",
   "7": "App.tsx",
   "8": "compilerOptions",
   "9": "dependencies",
@@ -34,9 +34,15 @@
   "32": "vite.config.ts",
   "33": "capacitor.config.ts",
   "34": "stryker.config.json",
+  "35": "notifications.ts",
   "36": "knip.json",
   "37": "ref_playwright_test",
   "38": "commitlint.config.js",
   "39": "GenreBadge.tsx",
-  "40": "eslint.config.js"
+  "40": "eslint.config.js",
+  "41": "streams.ts",
+  "42": "useAppStore.ts",
+  "43": "EmptyState.tsx",
+  "44": "ExampleInstrumentedTest.java",
+  "45": "epg.ts"
 }

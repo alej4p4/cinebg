@@ -159,7 +159,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                     onFocus={() => {
                       window.scrollTo({ top: 0, behavior: 'auto' })
                     }}
-                    onEnterPress={() => navigate(`/watch/${item.type}/${item.id}`)}
+                    onEnterPress={() => navigate(`/details/${item.type}/${item.id}`)}
                     onArrowPress={(dir) => {
                       if (dir === 'up') {
                         setFocus('nav-item-0')
@@ -186,7 +186,7 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                       whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.96 }}
                       transition={SPRING_SNAPPY}
-                      onClick={() => navigate(`/watch/${item.type}/${item.id}`)}
+                      onClick={() => navigate(`/details/${item.type}/${item.id}`)}
                       className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white font-semibold px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base shadow-xl glow-red"
                     >
                       <Play className="h-5 w-5 fill-white" />

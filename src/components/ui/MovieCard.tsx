@@ -30,7 +30,7 @@ const MovieCard = memo(({ item, index = 0, progress, rank, focusKey, onArrowPres
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation()
-    navigate(`/watch/${item.type}/${item.id}`)
+    navigate(`/details/${item.type}/${item.id}`)
   }
 
   const handleToggleFav = (e: React.MouseEvent) => {
@@ -50,11 +50,7 @@ const MovieCard = memo(({ item, index = 0, progress, rank, focusKey, onArrowPres
   }
 
   const handleClick = () => {
-    // Estilo YuCine: Se o item está em "Continuar Assistindo" com progresso salvo, vai direto ao player
-    if (typeof progress === 'number' && progress > 0) {
-      navigate(`/watch/${item.type}/${item.id}`)
-      return
-    }
+    // Padrão YouCine: sempre abre a tela de Sinopse / Detalhes primeiro; o Play é acionado dentro dela
     navigate(`/details/${item.type}/${item.id}`)
   }
 
