@@ -1,14 +1,25 @@
 import { useEffect, useRef } from 'react'
 import { Capacitor } from '@capacitor/core'
+import { isMobileDevice, setNativePlayerLandscape } from '@/utils/tv'
 
 /**
- * Adapta a interface para portrait/landscape e usa tela cheia em paisagem
- * em dispositivos Android. Solicita fullscreen automaticamente em landscape.
+ * Em celulares (Mobile), garante que todas as telas de navegação fiquem em Retrato (vertical),
+ * ativando modo paisagem/tela cheia apenas dentro do player (/watch).
  */
 export const useOrientationFullscreen = () => {
   const fullscreenRequested = useRef(false)
 
   useEffect(() => {
+    // Se for celular e não estiver no player de vídeo (/watch), garante orientação Retrato (em pé)
+    if (isMobileDevice() && !window.location.pathname.startsWith('/watch')) {
+      setNativePlayerLandscape(false)
+      try {
+        if (typeof screen !== 'undefined' && screen.orientation && 'unlock' in screen.orientation) {
+          screen.orientation.unlock()
+        }
+      } catch {}
+    }
+
     const isLandscape = () => {
       if (typeof screen !== 'undefined' && screen.orientation?.type) {
         return screen.orientation.type.startsWith('landscape')
@@ -39,25 +50,41 @@ export const useOrientationFullscreen = () => {
     }
 
     const update = async () => {
+      const isWatchRoute = window.location.pathname.startsWith('/watch')
       const landscape = isLandscape()
+
+      if (isMobileDevice() && !isWatchRoute) {
+        setNativePlayerLandscape(false)
+        document.documentElement.classList.remove('cinebg-landscape')
+        if (document.fullscreenElement) {
+          await exitFullscreen()
+        }
+        if (Capacitor.isNativePlatform()) {
+          try {
+            const { StatusBar } = await import('@capacitor/status-bar')
+            await StatusBar.show()
+          } catch {}
+        }
+        return
+      }
 
       if (Capacitor.isNativePlatform()) {
         try {
           const { StatusBar } = await import('@capacitor/status-bar')
           await StatusBar.setOverlaysWebView({ overlay: true })
-          if (landscape) await StatusBar.hide()
-          else await StatusBar.show()
+          if (landscape && isWatchRoute) await StatusBar.hide()
+          else if (isMobileDevice()) await StatusBar.show()
         } catch {
           /* StatusBar indisponivel neste contexto */
         }
       }
 
-      document.documentElement.classList.toggle('cinebg-landscape', landscape)
+      document.documentElement.classList.toggle('cinebg-landscape', landscape && isWatchRoute)
 
-      // Auto fullscreen no mobile/web quando em landscape
-      if (landscape && !fullscreenRequested.current && !document.fullscreenElement) {
+      // Auto fullscreen no mobile apenas dentro do player (/watch)
+      if (isWatchRoute && landscape && !fullscreenRequested.current && !document.fullscreenElement) {
         await requestFullscreen()
-      } else if (!landscape && fullscreenRequested.current && document.fullscreenElement) {
+      } else if ((!landscape || !isWatchRoute) && fullscreenRequested.current && document.fullscreenElement) {
         await exitFullscreen()
       }
     }

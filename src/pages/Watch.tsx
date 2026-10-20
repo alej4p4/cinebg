@@ -7,7 +7,7 @@ import { getMovieDetails, getShowDetails, getCachedMediaDetails } from '@/servic
 import { resolveMegaEmbed } from '@/services/streams'
 import { buildFileName, downloadVideo, downloadsSupported } from '@/services/downloads'
 import { useAppStore } from '@/store/useAppStore'
-import { markBackHandled } from '@/utils/tv'
+import { markBackHandled, setNativePlayerLandscape } from '@/utils/tv'
 import type { DownloadItem, MediaType, TMDBMovieDetails, TMDBShowDetails } from '@/types'
 
 const Watch = () => {
@@ -44,6 +44,7 @@ const Watch = () => {
 
   // Ao dar o Play e entrar na rota /watch, entra em tela cheia imediata e trava em paisagem (estilo YuCine)
   useEffect(() => {
+    setNativePlayerLandscape(true)
     if (Capacitor.isNativePlatform()) {
       import('@capacitor/status-bar')
         .then(({ StatusBar }) => {
@@ -61,6 +62,7 @@ const Watch = () => {
     }
 
     return () => {
+      setNativePlayerLandscape(false)
       if (typeof screen !== 'undefined' && screen.orientation && 'unlock' in screen.orientation) {
         try {
           screen.orientation.unlock()

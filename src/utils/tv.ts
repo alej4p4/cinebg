@@ -7,6 +7,17 @@ interface CineBGNativeBridge {
   getDeviceType?: () => string
   isTv?: () => boolean
   isMobile?: () => boolean
+  setPlayerLandscape?: (landscape: boolean) => void
+}
+
+export const setNativePlayerLandscape = (landscape: boolean) => {
+  if (typeof window === 'undefined') return
+  try {
+    const bridge = (window as unknown as { CineBGNative?: CineBGNativeBridge }).CineBGNative
+    if (bridge && typeof bridge.setPlayerLandscape === 'function') {
+      bridge.setPlayerLandscape(landscape)
+    }
+  } catch {}
 }
 
 const getNativeDeviceType = (): 'mobile' | 'tv' | null => {

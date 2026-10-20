@@ -148,4 +148,26 @@ test('10. Separação Estrita de Downloads OTA: Mobile (Celular) vs Smart TV em 
     /CineBG-Tv-release\.apk/,
     'AppInstallerPlugin.java deve forçar CineBG-Tv-release.apk em Smart TVs e TV Boxes'
   )
+
+  const buildGradle = fs.readFileSync(path.join(ROOT, 'android/app/build.gradle'), 'utf8')
+  assert.match(
+    buildGradle,
+    /screenOrientation:\s*"portrait"/,
+    'build.gradle deve configurar screenOrientation: "portrait" no flavor mobile para abrir em pé no celular'
+  )
+
+  const mainActivityJava = fs.readFileSync(
+    path.join(ROOT, 'android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java'),
+    'utf8'
+  )
+  assert.match(
+    mainActivityJava,
+    /SCREEN_ORIENTATION_PORTRAIT/,
+    'MainActivity.java deve forçar SCREEN_ORIENTATION_PORTRAIT em celulares fora do player de vídeo'
+  )
+  assert.match(
+    mainActivityJava,
+    /setPlayerLandscape/,
+    'MainActivity.java deve expor setPlayerLandscape na ponte CineBGNative'
+  )
 })
