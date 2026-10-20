@@ -137,7 +137,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ fromJson(file('public/update.json')).version }}
+          tag_name: v${{ steps.get-version.outputs.version }}
           files: |
             ./CineBG-Mobile-release.apk
             ./CineBG-Tv-release.apk
