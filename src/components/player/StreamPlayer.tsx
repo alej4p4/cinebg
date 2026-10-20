@@ -486,8 +486,8 @@ const StreamPlayer = ({
   const [fallbackAttempt, setFallbackAttempt] = useState(0)
   const [isAutoFallback, setIsAutoFallback] = useState(false)
   const fallbackSequence = audioOption === 'dub'
-    ? ['megaembed', 'vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'multiembed']
-    : ['vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'megaembed', 'multiembed']
+    ? ['megaembed', 'vidlink']
+    : ['vidlink', 'megaembed']
 
   const embedUrl =
     type === 'movie'

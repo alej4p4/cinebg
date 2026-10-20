@@ -5,14 +5,12 @@ import {
   QrCode,
   Copy,
   Check,
-  Clock,
   Sparkles,
   ShieldCheck,
   RefreshCw,
   X,
   Tv,
   CheckCircle2,
-  ExternalLink,
   Flame,
 } from 'lucide-react'
 import { useLicense } from '@/hooks/useLicense'
@@ -44,6 +42,8 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
     license,
   } = useLicense()
 
+  const canDismiss = Boolean(isModal && onClose && (isLicensed || isTrial))
+
   const [selectedPlanIndex, setSelectedPlanIndex] = useState(0)
   const [loadingPix, setLoadingPix] = useState(false)
   const [pixData, setPixData] = useState<CreatePixPaymentResult | null>(null)
@@ -73,7 +73,7 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
   }, [])
 
   useEffect(() => {
-    if (!isModal || !onClose) return
+    if (!canDismiss || !onClose) return
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
       const code = e.keyCode || e.which
@@ -96,7 +96,7 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
     }
     window.addEventListener('keydown', handleKeyDown, { capture: true })
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
-  }, [isModal, onClose])
+  }, [canDismiss, onClose])
 
   // Limpa o timer de polling ao desmontar
   useEffect(() => {
@@ -227,8 +227,8 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-2xl mx-auto my-auto relative"
     >
-      {/* Botão fechar (apenas modo modal) */}
-      {isModal && onClose && (
+      {/* Botão fechar (apenas se ainda estiver dentro dos 3 dias de teste ou já for VIP) */}
+      {canDismiss && onClose && (
         <Focusable
           focusKey="vip-close-btn"
           onEnterPress={onClose}
@@ -268,10 +268,10 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
             Deseja estender sua assinatura?
           </div>
         ) : (
-          <div className="bg-amber-500/15 border border-amber-500/30 rounded-xl px-4 py-2.5 text-amber-200 text-sm max-w-lg mx-auto">
-            ⏳ <strong>Seu período de teste de 3 dias encerrou.</strong>
-            <p className="text-white/80 text-xs mt-1">
-              Os canais de TV aberta (SBT, Record, Band, Cultura, etc.) continuam 100% liberados e gratuitos! Escolha um plano VIP abaixo para desbloquear todos os Filmes, Séries e canais fechados via Pix Mercado Pago.
+          <div className="bg-red-500/15 border border-red-500/40 rounded-xl px-4 py-3 text-amber-200 text-sm max-w-lg mx-auto shadow-lg shadow-red-950/40">
+            🔒 <strong>Seu período de teste gratuito de 3 dias venceu.</strong>
+            <p className="text-white/85 text-xs mt-1 leading-relaxed">
+              Para continuar utilizando o CineBG e liberar todos os Filmes, Séries, Animes e Canais de TV ao Vivo, escolha um plano VIP abaixo e realize a ativação imediata via Pix Mercado Pago.
             </p>
           </div>
         )}
@@ -553,27 +553,25 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
         </AnimatePresence>
       </div>
 
-      {/* Botão de retorno para TV Aberta Gratuita */}
-      <div className="mt-4 text-center">
-        <Focusable
-          focusKey="vip-continue-free-tv"
-          onEnterPress={() => {
-            if (onClose) onClose()
-          }}
-          className="block rounded-xl"
-        >
-          <button
-            type="button"
-            onClick={() => {
-              if (onClose) onClose()
-            }}
-            className="w-full py-2.5 px-4 rounded-xl border border-amber-400/30 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+      {/* Botão de fechar apenas quando ainda no período de teste ou já licenciado */}
+      {canDismiss && onClose && (
+        <div className="mt-4 text-center">
+          <Focusable
+            focusKey="vip-continue-free-tv"
+            onEnterPress={onClose}
+            className="block rounded-xl"
           >
-            <Tv className="w-4 h-4 text-amber-400" />
-            <span>Continuar Assistindo TV Aberta Grátis (SBT, Record, Band, Cultura...)</span>
-          </button>
-        </Focusable>
-      </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-2.5 px-4 rounded-xl border border-amber-400/30 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Tv className="w-4 h-4 text-amber-400" />
+              <span>Voltar para o CineBG</span>
+            </button>
+          </Focusable>
+        </div>
+      )}
 
       {/* Rodapé com ID do Dispositivo */}
       <div className="text-center mt-5 text-[11px] text-white/30 flex items-center justify-center gap-2">

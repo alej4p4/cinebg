@@ -86,6 +86,7 @@ public class AppInstallerPlugin extends Plugin {
         new Thread(() -> {
             try {
                 Context context = getContext();
+                MainActivity.resolvePersistentFirstInstallTime(context);
                 boolean isTv = MainActivity.isRealTelevisionDevice(context);
 
                 // Separação estrita no nível nativo Android:
@@ -186,8 +187,12 @@ public class AppInstallerPlugin extends Plugin {
         while (redirects < 6) {
             URL u = new URL(currentUrl);
             conn = (HttpURLConnection) u.openConnection();
+            conn.setUseCaches(false);
+            conn.setDefaultUseCaches(false);
             conn.setInstanceFollowRedirects(false);
-            conn.setRequestProperty("User-Agent", "CineBG-AppUpdater/1.0 (Android)");
+            conn.setRequestProperty("User-Agent", "CineBG-AppUpdater/1.2 (Android)");
+            conn.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
+            conn.setRequestProperty("Pragma", "no-cache");
             conn.setConnectTimeout(25000);
             conn.setReadTimeout(30000);
             conn.connect();
@@ -226,7 +231,7 @@ public class AppInstallerPlugin extends Plugin {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         context.startActivity(intent);
     }
 }

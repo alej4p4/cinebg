@@ -39,8 +39,8 @@ type UpdateStage = 'idle' | 'downloading' | 'installing' | 'error'
 const UpdateModal = ({
   visible,
   downloadUrl,
-  currentVersion = '1.2.62',
-  latestVersion = '1.2.62',
+  currentVersion = '1.2.63',
+  latestVersion = '1.2.63',
   hasUpdate = false,
   isChecking = false,
   onDismiss,

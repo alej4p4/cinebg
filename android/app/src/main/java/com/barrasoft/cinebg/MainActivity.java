@@ -2,12 +2,16 @@ package com.barrasoft.cinebg;
 
 import android.app.UiModeManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
+import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -23,6 +27,13 @@ import com.getcapacitor.BridgeWebViewClient;
 import java.io.ByteArrayInputStream;
 
 public class MainActivity extends BridgeActivity {
+    private static final String PREFS_NAME = "cinebg_device_prefs";
+    private static final String KEY_FIRST_INSTALL_TIME = "first_install_time";
+    private static final String KEY_LAST_VERSION_CODE = "last_installed_version_code";
+    private static final String KEY_SAVED_LICENSE = "saved_vip_license";
+    private static final String KEY_DEVICE_ID = "hardware_device_id";
+    private static final long MIN_VALID_TIMESTAMP = 1577836800000L; // 2020-01-01
+
     public static boolean isRealTelevisionDevice(Context context) {
         if (context == null) return false;
         try {
@@ -48,6 +59,75 @@ public class MainActivity extends BridgeActivity {
         return false;
     }
 
+    /**
+     * Resolve e persiste a data/hora real da primeira instalação do CineBG no aparelho,
+     * consultando tanto o PackageManager do Android (que preserva firstInstallTime entre atualizações de APK)
+     * quanto pacotes irmãos (Mobile/TV) e SharedPreferences.
+     */
+    public static synchronized long resolvePersistentFirstInstallTime(Context context) {
+        if (context == null) return System.currentTimeMillis();
+        long earliest = Long.MAX_VALUE;
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            long stored = prefs.getLong(KEY_FIRST_INSTALL_TIME, 0L);
+            if (stored > MIN_VALID_TIMESTAMP) {
+                earliest = Math.min(earliest, stored);
+            }
+
+            PackageManager pm = context.getPackageManager();
+            if (pm != null) {
+                String[] candidatePackages = new String[] {
+                    context.getPackageName(),
+                    "com.barrasoft.cinebg",
+                    "com.barrasoft.cinebg.tv"
+                };
+                for (String pkg : candidatePackages) {
+                    try {
+                        PackageInfo info = pm.getPackageInfo(pkg, 0);
+                        if (info != null && info.firstInstallTime > MIN_VALID_TIMESTAMP) {
+                            earliest = Math.min(earliest, info.firstInstallTime);
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            if (earliest == Long.MAX_VALUE || earliest <= MIN_VALID_TIMESTAMP) {
+                earliest = System.currentTimeMillis();
+            }
+
+            if (stored <= MIN_VALID_TIMESTAMP || earliest < stored) {
+                prefs.edit().putLong(KEY_FIRST_INSTALL_TIME, earliest).apply();
+            }
+        } catch (Exception ignored) {
+            if (earliest == Long.MAX_VALUE) {
+                earliest = System.currentTimeMillis();
+            }
+        }
+        return earliest;
+    }
+
+    public static synchronized String resolveHardwareDeviceId(Context context) {
+        if (context == null) return "cinebg_unknown";
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String cached = prefs.getString(KEY_DEVICE_ID, null);
+            if (cached != null && !cached.trim().isEmpty()) {
+                return cached;
+            }
+            String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+            String resolved;
+            if (androidId != null && !androidId.trim().isEmpty() && !"9774d56d682e549c".equalsIgnoreCase(androidId)) {
+                resolved = "cinebg_" + androidId.trim().toLowerCase();
+            } else {
+                resolved = "cinebg_" + Long.toString(resolvePersistentFirstInstallTime(context), 36);
+            }
+            prefs.edit().putString(KEY_DEVICE_ID, resolved).apply();
+            return resolved;
+        } catch (Exception ignored) {
+            return "cinebg_android";
+        }
+    }
+
     private boolean isVideoPlayerLandscape = false;
 
     private void applyDeviceOrientation() {
@@ -61,8 +141,47 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception ignored) {}
     }
 
+    /**
+     * Se o usuário em um celular estava com o pacote legado de TV ("com.barrasoft.cinebg.tv") aberto
+     * e já instalou o pacote correto de celular ("com.barrasoft.cinebg"), redireciona automaticamente
+     * para o novo app Mobile para nunca voltar à versão antiga.
+     */
+    private boolean redirectLegacyPackageIfNecessary() {
+        try {
+            boolean isTv = isRealTelevisionDevice(this);
+            String currentPkg = getPackageName();
+            PackageManager pm = getPackageManager();
+            if (pm == null) return false;
+
+            if (!isTv && "com.barrasoft.cinebg.tv".equals(currentPkg)) {
+                Intent mobileLaunch = pm.getLaunchIntentForPackage("com.barrasoft.cinebg");
+                if (mobileLaunch != null) {
+                    mobileLaunch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(mobileLaunch);
+                    finishAffinity();
+                    return true;
+                }
+            } else if (isTv && "com.barrasoft.cinebg".equals(currentPkg)) {
+                Intent tvLaunch = pm.getLaunchIntentForPackage("com.barrasoft.cinebg.tv");
+                if (tvLaunch != null) {
+                    tvLaunch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(tvLaunch);
+                    finishAffinity();
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        resolvePersistentFirstInstallTime(this);
+        if (redirectLegacyPackageIfNecessary()) {
+            super.onCreate(savedInstanceState);
+            return;
+        }
+
         applyDeviceOrientation();
         registerPlugin(AppInstallerPlugin.class);
         super.onCreate(savedInstanceState);
@@ -70,9 +189,18 @@ public class MainActivity extends BridgeActivity {
         setupImmersiveMode();
         setupTvFocus();
 
-        // Identifica formalmente o sabor (Mobile vs TV) no User-Agent do WebView
+        // Identifica formalmente o sabor (Mobile vs TV) e limpa cache obsoleto de WebView após atualização de APK
         if (getBridge() != null && getBridge().getWebView() != null) {
             WebView webView = getBridge().getWebView();
+            try {
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                int lastCode = prefs.getInt(KEY_LAST_VERSION_CODE, -1);
+                if (lastCode != BuildConfig.VERSION_CODE) {
+                    prefs.edit().putInt(KEY_LAST_VERSION_CODE, BuildConfig.VERSION_CODE).apply();
+                    webView.clearCache(true);
+                }
+            } catch (Exception ignored) {}
+
             String currentUa = webView.getSettings().getUserAgentString();
             boolean isTv = isRealTelevisionDevice(this);
             String flavorTag = isTv ? " CineBG-TV DeviceType/TV" : " CineBG-Mobile DeviceType/Mobile";
@@ -84,8 +212,6 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        // Assegura que o WebView receba o foco e processe teclas direcionais e D-Pad nativamente
-        // sem atrasos ou engasgos de evaluateJavascript que travam TV Boxes
         if (getBridge() != null && getBridge().getWebView() != null) {
             WebView webView = getBridge().getWebView();
             if (!webView.hasFocus()) {
@@ -98,6 +224,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
+        if (redirectLegacyPackageIfNecessary()) {
+            return;
+        }
         applyDeviceOrientation();
         setupTvFocus();
     }
@@ -115,7 +244,8 @@ public class MainActivity extends BridgeActivity {
     private static final String[] AD_HOST_KEYWORDS = new String[] {
         "doubleclick", "googlesyndication", "googleadservices", "popads", "adsterra",
         "propellerads", "onclickmega", "exoclick", "juicyads", "monetag", "trafficjunky",
-        "bet365", "1xbet", "betano", "blaze", "adtrue", "histats", "adnxs", "adform",
+        "bet365", "1xbet", "1xbt", "xbet", "melbet", "mostbet", "linebet", "betwinner",
+        "22bet", "megapari", "888starz", "betano", "blaze", "adtrue", "histats", "adnxs", "adform",
         "cpmstar", "hilltopads", "adcash", "bidvertiser", "clickadu", "popcash",
         "ad-delivery", "magsrv", "tsyndicate", "adservice", "adsystem",
         "streamad", "vpaid", "vast", "adroll", "smartadserver", "outbrain", "taboola",
@@ -137,6 +267,17 @@ public class MainActivity extends BridgeActivity {
     private static boolean isAdUrl(String url) {
         if (url == null) return false;
         String lower = url.toLowerCase();
+
+        // Bloqueia imediatamente qualquer propaganda de casas de apostas (1xBet / 1xbt / etc.) ou preroll
+        // mesmo que o arquivo termine em .mp4 ou .m3u8
+        if (lower.contains("1xbet") || lower.contains("1xbt") || lower.contains("xbet") ||
+            lower.contains("melbet") || lower.contains("mostbet") || lower.contains("linebet") ||
+            lower.contains("betwinner") || lower.contains("22bet") || lower.contains("megapari") ||
+            lower.contains("888starz") || lower.contains("bet365") || lower.contains("betano") ||
+            lower.contains("preroll") || lower.contains("midroll") || lower.contains("vast.xml") ||
+            lower.contains("vpaid")) {
+            return true;
+        }
 
         // NUNCA bloquear provedores de streaming, CDNs ou scripts de players legítimos
         if (lower.contains(".m3u8") || lower.contains(".ts") ||
@@ -192,7 +333,7 @@ public class MainActivity extends BridgeActivity {
                 if (!adBlockerInstalled) {
                     adBlockerInstalled = true;
 
-                    // Ponte nativa síncrona para o JavaScript identificar com 100% de precisão se o hardware é Celular ou TV
+                    // Ponte nativa síncrona para o JavaScript identificar dispositivo, versão real do APK e licença/trial
                     webView.addJavascriptInterface(new Object() {
                         @android.webkit.JavascriptInterface
                         public String getDeviceType() {
@@ -207,6 +348,57 @@ public class MainActivity extends BridgeActivity {
                         @android.webkit.JavascriptInterface
                         public boolean isMobile() {
                             return !isRealTelevisionDevice(MainActivity.this);
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public String getAppVersion() {
+                            return BuildConfig.VERSION_NAME;
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public int getAppVersionCode() {
+                            return BuildConfig.VERSION_CODE;
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public long getFirstInstallTime() {
+                            return resolvePersistentFirstInstallTime(MainActivity.this);
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public long syncFirstInstallTime(long jsTimestamp) {
+                            long nativeTs = resolvePersistentFirstInstallTime(MainActivity.this);
+                            if (jsTimestamp > MIN_VALID_TIMESTAMP && jsTimestamp < nativeTs) {
+                                try {
+                                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                                    prefs.edit().putLong(KEY_FIRST_INSTALL_TIME, jsTimestamp).apply();
+                                    return jsTimestamp;
+                                } catch (Exception ignored) {}
+                            }
+                            return nativeTs;
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public String getHardwareDeviceId() {
+                            return resolveHardwareDeviceId(MainActivity.this);
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public String getSavedLicense() {
+                            try {
+                                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                                return prefs.getString(KEY_SAVED_LICENSE, "");
+                            } catch (Exception ignored) {
+                                return "";
+                            }
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public void saveLicense(String licenseJson) {
+                            try {
+                                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                                prefs.edit().putString(KEY_SAVED_LICENSE, licenseJson != null ? licenseJson : "").apply();
+                            } catch (Exception ignored) {}
                         }
 
                         @android.webkit.JavascriptInterface

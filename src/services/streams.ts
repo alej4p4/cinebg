@@ -25,6 +25,17 @@ const normalizeAudio = (audio: AudioOption | Language): AudioOption => {
 
 export const MIRRORS: StreamMirror[] = [
   {
+    id: 'megaembed',
+    name: 'CineBG Dublado (MegaEmbed)',
+    flagEmoji: '🇧🇷',
+    quality: 'FHD 1080p',
+    type: 'dubbed_br',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}?autoplay=1&ads=0&adblock=1`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://mgeb.site/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1`,
+  },
+  {
     id: 'vidlink',
     name: 'CineBG Ultra (VidLink Pro)',
     flagEmoji: '🚀',
@@ -32,72 +43,17 @@ export const MIRRORS: StreamMirror[] = [
     type: 'multi_sub',
     sandboxed: false,
     getMovieUrl: (tmdbId) =>
-      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true`,
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&ads=0`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true`,
-  },
-  {
-    id: 'vidsrc-sh',
-    name: 'CineBG Prime (VidSrc)',
-    flagEmoji: '⚡',
-    quality: 'FHD 1080p',
-    type: 'multi_sub',
-    sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://vidsrc.sh/embed/movie?tmdb=${tmdbId}&ds_lang=pt&autoplay=1`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://vidsrc.sh/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}&ds_lang=pt&autoplay=1`,
-  },
-  {
-    id: 'megaembed',
-    name: 'CineBG Dublado (MegaEmbed)',
-    flagEmoji: '🇧🇷',
-    quality: 'FHD 1080p',
-    type: 'dubbed_br',
-    sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}?autoplay=1`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://mgeb.site/embed/${tmdbId}/${season}/${episode}?autoplay=1`,
-  },
-  {
-    id: 'vidsrc-io',
-    name: 'CineBG Cloud (VidSrc IO)',
-    flagEmoji: '🌐',
-    quality: 'FHD 1080p',
-    type: 'multi_sub',
-    sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://vidsrc.io/embed/movie/${tmdbId}?ds_lang=pt&autoplay=1`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://vidsrc.io/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt&autoplay=1`,
-  },
-  {
-    id: 'vsembed',
-    name: 'CineBG Express (VsEmbed)',
-    flagEmoji: '🍿',
-    quality: 'FHD 1080p',
-    type: 'multi_sub',
-    sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://vsembed.ru/embed/movie/${tmdbId}?ds_lang=pt&autoplay=1`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://vsembed.ru/embed/tv/${tmdbId}/${season}/${episode}?ds_lang=pt&autoplay=1`,
-  },
-  {
-    id: 'multiembed',
-    name: 'CineBG Nativo (Multi-Áudio Dublado)',
-    flagEmoji: '🇧🇷',
-    quality: 'FHD 1080p',
-    type: 'dubbed_br',
-    sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&autoplay=1`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}&autoplay=1`,
+      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&ads=0`,
   },
 ]
 
 export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'dub'): string => {
   const sequence =
     audio === 'dub'
-      ? ['megaembed', 'multiembed', 'vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed']
-      : ['vidlink', 'vidsrc-sh', 'vidsrc-io', 'vsembed', 'multiembed', 'megaembed']
+      ? ['megaembed', 'vidlink']
+      : ['vidlink', 'megaembed']
 
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
@@ -140,7 +96,7 @@ export const buildShowUrl = (
 }
 
 // =========================================================================
-// SELEÇÃO INTELIGENTE DE FONTES DIRETAS (MegaEmbed)
+// SELEÇÃO INTELIGENTE DE FONTES DIRETAS (MegaEmbed) & FILTRO ANTI-1XBET/CAMRIP
 // =========================================================================
 const MEGAEMBED_EMBED_BASE = 'https://mgeb.site/embed'
 
@@ -163,6 +119,41 @@ const BROKEN_IP_LOCKED_HOSTS = [
   'streamtape.com',
   '97bf1.com',
 ]
+
+// Palavras-chave proibidas de propagandas de apostas (1xBet / 1xbt) e gravações de cinema (HDCAM / CAMRIP / TS)
+export const BANNED_AD_STREAM_HINTS = [
+  '1xbet',
+  '1xbt',
+  'xbet',
+  'melbet',
+  'mostbet',
+  'linebet',
+  'betwinner',
+  'parimatch',
+  '22bet',
+  'megapari',
+  '888starz',
+  'hdcam',
+  'camrip',
+  'cam-rip',
+  'telesync',
+  'tsrip',
+  'hdts',
+  'telecine',
+  'clean.cam',
+  'cleancam',
+]
+
+const CAMRIP_LABEL_REGEX = /\b(1xbt|1xbet|xbet|cam|hdcam|camrip|telesync|hdts|tsrip|telecine)\b/i
+
+export const isAdOrCamripStream = (value: string | null | undefined): boolean => {
+  if (!value) return false
+  const lower = value.toLowerCase()
+  if (BANNED_AD_STREAM_HINTS.some((kw) => lower.includes(kw))) {
+    return true
+  }
+  return CAMRIP_LABEL_REGEX.test(lower)
+}
 
 interface MegaEmbedSource {
   file?: string
@@ -363,6 +354,11 @@ export const resolveMegaEmbed = async (
       const lowerUrl = cleanUrl.toLowerCase()
       // Filtra servidores com token travado no IP do servidor backend (ex: streamtape get_video que retorna text/html e 97bf1 que retorna 404)
       if (BROKEN_IP_LOCKED_HOSTS.some((badHost) => lowerUrl.includes(badHost))) {
+        continue
+      }
+
+      // Filtra estritamente qualquer vídeo ou fonte com propaganda 1xBet (1xbt) ou gravação de cinema (HDCAM / CAMRIP / TS)
+      if (isAdOrCamripStream(cleanUrl) || isAdOrCamripStream(s.label)) {
         continue
       }
 

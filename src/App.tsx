@@ -51,15 +51,11 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
     trackRouteView(location.pathname)
   }, [location.pathname])
 
-  // Quando o período de teste de 3 dias expira e o usuário não possui plano VIP:
-  // A aba TV ao Vivo (/live) permanece 100% liberada e gratuita (canais abertos).
-  // As demais rotas de filmes e séries redirecionam para /live abrindo o modal VIP.
   useEffect(() => {
-    if (!isVipActive && location.pathname !== '/live' && location.pathname !== '/profiles') {
-      navigate('/live', { replace: true })
+    if (!isVipActive) {
       setVipModalOpen(true)
     }
-  }, [isVipActive, location.pathname, navigate, setVipModalOpen])
+  }, [isVipActive, setVipModalOpen])
 
   // Tratamento universal do botao Voltar do controle remoto e do Android (Sem disparo duplo e sem pular para a Home)
   useEffect(() => {
@@ -216,6 +212,8 @@ function App() {
     setTimeout(focusHome, 450)
   }, [])
 
+  const isVipOrTrialActive = isLicensed || isTrial
+
   return (
     <>
       <AnimatePresence>
@@ -231,13 +229,30 @@ function App() {
         <div className="min-h-screen bg-bg-primary flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-white/10 border-t-accent-red rounded-full animate-spin" />
         </div>
+      ) : !isVipOrTrialActive ? (
+        <>
+          <ErrorBoundary>
+            <LicenseGate isModal={false} />
+            {!isMobileDevice() && <TvCursorOverlay />}
+          </ErrorBoundary>
+          <UpdateModal
+            visible={updateModalOpen}
+            downloadUrl={updateInfo.downloadUrl}
+            currentVersion={updateInfo.currentVersion}
+            latestVersion={updateInfo.latestVersion}
+            hasUpdate={updateInfo.hasUpdate}
+            isChecking={isCheckingUpdate}
+            onDismiss={() => setUpdateModalOpen(false)}
+            onCheckAgain={() => checkForUpdates(true)}
+          />
+        </>
       ) : (
         <BrowserRouter>
           <ErrorBoundary>
             <div className="min-h-screen bg-bg-primary text-text-primary pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
               <Navbar />
               <main>
-                <AnimatedRoutes isVipActive={isLicensed || isTrial} />
+                <AnimatedRoutes isVipActive={isVipOrTrialActive} />
               </main>
               <BottomNav />
               {!isMobileDevice() && <TvCursorOverlay />}
