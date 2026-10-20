@@ -115,7 +115,7 @@ const LivePlayer = ({
   }, [channel.id])
 
   // Recupera o último sinal funcional salvo para este canal ou inicia em 0
-  const getInitialSignal = () => {
+  const getInitialSignal = useCallback(() => {
     try {
       const saved = sessionStorage.getItem(`cinebg_signal_${channel.id}`)
       if (saved !== null) {
@@ -124,7 +124,7 @@ const LivePlayer = ({
       }
     } catch {}
     return 0
-  }
+  }, [channel.id, channel.sources.length])
 
   const [sourceIndex, setSourceIndex] = useState(getInitialSignal)
   const [mountKey, setMountKey] = useState(0)
@@ -259,7 +259,7 @@ const LivePlayer = ({
     setLoaded(false)
     setError(false)
     setStatusMessage(initIdx > 0 ? `Sintonizando Sinal ${initIdx + 1}...` : 'Sintonizando sinal...')
-  }, [channel.id])
+  }, [channel.id, getInitialSignal])
 
   // Monitor anti-congelamento (anti-freeze watchdog) para TV: detecta micro-travamentos e recupera o fluxo
   const lastTimeRef = useRef(0)

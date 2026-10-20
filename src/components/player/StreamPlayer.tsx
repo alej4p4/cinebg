@@ -1,14 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Hls from 'hls.js'
 import {
-  Maximize2,
   RefreshCw,
   AlertCircle,
   Volume2,
   SkipForward,
   Captions,
-  CaptionsOff,
-  PictureInPicture2,
   X,
   RotateCcw,
   RotateCw,
@@ -18,7 +15,6 @@ import {
   FastForward,
   Expand,
   Server,
-  Check,
   Play,
   Pause,
   Star,
@@ -30,7 +26,6 @@ import {
   buildMovieUrl,
   buildShowUrl,
   getInitialMirrorForAudio,
-  isMirrorSandboxed,
   resolveMegaEmbed,
   getCachedMegaEmbed,
   MIRRORS,
@@ -43,6 +38,10 @@ import {
 } from '@/services/subtitles'
 import { useAppStore } from '@/store/useAppStore'
 import type { AudioOption } from '@/store/useAppStore'
+
+interface ScreenOrientationWithLock extends ScreenOrientation {
+  lock?: (orientation: 'landscape' | 'portrait' | string) => Promise<void>
+}
 import type { TMDBSeason } from '@/types'
 import EpisodeSelector from './EpisodeSelector'
 import PlaybackSettingsModal from './PlaybackSettingsModal'
@@ -187,37 +186,48 @@ const StreamPlayer = ({
   // Legendas externas PT-BR (Stremio / OpenSubtitles / Forçadas)
   const [externalSubs, setExternalSubs] = useState<SubtitleTrackOption[]>([])
 
+  // Fallback automático de fontes
+  const [isAutoFallback, _setIsAutoFallback] = useState(false)
+  const [fallbackAttempt, setFallbackAttempt] = useState(0)
+  const [_activeTrack, setActiveTrack] = useState(-1)
+
   // ===== Controles do player (Sprint 2) =====
-  const [speed, setSpeed] = useState(1)
+  const [speed] = useState(1)
   const [speedOpen, setSpeedOpen] = useState(false)
-  const [tracks, setTracks] = useState<{ index: number; label: string; isForced?: boolean }[]>([])
-  const [activeTrack, setActiveTrack] = useState(-1)
+  const [_tracks, setTracks] = useState<{ index: number; label: string; isForced?: boolean }[]>([])
   const [subsOpen, setSubsOpen] = useState(false)
-  const [pipActive, setPipActive] = useState(false)
+  const [_pipActive, setPipActive] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const activeTrackRef = useRef(-1)
   const resumedRef = useRef(false)
   const lastProgressRef = useRef(0)
+  const refreshTextTracksRef = useRef<(() => void) | null>(null)
 
   // Customização de aparência das legendas
   const [subSize, setSubSize] = useState<'sm' | 'md' | 'lg' | 'xl'>(() => {
     try {
-      return (localStorage.getItem('cinebg_subs_size') as any) || 'md'
+      const val = localStorage.getItem('cinebg_subs_size')
+      if (val === 'sm' || val === 'md' || val === 'lg' || val === 'xl') return val
+      return 'md'
     } catch {
       return 'md'
     }
   })
   const [subColor, setSubColor] = useState<'yellow' | 'white' | 'cyan' | 'green'>(() => {
     try {
-      return (localStorage.getItem('cinebg_subs_color') as any) || 'yellow'
+      const val = localStorage.getItem('cinebg_subs_color')
+      if (val === 'yellow' || val === 'white' || val === 'cyan' || val === 'green') return val
+      return 'yellow'
     } catch {
       return 'yellow'
     }
   })
   const [subBg, setSubBg] = useState<'solid' | 'box' | 'transparent'>(() => {
     try {
-      return (localStorage.getItem('cinebg_subs_bg') as any) || 'box'
+      const val = localStorage.getItem('cinebg_subs_bg')
+      if (val === 'solid' || val === 'box' || val === 'transparent') return val
+      return 'box'
     } catch {
       return 'box'
     }
@@ -330,14 +340,11 @@ const StreamPlayer = ({
     } catch {}
   }, [])
 
-  const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2]
   const AUTO_NEXT_DELAY = 10 // seconds
 
-  const [autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null)
+  const [_autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null)
   const autoNextTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [qualityOpen, setQualityOpen] = useState(false)
-  const [availableQualities, _setAvailableQualities] = useState<{ label: string; url: string; type: 'hls' | 'mp4' }[]>([])
-  const [currentQuality, setCurrentQuality] = useState<string | null>(null)
 
   // ===== Aprimoramentos YuCine (Modo Lock, Pular Abertura, Gaveta de Episódios) =====
   const [isLocked, setIsLocked] = useState(false)
@@ -398,7 +405,7 @@ const StreamPlayer = ({
     if (isMobileDevice() || (typeof window !== 'undefined' && window.innerWidth < 850)) {
       if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
         try {
-          (screen.orientation as any).lock('landscape').catch(() => {})
+          (screen.orientation as unknown as ScreenOrientationWithLock).lock?.('landscape').catch(() => {})
         } catch {}
       }
     }
@@ -422,7 +429,7 @@ const StreamPlayer = ({
             screen.orientation.unlock()
           }
           if ('lock' in screen.orientation) {
-            await (screen.orientation as any).lock('portrait').catch(() => {})
+            await (screen.orientation as unknown as ScreenOrientationWithLock).lock?.('portrait').catch(() => {})
           }
         }
         showFeedback('Retrato 📱')
@@ -431,7 +438,7 @@ const StreamPlayer = ({
           await containerRef.current.requestFullscreen().catch(() => {})
         }
         if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
-          await (screen.orientation as any).lock('landscape').catch(() => {})
+          await (screen.orientation as unknown as ScreenOrientationWithLock).lock?.('landscape').catch(() => {})
         }
         showFeedback('Paisagem / Tela Cheia 🔄')
       }
@@ -483,19 +490,24 @@ const StreamPlayer = ({
   }
 
   // ===== Auto-fallback state =====
-  const [fallbackAttempt, setFallbackAttempt] = useState(0)
-  const [isAutoFallback, setIsAutoFallback] = useState(false)
-  const fallbackSequence = audioOption === 'dub'
-    ? ['megaembed', 'vidlink']
-    : ['vidlink', 'megaembed']
+  const fallbackSequence = useMemo(
+    () => (audioOption === 'dub' ? ['megaembed', 'vidlink'] : ['vidlink', 'megaembed']),
+    [audioOption]
+  )
 
   const embedUrl =
     type === 'movie'
       ? buildMovieUrl(tmdbId, audioOption, activeMirror)
       : buildShowUrl(tmdbId, season, episode, audioOption, activeMirror)
 
+  const showFeedback = useCallback((text: string) => {
+    setFeedback(text)
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
+    feedbackTimerRef.current = setTimeout(() => setFeedback(null), 700)
+  }, [])
+
   // Alternância de áudio inteligente sem anúncios
-  const switchAudio = (opt: AudioOption) => {
+  const switchAudio = useCallback((opt: AudioOption) => {
     userManualAudioRef.current = opt
     setAudioOption(opt)
     const list = candidatesRef.current
@@ -544,7 +556,7 @@ const StreamPlayer = ({
     setError(false)
     setFallbackAttempt(0)
     setKey((k) => k + 1)
-  }
+  }, [setAudioOption, setSubtitleOption, showFeedback])
 
   // Falha na reprodução direta da fonte atual: testa a próxima opção limpa da lista sem closure obsoleta
   const handleDirectMediaError = useCallback(() => {
@@ -575,7 +587,7 @@ const StreamPlayer = ({
     setLoaded(false)
     setError(false)
     showFeedback('Conectando servidor alternativo...')
-  }, [setAudioOption])
+  }, [showFeedback])
 
   // Alternância manual cíclica pelo botão "Opção 1 / Servidor" no controle remoto
   const handleCycleServerOption = useCallback(() => {
@@ -617,7 +629,7 @@ const StreamPlayer = ({
     setError(false)
     setKey((k) => k + 1)
     showFeedback(`Servidor: ${nextAttempt + 1}/${fallbackSequence.length}`)
-  }, [allowIframe, fallbackAttempt, fallbackSequence])
+  }, [allowIframe, fallbackAttempt, fallbackSequence, showFeedback])
 
   const handleStreamFailure = () => {
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
@@ -925,10 +937,10 @@ const StreamPlayer = ({
       }
 
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, selectPreferredAudioTrack)
-      hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => refreshTextTracks())
+      hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => refreshTextTracksRef.current?.())
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         selectPreferredAudioTrack()
-        window.setTimeout(() => refreshTextTracks(), 300)
+        window.setTimeout(() => refreshTextTracksRef.current?.(), 300)
         attemptPlay()
       })
       hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -989,7 +1001,6 @@ const StreamPlayer = ({
   // Reseta o estado quando a fonte ou episódio muda.
   useEffect(() => {
     activeTrackRef.current = -1
-    setActiveTrack(-1)
     setTracks([])
     resumedRef.current = false
     lastProgressRef.current = 0
@@ -1004,7 +1015,7 @@ const StreamPlayer = ({
     fetchPortugueseSubtitles(type, tmdbId, season, episode).then((subs) => {
       if (alive) {
         setExternalSubs(subs)
-        setTimeout(() => refreshTextTracks(), 400)
+        setTimeout(() => refreshTextTracksRef.current?.(), 400)
       }
     })
     return () => {
@@ -1037,12 +1048,12 @@ const StreamPlayer = ({
     []
   )
 
-  const handleLockTap = () => {
+  const handleLockTap = useCallback(() => {
     if (!isLocked || isTv) return
     setShowLockPrompt(true)
     if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
     lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
-  }
+  }, [isLocked, isTv])
 
   const toggleLock = () => {
     if (isTv) {
@@ -1060,6 +1071,16 @@ const StreamPlayer = ({
       return next
     })
   }
+
+  const seekBy = useCallback((delta: number, showDefaultFeedback = true) => {
+    const video = videoRef.current
+    if (!video) return
+    const max = Number.isFinite(video.duration) ? video.duration : Infinity
+    video.currentTime = Math.max(0, Math.min(max, video.currentTime + delta))
+    if (showDefaultFeedback) {
+      showFeedback(delta > 0 ? `+${delta}s` : `${delta}s`)
+    }
+  }, [showFeedback])
 
   const handleSkipIntro = () => {
     hasSkippedIntroRef.current = true
@@ -1080,7 +1101,7 @@ const StreamPlayer = ({
         await containerRef.current.requestFullscreen().catch(() => {})
         if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
           try {
-            await (screen.orientation as any).lock('landscape').catch(() => {})
+            await (screen.orientation as unknown as ScreenOrientationWithLock).lock?.('landscape').catch(() => {})
           } catch {}
         }
       }
@@ -1091,7 +1112,7 @@ const StreamPlayer = ({
     }, 800)
   }
 
-  const toggleFitMode = () => {
+  const toggleFitMode = useCallback(() => {
     setFitMode((prev) => {
       let next: 'cover' | 'contain' | 'fill' | 'classic' = 'contain'
       let label = 'Padrão (16:9)'
@@ -1111,23 +1132,7 @@ const StreamPlayer = ({
       showFeedback(`Proporção: ${label}`)
       return next
     })
-  }
-
-  const showFeedback = (text: string) => {
-    setFeedback(text)
-    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
-    feedbackTimerRef.current = setTimeout(() => setFeedback(null), 700)
-  }
-
-  const seekBy = (delta: number, showDefaultFeedback = true) => {
-    const video = videoRef.current
-    if (!video) return
-    const max = Number.isFinite(video.duration) ? video.duration : Infinity
-    video.currentTime = Math.max(0, Math.min(max, video.currentTime + delta))
-    if (showDefaultFeedback) {
-      showFeedback(delta > 0 ? `+${delta}s` : `${delta}s`)
-    }
-  }
+  }, [showFeedback])
 
   const togglePlay = () => {
     const video = videoRef.current
@@ -1217,7 +1222,7 @@ const StreamPlayer = ({
     } else {
       showFeedback(lang === 'pt' ? 'Legendas: Português 🇧🇷' : 'Legendas: Inglês 🇺🇸')
     }
-  }, [setSubtitleOption])
+  }, [setSubtitleOption, showFeedback])
 
   const cycleSubtitles = useCallback(() => {
     setSubLang((prev) => {
@@ -1245,7 +1250,6 @@ const StreamPlayer = ({
           video.textTracks[i].mode = 'disabled'
         }
         activeTrackRef.current = -1
-        setActiveTrack(-1)
       } else {
         let targetIndex = list.findIndex((t) => {
           const l = t.label.toLowerCase()
@@ -1258,8 +1262,9 @@ const StreamPlayer = ({
       }
     }
   }
+  refreshTextTracksRef.current = refreshTextTracks
 
-  const handlePip = async () => {
+  const _handlePip = async () => {
     const video = videoRef.current
     if (!video) return
     try {
@@ -1301,7 +1306,7 @@ const StreamPlayer = ({
     setAutoNextCountdown(null)
   }
 
-  // Ao carregar os metadados: lÃª legendas e retoma da posiÃ§Ã£o salva.
+  // Ao carregar os metadados: lÃª legendas e retoma da posi§�o salva.
   const handleLoadedMetadata = () => {
     refreshTextTracks()
     const video = videoRef.current
@@ -1649,7 +1654,23 @@ const StreamPlayer = ({
     return () => {
       window.removeEventListener('keydown', handleGlobalRemoteKey, { capture: true })
     }
-  }, [settingsModalOpen, episodesDrawerOpen, onBack, audioOption, type, onNextEpisode, cycleSubtitles, showHud, isLocked])
+  }, [
+    settingsModalOpen,
+    episodesDrawerOpen,
+    onBack,
+    audioOption,
+    type,
+    onNextEpisode,
+    cycleSubtitles,
+    showHud,
+    isLocked,
+    handleLockTap,
+    resetHudTimer,
+    seekBy,
+    switchAudio,
+    toggleFitMode,
+    showFeedback,
+  ])
 
   // Tratamento inteligente de toque mobile e cliques na tela do player
   const handlePlayerTap = (clientX: number, _clientY: number) => {
@@ -2140,7 +2161,7 @@ const StreamPlayer = ({
               setError(false)
               if (isMobileDevice() && typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
                 try {
-                  (screen.orientation as any).lock('landscape').catch(() => {})
+                  (screen.orientation as unknown as ScreenOrientationWithLock).lock?.('landscape').catch(() => {})
                 } catch {}
               }
             }}

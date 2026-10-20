@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Tv, ArrowRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
 import { useFocusable, FocusContext } from '@noriginmedia/norigin-spatial-navigation'
 import YuCineChannelCard from './YuCineChannelCard'
 import { loadLiveChannels, type LiveChannel } from '@/services/liveChannels'
-import { FLUID_EASE, SPRING_SNAPPY } from '@/utils/motion'
+import { SPRING_SNAPPY } from '@/utils/motion'
 
 interface LiveTvCarouselProps {
   title?: string

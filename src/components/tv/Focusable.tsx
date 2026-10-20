@@ -26,7 +26,7 @@ export const Focusable = ({
   children,
 }: FocusableProps) => {
   const innerRef = useRef<HTMLDivElement | null>(null)
-  const { ref, focused } = useFocusable({
+  const { ref: spatialRef, focused } = useFocusable({
     focusKey,
     onEnterPress: () => onEnterPress?.(),
     onFocus: () => onFocus?.(),
@@ -41,19 +41,17 @@ export const Focusable = ({
 
   useEffect(() => {
     if (focused && autoScroll) {
-      const el = (ref as any)?.current || innerRef.current
+      const el = (spatialRef && typeof spatialRef === 'object' && 'current' in spatialRef && spatialRef.current instanceof HTMLElement ? spatialRef.current : null) || innerRef.current
       scrollTvElementIntoView(el)
     }
-  }, [focused, autoScroll, ref])
+  }, [focused, autoScroll, spatialRef])
 
   return (
     <div
       ref={(node) => {
         if (node) {
-          if (typeof ref === 'function') {
-            (ref as any)(node)
-          } else if (ref && 'current' in (ref as any)) {
-            ;(ref as any).current = node
+          if (spatialRef && typeof spatialRef === 'object' && 'current' in spatialRef) {
+            (spatialRef as React.MutableRefObject<HTMLDivElement | null>).current = node
           }
           innerRef.current = node
         }

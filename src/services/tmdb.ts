@@ -363,7 +363,13 @@ export const showToMediaItem = (show: TMDBShow, type: MediaType = 'tv'): MediaIt
   genreIds: show.genre_ids,
 })
 
-const parseRawCatalogItem = (item: any, defaultType: 'movie' | 'tv' = 'movie'): MediaItem => {
+type RawCatalogPayload = (TMDBMovie | TMDBShow) & {
+  media_type?: string
+  name?: string
+  title?: string
+}
+
+const parseRawCatalogItem = (item: RawCatalogPayload, defaultType: 'movie' | 'tv' = 'movie'): MediaItem => {
   const isTv = item.media_type === 'tv' || (!item.title && !!item.name) || defaultType === 'tv'
   return isTv ? showToMediaItem(item as TMDBShow, 'tv') : movieToMediaItem(item as TMDBMovie)
 }
@@ -380,17 +386,17 @@ export const getCachedCatalogItems = (
 
     // 1. Memória RAM
     const inMem = requestCache.get(key)
-    if (inMem && inMem.expiresAt > now && (inMem.data as any)?.results) {
-      const results = (inMem.data as any).results as any[]
+    if (inMem && inMem.expiresAt > now && (inMem.data as TMDBPaginatedResponse<RawCatalogPayload>)?.results) {
+      const results = (inMem.data as TMDBPaginatedResponse<RawCatalogPayload>).results
       const mapped = results.map((item) => parseRawCatalogItem(item, type))
       return forKids(mapped)
     }
 
     // 2. Armazenamento Local Persistente
-    const fromStorage = loadFromLocalStorage<any>(key)
+    const fromStorage = loadFromLocalStorage<TMDBPaginatedResponse<RawCatalogPayload>>(key)
     if (fromStorage && fromStorage.results) {
       setMemoryCache(key, { data: fromStorage, expiresAt: now + DEFAULT_CATALOG_TTL_MS })
-      const results = fromStorage.results as any[]
+      const results = fromStorage.results
       const mapped = results.map((item) => parseRawCatalogItem(item, type))
       return forKids(mapped)
     }

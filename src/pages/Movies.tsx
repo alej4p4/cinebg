@@ -79,8 +79,13 @@ const Movies = () => {
         setUpcoming(upcomingResult.items)
         setClassics(classicsResult.items)
       } catch {
-        if (isMounted && popular.length === 0) {
-          setError(true)
+        if (isMounted) {
+          setPopular((current) => {
+            if (current.length === 0) {
+              setError(true)
+            }
+            return current
+          })
         }
       } finally {
         if (isMounted) {

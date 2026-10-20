@@ -34,7 +34,16 @@ const SERIES_GENRES = [
   { id: 10768, name: 'Guerra & Política' },
 ]
 
-const STREAMING_PLATFORMS = [
+interface StreamingPlatform {
+  id: string
+  name: string
+  providerId: number
+  networkId: number
+  emoji: string
+  isTurkish?: boolean
+}
+
+const STREAMING_PLATFORMS: StreamingPlatform[] = [
   { id: 'turkish', name: 'Novelas Turcas', providerId: 0, networkId: 0, emoji: '🇹🇷', isTurkish: true },
   { id: 'netflix', name: 'Netflix', providerId: 8, networkId: 213, emoji: '🔴' },
   { id: 'hbo', name: 'Max (HBO)', providerId: 384, networkId: 49, emoji: '🟣' },
@@ -78,8 +87,13 @@ const Series = () => {
         setClassics(classicsResult.items)
         setTurkish(turkishResult.items)
       } catch {
-        if (isMounted && popular.length === 0) {
-          setError(true)
+        if (isMounted) {
+          setPopular((current) => {
+            if (current.length === 0) {
+              setError(true)
+            }
+            return current
+          })
         }
       } finally {
         if (isMounted) {
@@ -94,7 +108,7 @@ const Series = () => {
   }, [reloadKey])
 
   // Filtro por Plataforma (Netflix, HBO, Disney, Prime, Apple, Novelas Turcas)
-  const handleFilterPlatform = async (platform: typeof STREAMING_PLATFORMS[0]) => {
+  const handleFilterPlatform = async (platform: StreamingPlatform) => {
     const filterKey = `platform-${platform.id}`
     if (activeFilter === filterKey) {
       handleFilterAll()
@@ -106,7 +120,7 @@ const Series = () => {
     setSelectedGenreId(null)
     setFilterLoading(true)
     try {
-      if ((platform as any).isTurkish) {
+      if (platform.isTurkish) {
         const res = await getTurkishShows()
         setFilteredList(res.items)
       } else {

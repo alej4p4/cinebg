@@ -10,10 +10,52 @@ interface SpeechRecognitionHook {
   resetTranscript: () => void
 }
 
+interface SpeechRecognitionResultAlternative {
+  transcript: string
+  confidence: number
+}
+
+interface SpeechRecognitionResultItem {
+  isFinal: boolean
+  length: number
+  [index: number]: SpeechRecognitionResultAlternative
+}
+
+interface SpeechRecognitionResultList {
+  length: number
+  [index: number]: SpeechRecognitionResultItem
+}
+
+interface SpeechRecognitionEventLike {
+  resultIndex: number
+  results: SpeechRecognitionResultList
+}
+
+interface SpeechRecognitionErrorEventLike {
+  error: string
+  message?: string
+}
+
+interface ISpeechRecognitionInstance {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  maxAlternatives: number
+  onstart: (() => void) | null
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null
+  onend: (() => void) | null
+  start: () => void
+  abort: () => void
+  stop: () => void
+}
+
+type SpeechRecognitionConstructor = new () => ISpeechRecognitionInstance
+
 // Interfaces globais do Web Speech API para TypeScript
 interface IWindowWithSpeech extends Window {
-  SpeechRecognition?: any
-  webkitSpeechRecognition?: any
+  SpeechRecognition?: SpeechRecognitionConstructor
+  webkitSpeechRecognition?: SpeechRecognitionConstructor
 }
 
 export const useSpeechRecognition = (
@@ -23,11 +65,11 @@ export const useSpeechRecognition = (
   const [transcript, setTranscript] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSupported, setIsSupported] = useState(false)
-  const recognitionRef = useRef<any>(null)
+  const recognitionRef = useRef<ISpeechRecognitionInstance | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const win = window as IWindowWithSpeech
+    const win = window as unknown as IWindowWithSpeech
     const SpeechRecognitionClass = win.SpeechRecognition || win.webkitSpeechRecognition
 
     if (SpeechRecognitionClass) {
@@ -43,7 +85,7 @@ export const useSpeechRecognition = (
         setError(null)
       }
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
         let finalTranscript = ''
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
@@ -61,7 +103,7 @@ export const useSpeechRecognition = (
         }
       }
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
         console.warn('Erro no reconhecimento de voz:', event.error)
         setIsListening(false)
         if (event.error === 'not-allowed') {
@@ -101,11 +143,11 @@ export const useSpeechRecognition = (
       setError(null)
       setTranscript('')
       recognitionRef.current.start()
-    } catch (err: any) {
+    } catch {
       // Se ja estiver rodando, interrompe e reinicia
       try {
         recognitionRef.current.abort()
-        setTimeout(() => recognitionRef.current.start(), 150)
+        setTimeout(() => recognitionRef.current?.start(), 150)
       } catch {
         setError('O microfone já está em uso.')
       }

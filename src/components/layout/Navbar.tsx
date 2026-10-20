@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, UserRound, Download, List, Settings, Crown, LayoutGrid } from 'lucide-react'
+import { Search, X, Heart, Clock, Home, Film, Tv, Star, Radio, Check, UserRound, Download, List, Settings, Crown, LayoutGrid } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
@@ -36,8 +36,6 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [gridMenuOpen, setGridMenuOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchFocused, setSearchFocused] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const {
     profiles,
@@ -60,15 +58,6 @@ const Navbar = () => {
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
-      setSearchQuery('')
-      setSearchFocused(false)
-    }
-  }
 
   const handleNavDown = () => {
     if (doesFocusableExist('details-play')) {

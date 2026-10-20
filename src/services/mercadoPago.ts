@@ -99,8 +99,14 @@ export const setMercadoPagoToken = (token: string, expiresInSeconds = 21600): vo
  * Garantindo que as requisições de Pix nunca falhem por expiração.
  */
 export async function refreshMercadoPagoToken(): Promise<string> {
-  const clientId = import.meta.env.VITE_MERCADO_PAGO_CLIENT_ID || '4070043112593139'
-  const clientSecret = import.meta.env.VITE_MERCADO_PAGO_CLIENT_SECRET || 'SFtjWhm55MnXqPdyfRH0fNuiBLYHRPjR'
+  // Segurança (CWE-798): credenciais OAuth NUNCA devem ficar hardcoded no bundle cliente.
+  // Sem variáveis de ambiente configuradas, o fluxo cai para o Pix estático (DEFAULT_PIX_KEY).
+  const clientId = import.meta.env.VITE_MERCADO_PAGO_CLIENT_ID
+  const clientSecret = import.meta.env.VITE_MERCADO_PAGO_CLIENT_SECRET
+
+  if (!clientId || !clientSecret) {
+    return getMercadoPagoToken()
+  }
 
   try {
     const res = await fetch('https://api.mercadopago.com/oauth/token', {

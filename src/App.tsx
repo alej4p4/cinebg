@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
+import { App as CapApp } from '@capacitor/app'
 import Navbar from '@/components/layout/Navbar'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { SkeletonCarousel } from '@/components/ui/SkeletonCard'
@@ -87,21 +88,26 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
     }
 
     let removeListener: (() => void) | null = null
-    import('@capacitor/app')
-      .then(({ App: CapApp }) => {
-        const handle = CapApp.addListener('backButton', () => {
-          if (wasBackRecentlyHandled(600)) return
-          if (location.pathname === '/') {
-            CapApp.exitApp()
+    let disposed = false
+    try {
+      CapApp.addListener('backButton', () => {
+        if (wasBackRecentlyHandled(600)) return
+        if (location.pathname === '/') {
+          CapApp.exitApp()
+        } else {
+          performSafeBack()
+        }
+      })
+        .then((h) => {
+          // Evita vazamento de listener quando a rota muda antes da Promise resolver
+          if (disposed) {
+            h.remove()
           } else {
-            performSafeBack()
+            removeListener = () => h.remove()
           }
         })
-        handle.then((h) => {
-          removeListener = () => h.remove()
-        })
-      })
-      .catch(() => {})
+        .catch(() => {})
+    } catch {}
 
     const handleWebBackKey = (e: KeyboardEvent) => {
       // Se a tecla já foi tratada por um player em tela cheia, modal ou input, não altera rota
@@ -127,6 +133,7 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
     window.addEventListener('keydown', handleWebBackKey)
 
     return () => {
+      disposed = true
       removeListener?.()
       window.removeEventListener('keydown', handleWebBackKey)
     }

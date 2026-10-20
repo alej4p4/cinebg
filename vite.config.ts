@@ -12,12 +12,15 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    // hls.js (~520 kB) é isolado em chunk próprio e carregado só no player
+    chunkSizeWarningLimit: 750,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           motion: ['framer-motion'],
           store: ['zustand'],
+          hls: ['hls.js'],
         },
       },
     },

@@ -162,7 +162,7 @@ const Search = () => {
 
     window.addEventListener('keydown', handlePhysicalKeyDown)
     return () => window.removeEventListener('keydown', handlePhysicalKeyDown)
-  }, [])
+  }, [isTv])
 
   useEffect(() => {
     if (!query.trim()) {

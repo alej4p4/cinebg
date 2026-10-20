@@ -13,7 +13,7 @@ import {
   CheckCircle2,
   Flame,
 } from 'lucide-react'
-import { useLicense } from '@/hooks/useLicense'
+import { useLicense, validateActivationCode, isLicensedRemotely } from '@/hooks/useLicense'
 import {
   VIP_PLANS,
   VipPlan,
@@ -49,6 +49,8 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
   const [pixData, setPixData] = useState<CreatePixPaymentResult | null>(null)
   const [copied, setCopied] = useState(false)
   const [manualCode, setManualCode] = useState('')
+  const [manualError, setManualError] = useState<string | null>(null)
+  const [validatingManual, setValidatingManual] = useState(false)
   const [activated, setActivated] = useState(false)
   const [checkingStatus, setCheckingStatus] = useState(false)
   const [showManualSection, setShowManualSection] = useState(false)
@@ -182,9 +184,33 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
     setTimeout(() => setCopied(false), 2500)
   }
 
-  const handleActivateManual = () => {
-    if (!manualCode.trim()) return
-    activateLicense(manualCode.trim(), currentPlan.days, 'Ativação Manual / Suporte')
+  const handleActivateManual = async () => {
+    const code = manualCode.trim()
+    if (!code || validatingManual) return
+    setManualError(null)
+
+    // 1) Código assinado vinculado ao aparelho: CINEBG-<DIAS>-<CHECKSUM>
+    const result = validateActivationCode(code, deviceId)
+    let days = 0
+    if (result.valid) {
+      days = result.days
+    } else {
+      // 2) Liberação remota pelo suporte (licenses.json)
+      setValidatingManual(true)
+      const remoteOk = await isLicensedRemotely(code, deviceId)
+      setValidatingManual(false)
+      if (!remoteOk) {
+        setManualError(
+          result.reason === 'format'
+            ? 'Código inválido. Formato esperado: CINEBG-30-XXXXXXXX.'
+            : 'Código não reconhecido para este aparelho. Fale com o suporte informando seu ID.'
+        )
+        return
+      }
+      days = currentPlan.days
+    }
+
+    activateLicense(code.toUpperCase(), days, 'Ativação Manual / Suporte')
     setActivated(true)
     setTimeout(() => {
       if (onClose) onClose()
@@ -541,13 +567,18 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
                   <button
                     type="button"
                     onClick={handleActivateManual}
-                    disabled={!manualCode.trim()}
+                    disabled={!manualCode.trim() || validatingManual}
                     className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-black font-bold text-xs rounded-lg transition-colors"
                   >
-                    Ativar
+                    {validatingManual ? 'Validando...' : 'Ativar'}
                   </button>
                 </Focusable>
               </div>
+              {manualError && (
+                <p role="alert" className="text-red-400 text-xs mt-2">
+                  {manualError}
+                </p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
