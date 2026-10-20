@@ -76,10 +76,9 @@ public class AppInstallerPlugin extends Plugin {
 
     @PluginMethod
     public void downloadAndInstall(PluginCall call) {
-        String downloadUrl = call.getString("url");
-        String filename = call.getString("filename", "CineBG-update.apk");
+        String rawUrl = call.getString("url");
 
-        if (downloadUrl == null || downloadUrl.isEmpty()) {
+        if (rawUrl == null || rawUrl.isEmpty()) {
             call.reject("URL de download é obrigatória");
             return;
         }
@@ -87,6 +86,26 @@ public class AppInstallerPlugin extends Plugin {
         new Thread(() -> {
             try {
                 Context context = getContext();
+                boolean isTv = MainActivity.isRealTelevisionDevice(context);
+
+                // Separação estrita no nível nativo Android:
+                // Celular SEMPRE baixa CineBG-Mobile-release.apk; Smart TV / TV Box SEMPRE baixa CineBG-Tv-release.apk
+                String downloadUrl;
+                String filename;
+                if (isTv) {
+                    downloadUrl = rawUrl
+                        .replace("CineBG-Mobile-release.apk", "CineBG-Tv-release.apk")
+                        .replace("-Mobile-release.apk", "-Tv-release.apk")
+                        .replace("/CineBG-release.apk", "/CineBG-Tv-release.apk");
+                    filename = "CineBG-Tv-release.apk";
+                } else {
+                    downloadUrl = rawUrl
+                        .replace("CineBG-Tv-release.apk", "CineBG-Mobile-release.apk")
+                        .replace("-Tv-release.apk", "-Mobile-release.apk")
+                        .replace("/CineBG-release.apk", "/CineBG-Mobile-release.apk");
+                    filename = "CineBG-Mobile-release.apk";
+                }
+
                 File targetFile = new File(context.getCacheDir(), filename);
                 if (targetFile.exists()) {
                     targetFile.delete();
@@ -94,13 +113,15 @@ public class AppInstallerPlugin extends Plugin {
 
                 HttpURLConnection conn = connectWithRedirects(downloadUrl);
 
-                // Fallback automático para CineBG-release.apk se a URL de flavor retornar 404
-                if ((conn == null || conn.getResponseCode() == 404) && (downloadUrl.contains("-Mobile-") || downloadUrl.contains("-Tv-"))) {
+                // Fallback seguro mantendo estritamente o sabor correto (Mobile vs TV)
+                if (conn == null || conn.getResponseCode() == 404) {
                     if (conn != null) {
                         try { conn.disconnect(); } catch (Exception ignored) {}
                     }
-                    String fallbackUrl = downloadUrl.replace("-Mobile-", "-").replace("-Tv-", "-");
-                    conn = connectWithRedirects(fallbackUrl);
+                    String canonicalFallback = isTv
+                        ? "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk"
+                        : "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk";
+                    conn = connectWithRedirects(canonicalFallback);
                 }
 
                 if (conn == null || conn.getResponseCode() < 200 || conn.getResponseCode() >= 300) {

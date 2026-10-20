@@ -1,4 +1,5 @@
 import { AlertCircle, RefreshCw } from 'lucide-react'
+import Focusable from '@/components/tv/Focusable'
 
 interface ErrorStateProps {
   title?: string
@@ -16,13 +17,21 @@ const ErrorState = ({
     <p className="text-lg font-semibold text-white/80">{title}</p>
     <p className="text-sm mt-1">{message}</p>
     {onRetry && (
-      <button
-        onClick={onRetry}
-        className="inline-flex items-center gap-2 mt-6 bg-accent-red hover:bg-red-600 text-white font-bold px-5 py-2.5 rounded-xl transition-colors"
-      >
-        <RefreshCw className="h-4 w-4" />
-        Tentar novamente
-      </button>
+      <div className="mt-6 flex justify-center">
+        <Focusable
+          focusKey="error-retry-btn"
+          onEnterPress={onRetry}
+          className="inline-block rounded-xl"
+        >
+          <button
+            onClick={onRetry}
+            className="inline-flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white font-bold px-5 py-2.5 rounded-xl transition-colors"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Tentar novamente
+          </button>
+        </Focusable>
+      </div>
     )}
   </div>
 )

@@ -34,6 +34,10 @@ public class MainActivity extends BridgeActivity {
                 if (pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK)) {
                     return true;
                 }
+                // Celulares possuem rádio de telefonia móvel (SIM/GSM/LTE); Smart TVs e TV Boxes não possuem
+                if (pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY)) {
+                    return false;
+                }
                 // Se NÃO tiver touchscreen, é um dispositivo fixo / TV Box
                 if (!pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)) {
                     return true;
@@ -169,6 +173,24 @@ public class MainActivity extends BridgeActivity {
 
                 if (!adBlockerInstalled) {
                     adBlockerInstalled = true;
+
+                    // Ponte nativa síncrona para o JavaScript identificar com 100% de precisão se o hardware é Celular ou TV
+                    webView.addJavascriptInterface(new Object() {
+                        @android.webkit.JavascriptInterface
+                        public String getDeviceType() {
+                            return isRealTelevisionDevice(MainActivity.this) ? "tv" : "mobile";
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public boolean isTv() {
+                            return isRealTelevisionDevice(MainActivity.this);
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public boolean isMobile() {
+                            return !isRealTelevisionDevice(MainActivity.this);
+                        }
+                    }, "CineBGNative");
 
                     // Bloqueio rigoroso de pop-ups, novas janelas e alertas de spam (Chrome Client)
                     webView.setWebChromeClient(new WebChromeClient() {

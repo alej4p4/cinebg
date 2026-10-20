@@ -163,9 +163,30 @@ const Watch = () => {
     }
   }
 
+  // Pré-resolve o próximo episódio em background para troca instantânea em 0ms
+  useEffect(() => {
+    if (!isMovie && mediaId) {
+      resolveMegaEmbed(mediaId, 'tv', season, episode + 1).catch(() => {})
+    }
+  }, [isMovie, mediaId, season, episode])
+
   const handleNextEpisode = () => {
-    const nextEp = episode + 1
-    handleEpisodeSelect(season, nextEp)
+    const realSeasons = showData?.seasons?.filter((s) => s.season_number > 0) || []
+    const currentSeasonMeta = realSeasons.find((s) => s.season_number === season)
+    if (
+      currentSeasonMeta &&
+      currentSeasonMeta.episode_count > 0 &&
+      episode >= currentSeasonMeta.episode_count
+    ) {
+      const nextSeasonMeta = realSeasons.find(
+        (s) => s.season_number === season + 1 && s.episode_count > 0
+      )
+      if (nextSeasonMeta) {
+        handleEpisodeSelect(season + 1, 1)
+        return
+      }
+    }
+    handleEpisodeSelect(season, episode + 1)
   }
 
   const handleProgress = (seconds: number) => {

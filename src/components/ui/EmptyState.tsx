@@ -10,6 +10,7 @@ import {
   RotateCcw,
   ArrowRight,
 } from 'lucide-react'
+import Focusable from '@/components/tv/Focusable'
 
 interface EmptyStateProps {
   variant?: 'search' | 'favorites' | 'history' | 'downloads' | 'livetv' | 'mylist' | 'default'
@@ -203,25 +204,37 @@ export const EmptyState = ({
           className="flex flex-col sm:flex-row gap-3 mt-8"
         >
           {onAction && (
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={onAction}
-              className="flex items-center gap-2 bg-accent-red hover:bg-red-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-red-900/40 transition-colors"
+            <Focusable
+              focusKey="empty-state-action"
+              onEnterPress={onAction}
+              className="rounded-xl"
             >
-              <span className="text-sm font-semibold">{actionLabel || config.actionLabel}</span>
-              <ArrowRight className="h-4 w-4" />
-            </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onAction}
+                className="flex items-center justify-center gap-2 bg-accent-red hover:bg-red-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-red-900/40 transition-colors"
+              >
+                <span className="text-sm font-semibold">{actionLabel || config.actionLabel}</span>
+                <ArrowRight className="h-4 w-4" />
+              </motion.button>
+            </Focusable>
           )}
           {onSecondaryAction && (
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={onSecondaryAction}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+            <Focusable
+              focusKey="empty-state-secondary-action"
+              onEnterPress={onSecondaryAction}
+              className="rounded-xl"
             >
-              <span className="text-sm font-semibold">{secondaryActionLabel}</span>
-            </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onSecondaryAction}
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+              >
+                <span className="text-sm font-semibold">{secondaryActionLabel}</span>
+              </motion.button>
+            </Focusable>
           )}
         </motion.div>
       )}

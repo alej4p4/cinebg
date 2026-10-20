@@ -25,6 +25,8 @@ import {
   CreatePixPaymentResult,
 } from '@/services/mercadoPago'
 import Focusable from '@/components/tv/Focusable'
+import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
+import { markBackHandled } from '@/utils/tv'
 
 interface LicenseGateProps {
   isModal?: boolean
@@ -50,10 +52,51 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
   const [activated, setActivated] = useState(false)
   const [checkingStatus, setCheckingStatus] = useState(false)
   const [showManualSection, setShowManualSection] = useState(false)
+  const [statusFeedback, setStatusFeedback] = useState<string | null>(null)
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
   const deviceId = getDeviceId()
   const currentPlan: VipPlan = VIP_PLANS[selectedPlanIndex] || VIP_PLANS[0]
+
+  // Foco inicial automático para controle remoto de TV e interceptação segura do botão Voltar
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        if (doesFocusableExist('vip-generate-pix')) {
+          setFocus('vip-generate-pix')
+        } else if (doesFocusableExist('vip-plan-0')) {
+          setFocus('vip-plan-0')
+        }
+      } catch {}
+    }, 120)
+    return () => clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    if (!isModal || !onClose) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
+      const code = e.keyCode || e.which
+      if (
+        e.key === 'Escape' ||
+        e.key === 'GoBack' ||
+        e.key === 'Backspace' ||
+        code === 27 ||
+        code === 4 ||
+        code === 8 ||
+        code === 10009 ||
+        code === 461 ||
+        code === 283
+      ) {
+        e.preventDefault()
+        e.stopPropagation()
+        markBackHandled()
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
+  }, [isModal, onClose])
 
   // Limpa o timer de polling ao desmontar
   useEffect(() => {
@@ -111,6 +154,7 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
   const handleCheckNow = async () => {
     if (!pixData?.paymentId || pixData.isFallback) return
     setCheckingStatus(true)
+    setStatusFeedback(null)
     try {
       const res = await checkMercadoPagoStatus(pixData.paymentId)
       if (res.isApproved) {
@@ -121,10 +165,10 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
           if (onClose) onClose()
         }, 2500)
       } else {
-        alert('Pagamento ainda não identificado. Se já pagou, aguarde alguns segundos que a confirmação é automática!')
+        setStatusFeedback('Pagamento ainda não identificado. Se já pagou, aguarde alguns segundos que a confirmação é automática!')
       }
     } catch {
-      alert('Erro ao consultar Mercado Pago. Verifique sua conexão com a internet.')
+      setStatusFeedback('Erro ao consultar Mercado Pago. Verifique sua conexão com a internet.')
     } finally {
       setCheckingStatus(false)
     }
@@ -185,12 +229,18 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
     >
       {/* Botão fechar (apenas modo modal) */}
       {isModal && onClose && (
-        <button
-          onClick={onClose}
-          className="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+        <Focusable
+          focusKey="vip-close-btn"
+          onEnterPress={onClose}
+          className="absolute -top-3 -right-3 z-10 rounded-full"
         >
-          <X className="h-5 w-5" />
-        </button>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </Focusable>
       )}
 
       {/* Cabeçalho */}
@@ -254,11 +304,12 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
           return (
             <Focusable
               key={p.id}
+              focusKey={`vip-plan-${i}`}
               onEnterPress={() => {
                 setSelectedPlanIndex(i)
                 setPixData(null)
               }}
-              className="w-full"
+              className="w-full rounded-2xl"
             >
               <button
                 type="button"
@@ -333,7 +384,7 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
             <p className="text-white/60 text-sm mb-4">
               Clique abaixo para gerar o código Pix e QR Code oficial do Mercado Pago para o plano selecionado.
             </p>
-            <Focusable onEnterPress={handleGeneratePix} className="inline-block">
+            <Focusable focusKey="vip-generate-pix" onEnterPress={handleGeneratePix} className="inline-block rounded-xl">
               <button
                 type="button"
                 onClick={handleGeneratePix}
@@ -393,7 +444,7 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
 
             {/* Botão Copiar Pix */}
             <div className="space-y-2">
-              <Focusable onEnterPress={handleCopyPix}>
+              <Focusable focusKey="vip-copy-pix" onEnterPress={handleCopyPix} className="rounded-xl">
                 <button
                   type="button"
                   onClick={handleCopyPix}
@@ -413,24 +464,34 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
                 </button>
               </Focusable>
 
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleCheckNow}
-                  disabled={checkingStatus}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-white/10 hover:bg-white/15 text-white/80 text-xs font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${checkingStatus ? 'animate-spin' : ''}`} />
-                  <span>Verificar Pagamento Agora</span>
-                </button>
+              {statusFeedback && (
+                <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-200 text-xs text-center">
+                  {statusFeedback}
+                </div>
+              )}
 
-                <button
-                  type="button"
-                  onClick={() => setPixData(null)}
-                  className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-xs rounded-lg transition-colors"
-                >
-                  Trocar Plano
-                </button>
+              <div className="flex gap-2">
+                <Focusable focusKey="vip-check-now" onEnterPress={handleCheckNow} className="flex-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={handleCheckNow}
+                    disabled={checkingStatus}
+                    className="w-full flex items-center justify-center gap-1.5 bg-white/10 hover:bg-white/15 text-white/80 text-xs font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${checkingStatus ? 'animate-spin' : ''}`} />
+                    <span>Verificar Pagamento Agora</span>
+                  </button>
+                </Focusable>
+
+                <Focusable focusKey="vip-change-plan" onEnterPress={() => setPixData(null)} className="rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setPixData(null)}
+                    className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-xs rounded-lg transition-colors"
+                  >
+                    Trocar Plano
+                  </button>
+                </Focusable>
               </div>
             </div>
           </div>
@@ -439,14 +500,20 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
 
       {/* Opção Ativação Manual / Chave Pix */}
       <div className="text-center">
-        <button
-          onClick={() => setShowManualSection(!showManualSection)}
-          className="text-white/40 hover:text-white/70 text-xs underline transition-colors"
+        <Focusable
+          focusKey="vip-manual-toggle"
+          onEnterPress={() => setShowManualSection(!showManualSection)}
+          className="inline-block rounded-lg"
         >
-          {showManualSection
-            ? 'Ocultar ativação manual'
-            : 'Já efetuou o pagamento e possui código de ativação?'}
-        </button>
+          <button
+            onClick={() => setShowManualSection(!showManualSection)}
+            className="text-white/40 hover:text-white/70 text-xs underline transition-colors px-2 py-1"
+          >
+            {showManualSection
+              ? 'Ocultar ativação manual'
+              : 'Já efetuou o pagamento e possui código de ativação?'}
+          </button>
+        </Focusable>
 
         <AnimatePresence>
           {showManualSection && (
@@ -470,14 +537,16 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
                   placeholder="Cole seu código de ativação aqui"
                   className="flex-1 bg-black/40 border border-white/10 text-white text-xs rounded-lg px-3 py-2.5 outline-none focus:border-amber-400/50"
                 />
-                <button
-                  type="button"
-                  onClick={handleActivateManual}
-                  disabled={!manualCode.trim()}
-                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-black font-bold text-xs rounded-lg transition-colors"
-                >
-                  Ativar
-                </button>
+                <Focusable focusKey="vip-manual-activate" onEnterPress={handleActivateManual} className="rounded-lg">
+                  <button
+                    type="button"
+                    onClick={handleActivateManual}
+                    disabled={!manualCode.trim()}
+                    className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-black font-bold text-xs rounded-lg transition-colors"
+                  >
+                    Ativar
+                  </button>
+                </Focusable>
               </div>
             </motion.div>
           )}
@@ -486,16 +555,24 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
 
       {/* Botão de retorno para TV Aberta Gratuita */}
       <div className="mt-4 text-center">
-        <button
-          type="button"
-          onClick={() => {
+        <Focusable
+          focusKey="vip-continue-free-tv"
+          onEnterPress={() => {
             if (onClose) onClose()
           }}
-          className="w-full py-2.5 px-4 rounded-xl border border-amber-400/30 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+          className="block rounded-xl"
         >
-          <Tv className="w-4 h-4 text-amber-400" />
-          <span>Continuar Assistindo TV Aberta Grátis (SBT, Record, Band, Cultura...)</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (onClose) onClose()
+            }}
+            className="w-full py-2.5 px-4 rounded-xl border border-amber-400/30 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Tv className="w-4 h-4 text-amber-400" />
+            <span>Continuar Assistindo TV Aberta Grátis (SBT, Record, Band, Cultura...)</span>
+          </button>
+        </Focusable>
       </div>
 
       {/* Rodapé com ID do Dispositivo */}

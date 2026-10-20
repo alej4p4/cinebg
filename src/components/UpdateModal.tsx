@@ -21,7 +21,7 @@ import {
   type DownloadProgress,
 } from '@/services/appUpdater'
 import { Capacitor } from '@capacitor/core'
-import { isMobileDevice, isTVDevice } from '@/utils/tv'
+import { getDeviceFlavor, getDeviceUpdateUrl, getDeviceApkFilename } from '@/utils/tv'
 
 interface UpdateModalProps {
   visible: boolean
@@ -38,43 +38,25 @@ type UpdateStage = 'idle' | 'downloading' | 'installing' | 'error'
 
 const UpdateModal = ({
   visible,
-  downloadUrl = 'https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk',
-  currentVersion = '1.2.60',
-  latestVersion = '1.2.60',
+  downloadUrl,
+  currentVersion = '1.2.61',
+  latestVersion = '1.2.61',
   hasUpdate = false,
   isChecking = false,
   onDismiss,
   onCheckAgain,
 }: UpdateModalProps) => {
-  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
-  const isExplicitMobile =
-    typeof window !== 'undefined' &&
-    window.innerHeight > window.innerWidth &&
-    /iPhone|iPod|Android.*Mobile|Mobile.*Android|BlackBerry|IEMobile/i.test(ua)
-
-  const isTv =
-    !isExplicitMobile &&
-    (ua.includes('CineBG-TV') ||
-      ua.includes('DeviceType/TV') ||
-      isTVDevice() ||
-      !isMobileDevice() ||
-      (typeof window !== 'undefined' &&
-        window.innerWidth > window.innerHeight &&
-        !/iPhone|iPod|Android.*Mobile|Mobile.*Android/i.test(ua)))
-
-  const isMobile = !isTv
-  const flavorLabel = isTv ? 'CineBG TV' : 'CineBG Mobile'
+  const flavor = getDeviceFlavor()
+  const isMobile = flavor === 'mobile'
+  const isTv = flavor === 'tv'
+  const flavorLabel = isMobile ? 'CineBG Mobile' : 'CineBG TV'
+  const apkFilename = getDeviceApkFilename()
   const deviceConfirmText = isTv
     ? 'O instalador de pacotes do Android foi acionado. Confirme na tela da sua TV para concluir a atualização.'
     : 'O instalador de pacotes do Android foi acionado. Confirme na tela do seu celular para concluir a atualização.'
 
-  // Se for TV e a downloadUrl fornecida for a de Mobile por engano, força a URL de TV!
-  const effectiveDownloadUrl =
-    isTv && downloadUrl.includes('-Mobile-')
-      ? downloadUrl.replace('-Mobile-', '-Tv-')
-      : !isTv && downloadUrl.includes('-Tv-')
-      ? downloadUrl.replace('-Tv-', '-Mobile-')
-      : downloadUrl
+  // Garante separação estrita: Celular sempre baixa CineBG-Mobile-release.apk; TV sempre baixa CineBG-Tv-release.apk
+  const effectiveDownloadUrl = getDeviceUpdateUrl(downloadUrl)
 
   const [stage, setStage] = useState<UpdateStage>('idle')
   const [progress, setProgress] = useState<DownloadProgress>({
@@ -671,12 +653,15 @@ const UpdateModal = ({
                 </div>
 
                 <h2 className="text-white font-black text-2xl mb-1">Você está atualizado!</h2>
-                <p className="text-xs font-mono text-emerald-400 font-semibold mb-4">
-                  Versão {currentVersion} (Compilação Oficial)
+                <p className="text-xs font-mono text-emerald-400 font-semibold mb-1">
+                  Versão {currentVersion} • {flavorLabel}
+                </p>
+                <p className="text-[11px] font-mono text-white/40 mb-4">
+                  Pacote reconhecido: {apkFilename}
                 </p>
 
                 <p className="text-white/70 text-sm mb-6 leading-relaxed">
-                  Seu CineBG já está na versão mais recente. Caso queira reinstalar ou atualizar o binário do aplicativo, use a opção abaixo.
+                  Seu {flavorLabel} já está na versão mais recente. Caso queira reinstalar ou atualizar o binário do seu {isMobile ? 'celular' : 'aparelho de TV'}, use a opção abaixo.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -698,7 +683,7 @@ const UpdateModal = ({
                       }`}
                     >
                       <Download className={`h-4 w-4 ${activeActionIndex === 0 ? 'animate-bounce' : ''}`} />
-                      <span>Baixar e Reinstalar APK</span>
+                      <span>Baixar {flavorLabel}</span>
                     </button>
                   </Focusable>
 

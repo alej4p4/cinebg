@@ -250,15 +250,23 @@ const LiveTV = () => {
             </div>
 
             {/* Busca Rápida de Canais */}
-            <div className="relative w-full sm:w-72">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+            <Focusable
+              focusKey="live-search-input"
+              onEnterPress={() => {
+                const el = document.getElementById('live-channel-search') as HTMLInputElement | null
+                el?.focus()
+              }}
+              className="relative w-full sm:w-72 rounded-xl"
+            >
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 pointer-events-none" />
               <input
+                id="live-channel-search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar canal..."
                 className="w-full bg-[#13131c] border border-white/10 text-white placeholder-white/30 rounded-xl pl-10 pr-4 py-2 text-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all outline-none"
               />
-            </div>
+            </Focusable>
           </div>
 
           {/* Player do Canal em Tela Cheia Imediata (Estilo YuCine) */}

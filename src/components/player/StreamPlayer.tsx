@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import Hls from 'hls.js'
 import {
   Maximize2,
   RefreshCw,
@@ -161,6 +162,14 @@ const StreamPlayer = ({
 
   const [candidates, setCandidates] = useState<DirectCandidate[]>(initialCachedStream?.candidates || [])
   const [candidateIndex, setCandidateIndex] = useState(0)
+  const candidatesRef = useRef<DirectCandidate[]>(initialCachedStream?.candidates || [])
+  const candidateIndexRef = useRef(0)
+  useEffect(() => {
+    candidatesRef.current = candidates
+  }, [candidates])
+  useEffect(() => {
+    candidateIndexRef.current = candidateIndex
+  }, [candidateIndex])
 
   // O espelho inicial se ajusta automaticamente ao áudio preferido
   const [activeMirror, setActiveMirror] = useState(() => getInitialMirrorForAudio(audioOption))
@@ -349,7 +358,7 @@ const StreamPlayer = ({
   const [showHud, setShowHud] = useState(true)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
   const hudTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ===== Gestos Touch & Toque Duplo (Avançar/Voltar 10s) =====
@@ -489,18 +498,24 @@ const StreamPlayer = ({
   const switchAudio = (opt: AudioOption) => {
     userManualAudioRef.current = opt
     setAudioOption(opt)
+    const list = candidatesRef.current
     if (opt === 'orig') {
-      // Prioridade máxima: verifica se há candidato direto nativo com áudio original
-      const directOrig = candidates.find((c) => !c.isDubbedHint)
-      if (directOrig) {
+      setSubLang('pt')
+      setSubtitleOption('pt')
+      // Prioridade máxima: verifica se há candidato direto nativo com áudio original/multi e legenda PT-BR
+      const origIdx = list.findIndex((c) => !c.isDubbedHint)
+      if (origIdx !== -1) {
+        const directOrig = list[origIdx]
         console.info('[StreamPlayer] Reproduzindo fonte original direta nativa (sem anúncios):', directOrig.label)
         nativeActiveRef.current = true
+        candidateIndexRef.current = origIdx
+        setCandidateIndex(origIdx)
         setDirectSrc(directOrig.url)
         setDirectKind(directOrig.kind)
         setAllowIframe(false)
         setLoaded(false)
         setError(false)
-        showFeedback(`Conectando: ${directOrig.label}`)
+        showFeedback(`Conectando: ${directOrig.label} (Legendado)`)
         return
       }
       setActiveMirror('vidlink')
@@ -510,9 +525,13 @@ const StreamPlayer = ({
     } else {
       setActiveMirror('megaembed')
       setAllowIframe(false)
-      const directDub = candidates.find((c) => c.isDubbedHint) || candidates[0]
+      const dubIdx = list.findIndex((c) => c.isDubbedHint)
+      const targetIdx = dubIdx !== -1 ? dubIdx : 0
+      const directDub = list[targetIdx]
       if (directDub) {
         nativeActiveRef.current = true
+        candidateIndexRef.current = targetIdx
+        setCandidateIndex(targetIdx)
         setDirectSrc(directDub.url)
         setDirectKind(directDub.kind)
         setLoaded(false)
@@ -527,35 +546,78 @@ const StreamPlayer = ({
     setKey((k) => k + 1)
   }
 
-  // Falha na reprodução direta da fonte atual: testa a próxima opção limpa da lista
-  const handleDirectMediaError = () => {
-    console.warn('[StreamPlayer] Falha na reprodução da fonte atual. Buscando próxima opção limpa...')
-    setCandidateIndex((prevIndex) => {
-      const nextIndex = prevIndex + 1
-      if (nextIndex < candidates.length) {
-        const next = candidates[nextIndex]
-        console.info(`[StreamPlayer] Testando candidato alternativo: ${next.label} (${nextIndex + 1}/${candidates.length})`)
-        nativeActiveRef.current = true
-        setDirectSrc(next.url)
-        setDirectKind(next.kind)
-        setLoaded(false)
-        setError(false)
-        showFeedback(`Conectando: ${next.label}`)
-        return nextIndex
-      }
-      // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho com áudio original e legenda PT-BR
-      console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho legendado PT-BR (VidLink)...')
-      setAudioOption('orig')
-      nativeActiveRef.current = false
-      setDirectSrc(null)
-      setDirectKind(null)
-      setActiveMirror('vidlink')
-      setAllowIframe(true)
+  // Falha na reprodução direta da fonte atual: testa a próxima opção limpa da lista sem closure obsoleta
+  const handleDirectMediaError = useCallback(() => {
+    const list = candidatesRef.current
+    const nextIndex = candidateIndexRef.current + 1
+    console.warn(`[StreamPlayer] Falha na opção atual (${candidateIndexRef.current + 1}/${list.length}). Buscando próxima opção limpa...`)
+    if (nextIndex < list.length) {
+      const next = list[nextIndex]
+      console.info(`[StreamPlayer] Testando candidato alternativo: ${next.label} (${nextIndex + 1}/${list.length})`)
+      candidateIndexRef.current = nextIndex
+      setCandidateIndex(nextIndex)
+      nativeActiveRef.current = true
+      setAllowIframe(false)
+      setDirectSrc(next.url)
+      setDirectKind(next.kind)
+      setLoaded(false)
       setError(false)
-      showFeedback('Conectando espelho legendado...')
-      return prevIndex
-    })
-  }
+      showFeedback(`Conectando: ${next.label}`)
+      return
+    }
+    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho com áudio original e legenda PT-BR
+    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho alternativo (VidLink)...')
+    nativeActiveRef.current = false
+    setDirectSrc(null)
+    setDirectKind(null)
+    setActiveMirror('vidlink')
+    setAllowIframe(true)
+    setLoaded(false)
+    setError(false)
+    showFeedback('Conectando servidor alternativo...')
+  }, [setAudioOption])
+
+  // Alternância manual cíclica pelo botão "Opção 1 / Servidor" no controle remoto
+  const handleCycleServerOption = useCallback(() => {
+    const list = candidatesRef.current
+    if (list.length > 0 && !allowIframe) {
+      const nextIndex = (candidateIndexRef.current + 1) % list.length
+      const next = list[nextIndex]
+      candidateIndexRef.current = nextIndex
+      setCandidateIndex(nextIndex)
+      nativeActiveRef.current = true
+      setAllowIframe(false)
+      setDirectSrc(next.url)
+      setDirectKind(next.kind)
+      setLoaded(false)
+      setError(false)
+      showFeedback(`Conectando: ${next.label}`)
+      return
+    }
+    // Se estiver em modo espelho (iframe), cicla entre os espelhos disponíveis ou retorna para a Opção 1 direta
+    if (list.length > 0 && allowIframe) {
+      const first = list[0]
+      candidateIndexRef.current = 0
+      setCandidateIndex(0)
+      nativeActiveRef.current = true
+      setAllowIframe(false)
+      setDirectSrc(first.url)
+      setDirectKind(first.kind)
+      setLoaded(false)
+      setError(false)
+      showFeedback(`Conectando: ${first.label}`)
+      return
+    }
+    const nextAttempt = (fallbackAttempt + 1) % fallbackSequence.length
+    const nextMirror = fallbackSequence[nextAttempt]
+    setFallbackAttempt(nextAttempt)
+    setActiveMirror(nextMirror)
+    setAllowIframe(true)
+    setLoaded(false)
+    setError(false)
+    setKey((k) => k + 1)
+    showFeedback(`Servidor: ${nextAttempt + 1}/${fallbackSequence.length}`)
+  }, [allowIframe, fallbackAttempt, fallbackSequence])
 
   const handleStreamFailure = () => {
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
@@ -659,29 +721,8 @@ const StreamPlayer = ({
     const isNewMedia = lastCheckedMediaRef.current !== mediaKey
     if (isNewMedia) {
       lastCheckedMediaRef.current = mediaKey
-      userManualAudioRef.current = null
-      // Sempre define Dublado como padrão ao abrir qualquer filme ou série novo
-      setAudioOption('dub')
-    }
-
-    // Se o usuário selecionou manualmente Original para este conteúdo, respeitamos a decisão manual
-    if (userManualAudioRef.current === 'orig' || userManualAudioRef.current === 'sub') {
-      const directOrig = candidates.find((c) => !c.isDubbedHint)
-      if (directOrig) {
-        nativeActiveRef.current = true
-        setResolvingDirect(false)
-        setDirectSrc(directOrig.url)
-        setDirectKind(directOrig.kind)
-        setAllowIframe(false)
-        return
-      }
-      nativeActiveRef.current = false
-      setResolvingDirect(false)
-      setDirectSrc(null)
-      setDirectKind(null)
-      setActiveMirror('vidlink')
-      setAllowIframe(true)
-      return
+      // Respeita se o usuário escolheu Legendado/Original na tela de Sinopse (Details.tsx)
+      userManualAudioRef.current = audioOption === 'orig' || audioOption === 'sub' ? audioOption : null
     }
 
     let cancelled = false
@@ -692,7 +733,9 @@ const StreamPlayer = ({
       setDirectSrc(null)
       setDirectKind(null)
       setCandidates([])
+      candidatesRef.current = []
       setCandidateIndex(0)
+      candidateIndexRef.current = 0
       setResolvingDirect(true)
     }
 
@@ -700,38 +743,55 @@ const StreamPlayer = ({
       .then((resolved) => {
         if (cancelled) return
         const list = resolved.candidates || []
+        candidatesRef.current = list
+        setCandidates(list)
 
-        // Verifica se há alguma fonte explicitamente dublada
-        const hasDubbedSource = list.some((c) => c.isDubbedHint) || !!resolved.dubbedMp4
-
-        if (hasDubbedSource) {
-          // Possui áudio em português! Deixa marcado Dublado como padrão absoluto
-          console.info('[StreamPlayer] Áudio em português encontrado. Deixando marcado Dublado como padrão.')
-          setAudioOption('dub')
-          setCandidates(list)
-          setCandidateIndex(0)
-
-          const firstDubbed = list.find((c) => c.isDubbedHint) || list[0]
-          if (firstDubbed) {
+        const wantsOriginal = userManualAudioRef.current === 'orig' || userManualAudioRef.current === 'sub'
+        if (wantsOriginal) {
+          const origIdx = list.findIndex((c) => !c.isDubbedHint)
+          if (origIdx !== -1) {
+            const origCandidate = list[origIdx]
+            candidateIndexRef.current = origIdx
+            setCandidateIndex(origIdx)
             nativeActiveRef.current = true
-            setDirectSrc(firstDubbed.url)
-            setDirectKind(firstDubbed.kind)
-          } else if (resolved.dubbedMp4) {
-            nativeActiveRef.current = true
-            setDirectSrc(resolved.dubbedMp4)
-            setDirectKind('mp4')
-          } else if (resolved.hlsProxy) {
-            nativeActiveRef.current = true
-            setDirectSrc(resolved.hlsProxy)
-            setDirectKind('hls')
+            setAllowIframe(false)
+            setDirectSrc(origCandidate.url)
+            setDirectKind(origCandidate.kind)
+            setSubLang('pt')
+            setSubtitleOption('pt')
+            return
           }
+          nativeActiveRef.current = false
+          setDirectSrc(null)
+          setDirectKind(null)
+          setActiveMirror('vidlink')
+          setAllowIframe(true)
+          return
+        }
+
+        if (list.length > 0) {
+          const hasDubbedSource = list.some((c) => c.isDubbedHint)
+          setAudioOption(hasDubbedSource ? 'dub' : 'orig')
+          if (!hasDubbedSource) {
+            setSubLang('pt')
+            setSubtitleOption('pt')
+          }
+          const firstIdx = hasDubbedSource ? Math.max(0, list.findIndex((c) => c.isDubbedHint)) : 0
+          const firstCandidate = list[firstIdx] || list[0]
+          candidateIndexRef.current = firstIdx
+          setCandidateIndex(firstIdx)
+          nativeActiveRef.current = true
+          setAllowIframe(false)
+          setDirectSrc(firstCandidate.url)
+          setDirectKind(firstCandidate.kind)
         } else {
-          // Nenhuma fonte dublada disponível no MegaEmbed (comum em séries turcas, doramas ou produções com áudio original)
-          // Alterna automaticamente para o reprodutor com áudio original e legenda em português (VidLink / VidSrc / MultiEmbed)
-          console.info('[StreamPlayer] Nenhuma fonte dublada disponível no MegaEmbed. Alternando para áudio original com legendas PT-BR...')
+          // Nenhuma fonte direta disponível no MegaEmbed (ex: séries turcas raras)
+          console.info('[StreamPlayer] Nenhuma fonte direta disponível no MegaEmbed. Alternando para espelho legendado PT-BR...')
           setAudioOption('orig')
-          setCandidates([])
+          setSubLang('pt')
+          setSubtitleOption('pt')
           setCandidateIndex(0)
+          candidateIndexRef.current = 0
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
@@ -750,7 +810,9 @@ const StreamPlayer = ({
         console.warn('[StreamPlayer] Erro ao carregar fontes diretas. Alternando para espelho legendado:', err)
         setAudioOption('orig')
         setCandidates([])
+        candidatesRef.current = []
         setCandidateIndex(0)
+        candidateIndexRef.current = 0
         nativeActiveRef.current = false
         setActiveMirror('vidlink')
         setAllowIframe(true)
@@ -765,6 +827,7 @@ const StreamPlayer = ({
     return () => {
       cancelled = true
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, mediaKey, tmdbId, season, episode, type, originalLanguage, setAudioOption])
 
   const handleIframeLoad = () => {
@@ -819,74 +882,87 @@ const StreamPlayer = ({
     attemptPlay()
   }
 
-  // Anexa o HLS (m3u8) ao <video> via hls.js (CORS garantido pelo proxy do MegaEmbed).
+  // Anexa o HLS (m3u8) ao <video> via hls.js priorizando Hls.isSupported() (no Android TV WebView, canPlayType retorna 'maybe' mas o player nativo falha em URLs .php/redirects).
   useEffect(() => {
     const video = videoRef.current
     if (!video || !directSrc || directKind !== 'hls') return
 
-    // Safari/iOS toca HLS nativamente.
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = directSrc
-      return
-    }
-
     let cancelled = false
-    let hlsInstance: { destroy: () => void } | null = null
+    let hlsInstance: Hls | null = null
 
-    void import('hls.js').then((mod) => {
-      if (cancelled) return
-      const Hls = mod.default
-      if (!Hls.isSupported()) {
-        handleDirectMediaError()
-        return
-      }
-
+    if (Hls.isSupported()) {
+      let networkRetries = 0
+      let mediaRetries = 0
       const hls = new Hls({
-        enableWorker: true,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-        maxBufferSize: 60 * 1000 * 1000,
+        enableWorker: false, // Evita travamento de Web Worker com Blob em Android TV / TV Box
+        maxBufferLength: 25,
+        maxMaxBufferLength: 50,
+        maxBufferSize: 35 * 1000 * 1000,
         lowLatencyMode: false,
-        manifestLoadingTimeOut: 15000,
-        manifestLoadingMaxRetry: 4,
-        levelLoadingTimeOut: 15000,
-        fragLoadingTimeOut: 20000,
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 2,
+        levelLoadingTimeOut: 10000,
+        levelLoadingMaxRetry: 2,
+        fragLoadingTimeOut: 15000,
+        fragLoadingMaxRetry: 2,
       })
       hlsInstance = hls
       hls.subtitleDisplay = true
       hls.loadSource(directSrc)
       hls.attachMedia(video)
+
+      const selectPreferredAudioTrack = () => {
+        if (!hls.audioTracks || hls.audioTracks.length <= 1) return
+        if (userManualAudioRef.current === 'orig' || userManualAudioRef.current === 'sub') return
+        const ptIdx = hls.audioTracks.findIndex((t) => {
+          const l = (t.lang || '').toLowerCase()
+          const n = (t.name || '').toLowerCase()
+          return l.startsWith('por') || l.startsWith('pt') || n.includes('por') || n.includes('dub') || n.includes('bra')
+        })
+        if (ptIdx !== -1 && hls.audioTrack !== ptIdx) {
+          hls.audioTrack = ptIdx
+        }
+      }
+
+      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, selectPreferredAudioTrack)
       hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => refreshTextTracks())
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        selectPreferredAudioTrack()
         window.setTimeout(() => refreshTextTracks(), 300)
         attemptPlay()
       })
       hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (cancelled) return
         if (data.fatal) {
-          switch (data.type) {
-            case Hls.ErrorTypes.NETWORK_ERROR:
-              console.warn('[StreamPlayer] Fatal network error, tentando recuperação automática...', data)
-              hls.startLoad()
-              break
-            case Hls.ErrorTypes.MEDIA_ERROR:
-              console.warn('[StreamPlayer] Fatal media error, tentando recuperação automática...', data)
-              hls.recoverMediaError()
-              break
-            default:
-              hls.destroy()
-              handleDirectMediaError()
-              break
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && networkRetries < 1) {
+            networkRetries += 1
+            console.warn('[StreamPlayer] Fatal network error, tentando 1 recuperação automática...', data)
+            hls.startLoad()
+            return
           }
+          if (data.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRetries < 1) {
+            mediaRetries += 1
+            console.warn('[StreamPlayer] Fatal media error, tentando 1 recuperação automática...', data)
+            hls.recoverMediaError()
+            return
+          }
+          hls.destroy()
+          handleDirectMediaError()
         }
       })
-    })
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Fallback para Safari/iOS sem suporte a MSE
+      video.src = directSrc
+    } else {
+      handleDirectMediaError()
+    }
 
     return () => {
       cancelled = true
       if (hlsInstance) hlsInstance.destroy()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [directSrc, directKind])
+  }, [directSrc, directKind, handleDirectMediaError])
 
   // Autoplay ativo ao conectar directSrc
   useEffect(() => {
@@ -1920,7 +1996,7 @@ const StreamPlayer = ({
           </div>
         )}
         {/* Loading Overlay com botões clicáveis por controle remoto na TV */}
-        {!loaded && !error && !isPlaying && (
+        {!loaded && !error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-20 gap-3 p-4">
             <div className="w-12 h-12 border-4 border-white/10 border-t-yellow-400 rounded-full animate-spin" />
             <div className="text-center">
@@ -2247,12 +2323,12 @@ const StreamPlayer = ({
                 type="button"
                 id="hud-btn-server"
                 data-hud-btn="true"
-                onClick={handleDirectMediaError}
+                onClick={handleCycleServerOption}
                 className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
                 title="Alternar servidor ou resolução"
               >
                 <Server className="w-4 h-4 text-yellow-400" />
-                <span>{candidates.length > 0 ? `Opção ${candidateIndex + 1}` : 'Resolução'}</span>
+                <span>{candidates.length > 0 && !allowIframe ? `Opção ${candidateIndex + 1}/${candidates.length}` : `Servidor ${fallbackAttempt + 1}`}</span>
               </button>
 
               {/* 4. Episódios (Para Séries) */}

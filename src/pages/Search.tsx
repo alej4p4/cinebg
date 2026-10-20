@@ -259,27 +259,33 @@ const Search = () => {
             )}
 
             {/* Botão de Busca por Voz */}
-            <button
-              type="button"
-              onClick={isListening ? stopListening : startListening}
-              className={`p-2 rounded-xl transition-all relative tv-focusable ${
-                isListening
-                  ? 'bg-accent-red text-white shadow-lg shadow-red-900/50 scale-110 animate-pulse'
-                  : 'text-white/50 hover:text-white hover:bg-white/10'
-              }`}
-              title={
-                voiceSupported
-                  ? isListening
-                    ? 'Ouvindo... Clique para cancelar'
-                    : 'Pesquisar por Voz (Microfone)'
-                  : 'Reconhecimento de voz não suportado neste aparelho'
-              }
+            <Focusable
+              focusKey="search-voice-btn"
+              onEnterPress={isListening ? stopListening : startListening}
+              className="rounded-xl"
             >
-              <Mic className={`h-4 w-4 ${isListening ? 'animate-bounce' : ''}`} />
-              {isListening && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping" />
-              )}
-            </button>
+              <button
+                type="button"
+                onClick={isListening ? stopListening : startListening}
+                className={`p-2 rounded-xl transition-all relative tv-focusable ${
+                  isListening
+                    ? 'bg-accent-red text-white shadow-lg shadow-red-900/50 scale-110 animate-pulse'
+                    : 'text-white/50 hover:text-white hover:bg-white/10'
+                }`}
+                title={
+                  voiceSupported
+                    ? isListening
+                      ? 'Ouvindo... Clique para cancelar'
+                      : 'Pesquisar por Voz (Microfone)'
+                    : 'Reconhecimento de voz não suportado neste aparelho'
+                }
+              >
+                <Mic className={`h-4 w-4 ${isListening ? 'animate-bounce' : ''}`} />
+                {isListening && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping" />
+                )}
+              </button>
+            </Focusable>
           </div>
         </div>
 
@@ -507,20 +513,26 @@ const Search = () => {
 
         {/* Filters */}
         <div className="mb-6">
-          <button
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            className={`flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border transition-all ${
-              filtersOpen || selectedGenre || selectedYear
-                ? 'bg-accent-red/20 border-accent-red/40 text-accent-red'
-                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-            }`}
+          <Focusable
+            focusKey="search-filters-toggle"
+            onEnterPress={() => setFiltersOpen(!filtersOpen)}
+            className="inline-block rounded-xl"
           >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filtros
-            {(selectedGenre || selectedYear) && (
-              <span className="w-2 h-2 rounded-full bg-accent-red" />
-            )}
-          </button>
+            <button
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className={`flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border transition-all ${
+                filtersOpen || selectedGenre || selectedYear
+                  ? 'bg-accent-red/20 border-accent-red/40 text-accent-red'
+                  : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+              }`}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filtros
+              {(selectedGenre || selectedYear) && (
+                <span className="w-2 h-2 rounded-full bg-accent-red" />
+              )}
+            </button>
+          </Focusable>
 
           <AnimatePresence>
             {filtersOpen && (
@@ -598,9 +610,16 @@ const Search = () => {
         ) : searched ? (
           <EmptySearch
             query={query}
-            onAction={() => {}}
+            onAction={() => {
+              setQuery('')
+              setSelectedGenre(null)
+              setSelectedYear('')
+            }}
             actionLabel="Limpar busca"
-            onSecondaryAction={() => {}}
+            onSecondaryAction={() => {
+              setSelectedGenre(null)
+              setSelectedYear('')
+            }}
           />
         ) : (
           <motion.div
