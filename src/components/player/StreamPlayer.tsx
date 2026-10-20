@@ -89,7 +89,13 @@ const StreamPlayer = ({
     removeFavorite,
     tvMode,
   } = useAppStore()
-  const isTv = isTVDevice() || tvMode || !isMobileDevice()
+  const isTv =
+    isTVDevice() ||
+    tvMode ||
+    !isMobileDevice() ||
+    (typeof window !== 'undefined' &&
+      window.innerWidth > window.innerHeight &&
+      !/iPhone|iPod|Android.*Mobile|Mobile.*Android/i.test(navigator.userAgent))
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -740,12 +746,24 @@ const StreamPlayer = ({
 
   const attemptPlay = useCallback(() => {
     const video = videoRef.current
-    if (video && video.paused) {
-      const p = video.play()
-      if (p !== undefined) {
-        p.catch((err) => {
-          console.warn('[StreamPlayer] Autoplay aguardando interação ou restrito pelo WebView:', err)
-        })
+    if (video) {
+      if (video.paused) {
+        const p = video.play()
+        if (p !== undefined) {
+          p.then(() => {
+            loadedRef.current = true
+            setLoaded(true)
+            setIsPlaying(true)
+            setError(false)
+          }).catch((err) => {
+            console.warn('[StreamPlayer] Autoplay aguardando interação ou restrito pelo WebView:', err)
+          })
+        }
+      } else {
+        loadedRef.current = true
+        setLoaded(true)
+        setIsPlaying(true)
+        setError(false)
       }
     }
   }, [])
@@ -830,11 +848,18 @@ const StreamPlayer = ({
   // Autoplay ativo ao conectar directSrc
   useEffect(() => {
     if (!directSrc) return
+    const video = videoRef.current
+    if (!video) return
+    try {
+      if (directKind === 'mp4') {
+        video.load()
+      }
+    } catch {}
     const timer = setTimeout(() => {
       attemptPlay()
-    }, 250)
+    }, 150)
     return () => clearTimeout(timer)
-  }, [directSrc, attemptPlay])
+  }, [directSrc, directKind, attemptPlay])
 
   // Aplica a velocidade escolhida (inclusive ao trocar de fonte).
   useEffect(() => {
@@ -1769,7 +1794,7 @@ const StreamPlayer = ({
         )}
 
         {/* Botão de Rotação Rápida para Celular (se segurando em pé/retrato) */}
-        {!isTv && !isTVDevice() && !tvMode && isPortrait && (
+        {!isTv && isMobileDevice() && isPortrait && (
           <button
             type="button"
             onClick={(e) => {
@@ -1787,7 +1812,7 @@ const StreamPlayer = ({
         )}
 
         {/* Botão de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
-        {directSrc && !isTv && !isTVDevice() && !tvMode && (
+        {directSrc && !isTv && isMobileDevice() && (
           <div className="absolute top-[max(0.75rem,env(safe-area-inset-top,0px))] left-[max(0.75rem,env(safe-area-inset-left,0px))] z-40">
             <button
               onClick={toggleLock}
@@ -1804,7 +1829,7 @@ const StreamPlayer = ({
         )}
 
         {/* Overlay de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
-        {isLocked && !isTv && !isTVDevice() && !tvMode && (
+        {isLocked && !isTv && isMobileDevice() && (
           <div
             onClick={handleLockTap}
             className="absolute inset-0 z-30 cursor-pointer flex items-center justify-center bg-transparent select-none"
@@ -1872,7 +1897,7 @@ const StreamPlayer = ({
           </div>
         )}
         {/* Loading Overlay com botões clicáveis por controle remoto na TV */}
-        {!loaded && !error && (
+        {!loaded && !error && !isPlaying && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-20 gap-3 p-4">
             <div className="w-12 h-12 border-4 border-white/10 border-t-yellow-400 rounded-full animate-spin" />
             <div className="text-center">
@@ -1978,6 +2003,7 @@ const StreamPlayer = ({
             title={title}
             autoPlay
             playsInline
+            preload="auto"
             className={`w-full h-full bg-black transition-all duration-200 ${
               fitMode === 'cover'
                 ? 'object-cover'
@@ -1990,13 +2016,29 @@ const StreamPlayer = ({
             onLoadedData={handleDirectMediaReady}
             onLoadedMetadata={handleLoadedMetadata}
             onCanPlay={handleDirectMediaReady}
-            onTimeUpdate={handleTimeUpdate}
+            onPlaying={() => {
+              loadedRef.current = true
+              setLoaded(true)
+              setIsPlaying(true)
+              setError(false)
+            }}
+            onTimeUpdate={() => {
+              const v = videoRef.current
+              if (v && v.currentTime > 0 && !loadedRef.current) {
+                loadedRef.current = true
+                setLoaded(true)
+              }
+              handleTimeUpdate()
+            }}
             onWaiting={handleStall}
             onStalled={handleStall}
             onError={handleDirectMediaError}
             onEnded={handleEnded}
             onPlay={() => {
+              loadedRef.current = true
+              setLoaded(true)
               setIsPlaying(true)
+              setError(false)
               if (isMobileDevice() && typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
                 try {
                   (screen.orientation as any).lock('landscape').catch(() => {})
@@ -2116,20 +2158,22 @@ const StreamPlayer = ({
           {/* Barra de Ações Estilo YuCine (Otimizada para D-Pad / Controle Remoto da TV) */}
           <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
             <div className="flex flex-wrap items-center gap-2">
-              {/* 1. Tela cheia */}
-              <button
-                type="button"
-                id="hud-btn-fullscreen"
-                data-hud-btn="true"
-                onClick={handleFullscreen}
-                className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
-              >
-                <Expand className="w-4 h-4 text-yellow-400 group-focus:text-black" />
-                <span>Tela cheia</span>
-              </button>
+              {/* 1. Tela cheia (Apenas para celular/tablet; Oculto em Smart TV que já opera em tela cheia) */}
+              {!isTv && isMobileDevice() && (
+                <button
+                  type="button"
+                  id="hud-btn-fullscreen"
+                  data-hud-btn="true"
+                  onClick={handleFullscreen}
+                  className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+                >
+                  <Expand className="w-4 h-4 text-yellow-400 group-focus:text-black" />
+                  <span>Tela cheia</span>
+                </button>
+              )}
 
               {/* Botão de Orientação / Girar Tela (exclusivo para celular) */}
-              {!isTv && !isTVDevice() && !tvMode && (
+              {!isTv && isMobileDevice() && (
                 <button
                   type="button"
                   id="hud-btn-rotate"
@@ -2238,31 +2282,33 @@ const StreamPlayer = ({
                 <span>{isFavorite ? 'Favorito' : 'Favoritar'}</span>
               </button>
 
-              {/* 6. Baixar */}
-              <button
-                type="button"
-                id="hud-btn-download"
-                data-hud-btn="true"
-                onClick={() => {
-                  if (onDownload) {
-                    onDownload()
-                  } else {
-                    const btn = document.getElementById('watch-download-btn')
-                    if (btn) btn.click()
-                    else showFeedback('Preparando download...')
-                  }
-                }}
-                className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
-              >
-                <Download className="w-4 h-4 text-yellow-400" />
-                <span>Baixar</span>
-              </button>
+              {/* 6. Baixar (Apenas para celular; Oculto em TV) */}
+              {!isTv && isMobileDevice() && (
+                <button
+                  type="button"
+                  id="hud-btn-download"
+                  data-hud-btn="true"
+                  onClick={() => {
+                    if (onDownload) {
+                      onDownload()
+                    } else {
+                      const btn = document.getElementById('watch-download-btn')
+                      if (btn) btn.click()
+                      else showFeedback('Preparando download...')
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
+                >
+                  <Download className="w-4 h-4 text-yellow-400" />
+                  <span>Baixar</span>
+                </button>
+              )}
             </div>
 
             {/* Ações Secundárias (Ajuste de Tela, Recarregar, Próximo Ep) */}
             <div className="flex items-center gap-2">
-              {/* Ajustar / Preencher tela (Estilo YuCine) */}
-              {directSrc && (
+              {/* Ajustar / Preencher tela (Apenas para celular; Oculto em TV) */}
+              {directSrc && !isTv && isMobileDevice() && (
                 <button
                   type="button"
                   id="hud-btn-fit"
@@ -2279,17 +2325,19 @@ const StreamPlayer = ({
                 </button>
               )}
 
-              {/* Recarregar Stream */}
-              <button
-                type="button"
-                id="hud-btn-refresh"
-                data-hud-btn="true"
-                onClick={handleManualRefresh}
-                className="p-2.5 bg-[#171824]/90 hover:bg-[#232538] rounded-xl text-white/80 hover:text-white transition-all border border-white/10 focus:outline-none focus:ring-4 focus:ring-yellow-400"
-                title="Recarregar"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
+              {/* Recarregar Stream (Apenas para celular; Na TV é acessível pelo menu Ajustes) */}
+              {!isTv && isMobileDevice() && (
+                <button
+                  type="button"
+                  id="hud-btn-refresh"
+                  data-hud-btn="true"
+                  onClick={handleManualRefresh}
+                  className="p-2.5 bg-[#171824]/90 hover:bg-[#232538] rounded-xl text-white/80 hover:text-white transition-all border border-white/10 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                  title="Recarregar"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              )}
 
               {/* Próximo Episódio */}
               {onNextEpisode && type !== 'movie' && (

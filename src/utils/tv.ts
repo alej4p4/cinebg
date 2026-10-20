@@ -80,10 +80,8 @@ export const isTVDevice = (): boolean => {
 
   // Detecção para Android TV boxes e Smart TVs com UA genérico em landscape
   const isLandscapeLarge = window.innerWidth >= 800 && window.innerWidth > window.innerHeight
-  const noTouchOrTv =
-    typeof navigator !== 'undefined' &&
-    (navigator.maxTouchPoints === 0 || navigator.maxTouchPoints === 1)
-  if (isLandscapeLarge && noTouchOrTv) return true
+  const isNotPhone = !/iPhone|iPod|Android.*Mobile|Mobile.*Android|BlackBerry|IEMobile/i.test(ua)
+  if (isLandscapeLarge && isNotPhone) return true
 
   return false
 }
