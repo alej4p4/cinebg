@@ -97,7 +97,7 @@ const UpdateModal = ({
     return `${mb.toFixed(1)} MB`
   }
 
-  const handleStartUpdate = async () => {
+  const handleStartUpdate = useCallback(async () => {
     setErrorMessage(null)
     setStage('downloading')
     setProgress({ percent: 0, bytesDownloaded: 0, totalBytes: 0 })
@@ -129,9 +129,9 @@ const UpdateModal = ({
       setStage('error')
       setErrorMessage(err?.message || 'Erro inesperado durante a atualização.')
     }
-  }
+  }, [effectiveDownloadUrl])
 
-  const handleOpenBrowserFallback = () => {
+  const handleOpenBrowserFallback = useCallback(() => {
     try {
       const a = document.createElement('a')
       a.href = effectiveDownloadUrl
@@ -143,7 +143,7 @@ const UpdateModal = ({
     } catch {
       window.location.href = effectiveDownloadUrl
     }
-  }
+  }, [effectiveDownloadUrl])
 
   // Foco ativo direto com sincronização entre D-Pad Spatial Navigation e elementos DOM
   const focusCurrentAction = useCallback(
@@ -335,6 +335,8 @@ const UpdateModal = ({
     focusCurrentAction,
     onDismiss,
     onCheckAgain,
+    handleOpenBrowserFallback,
+    handleStartUpdate,
   ])
 
   return (

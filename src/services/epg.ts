@@ -329,7 +329,7 @@ export function getLiveChannelEPG(channelId: string, category: string, channelNa
   // Encontra o slot que compreende o minuto atual
   for (let i = 0; i < pattern.length; i++) {
     const slot = pattern[i]
-    let startMin = slot.startHour * 60 + slot.startMinute
+    const startMin = slot.startHour * 60 + slot.startMinute
     let endMin = slot.endHour * 60 + slot.endMinute
 
     // Caso o programa cruze a meia-noite (ex: 23:45 -> 01:15)
@@ -400,7 +400,7 @@ export function getChannelDailySchedule(
   const pattern = getPatternForChannel(channelId, category)
 
   return pattern.map((slot) => {
-    let startMin = slot.startHour * 60 + slot.startMinute
+    const startMin = slot.startHour * 60 + slot.startMinute
     let endMin = slot.endHour * 60 + slot.endMinute
     if (endMin < startMin) endMin += 24 * 60
 

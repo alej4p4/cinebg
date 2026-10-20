@@ -265,6 +265,7 @@ export const useAppStore = create<AppState>()(
             history: active.history,
             language: active.language,
             audioOption: active.audioOption,
+            subtitleOption: active.subtitleOption,
           }
         }),
 

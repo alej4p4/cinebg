@@ -21,6 +21,70 @@ interface LicenseResponse {
   licenses: string[]
 }
 
+/** Planos aceitos em códigos de ativação manual (devem coincidir com VIP_PLANS). */
+export const VALID_ACTIVATION_DAYS = [30, 60, 90, 365] as const
+const ACTIVATION_SALT = 'cinebg-vip-v1'
+const ACTIVATION_CODE_REGEX = /^CINEBG-(\d{2,3})-([0-9A-Z]{8})$/
+
+/** Hash FNV-1a 32 bits determinístico (sem dependências, roda em TV Box antigas). */
+const fnv1a = (input: string): number => {
+  let hash = 0x811c9dc5
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 0x01000193) >>> 0
+  }
+  return hash >>> 0
+}
+
+/**
+ * Checksum de 8 caracteres vinculado ao aparelho + plano.
+ * Um código gerado para um aparelho NÃO funciona em outro (anti-compartilhamento).
+ */
+export const computeActivationChecksum = (deviceId: string, days: number): string => {
+  const a = fnv1a(`${ACTIVATION_SALT}|${deviceId}|${days}`)
+  const b = fnv1a(`${days}|${deviceId}|${ACTIVATION_SALT}|${a}`)
+  return (a.toString(36) + b.toString(36)).toUpperCase().padStart(8, '0').slice(-8)
+}
+
+export type ActivationValidation =
+  | { valid: true; days: number }
+  | { valid: false; reason: 'empty' | 'format' | 'plan' | 'checksum' | 'device' }
+
+/**
+ * Valida um código de ativação manual (CWE-306: impede liberar o VIP com qualquer texto).
+ * Formato: CINEBG-<DIAS>-<CHECKSUM>, ex.: CINEBG-30-1A2B3C4D
+ */
+export const validateActivationCode = (rawCode: string, deviceId: string): ActivationValidation => {
+  const code = (rawCode ?? '').trim().toUpperCase().replace(/\s+/g, '')
+  if (!code) return { valid: false, reason: 'empty' }
+  if (!deviceId || !deviceId.trim()) return { valid: false, reason: 'device' }
+  if (code.length > 32) return { valid: false, reason: 'format' }
+  const match = ACTIVATION_CODE_REGEX.exec(code)
+  if (!match) return { valid: false, reason: 'format' }
+  const days = Number(match[1])
+  if (!(VALID_ACTIVATION_DAYS as readonly number[]).includes(days)) {
+    return { valid: false, reason: 'plan' }
+  }
+  if (computeActivationChecksum(deviceId.trim(), days) !== match[2]) {
+    return { valid: false, reason: 'checksum' }
+  }
+  return { valid: true, days }
+}
+
+/** Consulta a lista remota de licenças (ativação feita pelo suporte). */
+export const isLicensedRemotely = async (code: string, deviceId: string): Promise<boolean> => {
+  try {
+    const res = await fetch(`/licenses.json?t=${Date.now()}`)
+    if (!res.ok) return false
+    const data = (await res.json()) as LicenseResponse
+    const active = Array.isArray(data?.licenses) ? data.licenses : []
+    const normalized = code.trim()
+    return active.includes(deviceId) || (normalized.length >= 6 && active.includes(normalized))
+  } catch {
+    return false
+  }
+}
+
 /**
  * Obtém e sincroniza a data/hora real da primeira instalação do CineBG no aparelho.
  * Prioriza o timestamp mais antigo entre o PackageManager/SharedPreferences nativo do Android

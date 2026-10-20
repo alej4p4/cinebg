@@ -5,7 +5,7 @@
  * ============================================================================
  */
 
-import { isTVDevice, isMobileDevice } from '@/utils/tv'
+import { isTVDevice, isMobileDevice, getNativeAppVersion } from '@/utils/tv'
 
 export interface TelemetrySpan {
   traceId: string
@@ -69,7 +69,7 @@ export function getObservabilityConfig(): ObservabilityConfig {
     newRelicAccountId: env.VITE_NEW_RELIC_ACCOUNT_ID,
     otelEndpoint: env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT,
     environment: env.MODE || 'production',
-    release: env.VITE_APP_VERSION || '1.2.57',
+    release: env.VITE_APP_VERSION || getNativeAppVersion(),
   }
 }
 

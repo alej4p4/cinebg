@@ -66,7 +66,7 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
       setFocusedRow(1)
       setFocusedCol(subtitleLang === 'off' ? 0 : subtitleLang === 'pt' ? 1 : 2)
     }
-  }, [isOpen])
+  }, [isOpen, subtitleLang])
 
   // Move o foco DOM e faz scroll suave até o item ativo no controle remoto
   useEffect(() => {
@@ -225,6 +225,7 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
     onChangeSubtitleSize,
     onChangeSubtitleStyle,
     onClose,
+    subtitleLang,
   ])
 
   if (!isOpen) return null
@@ -525,11 +526,11 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                 <span>Tamanho da legenda</span>
               </div>
               <div className="flex flex-wrap gap-3">
-                {[
+                {([
                   ['md', 'Normal'],
                   ['lg', 'Grande'],
                   ['sm', 'Pequeno'],
-                ].map(([val, label], colIdx) => (
+                ] as const).map(([val, label], colIdx) => (
                   <button
                     key={val}
                     type="button"
@@ -538,7 +539,7 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                     onClick={() => {
                       setFocusedRow(3)
                       setFocusedCol(colIdx)
-                      onChangeSubtitleSize(val as any)
+                      onChangeSubtitleSize(val)
                     }}
                     onMouseEnter={() => {
                       setFocusedRow(3)
