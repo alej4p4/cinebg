@@ -22,16 +22,25 @@ jobs:
     name: Build & Release CineBG APK (Mobile + TV)
     runs-on: ubuntu-latest
 
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Get version from update.json
+        id: get-version
+        run: |
+          VERSION=$(cat public/update.json | jq -r '.version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Create release tag from version
         if: github.event.inputs.publish_release == 'true' && !startsWith(github.ref, 'refs/tags/v')
         run: |
-          VERSION=$(cat public/update.json | jq -r '.version')
+          VERSION=${{ steps.get-version.outputs.version }}
           git tag v$VERSION
           git push origin v$VERSION
         env:
