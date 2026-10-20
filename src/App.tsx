@@ -202,6 +202,22 @@ function App() {
   } = useAppStore()
   const [showSplash, setShowSplash] = useState(true)
 
+  const handleUpdateComplete = useCallback(() => {
+    // Re-inicializa a navegação espacial após atualização concluir
+    try {
+      SpatialNavigation.updateAllLayouts().catch(() => {})
+      const current = getCurrentFocusKey()
+      if (current && current !== 'SN:ROOT' && doesFocusableExist(current)) {
+        return
+      }
+      if (doesFocusableExist('hero-watch-btn')) {
+        setFocus('hero-watch-btn')
+      } else if (doesFocusableExist('card-0-0')) {
+        setFocus('card-0-0')
+      }
+    } catch {}
+  }, [])
+
   useEffect(() => {
     checkForUpdates(false).catch(() => {})
   }, [checkForUpdates])
@@ -260,6 +276,7 @@ function App() {
             isChecking={isCheckingUpdate}
             onDismiss={() => setUpdateModalOpen(false)}
             onCheckAgain={() => checkForUpdates(true)}
+            onUpdateComplete={handleUpdateComplete}
           />
         </>
       ) : (
@@ -283,6 +300,7 @@ function App() {
             isChecking={isCheckingUpdate}
             onDismiss={() => setUpdateModalOpen(false)}
             onCheckAgain={() => checkForUpdates(true)}
+            onUpdateComplete={handleUpdateComplete}
           />
           {vipModalOpen && (
             <LicenseGate isModal={true} onClose={() => setVipModalOpen(false)} />

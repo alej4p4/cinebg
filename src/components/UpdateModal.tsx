@@ -32,6 +32,7 @@ interface UpdateModalProps {
   isChecking?: boolean
   onDismiss: () => void
   onCheckAgain?: () => void
+  onUpdateComplete?: () => void
 }
 
 type UpdateStage = 'idle' | 'downloading' | 'installing' | 'error'
@@ -45,6 +46,7 @@ const UpdateModal = ({
   isChecking = false,
   onDismiss,
   onCheckAgain,
+  onUpdateComplete,
 }: UpdateModalProps) => {
   const flavor = getDeviceFlavor()
   const isMobile = flavor === 'mobile'
@@ -123,13 +125,19 @@ const UpdateModal = ({
         setErrorMessage(result.error || 'Não foi possível concluir o download ou a instalação.')
       } else {
         setStage('installing')
+        // Auto-dismiss após atualização bem-sucedida (nativo retorna sucesso ao abrir instalador)
+        // Aguarda um pouco para o usuário ver "Download Concluído" e depois fecha o modal
+        setTimeout(() => {
+          onDismiss()
+          onUpdateComplete?.()
+        }, 2500)
       }
     } catch (e: unknown) {
       const err = e as { message?: string }
       setStage('error')
       setErrorMessage(err?.message || 'Erro inesperado durante a atualização.')
     }
-  }, [effectiveDownloadUrl])
+  }, [effectiveDownloadUrl, onDismiss, onUpdateComplete])
 
   const handleOpenBrowserFallback = useCallback(() => {
     try {
