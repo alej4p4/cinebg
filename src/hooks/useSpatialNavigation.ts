@@ -14,8 +14,8 @@ import { isTvRemoteKey, isTVDevice, markTvModeActive, isMobileDevice } from '@/u
 let isInitialized = false
 
 /**
- * Hook para controle remoto e navegacao espacial (Android TV, TV Box, Teclado/D-Pad).
- * Auto-detecta toques no controle remoto e ativa o modo TV instantaneamente.
+ * Hook para controle remoto e navegação espacial (Android TV, Fire TV, TV Box, Teclado/D-Pad).
+ * Otimizado para não roubar o foco quando o usuário já está navegando e evitar sobrecarga de layout.
  */
 export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string) => {
   useEffect(() => {
@@ -36,15 +36,21 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
           down: [40, 20, 'ArrowDown', 'Down'],
           enter: [13, 23, 'Enter', 'Select', 'OK'],
         })
-        setThrottle({ throttle: 20 })
+        // Throttle de 32ms (~30fps de repetição de tecla ao segurar seta) para evitar engasgos na Main Thread de TVs
+        setThrottle({ throttle: 32 })
         isInitialized = true
       } catch (err) {
         console.warn('Erro ao inicializar spatial navigation:', err)
       }
     }
 
-    const setInitialFocus = () => {
-      // Na tela inicial (root), o foco do controle DEVE ficar no conteúdo principal (Hero Banner ou primeiro card)
+    const setInitialFocusIfUnfocused = (forceOnRouteChange = false) => {
+      const currentKey = getCurrentFocusKey()
+      // Se já existe um elemento focado válido na tela atual e não é troca de rota forçada, NÃO rouba o foco do usuário
+      if (!forceOnRouteChange && currentKey && currentKey !== ROOT_FOCUS_KEY && doesFocusableExist(currentKey)) {
+        return
+      }
+
       if (routeKey === '/' || !routeKey) {
         if (doesFocusableExist('hero-watch-btn')) {
           setFocus('hero-watch-btn')
@@ -60,7 +66,6 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
         }
       }
 
-      // Na tela de pesquisa, posiciona o foco diretamente na primeira tecla do teclado virtual (letra A)
       if (routeKey === '/search') {
         if (doesFocusableExist('tvkey-A')) {
           setFocus('tvkey-A')
@@ -68,7 +73,6 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
         }
       }
 
-      // Na tela de detalhes, foca no botão principal de reprodução
       if (routeKey.startsWith('/details')) {
         if (doesFocusableExist('details-fullscreen')) {
           setFocus('details-fullscreen')
@@ -80,15 +84,13 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
         }
       }
 
-      // Na tela de canais ao vivo (LiveTV)
       if (routeKey === '/live') {
-        if (doesFocusableExist('cat-all')) {
-          setFocus('cat-all')
+        if (doesFocusableExist('cat-todos')) {
+          setFocus('cat-todos')
           return
         }
       }
 
-      // Ordem geral de prioridade de foco
       if (doesFocusableExist('details-fullscreen')) {
         setFocus('details-fullscreen')
       } else if (doesFocusableExist('details-play')) {
@@ -99,40 +101,28 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
         setFocus('yucine-hero-banner')
       } else if (doesFocusableExist('card-0-0')) {
         setFocus('card-0-0')
-      } else if (doesFocusableExist('cat-all')) {
-        setFocus('cat-all')
       } else if (doesFocusableExist('nav-item-0')) {
         setFocus('nav-item-0')
       }
     }
 
-    // Se o dispositivo ja e uma TV identificada ou explicitamente ativado
     if (explicitEnabled || isTVDevice()) {
       markTvModeActive()
-      const t1 = setTimeout(setInitialFocus, 200)
-      const t2 = setTimeout(setInitialFocus, 800)
-      const t3 = setTimeout(setInitialFocus, 1800)
-      const t4 = setTimeout(setInitialFocus, 2600)
+      const t1 = setTimeout(() => setInitialFocusIfUnfocused(true), 120)
+      const t2 = setTimeout(() => setInitialFocusIfUnfocused(false), 500)
       return () => {
         clearTimeout(t1)
         clearTimeout(t2)
-        clearTimeout(t3)
-        clearTimeout(t4)
       }
     }
 
-    // Auto-ativacao: Ouvinte global de teclas do controle remoto
     const handleRemoteKeyDown = (e: KeyboardEvent) => {
       if (isTvRemoteKey(e)) {
         markTvModeActive()
-        const currentKey = getCurrentFocusKey()
-        if (!currentKey || currentKey === ROOT_FOCUS_KEY) {
-          setInitialFocus()
-        }
+        setInitialFocusIfUnfocused(false)
       }
     }
 
-    // Se o usuario tocar na tela (touch / mouse), desativar o anel de foco ate novo toque no controle
     const handlePointerDown = () => {
       if (!isTVDevice() && !explicitEnabled) {
         document.body.classList.remove('tv-remote-active')
@@ -150,7 +140,7 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
     }
   }, [explicitEnabled, routeKey])
 
-  // Recalcular layouts e reposicionar foco nas trocas de tela
+  // Atualiza layouts apenas uma vez por mudança de rota (sem poluir o foco se já estiver posicionado)
   useEffect(() => {
     if (isMobileDevice()) {
       return
@@ -158,33 +148,8 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
     const timer = setTimeout(() => {
       try {
         SpatialNavigation.updateAllLayouts().catch(() => {})
-        if (
-          document.body.classList.contains('tv-remote-active') ||
-          explicitEnabled ||
-          isTVDevice()
-        ) {
-          if (routeKey === '/' || !routeKey) {
-            if (doesFocusableExist('hero-watch-btn')) {
-              setFocus('hero-watch-btn')
-            } else if (doesFocusableExist('card-0-0')) {
-              setFocus('card-0-0')
-            }
-          } else if (routeKey.startsWith('/details')) {
-            if (doesFocusableExist('details-fullscreen')) {
-              setFocus('details-fullscreen')
-            } else if (doesFocusableExist('details-play')) {
-              setFocus('details-play')
-            }
-          } else if (routeKey === '/search') {
-            if (doesFocusableExist('tvkey-A')) {
-              setFocus('tvkey-A')
-            }
-          } else if (doesFocusableExist('card-0-0')) {
-            setFocus('card-0-0')
-          }
-        }
       } catch {}
-    }, 300)
+    }, 220)
     return () => clearTimeout(timer)
   }, [explicitEnabled, routeKey])
 }

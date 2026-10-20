@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAppStore } from '@/store/useAppStore'
+import { isTVDevice } from '@/utils/tv'
 import type {
   TMDBPaginatedResponse,
   TMDBMovie,
@@ -32,7 +33,6 @@ export const tmdb = axios.create({
 })
 
 // ===== Filtro infantil =====
-// Gêneros considerados apropriados para o perfil infantil (perfil com `kids`).
 const KIDS_GENRES = new Set([16, 10751, 10762, 12, 14, 35, 10402, 10765])
 
 export const isKidsMode = (): boolean => {
@@ -43,15 +43,26 @@ export const isKidsMode = (): boolean => {
 const forKids = (items: MediaItem[]): MediaItem[] =>
   isKidsMode() ? items.filter((item) => item.genreIds.some((g) => KIDS_GENRES.has(g))) : items
 
-// ===== Image URLs =====
-export const getPosterUrl = (path: string | null | undefined, size: 'w185' | 'w342' | 'w500' | 'w780' | 'original' = 'w500'): string => {
+// ===== Image URLs (Com Otimização de Memória VRAM para Android TV / Fire TV) =====
+export const getPosterUrl = (
+  path: string | null | undefined,
+  size: 'w185' | 'w342' | 'w500' | 'w780' | 'original' = 'w342'
+): string => {
   if (!path) return '/placeholder-poster.svg'
-  return `${IMAGE_BASE}/${size}${path}`
+  // Em TVs Android / Fire TV, limita posters de grade a w342 para economizar ~55% de memória de textura na GPU
+  const effectiveSize = isTVDevice() && (size === 'w500' || size === 'w780' || size === 'original') ? 'w342' : size
+  return `${IMAGE_BASE}/${effectiveSize}${path}`
 }
 
-export const getBackdropUrl = (path: string | null | undefined, size: 'w300' | 'w780' | 'w1280' | 'original' = 'w1280'): string => {
+export const getBackdropUrl = (
+  path: string | null | undefined,
+  size: 'w300' | 'w780' | 'w1280' | 'original' = 'w1280'
+): string => {
   if (!path) return '/placeholder-backdrop.svg'
-  return `${IMAGE_BASE}/${size}${path}`
+  // Evita imagens 'original' (4K 3840x2160 = ~33MB de bitmap RGBA descompactado na RAM da TV),
+  // limitando a w1280 (HD 720p = ~3.6MB de bitmap RGBA) para eliminar crashes por Out-Of-Memory
+  const effectiveSize = size === 'original' ? 'w1280' : size
+  return `${IMAGE_BASE}/${effectiveSize}${path}`
 }
 
 export const getProfileUrl = (path: string | null | undefined): string => {
@@ -59,7 +70,8 @@ export const getProfileUrl = (path: string | null | undefined): string => {
   return `${IMAGE_BASE}/w185${path}`
 }
 
-// ===== Cache & Deduplication com Persistência Local (Android TV High Performance) =====
+// ===== Cache LRU em Memória RAM & Fila Assíncrona de Persistência Local (Zero Main-Thread Freeze) =====
+const MAX_MEMORY_CACHE_ENTRIES = 80
 const requestCache = new Map<string, { data: unknown; expiresAt: number }>()
 const inflightMap = new Map<string, Promise<unknown>>()
 
@@ -67,26 +79,47 @@ const STORAGE_PREFIX = 'cinebg_tmdb_v3_'
 const DEFAULT_CATALOG_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas para catálogos
 const DETAILS_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 dias para detalhes de filmes/séries
 
-// Purga automática de chaves legadas ou com colisão de versões anteriores
-try {
-  if (typeof window !== 'undefined') {
-    const legacyKeys: string[] = []
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i)
-      if (k && (k.startsWith('cinebg_tmdb_cache_') || k.startsWith('cinebg_tmdb_v2_'))) {
-        legacyKeys.push(k)
-      }
+const setMemoryCache = (key: string, entry: { data: unknown; expiresAt: number }) => {
+  if (requestCache.has(key)) {
+    requestCache.delete(key)
+  } else if (requestCache.size >= MAX_MEMORY_CACHE_ENTRIES) {
+    const oldestKey = requestCache.keys().next().value
+    if (oldestKey !== undefined) {
+      requestCache.delete(oldestKey)
     }
-    legacyKeys.forEach((k) => localStorage.removeItem(k))
   }
-} catch {}
+  requestCache.set(key, entry)
+}
+
+export const trimTmdbMemoryCache = (keepEntries = 20) => {
+  while (requestCache.size > keepEntries) {
+    const oldestKey = requestCache.keys().next().value
+    if (oldestKey === undefined) break
+    requestCache.delete(oldestKey)
+  }
+}
+
+// Purga automática de chaves legadas em background (não bloqueia o boot)
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    try {
+      const legacyKeys: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && (k.startsWith('cinebg_tmdb_cache_') || k.startsWith('cinebg_tmdb_v2_'))) {
+          legacyKeys.push(k)
+        }
+      }
+      legacyKeys.forEach((k) => localStorage.removeItem(k))
+    } catch {}
+  }, 2000)
+}
 
 const buildCacheKey = (method: string, url: string, params?: Record<string, unknown>) => {
   const p = params ? JSON.stringify(params) : ''
   return `${method.toUpperCase()}:${url}:${p}`
 }
 
-// Algoritmo de hash cyrb53 determinístico e não-colidente para chaves de tamanho arbitrário
 const hashString = (str: string): string => {
   let h1 = 0xdeadbeef
   let h2 = 0x41c6ce57
@@ -106,34 +139,70 @@ const getStorageKey = (key: string): string => {
   return `${STORAGE_PREFIX}${cleanEndpoint}_${hash}`
 }
 
-const saveToLocalStorage = (key: string, data: unknown, ttlMs: number) => {
-  try {
-    if (typeof window === 'undefined') return
-    const payload = {
-      data,
-      expiresAt: Date.now() + ttlMs,
-    }
-    const safeKey = getStorageKey(key)
-    localStorage.setItem(safeKey, JSON.stringify(payload))
-  } catch {
-    // Se a cota do localStorage estiver próxima do limite, remove as chaves mais antigas
+// Fila assíncrona para escrita no localStorage sem travar a Main Thread (evita ANR na TV)
+const pendingStorageQueue = new Map<string, { data: unknown; expiresAt: number }>()
+let storageFlushScheduled = false
+
+const flushStorageQueue = () => {
+  storageFlushScheduled = false
+  if (typeof window === 'undefined' || pendingStorageQueue.size === 0) return
+
+  // Processa apenas 2 itens por fatia de tempo ocioso para nunca bloquear frames de 16.6ms (60fps)
+  let processed = 0
+  for (const [safeKey, payload] of pendingStorageQueue.entries()) {
+    pendingStorageQueue.delete(safeKey)
     try {
-      const keysToRemove: string[] = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i)
-        if (k && k.startsWith(STORAGE_PREFIX)) {
-          keysToRemove.push(k)
+      localStorage.setItem(safeKey, JSON.stringify(payload))
+    } catch {
+      try {
+        const keysToRemove: string[] = []
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i)
+          if (k && k.startsWith(STORAGE_PREFIX)) {
+            keysToRemove.push(k)
+          }
         }
-      }
-      keysToRemove.slice(0, Math.ceil(keysToRemove.length / 2)).forEach((k) => localStorage.removeItem(k))
-    } catch {}
+        keysToRemove.slice(0, Math.ceil(keysToRemove.length / 2)).forEach((k) => localStorage.removeItem(k))
+      } catch {}
+    }
+    processed++
+    if (processed >= 2) break
   }
+
+  if (pendingStorageQueue.size > 0) {
+    scheduleStorageFlush()
+  }
+}
+
+const scheduleStorageFlush = () => {
+  if (storageFlushScheduled || typeof window === 'undefined') return
+  storageFlushScheduled = true
+  const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void }).requestIdleCallback
+  if (typeof ric === 'function') {
+    ric(flushStorageQueue, { timeout: 1500 })
+  } else {
+    setTimeout(flushStorageQueue, 80)
+  }
+}
+
+const saveToLocalStorage = (key: string, data: unknown, ttlMs: number) => {
+  if (typeof window === 'undefined') return
+  const safeKey = getStorageKey(key)
+  pendingStorageQueue.set(safeKey, {
+    data,
+    expiresAt: Date.now() + ttlMs,
+  })
+  scheduleStorageFlush()
 }
 
 const loadFromLocalStorage = <T>(key: string): T | null => {
   try {
     if (typeof window === 'undefined') return null
     const safeKey = getStorageKey(key)
+    const pending = pendingStorageQueue.get(safeKey)
+    if (pending && pending.expiresAt > Date.now()) {
+      return pending.data as T
+    }
     const raw = localStorage.getItem(safeKey)
     if (!raw) return null
     const parsed = JSON.parse(raw)
@@ -162,7 +231,7 @@ export const getCachedMediaDetails = <T>(id: number, type: 'movie' | 'tv' | 'ani
   // 2. Armazenamento Local Persistente (0ms)
   const fromStorage = loadFromLocalStorage<T>(key)
   if (fromStorage) {
-    requestCache.set(key, { data: fromStorage, expiresAt: Date.now() + DETAILS_TTL_MS })
+    setMemoryCache(key, { data: fromStorage, expiresAt: Date.now() + DETAILS_TTL_MS })
     return fromStorage
   }
 
@@ -182,7 +251,7 @@ const cachedGet = async <T>(url: string, params?: Record<string, unknown>): Prom
   // 2. Verifica armazenamento persistente do dispositivo
   const fromStorage = loadFromLocalStorage<T>(key)
   if (fromStorage) {
-    requestCache.set(key, { data: fromStorage, expiresAt: now + DEFAULT_CATALOG_TTL_MS })
+    setMemoryCache(key, { data: fromStorage, expiresAt: now + DEFAULT_CATALOG_TTL_MS })
     return fromStorage
   }
 
@@ -204,7 +273,7 @@ const cachedGet = async <T>(url: string, params?: Record<string, unknown>): Prom
     const data = await promise
     const isDetails = url.startsWith('/movie/') || url.startsWith('/tv/')
     const ttl = isDetails ? DETAILS_TTL_MS : DEFAULT_CATALOG_TTL_MS
-    requestCache.set(key, { data, expiresAt: now + ttl })
+    setMemoryCache(key, { data, expiresAt: now + ttl })
     saveToLocalStorage(key, data, ttl)
     return data
   } catch (error) {
@@ -266,7 +335,7 @@ export const getCachedCatalogItems = (
     // 2. Armazenamento Local Persistente
     const fromStorage = loadFromLocalStorage<any>(key)
     if (fromStorage && fromStorage.results) {
-      requestCache.set(key, { data: fromStorage, expiresAt: now + DEFAULT_CATALOG_TTL_MS })
+      setMemoryCache(key, { data: fromStorage, expiresAt: now + DEFAULT_CATALOG_TTL_MS })
       const results = fromStorage.results as any[]
       const mapped = results.map((item) => parseRawCatalogItem(item, type))
       return forKids(mapped)
@@ -277,7 +346,6 @@ export const getCachedCatalogItems = (
 
 // ===== API Functions =====
 
-// Trending
 export const getTrending = async (
   mediaType: 'movie' | 'tv' | 'all',
   timeWindow: 'day' | 'week' = 'week',
@@ -290,7 +358,6 @@ export const getTrending = async (
   )
 }
 
-// Movies
 export const getPopularMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/movie/popular', { page })
   return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
@@ -332,7 +399,6 @@ export const discoverMovies = async (params: {
   return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
-// Filmes Clássicos Inesquecíveis (Obras-primas consagradas pré-2002)
 export const getClassicMovies = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie>>('/discover/movie', {
     page,
@@ -343,7 +409,6 @@ export const getClassicMovies = async (page = 1): Promise<{ items: MediaItem[]; 
   return { items: forKids(data.results.map(movieToMediaItem)), totalPages: data.total_pages }
 }
 
-// TV Shows
 export const getPopularShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/popular', { page })
   return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
@@ -354,7 +419,6 @@ export const getTopRatedShows = async (page = 1): Promise<{ items: MediaItem[]; 
   return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 
-// Séries Clássicas e Nostalgia (Séries lendárias consagradas pré-2010)
 export const getClassicShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
     page,
@@ -396,7 +460,6 @@ export const discoverShows = async (params: {
   return { items: forKids(data.results.map((s) => showToMediaItem(s, type))), totalPages: data.total_pages }
 }
 
-// Novelas e Séries Turcas (Origem turca com dublagem / legendas traduzidas em PT-BR)
 export const getTurkishShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
     page,
@@ -406,7 +469,6 @@ export const getTurkishShows = async (page = 1): Promise<{ items: MediaItem[]; t
   return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 
-// Details
 export const getMovieDetails = async (id: number): Promise<TMDBMovieDetails> => {
   const data = await cachedGet<TMDBMovieDetails>(`/movie/${id}`, {
     append_to_response: 'videos,credits,similar,recommendations',
@@ -441,7 +503,6 @@ export const getShowCredits = async (id: number): Promise<TMDBCredits> => {
   return data
 }
 
-// Search
 export const searchMulti = async (query: string, page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBMovie & TMDBShow & { media_type: string }>>('/search/multi', {
     query,

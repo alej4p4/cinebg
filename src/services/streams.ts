@@ -189,8 +189,21 @@ export interface MegaEmbedResolved {
   candidates: DirectCandidate[]
 }
 
-// Cache em memória de fontes resolvidas para carregamento instantâneo (estilo YuCine)
+// Cache em memória de fontes resolvidas com limite LRU (50 entradas) para TV Boxes
+const MAX_RESOLVED_CACHE = 50
 const resolvedSourcesCache = new Map<string, MegaEmbedResolved>()
+
+const setResolvedCache = (key: string, value: MegaEmbedResolved) => {
+  if (resolvedSourcesCache.has(key)) {
+    resolvedSourcesCache.delete(key)
+  } else if (resolvedSourcesCache.size >= MAX_RESOLVED_CACHE) {
+    const oldestKey = resolvedSourcesCache.keys().next().value
+    if (oldestKey !== undefined) {
+      resolvedSourcesCache.delete(oldestKey)
+    }
+  }
+  resolvedSourcesCache.set(key, value)
+}
 
 // Normaliza URLs de CDN para HTTPS e remove portas obsoletas
 export const formatDirectStreamUrl = (url: string | null): string | null => {
@@ -356,7 +369,7 @@ export const resolveMegaEmbed = async (
     }
 
     if (result.dubbedMp4 || result.hlsProxy || candidates.length > 0) {
-      resolvedSourcesCache.set(cacheKey, result)
+      setResolvedCache(cacheKey, result)
     }
 
     return result

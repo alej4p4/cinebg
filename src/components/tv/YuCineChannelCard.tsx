@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, memo } from 'react'
 import { motion } from 'framer-motion'
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
 import type { LiveChannel } from '@/services/liveChannels'
@@ -21,7 +21,10 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
   onToggleFavorite,
 }) => {
   const [logoError, setLogoError] = useState(false)
-  const epg = getLiveChannelEPG(channel.id, channel.category, channel.name)
+  const epg = useMemo(
+    () => getLiveChannelEPG(channel.id, channel.category, channel.name),
+    [channel.id, channel.category, channel.name]
+  )
   const { ref, focused } = useFocusable({
     focusKey: `channel-${channel.id}`,
     onEnterPress: onClick,
@@ -479,4 +482,4 @@ const YuCineChannelCard: React.FC<YuCineChannelCardProps> = ({
   )
 }
 
-export default YuCineChannelCard
+export default memo(YuCineChannelCard)

@@ -294,9 +294,9 @@ const Details = () => {
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {backdropPath && !imgError ? (
           <img
-            src={getBackdropUrl(backdropPath, 'original')}
+            src={getBackdropUrl(backdropPath, 'w1280')}
             alt={displayTitle}
-            className="w-full h-full object-cover object-center opacity-30 filter blur-[1px] scale-105 transform"
+            className="w-full h-full object-cover object-center opacity-30"
             onError={() => setImgError(true)}
           />
         ) : (

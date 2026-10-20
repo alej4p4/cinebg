@@ -52,3 +52,19 @@ test('5. Instant Play no Watch.tsx: Hidratação imediata via cache e montagem s
   assert.match(watchContent, /getCachedMediaDetails/, 'Watch.tsx deve consultar cache instantâneo em 0ms')
   assert.match(watchContent, /<StreamPlayer/, 'Watch.tsx deve montar o StreamPlayer imediatamente')
 })
+
+test('6. Otimização de Performance e Memória para Smart TV (RAM, Renderização, D-Pad, Main Thread e Cache)', () => {
+  const tmdbContent = fs.readFileSync(path.join(ROOT, 'src/services/tmdb.ts'), 'utf8')
+  assert.match(tmdbContent, /MAX_MEMORY_CACHE_ENTRIES/, 'tmdb.ts deve aplicar limite LRU em memória')
+  assert.match(tmdbContent, /scheduleStorageFlush/, 'tmdb.ts deve enfileirar gravações de localStorage de forma assíncrona fora da Main Thread')
+  assert.match(tmdbContent, /effectiveSize = size === 'original' \? 'w1280' : size/, 'tmdb.ts deve limitar backdrops 4K para w1280 evitando estouro de VRAM na TV')
+
+  const homeContent = fs.readFileSync(path.join(ROOT, 'src/pages/Home.tsx'), 'utf8')
+  assert.match(homeContent, /Estágio 1/, 'Home.tsx deve utilizar carregamento escalonado em 2 estágios para evitar ANR na Main Thread')
+
+  const carouselContent = fs.readFileSync(path.join(ROOT, 'src/components/ui/Carousel.tsx'), 'utf8')
+  assert.match(carouselContent, /INITIAL_TV_CARDS_PER_ROW/, 'Carousel.tsx deve aplicar reciclagem/paginação progressiva de cards na TV')
+
+  const cursorContent = fs.readFileSync(path.join(ROOT, 'src/components/tv/TvCursorOverlay.tsx'), 'utf8')
+  assert.match(cursorContent, /startMoveLoop/, 'TvCursorOverlay.tsx deve rodar requestAnimationFrame apenas sob demanda quando teclas direcionais estiverem pressionadas')
+})

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
@@ -8,7 +8,7 @@ import { useAppStore } from '@/store/useAppStore'
 import type { MediaItem } from '@/types'
 import LazyImage from './LazyImage'
 import { FLUID_EASE, SPRING_SNAPPY } from '@/utils/motion'
-import { scrollTvElementIntoView } from '@/utils/tv'
+import { scrollTvElementIntoView, isTVDevice } from '@/utils/tv'
 
 interface MovieCardProps {
   item: MediaItem
@@ -17,12 +17,14 @@ interface MovieCardProps {
   rank?: number
   focusKey?: string
   onArrowPress?: (direction: string) => boolean | void
+  onCardFocus?: (index: number) => void
 }
 
-const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: MovieCardProps) => {
+const MovieCard = memo(({ item, index = 0, progress, rank, focusKey, onArrowPress, onCardFocus }: MovieCardProps) => {
   const navigate = useNavigate()
   const { addFavorite, removeFavorite, isFavorite } = useAppStore()
   const [isHovered, setIsHovered] = useState(false)
+  const isTv = isTVDevice()
 
   const favorite = isFavorite(item.id)
 
@@ -67,6 +69,7 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
       return true
     },
     onFocus: () => {
+      onCardFocus?.(index)
       scrollTvElementIntoView(ref.current)
     },
   })
@@ -80,25 +83,27 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
       tabIndex={0}
       data-focus-key={focusKey}
       style={{ transform: 'translateZ(0)' }}
-      className={`group cursor-pointer relative select-none tv-focusable rounded-xl transition-all duration-150 ${
+      className={`group cursor-pointer relative select-none tv-focusable rounded-xl transition-transform duration-150 ${
         focused ? 'tv-focused ring-4 ring-yellow-400 scale-[1.03] z-20 shadow-xl shadow-yellow-500/30' : ''
       }`}
       onClick={handleClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={isTv ? undefined : () => setIsHovered(true)}
+      onMouseLeave={isTv ? undefined : () => setIsHovered(false)}
     >
-      {/* Container de Imagem com Lazy Loading & Blur-up */}
-      <div className="relative rounded-xl overflow-hidden aspect-[2/3] bg-bg-card border border-white/5 shadow-md group-hover:shadow-2xl group-hover:shadow-red-950/20 transition-shadow duration-300">
+      {/* Container de Imagem com Lazy Loading & Shimmer */}
+      <div className="relative rounded-xl overflow-hidden aspect-[2/3] bg-bg-card border border-white/5 shadow-md">
         <LazyImage
           src={posterUrl}
           alt={item.title}
           fallbackTitle={item.title}
           aspectRatio="aspect-[2/3]"
-          className="transition-transform duration-500 ease-out group-hover:scale-105"
         />
 
         {typeof rank === 'number' && (
-          <div className="absolute -left-1 bottom-0 z-20 font-display font-black text-6xl md:text-7xl leading-none text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]" style={{ WebkitTextStroke: '2px rgba(0,0,0,0.8)' }}>
+          <div
+            className="absolute -left-1 bottom-0 z-20 font-display font-black text-6xl md:text-7xl leading-none text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]"
+            style={{ WebkitTextStroke: '2px rgba(0,0,0,0.8)' }}
+          >
             {rank}
           </div>
         )}
@@ -109,59 +114,58 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
           </div>
         )}
 
-        {/* Gradiente sutil escuro ao passar o mouse */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-250 pointer-events-none" />
-
-        {/* Ações com Micro-interações táteis */}
-        <AnimatePresence>
-          {isHovered && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ duration: 0.18, ease: FLUID_EASE }}
-              className="absolute inset-0 flex items-center justify-center gap-2 z-10"
-            >
-              <motion.button
-                whileHover={{ scale: 1.12 }}
-                whileTap={{ scale: 0.9 }}
-                transition={SPRING_SNAPPY}
-                onClick={handlePlay}
-                className="bg-accent-red hover:bg-red-600 text-white rounded-full p-3 shadow-xl glow-red tv-focusable"
-                aria-label="Assistir agora"
+        {/* Ações de Hover apenas para Desktop/Mouse (Ocultas em TV para reduzir árvore DOM em 50%) */}
+        {!isTv && (
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={{ duration: 0.18, ease: FLUID_EASE }}
+                className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2 z-10"
               >
-                <Play className="h-5 w-5 fill-white" />
-              </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.12 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={SPRING_SNAPPY}
+                  onClick={handlePlay}
+                  className="bg-accent-red hover:bg-red-600 text-white rounded-full p-3 shadow-xl glow-red tv-focusable"
+                  aria-label="Assistir agora"
+                >
+                  <Play className="h-5 w-5 fill-white" />
+                </motion.button>
 
-              <motion.button
-                whileHover={{ scale: 1.12 }}
-                whileTap={{ scale: 0.9 }}
-                transition={SPRING_SNAPPY}
-                onClick={handleToggleFav}
-                className={`rounded-full p-2.5 shadow-xl tv-focusable transition-colors ${
-                  favorite ? 'bg-red-500 text-white' : 'bg-black/60 text-white hover:bg-black/80'
-                }`}
-                aria-label={favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-              >
-                <Heart className={`h-4 w-4 ${favorite ? 'fill-white' : ''}`} />
-              </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.12 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={SPRING_SNAPPY}
+                  onClick={handleToggleFav}
+                  className={`rounded-full p-2.5 shadow-xl tv-focusable transition-colors ${
+                    favorite ? 'bg-red-500 text-white' : 'bg-black/60 text-white hover:bg-black/80'
+                  }`}
+                  aria-label={favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                >
+                  <Heart className={`h-4 w-4 ${favorite ? 'fill-white' : ''}`} />
+                </motion.button>
 
-              <motion.button
-                whileHover={{ scale: 1.12 }}
-                whileTap={{ scale: 0.9 }}
-                transition={SPRING_SNAPPY}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleClick()
-                }}
-                className="bg-black/60 hover:bg-black/80 text-white rounded-full p-2.5 shadow-xl tv-focusable"
-                aria-label="Ver detalhes"
-              >
-                <Info className="h-4 w-4" />
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <motion.button
+                  whileHover={{ scale: 1.12 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={SPRING_SNAPPY}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleClick()
+                  }}
+                  className="bg-black/60 hover:bg-black/80 text-white rounded-full p-2.5 shadow-xl tv-focusable"
+                  aria-label="Ver detalhes"
+                >
+                  <Info className="h-4 w-4" />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
 
         {/* Rating badge */}
         {typeof item.rating === 'number' && item.rating > 0 && (
@@ -175,7 +179,7 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
 
         {/* Type badge */}
         <div className="absolute top-2 right-2 z-10">
-          <span className="quality-badge bg-black/75 backdrop-blur-sm text-white/90 border border-white/10 shadow-sm">
+          <span className="quality-badge bg-black/80 text-white/90 border border-white/10 shadow-sm">
             {item.type === 'movie' ? 'FILME' : item.type === 'anime' ? 'ANIME' : 'SÉRIE'}
           </span>
         </div>
@@ -190,6 +194,8 @@ const MovieCard = ({ item, index = 0, progress, rank, focusKey, onArrowPress }: 
       </div>
     </div>
   )
-}
+})
+
+MovieCard.displayName = 'MovieCard'
 
 export default MovieCard

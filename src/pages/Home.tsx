@@ -1,5 +1,11 @@
-import { useState, useEffect, useMemo } from 'react'
-import { setFocus, doesFocusableExist, SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import {
+  setFocus,
+  doesFocusableExist,
+  getCurrentFocusKey,
+  ROOT_FOCUS_KEY,
+  SpatialNavigation,
+} from '@noriginmedia/norigin-spatial-navigation'
 import HeroBanner from '@/components/ui/HeroBanner'
 import Carousel from '@/components/ui/Carousel'
 import LiveTvCarousel from '@/components/tv/LiveTvCarousel'
@@ -46,113 +52,146 @@ const Home = () => {
   const [comedyShows, setComedyShows] = useState<MediaItem[]>([])
   const [turkishShows, setTurkishShows] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(() => trending.length === 0)
+  const userNavigatedRef = useRef(false)
 
   const { history, favorites, updateHistoryRating } = useAppStore()
 
-  // Enriquecimento de avaliações (estrelas) para itens históricos antigos
+  // Enriquecimento de avaliações em background ocioso (limitado e sequencial para não travar a Main Thread da TV)
   useEffect(() => {
-    const unrated = history.filter((h) => !h.rating)
+    const unrated = history.filter((h) => !h.rating).slice(0, 4)
     if (unrated.length === 0 || !updateHistoryRating) return
     let active = true
-    unrated.slice(0, 10).forEach(async (h) => {
-      try {
-        if (h.type === 'movie') {
-          const data = await getMovieDetails(h.id)
-          if (active && data?.vote_average && updateHistoryRating) {
-            updateHistoryRating(h.id, data.vote_average)
+
+    const timer = setTimeout(async () => {
+      for (const h of unrated) {
+        if (!active) break
+        try {
+          if (h.type === 'movie') {
+            const data = await getMovieDetails(h.id)
+            if (active && data?.vote_average) {
+              updateHistoryRating(h.id, data.vote_average)
+            }
+          } else {
+            const data = await getShowDetails(h.id)
+            if (active && data?.vote_average) {
+              updateHistoryRating(h.id, data.vote_average)
+            }
           }
-        } else {
-          const data = await getShowDetails(h.id)
-          if (active && data?.vote_average && updateHistoryRating) {
-            updateHistoryRating(h.id, data.vote_average)
-          }
-        }
-      } catch {}
-    })
+        } catch {}
+      }
+    }, 1800)
+
     return () => {
       active = false
+      clearTimeout(timer)
     }
   }, [history, updateHistoryRating])
 
+  // Carregamento escalonado em 2 Estágios (Evita pico de CPU/ANR na Main Thread da Android TV / Fire TV)
   useEffect(() => {
-    const load = async () => {
+    let active = true
+    let secondaryTimer: ReturnType<typeof setTimeout> | null = null
+
+    const loadStage1And2 = async () => {
       try {
-        const [
-          t,
-          pm, tom, np, up, cm, cs, ps, ts, a, anime,
-          actionM, comedyM, scifiM,
-          actionS, comedyS, turkish,
-        ] = await Promise.all([
+        // Estágio 1: Apenas conteúdo visível no topo (Above the Fold) para liberação instantânea da UI
+        const [t, pm, np, ps, a] = await Promise.all([
           getTrending('all', 'week'),
           getPopularMovies(),
-          getTopRatedMovies(),
           getNowPlayingMovies(),
-          getUpcomingMovies(),
-          getClassicMovies(),
-          getClassicShows(),
           getPopularShows(),
-          getTopRatedShows(),
           getAiringToday(),
-          discoverShows({ isAnime: true }),
-          discoverMovies({ genre: 28, sort: 'popularity.desc' }),
-          discoverMovies({ genre: 35, sort: 'popularity.desc' }),
-          discoverMovies({ genre: 878, sort: 'popularity.desc' }),
-          discoverShows({ genre: 10759, sort: 'popularity.desc' }),
-          discoverShows({ genre: 35, sort: 'popularity.desc' }),
-          getTurkishShows(),
         ])
 
+        if (!active) return
         setTrending(t)
         setPopularMovies(pm.items)
-        setTopMovies(tom.items)
         setNowPlaying(np.items)
-        setUpcoming(up.items)
-        setClassicMovies(cm.items)
-        setClassicShows(cs.items)
         setPopularShows(ps.items)
-        setTopShows(ts.items)
         setAiringNow(a.items)
-        setAnimeItems(anime.items)
-        setActionMovies(actionM.items)
-        setComedyMovies(comedyM.items)
-        setScifiMovies(scifiM.items)
-        setActionShows(actionS.items)
-        setComedyShows(comedyS.items)
-        setTurkishShows(turkish.items)
+        setLoading(false)
+
+        // Estágio 2: Categorias secundárias carregadas em background sem bloquear a navegação D-Pad
+        secondaryTimer = setTimeout(async () => {
+          if (!active) return
+          try {
+            const [tom, up, ts, turkish, actionM, comedyM] = await Promise.all([
+              getTopRatedMovies(),
+              getUpcomingMovies(),
+              getTopRatedShows(),
+              getTurkishShows(),
+              discoverMovies({ genre: 28, sort: 'popularity.desc' }),
+              discoverMovies({ genre: 35, sort: 'popularity.desc' }),
+            ])
+            if (!active) return
+            setTopMovies(tom.items)
+            setUpcoming(up.items)
+            setTopShows(ts.items)
+            setTurkishShows(turkish.items)
+            setActionMovies(actionM.items)
+            setComedyMovies(comedyM.items)
+
+            const [cm, cs, anime, scifiM, actionS, comedyS] = await Promise.all([
+              getClassicMovies(),
+              getClassicShows(),
+              discoverShows({ isAnime: true }),
+              discoverMovies({ genre: 878, sort: 'popularity.desc' }),
+              discoverShows({ genre: 10759, sort: 'popularity.desc' }),
+              discoverShows({ genre: 35, sort: 'popularity.desc' }),
+            ])
+            if (!active) return
+            setClassicMovies(cm.items)
+            setClassicShows(cs.items)
+            setAnimeItems(anime.items)
+            setScifiMovies(scifiM.items)
+            setActionShows(actionS.items)
+            setComedyShows(comedyS.items)
+          } catch {}
+        }, 280)
       } catch (err) {
         console.error('Failed to load home data:', err)
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
-    load()
+
+    loadStage1And2()
+    return () => {
+      active = false
+      if (secondaryTimer) clearTimeout(secondaryTimer)
+    }
   }, [])
 
-  // Quando a tela inicial monta ou o catálogo finaliza o carregamento, posiciona o foco/cursor na tela inicial
+  // Posiciona o foco inicial APENAS se o usuário ainda não tiver navegado pelo controle remoto (Zero Focus Stealing)
   useEffect(() => {
+    const onUserKey = () => {
+      userNavigatedRef.current = true
+    }
+    window.addEventListener('keydown', onUserKey, { once: true, passive: true })
+
     const focusHomeTarget = () => {
+      if (userNavigatedRef.current) return
       try {
+        const currentKey = getCurrentFocusKey()
+        if (currentKey && currentKey !== ROOT_FOCUS_KEY && doesFocusableExist(currentKey)) {
+          return
+        }
         SpatialNavigation.updateAllLayouts().catch(() => {})
         if (doesFocusableExist('hero-watch-btn')) {
           setFocus('hero-watch-btn')
         } else if (doesFocusableExist('card-0-0')) {
           setFocus('card-0-0')
-        } else if (doesFocusableExist('card-1-0')) {
-          setFocus('card-1-0')
         }
       } catch {}
     }
 
     focusHomeTarget()
-    const t1 = setTimeout(focusHomeTarget, 100)
-    const t2 = setTimeout(focusHomeTarget, 500)
-    const t3 = setTimeout(focusHomeTarget, 1200)
-    const t4 = setTimeout(focusHomeTarget, 2400)
+    const t1 = setTimeout(focusHomeTarget, 120)
+    const t2 = setTimeout(focusHomeTarget, 450)
     return () => {
+      window.removeEventListener('keydown', onUserKey)
       clearTimeout(t1)
       clearTimeout(t2)
-      clearTimeout(t3)
-      clearTimeout(t4)
     }
   }, [loading])
 
@@ -190,20 +229,23 @@ const Home = () => {
     return map
   }, [history])
 
-  const favoriteItems: MediaItem[] = favorites.map((f) => ({
-    id: f.id,
-    title: f.title,
-    overview: '',
-    posterPath: f.posterPath,
-    backdropPath: null,
-    releaseDate: '',
-    rating: f.rating,
-    voteCount: 0,
-    type: f.type,
-    genreIds: [],
-  }))
+  const favoriteItems: MediaItem[] = useMemo(
+    () =>
+      favorites.slice(0, 16).map((f) => ({
+        id: f.id,
+        title: f.title,
+        overview: '',
+        posterPath: f.posterPath,
+        backdropPath: null,
+        releaseDate: '',
+        rating: f.rating,
+        voteCount: 0,
+        type: f.type,
+        genreIds: [],
+      })),
+    [favorites]
+  )
 
-  // Slides do Início: Mescla harmônica de Filmes e Séries priorizando Lançamentos Recentes (2025/2026) e Em Alta
   const homeHeroItems = useMemo(() => {
     const pool = [...nowPlaying, ...airingNow, ...trending, ...popularMovies, ...popularShows]
     const seen = new Set<string>()
@@ -217,14 +259,12 @@ const Home = () => {
       unique.push(item)
     }
 
-    // Ordena priorizando lançamentos mais novos (data de estreia mais recente)
     const sorted = unique.sort((a, b) => {
       const timeA = a.releaseDate ? new Date(a.releaseDate).getTime() : 0
       const timeB = b.releaseDate ? new Date(b.releaseDate).getTime() : 0
       return timeB - timeA
     })
 
-    // Alterna dinamicamente entre filmes e séries
     const movies = sorted.filter((i) => i.type === 'movie')
     const series = sorted.filter((i) => i.type === 'tv')
     const mixed: MediaItem[] = []
@@ -235,10 +275,10 @@ const Home = () => {
       if (series[i]) mixed.push(series[i])
     }
 
-    return mixed.length > 0 ? mixed.slice(0, 10) : trending
+    return mixed.length > 0 ? mixed.slice(0, 8) : trending.slice(0, 8)
   }, [nowPlaying, airingNow, trending, popularMovies, popularShows])
 
-  const top10 = trending.slice(0, 10)
+  const top10 = useMemo(() => trending.slice(0, 10), [trending])
 
   return (
     <>
@@ -279,25 +319,54 @@ const Home = () => {
 
                     <LiveTvCarousel rowIndex={rowIdx++} />
 
-                    <Carousel rowIndex={rowIdx++} title="Em Cartaz nos Cinemas" emoji="🎬" items={nowPlaying} />
-                    <Carousel rowIndex={rowIdx++} title="Novidades em Filmes" emoji="🆕" items={popularMovies} />
-                    <Carousel rowIndex={rowIdx++} title="🏛️ Clássicos Inesquecíveis do Cinema" emoji="👑" items={classicMovies} />
-                    <Carousel rowIndex={rowIdx++} title="Filmes Populares" emoji="🔥" items={popularMovies.slice(6)} />
-                    <Carousel rowIndex={rowIdx++} title="Filmes de Ação" emoji="💥" items={actionMovies} />
-                    <Carousel rowIndex={rowIdx++} title="Comédias" emoji="😂" items={comedyMovies} />
-                    <Carousel rowIndex={rowIdx++} title="Ficção Científica" emoji="👽" items={scifiMovies} />
-                    <Carousel rowIndex={rowIdx++} title="Mais Bem Avaliados" emoji="⭐" items={topMovies} />
-                    <Carousel rowIndex={rowIdx++} title="Em Breve" emoji="🎥" items={upcoming} />
-                    <Carousel rowIndex={rowIdx++} title="Séries Populares" emoji="📺" items={popularShows} />
+                    {nowPlaying.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Em Cartaz nos Cinemas" emoji="🎬" items={nowPlaying} />
+                    )}
+                    {popularMovies.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Novidades em Filmes" emoji="🆕" items={popularMovies} />
+                    )}
+                    {popularShows.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Séries Populares" emoji="📺" items={popularShows} />
+                    )}
                     {turkishShows.length > 0 && (
                       <Carousel rowIndex={rowIdx++} title="Novelas & Séries Turcas" emoji="🇹🇷" items={turkishShows} />
                     )}
-                    <Carousel rowIndex={rowIdx++} title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classicShows} />
-                    <Carousel rowIndex={rowIdx++} title="Ação e Aventura em Séries" emoji="⚔️" items={actionShows} />
-                    <Carousel rowIndex={rowIdx++} title="Comédia em Séries" emoji="😄" items={comedyShows} />
-                    <Carousel rowIndex={rowIdx++} title="Em Exibição Hoje" emoji="🔴" items={airingNow} />
-                    <Carousel rowIndex={rowIdx++} title="Top Séries" emoji="⭐" items={topShows} />
-                    <Carousel rowIndex={rowIdx++} title="Anime em Destaque" emoji="🃏" items={animeItems} />
+                    {airingNow.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Em Exibição Hoje" emoji="🔴" items={airingNow} />
+                    )}
+                    {actionMovies.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Filmes de Ação" emoji="💥" items={actionMovies} />
+                    )}
+                    {comedyMovies.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Comédias" emoji="😂" items={comedyMovies} />
+                    )}
+                    {topMovies.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Mais Bem Avaliados" emoji="⭐" items={topMovies} />
+                    )}
+                    {upcoming.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Em Breve" emoji="🎥" items={upcoming} />
+                    )}
+                    {classicMovies.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="🏛️ Clássicos Inesquecíveis do Cinema" emoji="👑" items={classicMovies} />
+                    )}
+                    {classicShows.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classicShows} />
+                    )}
+                    {actionShows.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Ação e Aventura em Séries" emoji="⚔️" items={actionShows} />
+                    )}
+                    {comedyShows.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Comédia em Séries" emoji="😄" items={comedyShows} />
+                    )}
+                    {scifiMovies.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Ficção Científica" emoji="👽" items={scifiMovies} />
+                    )}
+                    {topShows.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Top Séries" emoji="⭐" items={topShows} />
+                    )}
+                    {animeItems.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Anime em Destaque" emoji="🃏" items={animeItems} />
+                    )}
                   </>
                 )}
               </>
