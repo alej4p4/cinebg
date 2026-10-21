@@ -89,11 +89,27 @@ public class AppInstallerPlugin extends Plugin {
                 MainActivity.resolvePersistentFirstInstallTime(context);
                 boolean isTv = MainActivity.isRealTelevisionDevice(context);
 
-                // Separação estrita no nível nativo Android:
-                // Celular SEMPRE baixa CineBG-Mobile-release.apk; Smart TV / TV Box SEMPRE baixa CineBG-Tv-release.apk
+                // Detecta qual pacote já está instalado para baixar o APK correspondente
+                // Evita erro "App não instalado" por mismatch de package name
+                String currentPackage = context.getPackageName();
+                boolean installedIsTv = "com.barrasoft.cinebg.tv".equals(currentPackage);
+                boolean installedIsMobile = "com.barrasoft.cinebg".equals(currentPackage);
+
+                // Decide qual APK baixar baseado no pacote JÁ INSTALADO (evita mismatch de package name)
+                // Se nenhum dos dois está instalado (primeira instalação), usa detecção de dispositivo
+                boolean downloadTvApk;
+                if (installedIsTv) {
+                    downloadTvApk = true;
+                } else if (installedIsMobile) {
+                    downloadTvApk = false;
+                } else {
+                    // Primeira instalação: usa detecção de dispositivo
+                    downloadTvApk = isTv;
+                }
+
                 String downloadUrl;
                 String filename;
-                if (isTv) {
+                if (downloadTvApk) {
                     downloadUrl = rawUrl
                         .replace("CineBG-Mobile-release.apk", "CineBG-Tv-release.apk")
                         .replace("-Mobile-release.apk", "-Tv-release.apk")
@@ -119,7 +135,7 @@ public class AppInstallerPlugin extends Plugin {
                     if (conn != null) {
                         try { conn.disconnect(); } catch (Exception ignored) {}
                     }
-                    String canonicalFallback = isTv
+                    String canonicalFallback = downloadTvApk
                         ? "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk"
                         : "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk";
                     conn = connectWithRedirects(canonicalFallback);
