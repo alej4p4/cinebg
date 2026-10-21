@@ -26,7 +26,7 @@ export const getCineBGNativeBridge = (): CineBGNativeBridge | null => {
   }
 }
 
-export const getNativeAppVersion = (fallback = '1.2.65'): string => {
+export const getNativeAppVersion = (fallback = '1.2.66'): string => {
   try {
     const bridge = getCineBGNativeBridge()
     if (bridge && typeof bridge.getAppVersion === 'function') {
