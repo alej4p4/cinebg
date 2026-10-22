@@ -28,7 +28,6 @@ import {
   getInitialMirrorForAudio,
   resolveMegaEmbed,
   getCachedMegaEmbed,
-  clearResolvedSourcesCache,
   MIRRORS,
   type DirectCandidate,
 } from '@/services/streams'
@@ -164,11 +163,6 @@ const StreamPlayer = ({
   const [candidateIndex, setCandidateIndex] = useState(0)
   const candidatesRef = useRef<DirectCandidate[]>(initialCachedStream?.candidates || [])
   const candidateIndexRef = useRef(0)
-  // Contador de tentativas de refetch de fontes diretas quando o iframe externo falha
-  const [directRefetchAttempts, setDirectRefetchAttempts] = useState(0)
-  const maxDirectRefetchAttempts = 2
-  // Indica que estamos mostrando iframe externo e pode não haver conteúdo
-  const [iframeExternalActive, setIframeExternalActive] = useState(false)
   useEffect(() => {
     candidatesRef.current = candidates
   }, [candidates])
@@ -651,39 +645,15 @@ const StreamPlayer = ({
           setActiveMirror(nextMirror)
           setLoaded(false)
           setError(false)
-          setIframeExternalActive(false)
           setKey((k) => k + 1)
           return nextAttempt
         }
-        // Espelhos esgotados: tenta refetch forçado de fontes diretas antes de desistir
-        if (directRefetchAttempts < maxDirectRefetchAttempts) {
-          console.info('[StreamPlayer] Espelhos esgotados. Forçando refetch de fontes diretas...')
-          setDirectRefetchAttempts((prev) => prev + 1)
-          setLoaded(false)
-          setError(false)
-          setIframeExternalActive(false)
-          setFallbackAttempt(0)
-          setActiveMirror('megaembed')
-          setKey((k) => k + 1)
-          return prev
-        }
+        // Todos os espelhos esgotados: mostra erro limpo sem botão de retry
         setError(true)
         return prev
       })
     }
   }
-
-  // Força nova resolução de fontes diretas limpando o cache de megaembed
-  const forceRefetchDirectSources = useCallback(() => {
-    clearResolvedSourcesCache()
-    setDirectRefetchAttempts(0)
-    setFallbackAttempt(0)
-    setActiveMirror('megaembed')
-    setLoaded(false)
-    setError(false)
-    setIframeExternalActive(false)
-    setKey((k) => k + 1)
-  }, [type, tmdbId, season, episode])
 
   const handleManualRefresh = () => {
     loadedRef.current = false
@@ -828,16 +798,8 @@ const StreamPlayer = ({
           setDirectSrc(firstCandidate.url)
           setDirectKind(firstCandidate.kind)
         } else {
-          // Nenhuma fonte direta disponível no MegaEmbed. Tenta refetch forçado antes de ir para iframe externo.
-          if (directRefetchAttempts < maxDirectRefetchAttempts) {
-            console.info('[StreamPlayer] Nenhuma fonte direta. Tentando refetch forçado antes do iframe...')
-            setDirectRefetchAttempts((prev) => prev + 1)
-            setLoaded(false)
-            setError(false)
-            setKey((k) => k + 1)
-            return
-          }
-          console.info('[StreamPlayer] Nenhuma fonte direta disponível no MegaEmbed. Alternando para espelho legendado PT-BR...')
+          // Nenhuma fonte direta disponível no MegaEmbed. Vai direto para espelho legendado PT-BR.
+          console.info('[StreamPlayer] Nenhuma fonte direta disponível no MegaEmbed. Usando espelho legendado PT-BR...')
           setAudioOption('orig')
           setSubLang('pt')
           setSubtitleOption('pt')
@@ -848,7 +810,6 @@ const StreamPlayer = ({
           setDirectKind(null)
           setActiveMirror('vidlink')
           setAllowIframe(true)
-          setIframeExternalActive(true)
           setError(false)
           if (originalLanguage === 'tr') {
             showFeedback('Série Turca (Áudio Original / Legendas PT-BR)')
@@ -860,15 +821,6 @@ const StreamPlayer = ({
       .catch((err) => {
         if (cancelled) return
         console.warn('[StreamPlayer] Erro ao carregar fontes diretas:', err)
-        // Tenta refetch forçado antes de ir para iframe externo
-        if (directRefetchAttempts < maxDirectRefetchAttempts) {
-          console.info('[StreamPlayer] Erro nas fontes diretas. Tentando refetch forçado antes do iframe...')
-          setDirectRefetchAttempts((prev) => prev + 1)
-          setLoaded(false)
-          setError(false)
-          setKey((k) => k + 1)
-          return
-        }
         setAudioOption('orig')
         setCandidates([])
         candidatesRef.current = []
@@ -877,7 +829,6 @@ const StreamPlayer = ({
         nativeActiveRef.current = false
         setActiveMirror('vidlink')
         setAllowIframe(true)
-        setIframeExternalActive(true)
         setDirectSrc(null)
         setDirectKind(null)
         setError(false)
@@ -896,7 +847,6 @@ const StreamPlayer = ({
     loadedRef.current = true
     setLoaded(true)
     setError(false)
-    setIframeExternalActive(true)
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
   }
 
@@ -2104,19 +2054,6 @@ const StreamPlayer = ({
                 Mudar para {audioOption === 'dub' ? 'Legendado' : 'Dublado'}
               </button>
             </div>
-          </div>
-        )}
-
-        {/* Aviso quando iframe externo está ativo - permite forçar fontes diretas */}
-        {iframeExternalActive && loaded && !error && (
-          <div className="absolute bottom-4 left-4 right-4 flex justify-center z-30">
-            <button
-              onClick={forceRefetchDirectSources}
-              className="flex items-center gap-2 bg-amber-500/90 hover:bg-amber-400 text-black px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-amber-900/50"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Tentar fontes diretas novamente
-            </button>
           </div>
         )}
 
