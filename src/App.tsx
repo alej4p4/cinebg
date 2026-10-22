@@ -19,6 +19,7 @@ import LicenseGate from '@/components/LicenseGate'
 import TvCursorOverlay from '@/components/tv/TvCursorOverlay'
 import BottomNav from '@/components/layout/BottomNav'
 import { setFocus, doesFocusableExist, getCurrentFocusKey, SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
+import ErrorState from '@/components/ui/ErrorState'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Movies = lazy(() => import('@/pages/Movies'))
@@ -191,6 +192,20 @@ function App() {
   useEpisodeNotifications()
   useOrientationFullscreen()
   const { isLicensed, isTrial, loading } = useLicense()
+  const [appError, setAppError] = useState<string | null>(null)
+
+  // Captura erros de inicialização para evitar tela preta em redes móveis
+  useEffect(() => {
+    const handleError = (event: Event) => {
+      const msg = (event as ErrorEvent).message || 'Erro desconhecido'
+      console.error('[CineBG] Erro de inicialização:', msg)
+      setAppError('Não foi possível carregar o aplicativo. Verifique sua conexão e tente novamente.')
+    }
+    window.addEventListener('cinebg:init-error', handleError as EventListener)
+    return () => {
+      window.removeEventListener('cinebg:init-error', handleError as EventListener)
+    }
+  }, [])
   const {
     vipModalOpen,
     setVipModalOpen,
@@ -257,6 +272,20 @@ function App() {
 
   return (
     <>
+      {/* Se houver erro de inicialização, exibe mensagem em vez de tela preta */}
+      {appError && (
+        <div className="min-h-screen bg-bg-primary flex items-center justify-center p-6">
+          <ErrorState
+            title="Erro ao carregar o aplicativo"
+            message={appError}
+            onRetry={() => {
+              setAppError(null)
+              window.location.reload()
+            }}
+          />
+        </div>
+      )}
+
       <AnimatePresence>
         {showSplash && (
           <SplashScreen
