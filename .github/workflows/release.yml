@@ -49,13 +49,18 @@ jobs:
           printf 'storeFile=cinebg-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/keystore.properties
 
-      - name: Assemble release
-        run: cd android && chmod +x gradlew && ./gradlew assembleRelease
+      - name: Assemble Mobile Release APK
+        run: cd android && ./gradlew assembleMobileRelease --no-daemon
+
+      - name: Assemble TV Release APK
+        run: cd android && ./gradlew assembleTvRelease --no-daemon
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/release/CineBG-release.apk
+          files: |
+            android/app/build/outputs/apk/mobile/release/CineBG-Mobile-release.apk
+            android/app/build/outputs/apk/tv/release/CineBG-Tv-release.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
