@@ -5,11 +5,11 @@ const config: CapacitorConfig = {
   appName: 'CineBG',
   webDir: 'dist',
   server: {
-    // Em redes móveis (3G/4G), o WebView Android pode falhar ao carregar
-    // assets locais via scheme http sem uma URL base definida.
-    // Definir url como localhost força o carregamento nativo dos assets
-    // empacotados no APK (dist/), evitando tela preta em conexões instáveis.
-    url: 'http://localhost',
+    // NÃO definir server.url: isso faria o WebView Android tentar conectar
+    // a http://localhost dentro do dispositivo (que não existe) causando
+    // 'connection refused' e tela branca/preta.
+    // Para assets locais (dist/) empacotados no APK, o Capacitor carrega
+    // automaticamente de android/app/src/main/assets/public/.
     androidScheme: 'http',
     cleartext: true,
     allowNavigation: ['localhost', 'cinebg://*'],
