@@ -1,146 +1,61 @@
-name: Build and Release APK
+name: Release Android APK
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      publish_release:
-        description: 'Publicar / Atualizar release no GitHub'
-        required: false
-        type: boolean
-        default: true
 
 permissions:
   contents: write
 
 jobs:
-  build-apk:
-    name: Build & Release CineBG APK (Mobile + TV)
+  release:
     runs-on: ubuntu-latest
 
-    outputs:
-      version: ${{ steps.get-version.outputs.version }}
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Get version from update.json
-        id: get-version
-        run: |
-          VERSION=$(cat public/update.json | jq -r '.version')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Create release tag from version
-        if: github.ref == 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v')
-        run: |
-          VERSION=${{ steps.get-version.outputs.version }}
-          git tag v$VERSION
-          git push origin v$VERSION
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node.js 22
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: npm
 
-      - name: Setup Java JDK 17
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
+          distribution: temurin
+          java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: '12.0'
-          accept-android-sdk-licenses: 'true'
-          packages: 'platforms;android-34 build-tools;34.0.0'
-
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: Build Web Application
+      - name: Build web
         run: npm run build
 
-      - name: Sync Capacitor Android
-        run: npx cap sync android
+      - name: Sync Capacitor
+        run: npm run cap:sync
 
-      - name: Configure Keystore and Signing
+      - name: Restore release keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          STORE_PASS="${KEYSTORE_PASSWORD:-cinebg123}"
-          ALIAS="${KEY_ALIAS:-cinebg}"
-          KEY_PASS="${KEY_PASSWORD:-cinebg123}"
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/cinebg-release.jks
+          printf 'storeFile=cinebg-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/keystore.properties
 
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "Decodificando keystore de producao a partir dos secrets..."
-            echo "$KEYSTORE_BASE64" | base64 --decode > android/cinebg-release.jks
-          else
-            echo "KEYSTORE_BASE64 nao configurado. Gerando keystore de release padrao..."
-            keytool -genkey -v -keystore android/cinebg-release.jks -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -storepass "$STORE_PASS" -keypass "$KEY_PASS" -dname "CN=CineBG, OU=Mobile, O=BarraSoft, L=Default, S=Default, C=BR"
-          fi
+      - name: Assemble release
+        run: cd android && chmod +x gradlew && ./gradlew assembleRelease
 
-          printf "storeFile=cinebg-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n" "$STORE_PASS" "$ALIAS" "$KEY_PASS" > android/keystore.properties
-
-      - name: Grant Execute Permission for Gradlew
-        run: chmod +x android/gradlew
-
-      - name: Assemble Mobile Release APK
-        run: |
-          cd android
-          ./gradlew assembleMobileRelease --no-daemon
-
-      - name: Assemble TV Release APK
-        run: |
-          cd android
-          ./gradlew assembleTvRelease --no-daemon
-
-      - name: Prepare Mobile APK Asset
-        run: |
-          cp android/app/build/outputs/apk/mobile/release/CineBG-Mobile-release.apk ./CineBG-Mobile-release.apk
-          ls -la ./CineBG-Mobile-release.apk
-
-      - name: Prepare TV APK Asset
-        run: |
-          cp android/app/build/outputs/apk/tv/release/CineBG-Tv-release.apk ./CineBG-Tv-release.apk
-          ls -la ./CineBG-Tv-release.apk
-
-      - name: Upload Mobile APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CineBG-Mobile-release
-          path: ./CineBG-Mobile-release.apk
-          if-no-files-found: error
-
-      - name: Upload TV APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CineBG-Tv-release
-          path: ./CineBG-Tv-release.apk
-          if-no-files-found: error
-
-      - name: Publish GitHub Release
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish_release == 'true'
+      - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.get-version.outputs.version }}
-          files: |
-            ./CineBG-Mobile-release.apk
-            ./CineBG-Tv-release.apk
+          files: android/app/build/outputs/apk/release/CineBG-release.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
