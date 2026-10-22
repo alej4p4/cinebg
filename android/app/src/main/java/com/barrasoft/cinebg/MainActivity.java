@@ -207,6 +207,13 @@ public class MainActivity extends BridgeActivity {
             if (!currentUa.contains("CineBG-")) {
                 webView.getSettings().setUserAgentString(currentUa + flavorTag);
             }
+
+            // Limpa cache do WebView a cada inicialização para evitar conteúdo antigo
+            // após atualização de APK (causa tela preta / conteúdo desatualizado)
+            try {
+                webView.clearCache(true);
+                webView.clearHistory();
+            } catch (Exception ignored) {}
         }
     }
 

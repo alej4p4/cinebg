@@ -223,6 +223,7 @@ function App() {
   }, [checkForUpdates])
 
   const handleSplashComplete = useCallback(() => {
+    // Garante que o splash sempre some, mesmo que algo dê erro depois
     setShowSplash(false)
     const focusHome = () => {
       try {
@@ -242,6 +243,14 @@ function App() {
     focusHome()
     setTimeout(focusHome, 120)
     setTimeout(focusHome, 450)
+  }, [])
+
+  // Watchdog de segurança: garante que o splash some mesmo se algo falhar
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false)
+    }, 3500)
+    return () => clearTimeout(timer)
   }, [])
 
   const isVipOrTrialActive = isLicensed || isTrial
