@@ -45,9 +45,19 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/cinebg-release.jks
-          printf 'storeFile=cinebg-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
-            "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/keystore.properties
+          STORE_PASS="${KEYSTORE_PASSWORD:-cinebg123}"
+          ALIAS="${KEY_ALIAS:-cinebg}"
+          KEY_PASS="${KEY_PASSWORD:-cinebg123}"
+
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Decodificando keystore de produção a partir dos secrets..."
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/cinebg-release.jks
+          else
+            echo "KEYSTORE_BASE64 não configurado. Gerando keystore de release nova..."
+            keytool -genkey -v -keystore android/cinebg-release.jks -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -storepass "$STORE_PASS" -keypass "$KEY_PASS" -dname "CN=CineBG, OU=Mobile, O=BarraSoft, L=Default, S=Default, C=BR"
+          fi
+
+          printf "storeFile=cinebg-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n" "$STORE_PASS" "$ALIAS" "$KEY_PASS" > android/keystore.properties
 
       - name: Assemble Mobile Release APK
         run: cd android && ./gradlew assembleMobileRelease --no-daemon
