@@ -50,7 +50,6 @@ import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/ant
 import { isTVDevice, isMobileDevice, markBackHandled } from '@/utils/tv'
 import { trackStreamPlayback } from '@/services/observability'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
-import { getBufferConfigForHls } from '@/utils/buffer'
 
 interface StreamPlayerProps {
   tmdbId: number
@@ -104,7 +103,7 @@ const StreamPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Pausa a navegaÃ§Ã£o espacial externa enquanto o player de vÃ­deo estiver aberto
+  // Pausa a navegação espacial externa enquanto o player de vídeo estiver aberto
   useEffect(() => {
     try {
       SpatialNavigation.pause()
@@ -151,14 +150,14 @@ const StreamPlayer = ({
 
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
-  // Fonte nativa direta hidratada instantaneamente do cache em 0ms (se jÃ¡ prÃ©-resolvida na tela de Detalhes)
+  // Fonte nativa direta hidratada instantaneamente do cache em 0ms (se já pré-resolvida na tela de Detalhes)
   const [directSrc, setDirectSrc] = useState<string | null>(
     initialFirstCandidate?.url || initialCachedStream?.dubbedMp4 || initialCachedStream?.hlsProxy || null
   )
   const [directKind, setDirectKind] = useState<'mp4' | 'hls' | null>(
     initialFirstCandidate?.kind || (initialCachedStream?.dubbedMp4 ? 'mp4' : initialCachedStream?.hlsProxy ? 'hls' : null)
   )
-  // Se jÃ¡ existe no cache, nÃ£o exibe tela de resoluÃ§Ã£o intermediÃ¡ria
+  // Se já existe no cache, não exibe tela de resolução intermediária
   const [resolvingDirect, setResolvingDirect] = useState(!initialCachedStream)
 
   const [candidates, setCandidates] = useState<DirectCandidate[]>(initialCachedStream?.candidates || [])
@@ -180,7 +179,7 @@ const StreamPlayer = ({
   // O espelho inicial se ajusta automaticamente ao áudio preferido
   const [activeMirror, setActiveMirror] = useState(() => getInitialMirrorForAudio(audioOption))
   const [key, setKey] = useState(0)
-  // SÃ³ mostra o iframe se o usuÃ¡rio pedir explicitamente em caso extremo. O padrÃ£o Ã© 100% nativo.
+  // Só mostra o iframe se o usuário pedir explicitamente em caso extremo. O padrão é 100% nativo.
   const [allowIframe, setAllowIframe] = useState(false)
 
   const loadedRef = useRef(false)
@@ -190,10 +189,10 @@ const StreamPlayer = ({
   const lastCheckedMediaRef = useRef<string>('')
   const userManualAudioRef = useRef<AudioOption | null>(null)
 
-  // Legendas externas PT-BR (Stremio / OpenSubtitles / ForÃ§adas)
+  // Legendas externas PT-BR (Stremio / OpenSubtitles / Forçadas)
   const [externalSubs, setExternalSubs] = useState<SubtitleTrackOption[]>([])
 
-  // Fallback automÃ¡tico de fontes
+  // Fallback automático de fontes
   const [isAutoFallback, _setIsAutoFallback] = useState(false)
   const [fallbackAttempt, setFallbackAttempt] = useState(0)
   const [_activeTrack, setActiveTrack] = useState(-1)
@@ -211,7 +210,7 @@ const StreamPlayer = ({
   const lastProgressRef = useRef(0)
   const refreshTextTracksRef = useRef<(() => void) | null>(null)
 
-  // CustomizaÃ§Ã£o de aparÃªncia das legendas
+  // Customização de aparência das legendas
   const [subSize, setSubSize] = useState<'sm' | 'md' | 'lg' | 'xl'>(() => {
     try {
       const val = localStorage.getItem('cinebg_subs_size')
@@ -239,54 +238,6 @@ const StreamPlayer = ({
       return 'box'
     }
   })
-
-  // ===== SELEÃÃO CORRETA DE FAIXA DE ÃUDIO/LEGENDA =====
-  const selectCorrectAudioTrack = useCallback((video: HTMLVideoElement) => {
-    if (!video || !video.textTracks) return
-
-    const _desiredAudio = audioOption // 'dub', 'orig', 'sub'
-    const desiredSub = subtitleOption // 'off', 'pt', 'en'
-
-    // Para HLS com hls.js, a seleção Ã© feita via hls.js (jÃ¡ tratado em MANIFEST_PARSED)
-    // Para MP4 nativo ou fallback, seleciona via textTracks
-    if (video.textTracks && video.textTracks.length > 0) {
-      // Desativa todas as faixas primeiro
-      for (let i = 0; i < video.textTracks.length; i++) {
-        video.textTracks[i].mode = 'disabled'
-      }
-
-      // Seleciona faixa de legenda baseada na preferÃªncia
-      let targetTrackIndex = -1
-      for (let i = 0; i < video.textTracks.length; i++) {
-        const track = video.textTracks[i]
-        const label = (track.label || track.language || '').toLowerCase()
-        const kind = track.kind
-
-        if (kind === 'subtitles' || kind === 'captions') {
-          if (desiredSub === 'off') continue
-          if (desiredSub === 'pt' && (label.includes('por') || label.includes('pt') || label.includes('pob') || label.includes('bra'))) {
-            targetTrackIndex = i
-            break
-          }
-          if (desiredSub === 'en' && (label.includes('eng') || label.includes('en'))) {
-            targetTrackIndex = i
-            break
-          }
-        }
-      }
-
-      if (targetTrackIndex >= 0) {
-        video.textTracks[targetTrackIndex].mode = 'showing'
-        activeTrackRef.current = targetTrackIndex
-        setActiveTrack(targetTrackIndex)
-      } else if (desiredSub !== 'off' && video.textTracks.length > 0) {
-        // Fallback: primeira legenda disponÃ­vel
-        video.textTracks[0].mode = 'showing'
-        activeTrackRef.current = 0
-        setActiveTrack(0)
-      }
-    }
-  }, [audioOption, subtitleOption])
 
   const updateSubSize = (size: 'sm' | 'md' | 'lg' | 'xl') => {
     setSubSize(size)
@@ -361,7 +312,7 @@ const StreamPlayer = ({
     `
   }, [subSize, subColor, subBg])
 
-  // Ajuste fino de sincronizaÃ§Ã£o de tempo de legendas (subDelay)
+  // Ajuste fino de sincronização de tempo de legendas (subDelay)
   const lastAppliedSubDelayRef = useRef(0)
   useEffect(() => {
     const video = videoRef.current
@@ -401,7 +352,7 @@ const StreamPlayer = ({
   const autoNextTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [qualityOpen, setQualityOpen] = useState(false)
 
-  // ===== Aprimoramentos YuCine (Modo Lock, Pular Abertura, Gaveta de EpisÃ³dios) =====
+  // ===== Aprimoramentos YuCine (Modo Lock, Pular Abertura, Gaveta de Episódios) =====
   const [isLocked, setIsLocked] = useState(false)
   const [showLockPrompt, setShowLockPrompt] = useState(false)
   const [showSkipIntro, setShowSkipIntro] = useState(false)
@@ -411,7 +362,7 @@ const StreamPlayer = ({
   const hasSkippedIntroRef = useRef(false)
   const lockPromptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // ===== OrientaÃ§Ã£o Mobile (Retrato / Paisagem) =====
+  // ===== Orientação Mobile (Retrato / Paisagem) =====
   const [isPortrait, setIsPortrait] = useState(
     typeof window !== 'undefined' ? window.innerHeight > window.innerWidth : false
   )
@@ -423,7 +374,7 @@ const StreamPlayer = ({
   const [isPlaying, setIsPlaying] = useState(false)
   const hudTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // ===== Gestos Touch & Toque Duplo (AvanÃ§ar/Voltar 10s) =====
+  // ===== Gestos Touch & Toque Duplo (Avançar/Voltar 10s) =====
   const [doubleTapFeedback, setDoubleTapFeedback] = useState<{
     direction: 'left' | 'right'
     seconds: number
@@ -444,7 +395,7 @@ const StreamPlayer = ({
     timer: null,
   })
 
-  // Monitora redimensionamento e orientaÃ§Ã£o da tela para adaptar celular
+  // Monitora redimensionamento e orientação da tela para adaptar celular
   useEffect(() => {
     const handleOrientationCheck = () => {
       setIsPortrait(window.innerHeight > window.innerWidth)
@@ -456,7 +407,7 @@ const StreamPlayer = ({
       screen.orientation.addEventListener('change', handleOrientationCheck)
     }
 
-    // Se estiver em dispositivo mÃ³vel, tenta travar em horizontal na inicializaÃ§Ã£o
+    // Se estiver em dispositivo móvel, tenta travar em horizontal na inicialização
     if (isMobileDevice() || (typeof window !== 'undefined' && window.innerWidth < 850)) {
       if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
         try {
@@ -474,7 +425,7 @@ const StreamPlayer = ({
     }
   }, [])
 
-  // Alterna manualmente a orientaÃ§Ã£o no celular
+  // Alterna manualmente a orientação no celular
   const handleToggleOrientation = async () => {
     try {
       const isCurrentlyLandscape = window.innerWidth > window.innerHeight
@@ -487,7 +438,7 @@ const StreamPlayer = ({
             await (screen.orientation as unknown as ScreenOrientationWithLock).lock?.('portrait').catch(() => {})
           }
         }
-        showFeedback('Retrato ð±')
+        showFeedback('Retrato 📱')
       } else {
         if (containerRef.current && !document.fullscreenElement) {
           await containerRef.current.requestFullscreen().catch(() => {})
@@ -495,7 +446,7 @@ const StreamPlayer = ({
         if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
           await (screen.orientation as unknown as ScreenOrientationWithLock).lock?.('landscape').catch(() => {})
         }
-        showFeedback('Paisagem / Tela Cheia ð')
+        showFeedback('Paisagem / Tela Cheia 🔄')
       }
     } catch {}
   }
@@ -561,7 +512,7 @@ const StreamPlayer = ({
     feedbackTimerRef.current = setTimeout(() => setFeedback(null), 700)
   }, [])
 
-  // AlternÃ¢ncia de áudio inteligente sem anÃºncios
+  // Alternância de áudio inteligente sem anúncios
   const switchAudio = useCallback((opt: AudioOption) => {
     userManualAudioRef.current = opt
     setAudioOption(opt)
@@ -569,11 +520,11 @@ const StreamPlayer = ({
     if (opt === 'orig') {
       setSubLang('pt')
       setSubtitleOption('pt')
-      // Prioridade mÃ¡xima: verifica se hÃ¡ candidato direto nativo com áudio original/multi e legenda PT-BR
+      // Prioridade máxima: verifica se há candidato direto nativo com áudio original/multi e legenda PT-BR
       const origIdx = list.findIndex((c) => !c.isDubbedHint)
       if (origIdx !== -1) {
         const directOrig = list[origIdx]
-        console.info('[StreamPlayer] Reproduzindo fonte original direta nativa (sem anÃºncios):', directOrig.label)
+        console.info('[StreamPlayer] Reproduzindo fonte original direta nativa (sem anúncios):', directOrig.label)
         nativeActiveRef.current = true
         candidateIndexRef.current = origIdx
         setCandidateIndex(origIdx)
@@ -582,9 +533,6 @@ const StreamPlayer = ({
         setAllowIframe(false)
         setLoaded(false)
         setError(false)
-        // FORÇA seleção de faixa de áudio original + legenda PT
-        setSubLang('pt')
-        setSubtitleOption('pt')
         showFeedback(`Conectando: ${directOrig.label} (Legendado)`)
         return
       }
@@ -606,10 +554,7 @@ const StreamPlayer = ({
         setDirectKind(directDub.kind)
         setLoaded(false)
         setError(false)
-        // FORÇA seleção de faixa dublada + legenda OFF
-        setSubLang('off')
-        setSubtitleOption('off')
-        showFeedback(`Conectando: ${directDub.label} (Dublado)`)
+        showFeedback(`Conectando: ${directDub.label}`)
         return
       }
     }
@@ -619,11 +564,11 @@ const StreamPlayer = ({
     setKey((k) => k + 1)
   }, [setAudioOption, setSubtitleOption, showFeedback])
 
-  // Falha na reproduÃ§Ã£o direta da fonte atual: testa a prÃ³xima opÃ§Ã£o limpa da lista sem closure obsoleta
+  // Falha na reprodução direta da fonte atual: testa a próxima opção limpa da lista sem closure obsoleta
   const handleDirectMediaError = useCallback(() => {
     const list = candidatesRef.current
     const nextIndex = candidateIndexRef.current + 1
-    console.warn(`[StreamPlayer] Falha na opÃ§Ã£o atual (${candidateIndexRef.current + 1}/${list.length}). Buscando prÃ³xima opÃ§Ã£o limpa...`)
+    console.warn(`[StreamPlayer] Falha na opção atual (${candidateIndexRef.current + 1}/${list.length}). Buscando próxima opção limpa...`)
     if (nextIndex < list.length) {
       const next = list[nextIndex]
       console.info(`[StreamPlayer] Testando candidato alternativo: ${next.label} (${nextIndex + 1}/${list.length})`)
@@ -650,7 +595,7 @@ const StreamPlayer = ({
     showFeedback('Conectando servidor alternativo...')
   }, [showFeedback])
 
-  // AlternÃ¢ncia manual cÃ­clica pelo botÃ£o "OpÃ§Ã£o 1 / Servidor" no controle remoto
+  // Alternância manual cíclica pelo botão "Opção 1 / Servidor" no controle remoto
   const handleCycleServerOption = useCallback(() => {
     const list = candidatesRef.current
     if (list.length > 0 && !allowIframe) {
@@ -667,7 +612,7 @@ const StreamPlayer = ({
       showFeedback(`Conectando: ${next.label}`)
       return
     }
-    // Se estiver em modo espelho (iframe), cicla entre os espelhos disponÃ­veis ou retorna para a OpÃ§Ã£o 1 direta
+    // Se estiver em modo espelho (iframe), cicla entre os espelhos disponíveis ou retorna para a Opção 1 direta
     if (list.length > 0 && allowIframe) {
       const first = list[0]
       candidateIndexRef.current = 0
@@ -697,12 +642,12 @@ const StreamPlayer = ({
     if (directSrc) {
       handleDirectMediaError()
     } else {
-      // Se estiver em iframe (legendado), tenta o prÃ³ximo espelho da sequÃªncia
+      // Se estiver em iframe (legendado), tenta o próximo espelho da sequência
       setFallbackAttempt((prev) => {
         const nextAttempt = prev + 1
         if (nextAttempt < fallbackSequence.length) {
           const nextMirror = fallbackSequence[nextAttempt]
-          console.info(`[StreamPlayer] Iframe falhou. Alternando para prÃ³ximo espelho: ${nextMirror}`)
+          console.info(`[StreamPlayer] Iframe falhou. Alternando para próximo espelho: ${nextMirror}`)
           setActiveMirror(nextMirror)
           setLoaded(false)
           setError(false)
@@ -772,17 +717,17 @@ const StreamPlayer = ({
     if (stallTimerRef.current) clearTimeout(stallTimerRef.current)
     stallTimerRef.current = setTimeout(() => {
       if (!loadedRef.current) {
-        console.warn('[StreamPlayer] VÃ­deo estagnado na rede (7s). AvanÃ§ando para prÃ³xima opÃ§Ã£o...')
+        console.warn('[StreamPlayer] Vídeo estagnado na rede (7s). Avançando para próxima opção...')
         handleDirectMediaError()
       }
     }, 7000)
   }
 
   useEffect(() => {
-    // Se ainda estÃ¡ consultando a API para descobrir fontes diretas, aguarda resoluÃ§Ã£o sem abortar
+    // Se ainda está consultando a API para descobrir fontes diretas, aguarda resolução sem abortar
     if (resolvingDirect) return
 
-    // Se nÃ£o hÃ¡ fonte direta nem espelho ativo, nÃ£o inicia contagem regressiva
+    // Se não há fonte direta nem espelho ativo, não inicia contagem regressiva
     if (!directSrc && !allowIframe) return
 
     loadedRef.current = false
@@ -798,10 +743,10 @@ const StreamPlayer = ({
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout Ã¡gil para conexÃµes residenciais e TV Boxes: 8s para buffer inicial antes de pular para a prÃ³xima opÃ§Ã£o
+    // Timeout ágil para conexões residenciais e TV Boxes: 8s para buffer inicial antes de pular para a próxima opção
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
-      console.warn(`[StreamPlayer] Timeout de carregamento (8s) na opÃ§Ã£o ${candidateIndex + 1}. Tentando prÃ³xima opÃ§Ã£o...`)
+      console.warn(`[StreamPlayer] Timeout de carregamento (8s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
       handleDirectMediaError()
     }, 8000)
 
@@ -811,15 +756,15 @@ const StreamPlayer = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, tmdbId, season, episode, audioOption, activeMirror, candidateIndex, directSrc, resolvingDirect, allowIframe])
 
-  // VerificaÃ§Ã£o e resoluÃ§Ã£o inteligente de áudio:
-  // Ao entrar em um filme ou episÃ³dio, verifica se tem em portuguÃªs (dublado).
-  // Se tiver, deixa marcado 'Dublado' (audioOption='dub') e reproduz a fonte em portuguÃªs.
-  // Se nÃ£o tiver áudio em portuguÃªs, muda automaticamente para o idioma original com legenda em portuguÃªs (audioOption='orig').
+  // Verificação e resolução inteligente de áudio:
+  // Ao entrar em um filme ou episódio, verifica se tem em português (dublado).
+  // Se tiver, deixa marcado 'Dublado' (audioOption='dub') e reproduz a fonte em português.
+  // Se não tiver áudio em português, muda automaticamente para o idioma original com legenda em português (audioOption='orig').
   useEffect(() => {
     const isNewMedia = lastCheckedMediaRef.current !== mediaKey
     if (isNewMedia) {
       lastCheckedMediaRef.current = mediaKey
-      // Respeita se o usuÃ¡rio escolheu Legendado/Original na tela de Sinopse (Details.tsx)
+      // Respeita se o usuário escolheu Legendado/Original na tela de Sinopse (Details.tsx)
       userManualAudioRef.current = audioOption === 'orig' || audioOption === 'sub' ? audioOption : null
     }
 
@@ -883,7 +828,7 @@ const StreamPlayer = ({
           setDirectSrc(firstCandidate.url)
           setDirectKind(firstCandidate.kind)
         } else {
-          // Nenhuma fonte direta disponÃ­vel no MegaEmbed. Tenta refetch forçado antes de ir para iframe externo.
+          // Nenhuma fonte direta disponível no MegaEmbed. Tenta refetch forçado antes de ir para iframe externo.
           if (directRefetchAttempts < maxDirectRefetchAttempts) {
             console.info('[StreamPlayer] Nenhuma fonte direta. Tentando refetch forçado antes do iframe...')
             setDirectRefetchAttempts((prev) => prev + 1)
@@ -892,7 +837,7 @@ const StreamPlayer = ({
             setKey((k) => k + 1)
             return
           }
-          console.info('[StreamPlayer] Nenhuma fonte direta disponÃ­vel no MegaEmbed. Alternando para espelho legendado PT-BR...')
+          console.info('[StreamPlayer] Nenhuma fonte direta disponível no MegaEmbed. Alternando para espelho legendado PT-BR...')
           setAudioOption('orig')
           setSubLang('pt')
           setSubtitleOption('pt')
@@ -906,9 +851,9 @@ const StreamPlayer = ({
           setIframeExternalActive(true)
           setError(false)
           if (originalLanguage === 'tr') {
-            showFeedback('SÃ©rie Turca (Ãudio Original / Legendas PT-BR)')
+            showFeedback('Série Turca (Áudio Original / Legendas PT-BR)')
           } else {
-            showFeedback('Iniciando em versÃ£o legendada PT-BR...')
+            showFeedback('Iniciando em versão legendada PT-BR...')
           }
         }
       })
@@ -953,58 +898,36 @@ const StreamPlayer = ({
     setError(false)
     setIframeExternalActive(true)
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
-  };
+  }
 
   const attemptPlay = useCallback(() => {
     const video = videoRef.current
-    if (!video) return
-
-    // GARANTE: vídeo não mutado, volume normal, faixa de áudio correta
-    video.muted = false
-    video.volume = 1.0
-
-    // FORÇA seleção de faixa de áudio ANTES do play
-    selectCorrectAudioTrack(video)
-
-    if (video.paused) {
-      const playPromise = video.play()
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
+    if (video) {
+      if (video.paused) {
+        const p = video.play()
+        if (p !== undefined) {
+          p.then(() => {
             loadedRef.current = true
             setLoaded(true)
             setIsPlaying(true)
             setError(false)
-            // GARANTE: áudio ativo após play bem-sucedido
-            video.muted = false
-            video.volume = 1.0
-          })
-          .catch((err) => {
-            console.warn('[StreamPlayer] Autoplay bloqueado, tentando fallback:', err)
-            // FALLBACK: Tenta com muted=true primeiro, depois unmute
+          }).catch(() => {
+            // Fallback imediato de autoplay para WebViews que exigem início mudo antes de liberar áudio
             try {
               video.muted = true
               video
                 .play()
                 .then(() => {
-                  // Tenta unmute após play bem-sucedido
-                  setTimeout(() => {
-                    video.muted = false
-                    video.volume = 1.0
-                    loadedRef.current = true
-                    setLoaded(true)
-                    setIsPlaying(true)
-                    setError(false)
-                  }, 100)
-                })
-                .catch(() => {
-                  // último recurso: mantï¿½m mutado mas avisa usuário
-                  showFeedback('Toque para ativar áudio')
+                  video.muted = false
+                  loadedRef.current = true
                   setLoaded(true)
+                  setIsPlaying(true)
                   setError(false)
                 })
+                .catch(() => {})
             } catch {}
           })
+        }
       } else {
         loadedRef.current = true
         setLoaded(true)
@@ -1012,7 +935,7 @@ const StreamPlayer = ({
         setError(false)
       }
     }
-    }, [selectCorrectAudioTrack, showFeedback]);
+  }, [])
 
   const handleDirectMediaReady = () => {
     loadedRef.current = true
@@ -1033,19 +956,18 @@ const StreamPlayer = ({
     if (Hls.isSupported()) {
       let networkRetries = 0
       let mediaRetries = 0
-      const adaptiveConfig = getBufferConfigForHls()
       const hls = new Hls({
         enableWorker: false, // Evita travamento de Web Worker com Blob em Android TV / TV Box
-        maxBufferLength: adaptiveConfig.maxBufferLength,
-        maxMaxBufferLength: adaptiveConfig.maxMaxBufferLength,
-        maxBufferSize: adaptiveConfig.maxBufferSize,
-        lowLatencyMode: adaptiveConfig.lowLatencyMode,
-        manifestLoadingTimeOut: adaptiveConfig.manifestLoadingTimeOut,
-        manifestLoadingMaxRetry: adaptiveConfig.manifestLoadingMaxRetry,
-        levelLoadingTimeOut: adaptiveConfig.levelLoadingTimeOut,
-        levelLoadingMaxRetry: adaptiveConfig.levelLoadingMaxRetry,
-        fragLoadingTimeOut: adaptiveConfig.fragLoadingTimeOut,
-        fragLoadingMaxRetry: adaptiveConfig.fragLoadingMaxRetry,
+        maxBufferLength: 25,
+        maxMaxBufferLength: 50,
+        maxBufferSize: 35 * 1000 * 1000,
+        lowLatencyMode: false,
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 2,
+        levelLoadingTimeOut: 10000,
+        levelLoadingMaxRetry: 2,
+        fragLoadingTimeOut: 15000,
+        fragLoadingMaxRetry: 2,
       })
       hlsInstance = hls
       hls.subtitleDisplay = true
@@ -1077,13 +999,13 @@ const StreamPlayer = ({
         if (data.fatal) {
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR && networkRetries < 1) {
             networkRetries += 1
-            console.warn('[StreamPlayer] Fatal network error, tentando 1 recuperaÃ§Ã£o automÃ¡tica...', data)
+            console.warn('[StreamPlayer] Fatal network error, tentando 1 recuperação automática...', data)
             hls.startLoad()
             return
           }
           if (data.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRetries < 1) {
             mediaRetries += 1
-            console.warn('[StreamPlayer] Fatal media error, tentando 1 recuperaÃ§Ã£o automÃ¡tica...', data)
+            console.warn('[StreamPlayer] Fatal media error, tentando 1 recuperação automática...', data)
             hls.recoverMediaError()
             return
           }
@@ -1100,12 +1022,7 @@ const StreamPlayer = ({
 
     return () => {
       cancelled = true
-      if (hlsInstance) {
-        try {
-          hlsInstance.destroy()
-        } catch {}
-        hlsInstance = null
-      }
+      if (hlsInstance) hlsInstance.destroy()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [directSrc, directKind, handleDirectMediaError])
@@ -1122,7 +1039,7 @@ const StreamPlayer = ({
     } catch {}
     const timer = setTimeout(() => {
       attemptPlay()
-    }, 100)
+    }, 150)
     return () => clearTimeout(timer)
   }, [directSrc, directKind, attemptPlay])
 
@@ -1132,7 +1049,7 @@ const StreamPlayer = ({
     if (video) video.playbackRate = speed
   }, [speed, directSrc])
 
-  // Reseta o estado quando a fonte ou episÃ³dio muda.
+  // Reseta o estado quando a fonte ou episódio muda.
   useEffect(() => {
     activeTrackRef.current = -1
     setTracks([])
@@ -1143,7 +1060,7 @@ const StreamPlayer = ({
     setEpisodesDrawerOpen(false)
   }, [directSrc, season, episode])
 
-  // Busca e carrega legendas em PortuguÃªs (PT-BR) pÃºblicas e forÃ§adas
+  // Busca e carrega legendas em Português (PT-BR) públicas e forçadas
   useEffect(() => {
     let alive = true
     fetchPortugueseSubtitles(type, tmdbId, season, episode).then((subs) => {
@@ -1158,7 +1075,7 @@ const StreamPlayer = ({
     }
   }, [type, tmdbId, season, episode])
 
-  // Observa a entrada/saÃ­da do Picture-in-Picture (eventos nÃ£o tipados pelo React).
+  // Observa a entrada/saída do Picture-in-Picture (eventos não tipados pelo React).
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -1197,10 +1114,10 @@ const StreamPlayer = ({
     setIsLocked((prev) => {
       const next = !prev
       if (next) {
-        showFeedback('ð Tela Bloqueada')
+        showFeedback('🔒 Tela Bloqueada')
         setShowLockPrompt(false)
       } else {
-        showFeedback('ð Tela Desbloqueada')
+        showFeedback('🔓 Tela Desbloqueada')
       }
       return next
     })
@@ -1240,7 +1157,7 @@ const StreamPlayer = ({
         }
       }
     }
-    // Ao alternar tela cheia, esconde os controles rapidamente apÃ³s 800ms
+    // Ao alternar tela cheia, esconde os controles rapidamente após 800ms
     setTimeout(() => {
       setShowHud(false)
     }, 800)
@@ -1249,21 +1166,21 @@ const StreamPlayer = ({
   const toggleFitMode = useCallback(() => {
     setFitMode((prev) => {
       let next: 'cover' | 'contain' | 'fill' | 'classic' = 'contain'
-      let label = 'PadrÃ£o (16:9)'
+      let label = 'Padrão (16:9)'
       if (prev === 'cover') {
         next = 'contain'
-        label = 'PadrÃ£o (16:9)'
+        label = 'Padrão (16:9)'
       } else if (prev === 'contain') {
         next = 'fill'
         label = 'Esticar (100%)'
       } else if (prev === 'fill') {
         next = 'classic'
-        label = 'ClÃ¡ssico (4:3)'
+        label = 'Clássico (4:3)'
       } else {
         next = 'cover'
         label = 'Preencher Tela'
       }
-      showFeedback(`ProporÃ§Ã£o: ${label}`)
+      showFeedback(`Proporção: ${label}`)
       return next
     })
   }, [showFeedback])
@@ -1297,11 +1214,11 @@ const StreamPlayer = ({
         label.includes('eng') || label.includes('en') ? 'en' : 'pt'
       setSubLang(inferredLang)
       setSubtitleOption(inferredLang)
-      showFeedback(`Legenda: ${selected?.label || 'Ativada ð§ð·'}`)
+      showFeedback(`Legenda: ${selected?.label || 'Ativada 🇧🇷'}`)
     } else {
       setSubLang('off')
       setSubtitleOption('off')
-      showFeedback('Legendas: Desativadas ð«')
+      showFeedback('Legendas: Desativadas 🚫')
     }
   }
 
@@ -1317,7 +1234,7 @@ const StreamPlayer = ({
       }
       activeTrackRef.current = -1
       setActiveTrack(-1)
-      showFeedback('Legendas: Desativadas ð«')
+      showFeedback('Legendas: Desativadas 🚫')
       return
     }
 
@@ -1352,9 +1269,9 @@ const StreamPlayer = ({
       activeTrackRef.current = targetIndex
       setActiveTrack(targetIndex)
       const selected = video.textTracks[targetIndex]
-      showFeedback(`Legenda: ${selected?.label || (lang === 'pt' ? 'PortuguÃªs ð§ð·' : 'InglÃªs ðºð¸')}`)
+      showFeedback(`Legenda: ${selected?.label || (lang === 'pt' ? 'Português 🇧🇷' : 'Inglês 🇺🇸')}`)
     } else {
-      showFeedback(lang === 'pt' ? 'Legendas: PortuguÃªs ð§ð·' : 'Legendas: InglÃªs ðºð¸')
+      showFeedback(lang === 'pt' ? 'Legendas: Português 🇧🇷' : 'Legendas: Inglês 🇺🇸')
     }
   }, [setSubtitleOption, showFeedback])
 
@@ -1373,7 +1290,7 @@ const StreamPlayer = ({
     for (let i = 0; i < video.textTracks.length; i += 1) {
       const track = video.textTracks[i]
       const label = track.label || track.language || `Faixa ${i + 1}`
-      const isForced = /forced|forcad|forÃ§ad|falas/i.test(label)
+      const isForced = /forced|forcad|forçad|falas/i.test(label)
       list.push({ index: i, label, isForced })
     }
     setTracks(list)
@@ -1408,7 +1325,7 @@ const StreamPlayer = ({
         await video.requestPictureInPicture()
       }
     } catch {
-      /* PiP indisponÃÂ­vel neste contexto */
+      /* PiP indisponÃ­vel neste contexto */
     }
   }
 
@@ -1440,7 +1357,7 @@ const StreamPlayer = ({
     setAutoNextCountdown(null)
   }
 
-  // Ao carregar os metadados: as legendas e retoma da posiÂ§ï¿½o salva.
+  // Ao carregar os metadados: lÃª legendas e retoma da posi§�o salva.
   const handleLoadedMetadata = () => {
     refreshTextTracks()
     const video = videoRef.current
@@ -1453,7 +1370,7 @@ const StreamPlayer = ({
           setResumeToast({ seconds: Math.floor(startAt) })
           setTimeout(() => setResumeToast(null), 8000)
         } catch {
-          /* seek invÃ¡lido */
+          /* seek inválido */
         }
       }
     }
@@ -1461,7 +1378,7 @@ const StreamPlayer = ({
     attemptPlay()
   }
 
-  // Salva a posição a cada ~5s de reproduÃ§Ã£o e gerencia o botÃ£o Pular Abertura.
+  // Salva a posição a cada ~5s de reprodução e gerencia o botão Pular Abertura.
   const handleTimeUpdate = () => {
     const video = videoRef.current
     if (!video) return
@@ -1471,7 +1388,7 @@ const StreamPlayer = ({
     setDuration(dur)
     setIsPlaying(!video.paused)
 
-    // Pular Abertura (+85s) durante os primeiros minutos de sÃ©ries/animes
+    // Pular Abertura (+85s) durante os primeiros minutos de séries/animes
     if (type !== 'movie') {
       if (current >= 5 && current <= 110 && !hasSkippedIntroRef.current) {
         setShowSkipIntro(true)
@@ -1488,7 +1405,7 @@ const StreamPlayer = ({
   }
 
   // Listener Global Unificado de Teclas do Controle Remoto (Android TV / TV Box / D-Pad)
-  // Zero interferÃªncia de volume nas setas Cima/Baixo e zero avanÃ§o acidental ao navegar entre botÃµes do HUD.
+  // Zero interferência de volume nas setas Cima/Baixo e zero avanço acidental ao navegar entre botões do HUD.
   useEffect(() => {
     const handleGlobalRemoteKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
@@ -1540,7 +1457,7 @@ const StreamPlayer = ({
         }
       }
 
-      // Se um modal ou gaveta de episÃ³dios estiver aberto, permite navegaÃ§Ã£o pelos botÃµes do modal
+      // Se um modal ou gaveta de episódios estiver aberto, permite navegação pelos botões do modal
       if (settingsModalOpen || episodesDrawerOpen) {
         return
       }
@@ -1548,7 +1465,7 @@ const StreamPlayer = ({
       // Qualquer tecla no controle remoto reativa e exibe o HUD
       resetHudTimer()
 
-      // Lista de botÃµes inferiores do HUD
+      // Lista de botões inferiores do HUD
       const getBottomHudButtons = (): HTMLElement[] => {
         if (!containerRef.current) return []
         return Array.from(
@@ -1565,7 +1482,7 @@ const StreamPlayer = ({
         currentFocused.id !== 'hud-btn-back' &&
         currentFocused.id !== 'hud-btn-play'
 
-      // Tecla D-Pad Para Baixo (NUNCA altera o volume! Navega exclusivamente atÃ© os botÃµes do player)
+      // Tecla D-Pad Para Baixo (NUNCA altera o volume! Navega exclusivamente até os botões do player)
       if (key === 'ArrowDown' || code === 40 || code === 20) {
         e.preventDefault()
         e.stopPropagation()
@@ -1597,7 +1514,7 @@ const StreamPlayer = ({
         return
       }
 
-      // Tecla D-Pad Para Cima (NUNCA altera o volume! Navega dos botÃµes para a barra de progresso / botÃ£o Voltar)
+      // Tecla D-Pad Para Cima (NUNCA altera o volume! Navega dos botões para a barra de progresso / botão Voltar)
       if (key === 'ArrowUp' || code === 38 || code === 19) {
         e.preventDefault()
         e.stopPropagation()
@@ -1632,12 +1549,12 @@ const StreamPlayer = ({
         return
       }
 
-      // Tecla D-Pad Para a Esquerda (Navega entre os botÃµes sem avanÃ§ar/voltar o vÃ­deo!)
+      // Tecla D-Pad Para a Esquerda (Navega entre os botões sem avançar/voltar o vídeo!)
       if (key === 'ArrowLeft' || code === 37 || code === 21) {
         e.preventDefault()
         e.stopPropagation()
 
-        // SÃ³ volta -10s se o foco estiver na barra de tempo (#hud-scrubber) ou se o HUD estiver fechado
+        // Só volta -10s se o foco estiver na barra de tempo (#hud-scrubber) ou se o HUD estiver fechado
         if (currentFocused?.id === 'hud-scrubber' || !showHud) {
           seekBy(-10)
           return
@@ -1650,7 +1567,7 @@ const StreamPlayer = ({
           return
         }
         if (activeIndex === 0) {
-          // JÃ¡ estÃ¡ no primeiro botÃ£o da fila: permanece nele sem pular o vÃ­deo
+          // Já está no primeiro botão da fila: permanece nele sem pular o vídeo
           bottomBtns[0].focus()
           return
         }
@@ -1664,12 +1581,12 @@ const StreamPlayer = ({
         return
       }
 
-      // Tecla D-Pad Para a Direita (Navega entre os botÃµes sem acelerar/avanÃ§ar o vÃ­deo!)
+      // Tecla D-Pad Para a Direita (Navega entre os botões sem acelerar/avançar o vídeo!)
       if (key === 'ArrowRight' || code === 39 || code === 22) {
         e.preventDefault()
         e.stopPropagation()
 
-        // SÃ³ avanÃ§a +10s se o foco estiver na barra de tempo (#hud-scrubber) ou se o HUD estiver fechado
+        // Só avança +10s se o foco estiver na barra de tempo (#hud-scrubber) ou se o HUD estiver fechado
         if (currentFocused?.id === 'hud-scrubber' || !showHud) {
           seekBy(10)
           return
@@ -1690,7 +1607,7 @@ const StreamPlayer = ({
           return
         }
         if (activeIndex === bottomBtns.length - 1 && bottomBtns.length > 0) {
-          // JÃ¡ estÃ¡ no Ãºltimo botÃ£o da fila: permanece nele sem avanÃ§ar o vÃ­deo
+          // Já está no último botão da fila: permanece nele sem avançar o vídeo
           bottomBtns[bottomBtns.length - 1].focus()
           return
         }
@@ -1702,8 +1619,8 @@ const StreamPlayer = ({
 
       // Tecla Enter / OK / D-Pad Center
       if (key === 'Enter' || code === 13 || code === 23 || code === 66) {
-        // Se o foco jÃ¡ estÃ¡ em um botÃ£o do HUD (Dublado, Sem Legenda, Ajustes, Voltar, etc.),
-        // aciona exclusivamente o clique desse botÃ£o sem pausar o filme!
+        // Se o foco já está em um botão do HUD (Dublado, Sem Legenda, Ajustes, Voltar, etc.),
+        // aciona exclusivamente o clique desse botão sem pausar o filme!
         if (currentFocused && currentFocused.tagName === 'BUTTON') {
           e.preventDefault()
           e.stopPropagation()
@@ -1754,7 +1671,7 @@ const StreamPlayer = ({
         e.preventDefault()
         const nextOpt = audioOption === 'dub' ? 'orig' : 'dub'
         switchAudio(nextOpt)
-        showFeedback(nextOpt === 'dub' ? 'Ãudio: Dublado ð§ð·' : 'Ãudio: Legendado / Original ðºð¸')
+        showFeedback(nextOpt === 'dub' ? 'Áudio: Dublado 🇧🇷' : 'Áudio: Legendado / Original 🇺🇸')
       } else if (
         key === 's' ||
         key === 'S' ||
@@ -1829,7 +1746,7 @@ const StreamPlayer = ({
     const width = rect.width
     const ratio = relativeX / width
 
-    // Zonas de toque: Esquerda (< 35%: Voltar 10s), Direita (> 65%: AvanÃ§ar 10s), Centro (35% a 65%: Controles)
+    // Zonas de toque: Esquerda (< 35%: Voltar 10s), Direita (> 65%: Avançar 10s), Centro (35% a 65%: Controles)
     let side: 'left' | 'right' | 'center' = 'center'
     if (ratio < 0.35) side = 'left'
     else if (ratio > 0.65) side = 'right'
@@ -1840,14 +1757,14 @@ const StreamPlayer = ({
 
     if ((side === 'left' || side === 'right') && isDoubleTap) {
       const activeSide: 'left' | 'right' = side
-      // Cancelar qualquer timer de toque Ãºnico para nÃ£o piscar os controles da HUD
+      // Cancelar qualquer timer de toque único para não piscar os controles da HUD
       if (singleTapTimerRef.current) {
         clearTimeout(singleTapTimerRef.current)
         singleTapTimerRef.current = null
       }
 
       const delta = activeSide === 'left' ? -10 : 10
-      seekBy(delta, false) // busca rÃ¡pida sem feedback central genÃ©rico
+      seekBy(delta, false) // busca rápida sem feedback central genérico
 
       // Acumula segundos no feedback de toque duplo (+10s, +20s, +30s...)
       if (doubleTapAccumulatorRef.current.timer) {
@@ -1889,7 +1806,7 @@ const StreamPlayer = ({
           return !prev
         })
       } else {
-        // Aguarda 280ms para confirmar se Ã© toque Ãºnico ou se virÃ¡ um segundo toque
+        // Aguarda 280ms para confirmar se é toque único ou se virá um segundo toque
         if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current)
         singleTapTimerRef.current = setTimeout(() => {
           setShowHud((prev) => {
@@ -1903,9 +1820,9 @@ const StreamPlayer = ({
   }
 
   const audioLabels = {
-    dub: 'ð§ð· Dublado (PT-BR)',
+    dub: '🇧🇷 Dublado (PT-BR)',
     sub: 'Legendado (PT-BR)',
-    orig: 'ðºð¸ Original',
+    orig: '🇺🇸 Original',
   }
 
   const getMirrorLabel = (id: string) => {
@@ -1913,10 +1830,10 @@ const StreamPlayer = ({
     return mirror ? mirror.name : id
   }
 
-  // O iframe (provedor externo) sÃ³ entra em cena se o usuÃ¡rio pedir explicitamente.
+  // O iframe (provedor externo) só entra em cena se o usuário pedir explicitamente.
   const showIframe = allowIframe && !resolvingDirect
 
-  // Ativa/desativa o escudo anti-redirect conforme o iframe Ã© exibido
+  // Ativa/desativa o escudo anti-redirect conforme o iframe é exibido
   useEffect(() => {
     setAntiRedirectShieldActive(showIframe)
   }, [showIframe])
@@ -1942,7 +1859,7 @@ const StreamPlayer = ({
         const deltaY = Math.abs(touch.clientY - touchStartRef.current.y)
         const duration = Date.now() - touchStartRef.current.time
 
-        // Se foi um movimento de arrastar/swipe longo (> 25px ou > 500ms), nÃ£o trata como toque
+        // Se foi um movimento de arrastar/swipe longo (> 25px ou > 500ms), não trata como toque
         if (deltaX > 25 || deltaY > 25 || duration > 500) {
           return
         }
@@ -1989,7 +1906,7 @@ const StreamPlayer = ({
             </h1>
             {type !== 'movie' && season && episode && (
               <span className="text-yellow-400 text-xs font-bold">
-                Temporada {season} Â· EpisÃ³dio {episode}
+                Temporada {season} · Episódio {episode}
               </span>
             )}
           </div>
@@ -1997,7 +1914,7 @@ const StreamPlayer = ({
 
         <div className="flex items-center gap-2">
           <span className="bg-black/60 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white/90 backdrop-blur-md">
-            {audioOption === 'dub' ? 'ð§ð· Dublado' : 'ðºð¸ Legendado'}
+            {audioOption === 'dub' ? '🇧🇷 Dublado' : '🇺🇸 Legendado'}
           </span>
         </div>
       </div>
@@ -2009,7 +1926,7 @@ const StreamPlayer = ({
           </div>
         )}
 
-        {/* Feedback visual de Toque Duplo (Voltar 10s À Esquerda) */}
+        {/* Feedback visual de Toque Duplo (Voltar 10s à Esquerda) */}
         {doubleTapFeedback && doubleTapFeedback.direction === 'left' && (
           <div
             key={`dt-left-${doubleTapFeedback.key}`}
@@ -2028,7 +1945,7 @@ const StreamPlayer = ({
           </div>
         )}
 
-        {/* Feedback visual de Toque Duplo (Avançar 10s À Direita) */}
+        {/* Feedback visual de Toque Duplo (Avançar 10s à Direita) */}
         {doubleTapFeedback && doubleTapFeedback.direction === 'right' && (
           <div
             key={`dt-right-${doubleTapFeedback.key}`}
@@ -2041,13 +1958,13 @@ const StreamPlayer = ({
                 +{doubleTapFeedback.seconds}s
               </span>
               <span className="text-[10px] text-yellow-400/90 font-bold uppercase tracking-wider">
-                AvanÃ§ar
+                Avançar
               </span>
             </div>
           </div>
         )}
 
-        {/* BotÃ£o de RotaÃ§Ã£o RÃ¡pida para Celular (se segurando em pÃ©/retrato) */}
+        {/* Botão de Rotação Rápida para Celular (se segurando em pé/retrato) */}
         {!isTv && isMobileDevice() && isPortrait && (
           <button
             type="button"
@@ -2065,7 +1982,7 @@ const StreamPlayer = ({
           </button>
         )}
 
-        {/* BotÃ£o de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
+        {/* Botão de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
         {directSrc && !isTv && isMobileDevice() && (
           <div className="absolute top-[max(0.75rem,env(safe-area-inset-top,0px))] left-[max(0.75rem,env(safe-area-inset-left,0px))] z-40">
             <button
@@ -2121,13 +2038,13 @@ const StreamPlayer = ({
           </div>
         )}
 
-        {/* Gaveta de EpisÃ³dios In-Player (Estilo YuCine) */}
+        {/* Gaveta de Episódios In-Player (Estilo YuCine) */}
         {episodesDrawerOpen && seasons && onSelectEpisode && !isLocked && (
           <div className="absolute inset-y-0 right-0 w-full sm:w-96 bg-[#0e0e16]/95 backdrop-blur-md border-l border-white/10 z-40 flex flex-col p-4 shadow-2xl animate-in slide-in-from-right duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
               <div className="flex items-center gap-2">
                 <Layers className="h-4 w-4 text-accent-red" />
-                <span className="text-white font-bold text-sm">EpisÃ³dios</span>
+                <span className="text-white font-bold text-sm">Episódios</span>
               </div>
               <button
                 onClick={() => setEpisodesDrawerOpen(false)}
@@ -2150,24 +2067,24 @@ const StreamPlayer = ({
             </div>
           </div>
         )}
-        {/* Loading Overlay com botÃµes clicÃ¡veis por controle remoto na TV */}
+        {/* Loading Overlay com botões clicáveis por controle remoto na TV */}
         {!loaded && !error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-20 gap-3 p-4">
             <div className="w-12 h-12 border-4 border-white/10 border-t-yellow-400 rounded-full animate-spin" />
             <div className="text-center">
               <p className="text-white font-black text-lg">
                 {resolvingDirect
-                  ? 'Localizando transmissÃ£o direta dublada...'
+                  ? 'Localizando transmissão direta dublada...'
                   : candidates[candidateIndex]?.label
                   ? `Conectando: ${candidates[candidateIndex]?.label}`
                   : isAutoFallback
                   ? `Tentando ${getMirrorLabel(activeMirror)}...`
-                  : 'Carregando transmissÃ£o...'}
+                  : 'Carregando transmissão...'}
               </p>
               <p className="text-white/60 text-xs mt-1">{audioLabels[audioOption]}</p>
             </div>
 
-            {/* AÃ§Ãµes clicÃ¡veis com o controle remoto da TV */}
+            {/* Ações clicáveis com o controle remoto da TV */}
             <div className="flex flex-wrap items-center justify-center gap-3 mt-4 z-30">
               {candidates.length > 1 && (
                 <button
@@ -2176,7 +2093,7 @@ const StreamPlayer = ({
                   className="px-4 py-2 bg-yellow-400 text-black rounded-xl text-xs font-black hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 transition-all flex items-center gap-2 shadow-lg"
                 >
                   <Server className="w-4 h-4" />
-                  <span>Pular OpÃ§Ã£o ({candidateIndex + 1}/{candidates.length})</span>
+                  <span>Pular Opção ({candidateIndex + 1}/{candidates.length})</span>
                 </button>
               )}
               <button
@@ -2190,7 +2107,7 @@ const StreamPlayer = ({
           </div>
         )}
 
-        {/* Aviso quando iframe externo estÃ¡ ativo - permite forçar fontes diretas */}
+        {/* Aviso quando iframe externo está ativo - permite forçar fontes diretas */}
         {iframeExternalActive && loaded && !error && (
           <div className="absolute bottom-4 left-4 right-4 flex justify-center z-30">
             <button
@@ -2208,9 +2125,9 @@ const StreamPlayer = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-10 gap-4 p-6">
             <AlertCircle className="h-12 w-12 text-red-400" />
             <div className="text-center">
-              <p className="text-white font-bold text-lg">TransmissÃ£o indisponÃ­vel nesta opÃ§Ã£o</p>
+              <p className="text-white font-bold text-lg">Transmissão indisponível nesta opção</p>
               <p className="text-white/40 text-sm mt-1 max-w-md">
-                NÃ£o foi possÃ­vel conectar a este servidor no momento. VocÃª pode testar outra opÃ§Ã£o limpa ou alternar o áudio.
+                Não foi possível conectar a este servidor no momento. Você pode testar outra opção limpa ou alternar o áudio.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -2227,7 +2144,7 @@ const StreamPlayer = ({
                   className="flex items-center gap-2 bg-amber-500 text-black px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-400 transition-colors shadow-lg"
                 >
                   <Server className="h-4 w-4" />
-                  PrÃ³xima OpÃ§Ã£o ({candidateIndex + 1}/{candidates.length})
+                  Próxima Opção ({candidateIndex + 1}/{candidates.length})
                 </button>
               )}
               <button
@@ -2241,8 +2158,8 @@ const StreamPlayer = ({
         )}
 
         {/*
-          Escudo anti-popup/anti-redirect Ã© mantido pelo `initAntiRedirectShield()` global
-          e pela camada de seguranÃ§a do Capacitor/WebView, sem utilizar o atributo `sandbox`
+          Escudo anti-popup/anti-redirect é mantido pelo `initAntiRedirectShield()` global
+          e pela camada de segurança do Capacitor/WebView, sem utilizar o atributo `sandbox`
           que ativa detectores de anti-tamper (como "Please disable sandbox" no VidLink/VidSrc).
         */}
         {showIframe && (
@@ -2338,7 +2255,7 @@ const StreamPlayer = ({
               onClick={() => {
                 if (videoRef.current) videoRef.current.currentTime = 0
                 setResumeToast(null)
-                showFeedback('Reiniciado do inÃ­cio')
+                showFeedback('Reiniciado do início')
               }}
               className="ml-1.5 px-2 py-0.5 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold transition-colors"
             >
@@ -2353,7 +2270,7 @@ const StreamPlayer = ({
           </div>
         )}
 
-        {/* Barra Inferior HUD Integrada (Linha do Tempo + AÃ§Ãµes Estilo YuCine) */}
+        {/* Barra Inferior HUD Integrada (Linha do Tempo + Ações Estilo YuCine) */}
         <div
           className={`absolute bottom-0 inset-x-0 z-40 bg-gradient-to-t from-black/95 via-black/80 to-transparent pt-12 pb-6 px-4 sm:px-8 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] transition-opacity duration-300 ${
             showHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -2407,10 +2324,10 @@ const StreamPlayer = ({
             </div>
           )}
 
-          {/* Barra de AÃ§Ãµes Estilo YuCine (Otimizada para D-Pad / Controle Remoto da TV) */}
+          {/* Barra de Ações Estilo YuCine (Otimizada para D-Pad / Controle Remoto da TV) */}
           <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
             <div className="flex flex-wrap items-center gap-2">
-              {/* 1. Tela cheia (Apenas para celular/tablet; Oculto em Smart TV que jÃ¡ opera em tela cheia) */}
+              {/* 1. Tela cheia (Apenas para celular/tablet; Oculto em Smart TV que já opera em tela cheia) */}
               {!isTv && isMobileDevice() && (
                 <button
                   type="button"
@@ -2424,7 +2341,7 @@ const StreamPlayer = ({
                 </button>
               )}
 
-              {/* BotÃ£o de OrientaÃ§Ã£o / Girar Tela (exclusivo para celular) */}
+              {/* Botão de Orientação / Girar Tela (exclusivo para celular) */}
               {!isTv && isMobileDevice() && (
                 <button
                   type="button"
@@ -2432,14 +2349,14 @@ const StreamPlayer = ({
                   data-hud-btn="true"
                   onClick={handleToggleOrientation}
                   className="flex items-center justify-center gap-1.5 bg-[#171824]/90 hover:bg-[#232538] text-white px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 shadow-md"
-                  title="Alternar orientaÃ§Ã£o Paisagem/Retrato"
+                  title="Alternar orientação Paisagem/Retrato"
                 >
                   <RotateCw className="w-4 h-4 text-yellow-400" />
                   <span>Girar</span>
                 </button>
               )}
 
-              {/* 2. Ãudio 1-Click (Dublado / Legendado - Estilo YuCine) */}
+              {/* 2. Áudio 1-Click (Dublado / Legendado - Estilo YuCine) */}
               <button
                 type="button"
                 id="hud-btn-audio"
@@ -2447,13 +2364,13 @@ const StreamPlayer = ({
                 onClick={() => {
                   const nextOpt = audioOption === 'dub' ? 'orig' : 'dub'
                   switchAudio(nextOpt)
-                  showFeedback(nextOpt === 'dub' ? 'Ãudio: Dublado ð§ð·' : 'Ãudio: Legendado / Original ðºð¸')
+                  showFeedback(nextOpt === 'dub' ? 'Áudio: Dublado 🇧🇷' : 'Áudio: Legendado / Original 🇺🇸')
                 }}
                 className="flex items-center justify-center gap-1.5 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
                 title="Clique ou pressione A no controle para alternar áudio"
               >
                 <Volume2 className="w-4 h-4 text-yellow-400 group-focus:text-black" />
-                <span>{audioOption === 'dub' ? 'ð§ð· Dublado' : 'ðºð¸ Legendado'}</span>
+                <span>{audioOption === 'dub' ? '🇧🇷 Dublado' : '🇺🇸 Legendado'}</span>
               </button>
 
               {/* 3. Legendas 1-Click (Ativar / Desativar / Alternar no controle remoto) */}
@@ -2466,10 +2383,10 @@ const StreamPlayer = ({
                 title="Clique ou pressione S no controle para alternar legendas"
               >
                 <Captions className={`w-4 h-4 ${subLang !== 'off' ? 'text-yellow-400' : 'text-white/40'}`} />
-                <span>{subLang === 'off' ? 'ð« Sem Legenda' : subLang === 'pt' ? 'ð§ð· Legenda PT' : 'ðºð¸ Legenda EN'}</span>
+                <span>{subLang === 'off' ? '🚫 Sem Legenda' : subLang === 'pt' ? '🇧🇷 Legenda PT' : '🇺🇸 Legenda EN'}</span>
               </button>
 
-              {/* 4. Ajustes de ReproduÃ§Ã£o (Abre o modal) */}
+              {/* 4. Ajustes de Reprodução (Abre o modal) */}
               <button
                 type="button"
                 id="hud-btn-settings"
@@ -2480,26 +2397,26 @@ const StreamPlayer = ({
                     ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
                     : 'bg-[#171824]/90 hover:bg-[#232538] text-white border-white/10'
                 }`}
-                title="Ajustes completos de áudio, legendas, sincronizaÃ§Ã£o e estilos (Tecla C)"
+                title="Ajustes completos de áudio, legendas, sincronização e estilos (Tecla C)"
               >
                 <Sliders className="w-4 h-4 text-yellow-400" />
                 <span>Ajustes</span>
               </button>
 
-              {/* 3. ResoluÃ§Ã£o / OpÃ§Ã£o de Servidor */}
+              {/* 3. Resolução / Opção de Servidor */}
               <button
                 type="button"
                 id="hud-btn-server"
                 data-hud-btn="true"
                 onClick={handleCycleServerOption}
                 className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
-                title="Alternar servidor ou resoluÃ§Ã£o"
+                title="Alternar servidor ou resolução"
               >
                 <Server className="w-4 h-4 text-yellow-400" />
-                <span>{candidates.length > 0 && !allowIframe ? `OpÃ§Ã£o ${candidateIndex + 1}/${candidates.length}` : `Servidor ${fallbackAttempt + 1}`}</span>
+                <span>{candidates.length > 0 && !allowIframe ? `Opção ${candidateIndex + 1}/${candidates.length}` : `Servidor ${fallbackAttempt + 1}`}</span>
               </button>
 
-              {/* 4. EpisÃ³dios (Para SÃ©ries) */}
+              {/* 4. Episódios (Para Séries) */}
               {type !== 'movie' && seasons && seasons.length > 0 && onSelectEpisode && (
                 <button
                   type="button"
@@ -2511,10 +2428,10 @@ const StreamPlayer = ({
                       ? 'bg-yellow-400 text-black border-yellow-400'
                       : 'bg-[#171824]/90 hover:bg-[#232538] text-white border-white/10'
                   }`}
-                  title="Lista de EpisÃ³dios"
+                  title="Lista de Episódios"
                 >
                   <Layers className="w-4 h-4 text-yellow-400" />
-                  <span>EpisÃ³dios</span>
+                  <span>Episódios</span>
                 </button>
               )}
 
@@ -2557,7 +2474,7 @@ const StreamPlayer = ({
               )}
             </div>
 
-            {/* AÃ§Ãµes SecundÃ¡rias (Ajuste de Tela, Recarregar, PrÃ³ximo Ep) */}
+            {/* Ações Secundárias (Ajuste de Tela, Recarregar, Próximo Ep) */}
             <div className="flex items-center gap-2">
               {/* Ajustar / Preencher tela (Apenas para celular; Oculto em TV) */}
               {directSrc && !isTv && isMobileDevice() && (
@@ -2571,13 +2488,13 @@ const StreamPlayer = ({
                       ? 'bg-yellow-400 text-black font-extrabold'
                       : 'bg-[#171824]/90 hover:bg-[#232538] text-white/80 hover:text-white'
                   }`}
-                  title={fitMode === 'cover' ? 'Ajustar para proporÃ§Ã£o original' : 'Preencher tela inteira'}
+                  title={fitMode === 'cover' ? 'Ajustar para proporção original' : 'Preencher tela inteira'}
                 >
                   <Expand className="w-4 h-4" />
                 </button>
               )}
 
-              {/* Recarregar Stream (Apenas para celular; Na TV Ã© acessÃ­vel pelo menu Ajustes) */}
+              {/* Recarregar Stream (Apenas para celular; Na TV é acessível pelo menu Ajustes) */}
               {!isTv && isMobileDevice() && (
                 <button
                   type="button"
@@ -2591,7 +2508,7 @@ const StreamPlayer = ({
                 </button>
               )}
 
-              {/* PrÃ³ximo EpisÃ³dio */}
+              {/* Próximo Episódio */}
               {onNextEpisode && type !== 'movie' && (
                 <button
                   type="button"
@@ -2602,10 +2519,10 @@ const StreamPlayer = ({
                     onNextEpisode()
                   }}
                   className="flex items-center gap-1.5 px-3 py-2.5 bg-yellow-400 hover:bg-yellow-300 rounded-xl text-black font-bold text-xs transition-transform hover:scale-105 shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400"
-                  title="PrÃ³ximo EpisÃ³dio"
+                  title="Próximo Episódio"
                 >
                   <SkipForward className="h-4 w-4 fill-black" />
-                  <span>PrÃ³ximo</span>
+                  <span>Próximo</span>
                 </button>
               )}
             </div>
@@ -2614,7 +2531,7 @@ const StreamPlayer = ({
 
 
 
-      {/* Modal de ConfiguraÃ§Ãµes de ReproduÃ§Ã£o (Imagem 2) */}
+      {/* Modal de Configurações de Reprodução (Imagem 2) */}
       <PlaybackSettingsModal
         isOpen={settingsModalOpen}
         onClose={() => setSettingsModalOpen(false)}
