@@ -452,3 +452,8 @@ export const resolveMegaEmbedDubbedSource = async (
   season = 1,
   episode = 1
 ): Promise<string | null> => (await resolveMegaEmbed(tmdbId, mediaType, season, episode)).dubbedMp4
+
+// Limpa o cache de fontes resolvidas (útil para forçar nova busca após falha de iframe externo)
+export const clearResolvedSourcesCache = (): void => {
+  resolvedSourcesCache.clear()
+}

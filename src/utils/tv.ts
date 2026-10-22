@@ -213,41 +213,28 @@ export interface UpdateUrlPayload {
 }
 
 /**
- * Resolve estritamente a URL do APK de atualização separando Celular (CineBG-Mobile-release.apk)
- * e Smart TV / TV Box (CineBG-Tv-release.apk), impedindo que um baixe a versão do outro.
+ * Resolve a URL do APK de atualização.
+ *
+ * No Android nativo (Capacitor), o AppInstallerPlugin.java já detecta o
+ * package name realmente instalado (com.barrasoft.cinebg vs com.barrasoft.cinebg.tv)
+ * e escolhe o APK correto, evitando o erro "App não instalado" por mismatch
+ * de package name ou assinatura.
+ *
+ * Por isso, NÃO convertemos a URL baseado apenas no User-Agent aqui. Usamos
+ * a URL fornecida pelo update.json e deixamos o Java decidir qual sabor baixar.
  */
 export const getDeviceUpdateUrl = (data?: UpdateUrlPayload | string | null): string => {
   const flavor = getDeviceFlavor()
 
   if (typeof data === 'string' && data.trim().length > 0) {
-    const raw = data.trim()
-    if (flavor === 'mobile') {
-      return raw
-        .replace('CineBG-Tv-release.apk', 'CineBG-Mobile-release.apk')
-        .replace('-Tv-release.apk', '-Mobile-release.apk')
-        .replace('/CineBG-release.apk', '/CineBG-Mobile-release.apk')
-    }
-    return raw
-      .replace('CineBG-Mobile-release.apk', 'CineBG-Tv-release.apk')
-      .replace('-Mobile-release.apk', '-Tv-release.apk')
-      .replace('/CineBG-release.apk', '/CineBG-Tv-release.apk')
+    return data.trim()
   }
 
   if (data && typeof data === 'object') {
     if (flavor === 'mobile') {
-      const candidate =
-        data.downloadUrlMobile || data.mobileUrl || data.downloadUrl || DEFAULT_MOBILE_APK_URL
-      return candidate
-        .replace('CineBG-Tv-release.apk', 'CineBG-Mobile-release.apk')
-        .replace('-Tv-release.apk', '-Mobile-release.apk')
-        .replace('/CineBG-release.apk', '/CineBG-Mobile-release.apk')
+      return data.downloadUrlMobile || data.mobileUrl || data.downloadUrl || DEFAULT_MOBILE_APK_URL
     }
-    const candidate =
-      data.downloadUrlTv || data.tvUrl || data.downloadUrl || DEFAULT_TV_APK_URL
-    return candidate
-      .replace('CineBG-Mobile-release.apk', 'CineBG-Tv-release.apk')
-      .replace('-Mobile-release.apk', '-Tv-release.apk')
-      .replace('/CineBG-release.apk', '/CineBG-Tv-release.apk')
+    return data.downloadUrlTv || data.tvUrl || data.downloadUrl || DEFAULT_TV_APK_URL
   }
 
   return flavor === 'mobile' ? DEFAULT_MOBILE_APK_URL : DEFAULT_TV_APK_URL

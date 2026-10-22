@@ -648,6 +648,7 @@ const StreamPlayer = ({
           setKey((k) => k + 1)
           return nextAttempt
         }
+        // Todos os espelhos esgotados: mostra erro limpo sem botão de retry
         setError(true)
         return prev
       })
@@ -797,8 +798,8 @@ const StreamPlayer = ({
           setDirectSrc(firstCandidate.url)
           setDirectKind(firstCandidate.kind)
         } else {
-          // Nenhuma fonte direta disponível no MegaEmbed (ex: séries turcas raras)
-          console.info('[StreamPlayer] Nenhuma fonte direta disponível no MegaEmbed. Alternando para espelho legendado PT-BR...')
+          // Nenhuma fonte direta disponível no MegaEmbed. Vai direto para espelho legendado PT-BR.
+          console.info('[StreamPlayer] Nenhuma fonte direta disponível no MegaEmbed. Usando espelho legendado PT-BR...')
           setAudioOption('orig')
           setSubLang('pt')
           setSubtitleOption('pt')
@@ -819,7 +820,7 @@ const StreamPlayer = ({
       })
       .catch((err) => {
         if (cancelled) return
-        console.warn('[StreamPlayer] Erro ao carregar fontes diretas. Alternando para espelho legendado:', err)
+        console.warn('[StreamPlayer] Erro ao carregar fontes diretas:', err)
         setAudioOption('orig')
         setCandidates([])
         candidatesRef.current = []
