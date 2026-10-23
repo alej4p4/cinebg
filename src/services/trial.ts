@@ -122,8 +122,11 @@ export const logAuditEvent = (event: AuditEventType, metadata?: Record<string, u
   try {
     const logs = getAuditLogs()
     logs.push(entry)
-    if (logs.length > MAX_AUDIT_ENTRIES) logs.splice(0, logs.length - MAX_AUDIT_ENTRIES)
-    localStorage.setItem(AUDIT_LOG_KEY, JSON.stringify(logs))
+    // Limpeza baseada em tempo: manter apenas eventos dos últimos 30 dias
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000
+    const filtered = logs.filter((e) => e.timestamp > thirtyDaysAgo)
+    if (filtered.length > MAX_AUDIT_ENTRIES) filtered.splice(0, filtered.length - MAX_AUDIT_ENTRIES)
+    localStorage.setItem(AUDIT_LOG_KEY, JSON.stringify(filtered))
   } catch {}
 
   try {

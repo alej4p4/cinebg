@@ -191,7 +191,8 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
 function App() {
   useEpisodeNotifications()
   useOrientationFullscreen()
-  const { isLicensed, isTrial, loading } = useLicense()
+  const appVersion = import.meta.env.VITE_APP_VERSION || '1.2.76'
+const { isLicensed, isTrial, loading } = useLicense()
   const [appError, setAppError] = useState<string | null>(null)
 
   // Captura erros de inicialização para evitar tela preta em redes móveis
@@ -289,7 +290,7 @@ function App() {
       <AnimatePresence>
         {showSplash && (
           <SplashScreen
-            version={updateInfo.currentVersion}
+            version={updateInfo.currentVersion || appVersion}
             onComplete={handleSplashComplete}
           />
         )}

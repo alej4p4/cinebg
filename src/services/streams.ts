@@ -189,7 +189,7 @@ export interface MegaEmbedResolved {
 
 // Cache em memória de fontes resolvidas com limite LRU (50 entradas) e TTL de 15 minutos
 // (evita reutilizar tokens de CDN expirados caso o usuário pause/retorne depois)
-const MAX_RESOLVED_CACHE = 50
+const MAX_RESOLVED_CACHE = 200
 const RESOLVED_CACHE_TTL_MS = 15 * 60 * 1000
 const resolvedSourcesCache = new Map<string, { data: MegaEmbedResolved; timestamp: number }>()
 

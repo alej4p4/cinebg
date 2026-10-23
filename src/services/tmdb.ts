@@ -120,15 +120,25 @@ export const getProfileUrl = (path: string | null | undefined): string => {
 }
 
 // ===== Cache LRU em Memória RAM & Fila Assíncrona de Persistência Local (Zero Main-Thread Freeze) =====
-const MAX_MEMORY_CACHE_ENTRIES = 80
-const requestCache = new Map<string, { data: unknown; expiresAt: number }>()
+const MAX_MEMORY_CACHE_ENTRIES = 200
+const MAX_MEMORY_CACHE_TOTAL_SIZE_MB = 50
+const requestCache = new Map<string, { data: unknown; expiresAt: number; sizeBytes: number }>()
 const inflightMap = new Map<string, Promise<unknown>>()
 
 const STORAGE_PREFIX = 'cinebg_tmdb_v4_'
 const DEFAULT_CATALOG_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas para catálogos
 const DETAILS_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 dias para detalhes de filmes/séries
 
+const estimateSizeBytes = (data: unknown): number => {
+  try {
+    return new TextEncoder().encode(JSON.stringify(data)).length
+  } catch {
+    return 1024
+  }
+}
+
 const setMemoryCache = (key: string, entry: { data: unknown; expiresAt: number }) => {
+  const sizeBytes = estimateSizeBytes(entry.data)
   if (requestCache.has(key)) {
     requestCache.delete(key)
   } else if (requestCache.size >= MAX_MEMORY_CACHE_ENTRIES) {
@@ -137,13 +147,26 @@ const setMemoryCache = (key: string, entry: { data: unknown; expiresAt: number }
       requestCache.delete(oldestKey)
     }
   }
-  requestCache.set(key, entry)
+  requestCache.set(key, { ...entry, sizeBytes })
 }
 
 export const trimTmdbMemoryCache = (keepEntries = 20) => {
+  // Limite por quantidade de entradas
   while (requestCache.size > keepEntries) {
     const oldestKey = requestCache.keys().next().value
     if (oldestKey === undefined) break
+    requestCache.delete(oldestKey)
+  }
+  // Limite por tamanho total (50 MB)
+  let totalSize = 0
+  for (const entry of requestCache.values()) {
+    totalSize += entry.sizeBytes || 0
+  }
+  while (totalSize > MAX_MEMORY_CACHE_TOTAL_SIZE_MB * 1024 * 1024 && requestCache.size > 0) {
+    const oldestKey = requestCache.keys().next().value
+    if (oldestKey === undefined) break
+    const removed = requestCache.get(oldestKey)
+    totalSize -= removed?.sizeBytes || 0
     requestCache.delete(oldestKey)
   }
 }

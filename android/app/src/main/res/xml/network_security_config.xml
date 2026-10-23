@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">mgeb.site</domain>
+        <domain includeSubdomains="true">vidlink.pro</domain>
+        <domain includeSubdomains="true">github.com</domain>
+        <domain includeSubdomains="true">api.themoviedb.org</domain>
+        <domain includeSubdomains="true">image.tmdb.org</domain>
+    </domain-config>
+</network-security-config>

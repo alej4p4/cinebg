@@ -250,8 +250,11 @@ export const useLicense = () => {
     setLicense(null)
 
     // Verifica se há licença ativa no arquivo de licenças remotas
-    fetch(`/licenses.json?t=${Date.now()}`)
+    const licenseController = new AbortController()
+    const licenseTimeout = setTimeout(() => licenseController.abort(), 5000)
+    fetch(`/licenses.json?t=${Date.now()}`, { signal: licenseController.signal })
       .then((r) => r.json())
+      .finally(() => clearTimeout(licenseTimeout))
       .then((data: LicenseResponse) => {
         const active = data?.licenses ?? []
         const deviceId = getDeviceId()
