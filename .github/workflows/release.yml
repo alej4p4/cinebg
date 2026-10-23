@@ -52,9 +52,11 @@ jobs:
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "Decodificando keystore de produção a partir dos secrets..."
             echo "$KEYSTORE_BASE64" | base64 --decode > android/cinebg-release.jks
-          else
-            echo "KEYSTORE_BASE64 não configurado. Gerando keystore de release nova..."
+          elif [ ! -f android/cinebg-release.jks ]; then
+            echo "KEYSTORE_BASE64 não configurado e arquivo não existe. Gerando keystore de release nova..."
             keytool -genkey -v -keystore android/cinebg-release.jks -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -storepass "$STORE_PASS" -keypass "$KEY_PASS" -dname "CN=CineBG, OU=Mobile, O=BarraSoft, L=Default, S=Default, C=BR"
+          else
+            echo "Usando keystore de release existente no repositorio..."
           fi
 
           printf "storeFile=cinebg-release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n" "$STORE_PASS" "$ALIAS" "$KEY_PASS" > android/keystore.properties
