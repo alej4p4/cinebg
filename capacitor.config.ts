@@ -5,12 +5,13 @@ const config: CapacitorConfig = {
   appName: 'CineBG',
   webDir: 'dist',
   server: {
-    // NÃO definir server.url: isso faria o WebView Android tentar conectar
-    // a http://localhost dentro do dispositivo (que não existe) causando
-    // 'connection refused' e tela branca/preta.
+    // NÃO definir server.url nem androidScheme: 'http'.
+    // androidScheme: 'http' fazia o WebView Android tentar conectar a
+    // http://localhost dentro do dispositivo (porta 80 inexistente),
+    // causando 'connection refused' e tela preta.
     // Para assets locais (dist/) empacotados no APK, o Capacitor carrega
-    // automaticamente de android/app/src/main/assets/public/.
-    androidScheme: 'http',
+    // automaticamente via capacitor://localhost/ de
+    // android/app/src/main/assets/public/.
     cleartext: true,
     allowNavigation: ['localhost', 'cinebg://*'],
   },
@@ -28,7 +29,7 @@ const config: CapacitorConfig = {
       backgroundColor: '#0a0a0f',
     },
     SplashScreen: {
-      launchShowDuration: 0,
+      launchShowDuration: 2000,
       launchAutoHide: true,
       backgroundColor: '#08070d',
       androidSplashResourceName: 'splash',
