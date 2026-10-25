@@ -6,9 +6,10 @@
 
 ---
 
-## 🎯 Sprint Atual (v1.2.88 - IN PROGRESS)
+## 🎯 Sprint Atual (v1.2.89 - RELEASE)
 
 ### ✅ Done
+- [x] Release v1.2.89 gerada e publicada (Mobile + TV APKs) - Issue #262
 - [x] Integração do carrossel de desenhos clássicos em Series e conformidade total com ESLint (Issue #260)
 - [x] Otimização e resiliência total de reprodução de filmes, séries e TV ao vivo sem tela preta (Issue #258)
 - [x] Catálogo de desenhos antigos clássicos e 4 novos canais 24h na TV ao vivo (Issue #256)
