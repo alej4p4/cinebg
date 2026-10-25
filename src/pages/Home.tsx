@@ -22,6 +22,7 @@ import {
   getUpcomingMovies,
   getClassicMovies,
   getClassicShows,
+  getClassicCartoons,
   discoverMovies,
   discoverShows,
   getTurkishShows,
@@ -41,6 +42,7 @@ const Home = () => {
   const [upcoming, setUpcoming] = useState<MediaItem[]>(() => getCachedCatalogItems('/movie/upcoming', { page: 1 }, 'movie'))
   const [classicMovies, setClassicMovies] = useState<MediaItem[]>([])
   const [classicShows, setClassicShows] = useState<MediaItem[]>([])
+  const [classicCartoons, setClassicCartoons] = useState<MediaItem[]>([])
   const [popularShows, setPopularShows] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/popular', { page: 1 }, 'tv'))
   const [topShows, setTopShows] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/top_rated', { page: 1 }, 'tv'))
   const [airingNow, setAiringNow] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/airing_today', { page: 1 }, 'tv'))
@@ -131,13 +133,14 @@ const Home = () => {
             setActionMovies(actionM.items)
             setComedyMovies(comedyM.items)
 
-            const [cm, cs, anime, scifiM, actionS, comedyS] = await Promise.all([
+            const [cm, cs, anime, scifiM, actionS, comedyS, cartoons] = await Promise.all([
               getClassicMovies(),
               getClassicShows(),
               discoverShows({ isAnime: true }),
               discoverMovies({ genre: 878, sort: 'popularity.desc' }),
               discoverShows({ genre: 10759, sort: 'popularity.desc' }),
               discoverShows({ genre: 35, sort: 'popularity.desc' }),
+              getClassicCartoons(),
             ])
             if (!active) return
             setClassicMovies(cm.items)
@@ -146,6 +149,7 @@ const Home = () => {
             setScifiMovies(scifiM.items)
             setActionShows(actionS.items)
             setComedyShows(comedyS.items)
+            setClassicCartoons(cartoons.items)
           } catch {}
         }, 280)
       } catch (err) {
@@ -351,6 +355,9 @@ const Home = () => {
                     )}
                     {classicShows.length > 0 && (
                       <Carousel rowIndex={rowIdx++} title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classicShows} />
+                    )}
+                    {classicCartoons.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="✨ Desenhos Antigos & Nostalgia" emoji="📺" items={classicCartoons} />
                     )}
                     {actionShows.length > 0 && (
                       <Carousel rowIndex={rowIdx++} title="Ação e Aventura em Séries" emoji="⚔️" items={actionShows} />

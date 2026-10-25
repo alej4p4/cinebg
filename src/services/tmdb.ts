@@ -641,3 +641,39 @@ export const searchShows = async (query: string, page = 1): Promise<{ items: Med
   })
   return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
+
+
+export const getClassicCartoons = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
+    page,
+    with_genres: 16,
+    'first_air_date.lte': '2004-12-31',
+    with_original_language: 'en',
+    sort_by: 'popularity.desc',
+  })
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
+}
+
+export const getHannaBarberaAnd80sCartoons = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
+    page,
+    with_genres: 16,
+    'first_air_date.gte': '1960-01-01',
+    'first_air_date.lte': '1989-12-31',
+    with_original_language: 'en',
+    sort_by: 'popularity.desc',
+  })
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
+}
+
+export const getGolden90sCartoons = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
+    page,
+    with_genres: 16,
+    'first_air_date.gte': '1990-01-01',
+    'first_air_date.lte': '1999-12-31',
+    with_original_language: 'en',
+    sort_by: 'popularity.desc',
+  })
+  return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
+}

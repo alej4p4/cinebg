@@ -9,6 +9,7 @@
 ## 🎯 Sprint Atual (v1.2.88 - IN PROGRESS)
 
 ### ✅ Done
+- [x] Catálogo de desenhos antigos clássicos e 4 novos canais 24h na TV ao vivo (Issue #256)
 - [x] Auditoria de canais ao vivo e fallback instantâneo no LivePlayer (Issue #254)
 - [x] Fix definitivo tela preta ao abrir o APK no Android (Issue #250)
 - [x] Fix connection refused (removido androidScheme: 'http' do capacitor.config.ts) - Issue #249

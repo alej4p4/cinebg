@@ -14,6 +14,7 @@ import {
   getTopRatedShows,
   getAiringToday,
   getClassicShows,
+  getClassicCartoons,
   getTurkishShows,
   discoverShows,
   getCachedCatalogItems,
@@ -42,9 +43,11 @@ interface StreamingPlatform {
   networkId: number
   emoji: string
   isTurkish?: boolean
+  isCartoons?: boolean
 }
 
 const STREAMING_PLATFORMS: StreamingPlatform[] = [
+  { id: 'cartoons', name: 'Desenhos Antigos', providerId: 0, networkId: 0, emoji: '📺', isCartoons: true },
   { id: 'turkish', name: 'Novelas Turcas', providerId: 0, networkId: 0, emoji: '🇹🇷', isTurkish: true },
   { id: 'netflix', name: 'Netflix', providerId: 8, networkId: 213, emoji: '🔴' },
   { id: 'hbo', name: 'Max (HBO)', providerId: 384, networkId: 49, emoji: '🟣' },
@@ -58,6 +61,7 @@ const Series = () => {
   const [topRated, setTopRated] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/top_rated', { page: 1 }, 'tv'))
   const [airingToday, setAiringToday] = useState<MediaItem[]>(() => getCachedCatalogItems('/tv/airing_today', { page: 1 }, 'tv'))
   const [classics, setClassics] = useState<MediaItem[]>([])
+  const [classicCartoons, setClassicCartoons] = useState<MediaItem[]>([])
   const [turkish, setTurkish] = useState<MediaItem[]>([])
   const [filteredList, setFilteredList] = useState<MediaItem[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
@@ -74,12 +78,13 @@ const Series = () => {
     let isMounted = true
     const load = async () => {
       try {
-        const [popularResult, topResult, airingResult, classicsResult, turkishResult] = await Promise.all([
+        const [popularResult, topResult, airingResult, classicsResult, turkishResult, cartoonsResult] = await Promise.all([
           getPopularShows(),
           getTopRatedShows(),
           getAiringToday(),
           getClassicShows(),
           getTurkishShows(),
+          getClassicCartoons(),
         ])
         if (!isMounted) return
         setPopular(popularResult.items)
@@ -87,6 +92,7 @@ const Series = () => {
         setAiringToday(airingResult.items)
         setClassics(classicsResult.items)
         setTurkish(turkishResult.items)
+        setClassicCartoons(cartoonsResult.items)
       } catch {
         if (isMounted) {
           setPopular((current) => {
@@ -121,7 +127,10 @@ const Series = () => {
     setSelectedGenreId(null)
     setFilterLoading(true)
     try {
-      if (platform.isTurkish) {
+      if (platform.isCartoons) {
+        const res = await getClassicCartoons()
+        setFilteredList(res.items)
+      } else if (platform.isTurkish) {
         const res = await getTurkishShows()
         setFilteredList(res.items)
       } else {

@@ -122,7 +122,12 @@ const LiveTV = () => {
     const q = query.trim().toLowerCase()
     return channels.filter((c) => {
       if (category === 'favorites' && !favorites.has(c.id)) return false
-      if (category !== 'todos' && category !== 'favorites' && c.category !== category) return false
+      if (
+        category !== 'todos' &&
+        category !== 'favorites' &&
+        c.category !== category &&
+        !(category === 'infantil' && (c.genres.includes('Infantil') || c.genres.includes('Desenhos') || c.genres.includes('Kids') || c.genres.includes('Nostalgia')))
+      ) return false
       if (q !== '' && !c.name.toLowerCase().includes(q)) return false
       return true
     })

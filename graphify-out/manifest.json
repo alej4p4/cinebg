@@ -138,9 +138,9 @@
     "semantic_hash": "582012cd608852a3d274367c6f820cf3"
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1792935098.5553677,
-    "seen": 1792935251.566087,
-    "ast_hash": "e75d92a8ab20627f7f645cd0f7e96f25",
+    "mtime": 1792935296.63088,
+    "seen": 1792937114.187552,
+    "ast_hash": "b67881e0e012056136cce830790de507",
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
@@ -288,15 +288,15 @@
     "semantic_hash": "c426fb08d4a3f1b5f4112de832353661"
   },
   "src/pages/Home.tsx": {
-    "mtime": 1792509483.3012054,
-    "seen": 1792598140.1742964,
-    "ast_hash": "249f0217fa33751c6386a719e3e64b90",
-    "semantic_hash": "249f0217fa33751c6386a719e3e64b90"
+    "mtime": 1792936974.073088,
+    "seen": 1792937114.1877625,
+    "ast_hash": "00d4df71118e756ddc45603b9395fe31",
+    "semantic_hash": ""
   },
   "src/pages/LiveTV.tsx": {
-    "mtime": 1792932389.2912586,
-    "seen": 1792933406.3500493,
-    "ast_hash": "7b3b12a80660fd25ed1d8cc037b27086",
+    "mtime": 1792936974.0740888,
+    "seen": 1792937114.1877675,
+    "ast_hash": "bcf23c013d9003953936e833b02ab372",
     "semantic_hash": ""
   },
   "src/pages/Movies.tsx": {
@@ -324,10 +324,10 @@
     "semantic_hash": "6d75e47f55f0a0260efe46572f11e1a3"
   },
   "src/pages/Series.tsx": {
-    "mtime": 1792533939.1862135,
-    "seen": 1792598140.174317,
-    "ast_hash": "a48fb9c108656e8726ac4ca8db45b6fb",
-    "semantic_hash": "a48fb9c108656e8726ac4ca8db45b6fb"
+    "mtime": 1792937052.6519353,
+    "seen": 1792937114.1877956,
+    "ast_hash": "8c0965b58be3b633aa088d2b516e523d",
+    "semantic_hash": ""
   },
   "src/pages/Watch.tsx": {
     "mtime": 1792533939.1862135,
@@ -342,9 +342,9 @@
     "semantic_hash": "88596bd4dfe5fd1a858b122a6e632c98"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1792935145.7762084,
-    "seen": 1792935251.5662847,
-    "ast_hash": "8d753813ea60e2d4ab3c1cd6c3b28461",
+    "mtime": 1792936936.2766225,
+    "seen": 1792937114.187841,
+    "ast_hash": "c6a0ef58a6a0b07ebf35ab61a4bbaf87",
     "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
@@ -366,9 +366,9 @@
     "semantic_hash": ""
   },
   "src/services/tmdb.ts": {
-    "mtime": 1792777736.3050857,
-    "seen": 1792931668.2324452,
-    "ast_hash": "f750d4d4e68d27ef245a64ebf9660d48",
+    "mtime": 1792936936.2862017,
+    "seen": 1792937114.187888,
+    "ast_hash": "ea9fc0b9aded9145d09af881e2bcd2bd",
     "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
@@ -954,9 +954,9 @@
     "semantic_hash": ""
   },
   "TASKS.md": {
-    "mtime": 1792933582.306062,
-    "seen": 1792935251.5664601,
-    "ast_hash": "e5c1a609e6240d01368781030bee372a",
+    "mtime": 1792935296.6179004,
+    "seen": 1792937114.1881099,
+    "ast_hash": "b50f71341c2114559e8646a2e0a1a72c",
     "semantic_hash": ""
   },
   "docs/STREAMS_API.md": {
