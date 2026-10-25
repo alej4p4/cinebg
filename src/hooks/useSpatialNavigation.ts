@@ -19,9 +19,7 @@ let isInitialized = false
  */
 export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string) => {
   useEffect(() => {
-    if (isMobileDevice()) {
-      return
-    }
+    // Inicialização mandatória para registrar measureLayout em TODOS os dispositivos (inclusive Mobile)
     if (!isInitialized) {
       try {
         init({
@@ -42,6 +40,10 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
       } catch (err) {
         console.warn('Erro ao inicializar spatial navigation:', err)
       }
+    }
+
+    if (isMobileDevice()) {
+      return
     }
 
     const setInitialFocusIfUnfocused = (forceOnRouteChange = false) => {

@@ -2,9 +2,20 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import { initObservability } from '@/services/observability'
+import { init as initSpatialNav } from '@noriginmedia/norigin-spatial-navigation'
 import './index.css'
 
 initObservability()
+
+try {
+  initSpatialNav({
+    debug: false,
+    visualDebug: false,
+    shouldFocusDOMNode: true,
+  })
+} catch (e) {
+  console.warn('[CineBG] Falha ao inicializar SpatialNav no bootstrap:', e)
+}
 
 // Error handler global com proteção estrita contra loop de reload infinito
 if (typeof window !== 'undefined') {
