@@ -391,7 +391,7 @@ const LivePlayer = ({
 
     let cancelled = false
 
-    const CONNECT_TIMEOUT_MS = 4500 // 4.5 segundos de tolerância máxima por sinal
+    const CONNECT_TIMEOUT_MS = 8000 // 8 segundos de tolerância por sinal para redes móveis e TV Box
 
     // Timeout estrito de 4.5s para TV (NÃO reseta em FRAG_LOADING para evitar loop infinito)
     if (watchdogRef.current) clearTimeout(watchdogRef.current)
@@ -481,6 +481,33 @@ const LivePlayer = ({
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         selectPortugueseAudio()
         tryPlay()
+        if (watchdogRef.current && !loadedRef.current && !playingRef.current) {
+          clearTimeout(watchdogRef.current)
+          watchdogRef.current = setTimeout(() => {
+            if (cancelled || loadedRef.current || playingRef.current) return
+            const v = videoRef.current
+            if (v && !v.paused && v.currentTime > 0) {
+              markPlaying()
+              return
+            }
+            goNext()
+          }, CONNECT_TIMEOUT_MS)
+        }
+      })
+
+      hls.on(Hls.Events.FRAG_LOADING, () => {
+        if (watchdogRef.current && !loadedRef.current && !playingRef.current) {
+          clearTimeout(watchdogRef.current)
+          watchdogRef.current = setTimeout(() => {
+            if (cancelled || loadedRef.current || playingRef.current) return
+            const v = videoRef.current
+            if (v && !v.paused && v.currentTime > 0) {
+              markPlaying()
+              return
+            }
+            goNext()
+          }, CONNECT_TIMEOUT_MS)
+        }
       })
 
       hls.on(Hls.Events.FRAG_LOADED, () => {
@@ -743,6 +770,10 @@ const LivePlayer = ({
           }
         }}
         onError={() => {
+          if (hlsInstanceRef.current) {
+            console.warn('[LivePlayer] Ignorando onError nativo no video (gerenciado pelo Hls.js)')
+            return
+          }
           console.warn('[LivePlayer] Erro no vídeo nativo. Alternando sinal...')
           goNext()
         }}

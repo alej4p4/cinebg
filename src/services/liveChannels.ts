@@ -46,10 +46,10 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      'https://dai.google.com/linear/hls/event/1XSOdtQ0SH2G8OEmEfGgjQ/master.m3u8',
       'https://6836041ea1117.streamlock.net/cverde/cverde/playlist.m3u8',
       'https://video09.logicahost.com.br/sbtmutum/sbtmutum/playlist.m3u8',
       'https://video09.logicahost.com.br/sbtroo/sbtroo/playlist.m3u8',
-      'https://video09.logicahost.com.br/sbtcuiaba/sbtcuiaba/playlist.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
