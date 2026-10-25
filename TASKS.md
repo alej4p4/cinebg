@@ -9,6 +9,7 @@
 ## 🎯 Sprint Atual (v1.2.88 - IN PROGRESS)
 
 ### ✅ Done
+- [x] Auditoria de canais ao vivo e fallback instantâneo no LivePlayer (Issue #254)
 - [x] Fix definitivo tela preta ao abrir o APK no Android (Issue #250)
 - [x] Fix connection refused (removido androidScheme: 'http' do capacitor.config.ts) - Issue #249
 - [x] Fix tela preta em redes móveis (error handler global, ErrorState retry, SplashScreen watchdog) - Issue #246
