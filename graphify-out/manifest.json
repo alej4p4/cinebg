@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792941912.489327,
-    "seen": 1792941983.9084613,
-    "ast_hash": "9495536c7c70db103337137bf8849d2f",
+    "mtime": 1792951944.7837882,
+    "seen": 1792951991.3898056,
+    "ast_hash": "a60f031b910f000b99bec5786915f321",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792941716.0890486,
-    "seen": 1792941983.9084692,
+    "mtime": 1792951761.6388497,
+    "seen": 1792951991.389814,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": "4d2bbe5da73933ac326a41f41302842f"
   },
@@ -18,9 +18,9 @@
     "semantic_hash": "c777a4127ae7213f7da22c4105bdfeab"
   },
   "android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java": {
-    "mtime": 1792933582.3080592,
-    "seen": 1792935251.5659666,
-    "ast_hash": "eac648738cb755080dc5734723c9650f",
+    "mtime": 1792951944.7868626,
+    "seen": 1792951991.3898253,
+    "ast_hash": "4f1fd2ada35f7164ce0cbd622ebf2807",
     "semantic_hash": ""
   },
   "android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java": {
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792941716.087051,
-    "seen": 1792941983.908489,
+    "mtime": 1792951761.6378522,
+    "seen": 1792951991.3898323,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": "aa014fc13e426f53986cc2fec0130a09"
   },
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1792941912.4913213,
-    "seen": 1792941983.9085093,
-    "ast_hash": "a79939fb27ff0c76d760d85c5619ce71",
+    "mtime": 1792951944.7883692,
+    "seen": 1792951991.3898525,
+    "ast_hash": "9a0af19db9352bcdd256750eaa034555",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1792941912.492321,
-    "seen": 1792941983.9085178,
-    "ast_hash": "99ff1e852d7063fabc261502c3d27fe7",
+    "mtime": 1792951944.7883692,
+    "seen": 1792951991.389861,
+    "ast_hash": "8e3b1382d36e46524b28646c0702842e",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "src/main.tsx": {
-    "mtime": 1792941912.4933197,
-    "seen": 1792941983.908598,
-    "ast_hash": "f8c537df79fba072fdf3a9e2e01e243f",
+    "mtime": 1792951944.7893655,
+    "seen": 1792951991.3899422,
+    "ast_hash": "7a894d2a1a45923acfc44def86162983",
     "semantic_hash": ""
   },
   "src/pages/Anime.tsx": {
@@ -426,10 +426,10 @@
     "semantic_hash": "df562a73dce2f53f022bc93ee20099c2"
   },
   "vite.config.ts": {
-    "mtime": 1792515552.5055153,
-    "seen": 1792598140.1749756,
-    "ast_hash": "f59c96f3cc8ea9e248a3382e614f5659",
-    "semantic_hash": "f59c96f3cc8ea9e248a3382e614f5659"
+    "mtime": 1792951944.7893655,
+    "seen": 1792951991.3900318,
+    "ast_hash": "ab24d55d6db2d7f6e6c52dcfd8a042aa",
+    "semantic_hash": ""
   },
   ".github/ISSUE_TEMPLATE/bug_fix.md": {
     "mtime": 1791835167.3512557,
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1792941912.4903238,
-    "seen": 1792941983.90873,
-    "ast_hash": "86983030e706f1886536b1bd6f71ea6a",
+    "mtime": 1792951944.7878597,
+    "seen": 1792951991.390077,
+    "ast_hash": "dc9fa7842a91508aa9b52f07c905cc91",
     "semantic_hash": ""
   },
   "android/app/src/main/res/drawable-land-hdpi/splash.png": {
@@ -954,9 +954,9 @@
     "semantic_hash": ""
   },
   "TASKS.md": {
-    "mtime": 1792941912.4888158,
-    "seen": 1792941983.908724,
-    "ast_hash": "a8ff60f6e07c866d33e1eabc5e2237a8",
+    "mtime": 1792951944.7830088,
+    "seen": 1792951991.3900714,
+    "ast_hash": "361eefcc557e46a66918cd6bc85e50c6",
     "semantic_hash": ""
   },
   "docs/STREAMS_API.md": {
