@@ -1,14 +1,16 @@
 # CineBG - Task Backlog & Roadmap
 
-> **Versão**: v1.2.88  
+> **Versão**: v1.2.90  
 > **Última atualização**: 2026-10-25  
 > **Metodologia**: Kanban simples (Backlog → Doing → Done)
 
 ---
 
-## 🎯 Sprint Atual (v1.2.89 - RELEASE)
+## 🎯 Sprint Atual (v1.2.90 - RELEASE)
 
 ### ✅ Done
+- [x] Correção de onError espúrio no elemento de vídeo nativo no LivePlayer e stream Google DAI para SBT HD (Issue #264)
+- [x] Release v1.2.90 gerada e publicada (Mobile + TV APKs)
 - [x] Release v1.2.89 gerada e publicada (Mobile + TV APKs) - Issue #262
 - [x] Integração do carrossel de desenhos clássicos em Series e conformidade total com ESLint (Issue #260)
 - [x] Otimização e resiliência total de reprodução de filmes, séries e TV ao vivo sem tela preta (Issue #258)
