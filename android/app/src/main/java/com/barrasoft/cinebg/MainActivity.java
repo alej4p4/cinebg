@@ -147,49 +147,18 @@ public class MainActivity extends BridgeActivity {
      * para o novo app Mobile para nunca voltar à versão antiga.
      */
     private boolean redirectLegacyPackageIfNecessary() {
-        try {
-            boolean isTv = isRealTelevisionDevice(this);
-            String currentPkg = getPackageName();
-            PackageManager pm = getPackageManager();
-            if (pm == null) return false;
-
-            if (!isTv && "com.barrasoft.cinebg.tv".equals(currentPkg)) {
-                Intent mobileLaunch = pm.getLaunchIntentForPackage("com.barrasoft.cinebg");
-                if (mobileLaunch != null) {
-                    mobileLaunch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(mobileLaunch);
-                    finishAffinity();
-                    return true;
-                }
-            } else if (isTv && "com.barrasoft.cinebg".equals(currentPkg)) {
-                Intent tvLaunch = pm.getLaunchIntentForPackage("com.barrasoft.cinebg.tv");
-                if (tvLaunch != null) {
-                    tvLaunch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(tvLaunch);
-                    finishAffinity();
-                    return true;
-                }
-            }
-        } catch (Exception ignored) {}
         return false;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         resolvePersistentFirstInstallTime(this);
-        if (redirectLegacyPackageIfNecessary()) {
-            super.onCreate(savedInstanceState);
-            return;
-        }
-
-        applyDeviceOrientation();
         registerPlugin(AppInstallerPlugin.class);
         super.onCreate(savedInstanceState);
-        applyDeviceOrientation();
         setupImmersiveMode();
         setupTvFocus();
 
-        // Identifica formalmente o sabor (Mobile vs TV) e limpa cache obsoleto de WebView após atualização de APK
+        // Identifica formalmente o sabor (Mobile vs TV)
         if (getBridge() != null && getBridge().getWebView() != null) {
             WebView webView = getBridge().getWebView();
             try {
@@ -315,7 +284,6 @@ public class MainActivity extends BridgeActivity {
                 webView.setFocusable(true);
                 webView.setFocusableInTouchMode(true);
                 webView.requestFocus();
-                webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
                 if (webView.getSettings() != null) {
                     webView.getSettings().setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
                     webView.getSettings().setSupportMultipleWindows(false);
@@ -411,76 +379,6 @@ public class MainActivity extends BridgeActivity {
                             });
                         }
                     }, "CineBGNative");
-
-                    // Bloqueio de rede nativo de URLs de anúncios, redirecionamentos e sequestro de tela
-                    webView.setWebViewClient(new BridgeWebViewClient(getBridge()) {
-                        @Override
-                        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                            if (request != null && request.getUrl() != null) {
-                                String url = request.getUrl().toString();
-                                if (isAdUrl(url)) {
-                                    return new WebResourceResponse("text/plain", "UTF-8", new ByteArrayInputStream("".getBytes()));
-                                }
-                            }
-                            return super.shouldInterceptRequest(view, request);
-                        }
-
-                        @Override
-                        public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-                            if (url != null && isAdUrl(url)) {
-                                return new WebResourceResponse("text/plain", "UTF-8", new ByteArrayInputStream("".getBytes()));
-                            }
-                            return super.shouldInterceptRequest(view, url);
-                        }
-
-                        @Override
-                        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                            if (request != null && request.getUrl() != null) {
-                                String url = request.getUrl().toString();
-                                String scheme = request.getUrl().getScheme();
-
-                                // Bloqueia intents externos (Play Store, cassinos, etc.)
-                                if (url.startsWith("intent:") || url.startsWith("market:") || "market".equalsIgnoreCase(scheme)) {
-                                    return true;
-                                }
-
-                                // Se for tentativa de navegação no frame principal para fora do app local (anúncio tentando tomar a tela)
-                                if (request.isForMainFrame()) {
-                                    String host = request.getUrl().getHost();
-                                    if (host != null && !host.contains("localhost") && !host.contains("127.0.0.1") && !url.startsWith("capacitor:")) {
-                                        return true; // Bloqueia sequestro de tela pelo player/anúncio
-                                    }
-                                }
-
-                                if (url.contains("sandbox.php") || url.contains("bloqueio")) {
-                                    return true; // Bloqueia tentativa de redirecionar para tela de bloqueio de app
-                                }
-
-                                if (isAdUrl(url) || url.contains("bet") || url.contains("pop")) {
-                                    return true;
-                                }
-                            }
-                            return super.shouldOverrideUrlLoading(view, request);
-                        }
-
-                        @Override
-                        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                            if (url != null) {
-                                if (url.contains("sandbox.php") || url.contains("bloqueio")) {
-                                    return true;
-                                }
-                                if (url.startsWith("intent:") || url.startsWith("market:") || isAdUrl(url)) {
-                                    return true;
-                                }
-                            }
-                            return super.shouldOverrideUrlLoading(view, url);
-                        }
-
-                        @Override
-                        public void onPageFinished(WebView view, String url) {
-                            super.onPageFinished(view, url);
-                        }
-                    });
                 }
             }
         } catch (Exception ignored) {}

@@ -1,7 +1,7 @@
 # CineBG - Architectural Decisions Log
 
 > **Formato**: ADR (Architecture Decision Records)  
-> **Versão**: v1.2.87  
+> **Versão**: v1.2.88  
 > **Última atualização**: 2026-10-25
 
 ---
@@ -439,3 +439,31 @@ Usuários enfrentavam tela preta permanente logo ao abrir o APK no Android. Uma 
 - Fim definitivo da tela preta na inicialização do APK.
 - Carregamento instantâneo da interface sem loops de recarga.
 - Preservação total das regras de observabilidade e Motion Design.
+
+---
+
+## ADR-016: Eliminação do Bloqueio de Inicialização e Correção de Renderização no Android WebView
+
+**Status**: Accepted  
+**Data**: 2026-10-25  
+**Issue**: #252
+
+### Contexto
+Mesmo após a resolução do loop de reload, testes em smartphones Samsung (OneUI) apresentaram tela preta na inicialização. A investigação aprofundada revelou:
+1. **Falha do Compositor com LAYER_TYPE_HARDWARE**: A chamada programática `webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)` em dispositivos Samsung OneUI causa desacoplamento do buffer gráfico com a camada SurfaceView/TextureView, renderizando o WebView como uma superfície preta sólida (#000000). A aceleração gráfica do hardware já é tratada pelo Android nativo em nível de janela no `AndroidManifest.xml` (`android:hardwareAccelerated="true"`).
+2. **Redirecionamento Indevido de Pacote (`redirectLegacyPackageIfNecessary`)**: A lógica verificava se `com.barrasoft.cinebg` estava instalado no celular e, caso o usuário instalasse a build TV, chamava `startActivity` para o app antigo e finalizava o app atual com `finishAffinity()`.
+3. **Sobrescrita do `BridgeWebViewClient`**: A sobreposição do WebViewClient com métodos customizados de bloqueio de anúncios (`shouldInterceptRequest` e `shouldOverrideUrlLoading`) interferia no pipeline de resolução de assets internos do Capacitor (`WebViewLocalServer`).
+4. **Google Fonts Render-Blocking no `index.html`**: O arquivo `index.html` continha links `<link rel="stylesheet">` para servidores do Google Fonts sem carregamento assíncrono. Em conexões móveis (3G/4G/5G) com alta latência, o parser do navegador aguarda a folha de estilo externa, mantendo a tela em branco/preta.
+5. **Ausência de Fallback Inline no HTML**: O container `<div id="root"></div>` estava completamente vazio antes do bundle JavaScript hidratar o React.
+
+### Decisão
+1. **Remoção de `setLayerType(View.LAYER_TYPE_HARDWARE, null)`**: Permitir que o Android e o motor Chromium do WebView gerenciem a aceleração gráfica nativamente conforme configurado no manifesto.
+2. **Remoção definitiva de `redirectLegacyPackageIfNecessary()`**: O aplicativo inicializa diretamente sem tentar invocar pacotes externos ou finalizar o processo no `onCreate`.
+3. **Preservação integral do `BridgeWebViewClient` do Capacitor**: Eliminada a sobreposição de WebViewClient. O carregamento de assets via `WebViewLocalServer` opera sem qualquer interceptação que possa abortar requisições.
+4. **Google Fonts Não-Bloqueante**: Adicionado `media="print" onload="this.media='all'"` na folha de estilos externa e fontes do sistema como fallback imediato.
+5. **Boot Loader Inline no `index.html`**: Injetado splash loader nativo em CSS/HTML diretamente no elemento `<div id="root">`, garantindo que no exato instante em que o WebView carrega o HTML, a tela exiba o logo "CineBG" e indicador de carregamento com fundo escuro cinematográfico.
+
+### Consequências
+- Fim da renderização preta sólida no Android/Samsung.
+- Exibição visual instantânea desde o primeiro milissegundo de carregamento do WebView.
+- Total estabilidade em qualquer sabor e arquitetura de dispositivo.

@@ -1,12 +1,12 @@
 # CineBG - Task Backlog & Roadmap
 
-> **Versão**: v1.2.87  
+> **Versão**: v1.2.88  
 > **Última atualização**: 2026-10-25  
 > **Metodologia**: Kanban simples (Backlog → Doing → Done)
 
 ---
 
-## 🎯 Sprint Atual (v1.2.87 - IN PROGRESS)
+## 🎯 Sprint Atual (v1.2.88 - IN PROGRESS)
 
 ### ✅ Done
 - [x] Fix definitivo tela preta ao abrir o APK no Android (Issue #250)
