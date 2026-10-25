@@ -207,3 +207,10 @@ test('11. Persistência de Atualização OTA sem Loop, Bloqueio Estrito de 3 Dia
   assert.match(mainActivityJava, /clearCache\(true\)/, 'MainActivity.java deve limpar o cache do WebView automaticamente quando o versionCode subir')
   assert.match(mainActivityJava, /1xbt/, 'MainActivity.java deve bloquear domínios e vídeos 1xbt/1xbet no WebView')
 })
+
+test('12. Inicialização Resiliente do TMDB: Ausência de throw fatal no startup e fallback seguro de API Key', () => {
+  const tmdbContent = fs.readFileSync(path.join(ROOT, 'src/services/tmdb.ts'), 'utf8')
+  assert.ok(!tmdbContent.includes("throw new Error('VITE_TMDB_API_KEY"), 'tmdb.ts não deve lançar exceções fatais de VITE_TMDB_API_KEY no escopo global')
+  assert.match(tmdbContent, /DEFAULT_TMDB_KEY/, 'tmdb.ts deve fornecer DEFAULT_TMDB_KEY como fallback')
+  assert.match(tmdbContent, /import.meta.env.VITE_TMDB_API_KEY || DEFAULT_TMDB_KEY/, 'tmdb.ts deve utilizar fallback se a variável de ambiente for ausente')
+})

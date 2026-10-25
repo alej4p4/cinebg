@@ -29,6 +29,8 @@ jobs:
         run: npm run test:unit -- --experimental-vm-modules 2>&1 | tee test-output.txt
 
       - name: Build Production Bundle (TypeScript & Vite)
+        env:
+          VITE_TMDB_API_KEY: ${{ secrets.VITE_TMDB_API_KEY || '4e44d9029b1270a757cddc766a1bcb63' }}
         run: npm run build
 
       - name: Run E2E Tests (Playwright)
