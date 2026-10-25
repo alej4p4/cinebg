@@ -1,8 +1,8 @@
 # CineBG - Architectural Decisions Log
 
 > **Formato**: ADR (Architecture Decision Records)  
-> **Versão**: v1.2.86  
-> **Última atualização**: 2026-10-23
+> **Versão**: v1.2.87  
+> **Última atualização**: 2026-10-25
 
 ---
 
@@ -402,3 +402,40 @@ Remover botões de retry e lógica de refetch forçado. O player:
 - UX mais limpa, igual ao YuCine
 - Menos interação necessária do usuário
 - Erro final exibe `ErrorState` genérico sem opção de retry específico
+
+---
+
+## ADR-015: Correção Definitiva da Inicialização do APK e Eliminação do Loop de Tela Preta
+
+**Status**: Accepted  
+**Data**: 2026-10-25  
+**Issue**: #250
+
+### Contexto
+Usuários enfrentavam tela preta permanente logo ao abrir o APK no Android. Uma investigação profunda revelou cinco causas simultâneas:
+1. **Loop infinito de recarregamento em `src/main.tsx`**: A implementação de erro de rede capturava qualquer `Failed to load` ou `net::` (comuns em conexões 3G/4G, falhas transitórias de fontes, analytics ou TMDB) e chamava `window.location.reload()` a cada 1 segundo incondicionalmente, reiniciando o app antes do React sequer montar a UI.
+2. **Bloqueio de recursos por tráfego claro (`usesCleartextTraffic="false"`)**: O `AndroidManifest.xml` e `network_security_config.xml` bloqueavam requisições HTTP locais e a maioria dos fluxos HLS/m3u8 de canais de TV aberta e streams IPTV.
+3. **Invalidação prematura de cache no `MainActivity.java`**: A chamada incondicional a `webView.clearCache(true)` no método `onCreate` ocorria logo após `super.onCreate`, cancelando o carregamento dos assets locais do WebView (`capacitor://localhost`).
+4. **Sobrescrita do `BridgeWebChromeClient`**: Em `MainActivity.java`, `webView.setWebChromeClient(new WebChromeClient() { ... })` substituía a implementação nativa do Capacitor, quebrando callbacks de bridge, mensagens e controles do WebView.
+5. **Fallbacks visuais sem Skeletons em `App.tsx`**: Caso o splash nativo finalizasse enquanto a licença estivesse em verificação, era renderizado um spinner isolado em fundo escuro em desacordo com as diretrizes de Motion Design.
+
+### Decisão
+1. **Erro de carregamento estrito (`src/main.tsx`)**:
+   - Removido o recarregamento automático por qualquer `Failed to load` ou `net::`.
+   - Adicionada detecção estrita exclusivamente para `ChunkLoadError` com flag em `sessionStorage` (`chunk_reload_done`), garantindo no máximo 1 reload caso um bundle Vite esteja desatualizado após deploy.
+2. **Restauração de Cleartext seguro**:
+   - `android:usesCleartextTraffic="true"` no `AndroidManifest.xml`.
+   - `network_security_config.xml` configurado com `<base-config cleartextTrafficPermitted="true">` e inclusão explícita de `localhost` e `127.0.0.1`.
+3. **Preservação de Cache e Bridge Nativa (`MainActivity.java`)**:
+   - Removida a limpeza incondicional de cache no ciclo de abertura normal. A limpeza ocorre apenas de forma controlada quando `BuildConfig.VERSION_CODE` for diferente da versão anterior gravada em `SharedPreferences`.
+   - Removida a sobrescrita do `WebChromeClient`, preservando o `BridgeWebChromeClient` do Capacitor, mantendo a proteção de popups via `WebSettings.setSupportMultipleWindows(false)`.
+   - `shouldOverrideUrlLoading` repassa para `super.shouldOverrideUrlLoading(view, url)`.
+4. **Configuração de Navegação (`capacitor.config.ts`)**:
+   - Definidos `cleartext: true`, `allowNavigation: ['*']` e `SplashScreen.launchShowDuration: 0` para transição imediata ao splash animado do React.
+5. **Conformidade com Skeletons (`src/App.tsx`)**:
+   - Substituído o spinner isolado de carregamento de licença pelo componente `PageFallback`, contendo `ProgressBar` e `SkeletonCarousel` com animações shimmer suaves.
+
+### Consequências
+- Fim definitivo da tela preta na inicialização do APK.
+- Carregamento instantâneo da interface sem loops de recarga.
+- Preservação total das regras de observabilidade e Motion Design.

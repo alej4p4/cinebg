@@ -1,7 +1,7 @@
 # CineBG - Architecture Documentation
 
-> **Versão**: v1.2.86  
-> **Última atualização**: 2026-10-23
+> **Versão**: v1.2.87  
+> **Última atualização**: 2026-10-25
 
 ---
 
@@ -45,7 +45,7 @@ cinebg/
 │       ├── src/main/java/.../MainActivity.kt
 │       └── build.gradle
 ├── public/
-│   └── update.json          # OTA manifest (versão 1.2.73)
+│   └── update.json          # OTA manifest (versão 1.2.87)
 ├── tests/
 │   ├── unit/                # Testes unitários (Node.js --test)
 │   └── e2e/                 # Testes E2E (Playwright)

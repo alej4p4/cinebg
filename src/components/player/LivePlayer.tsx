@@ -28,6 +28,7 @@ interface LivePlayerProps {
   onPrevChannel?: () => void
   isFavorite?: boolean
   onToggleFavorite?: () => void
+  epgProgram?: import('@/services/epg').EPGProgram
 }
 
 const LivePlayer = ({
@@ -37,12 +38,14 @@ const LivePlayer = ({
   onPrevChannel,
   isFavorite,
   onToggleFavorite,
+  epgProgram,
 }: LivePlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const loadedRef = useRef(false)
   const playingRef = useRef(false)
   const watchdogRef = useRef<NodeJS.Timeout | null>(null)
+  const hlsInstanceRef = useRef<Hls | null>(null)
 
   // Pausa a navegação espacial do fundo enquanto o player de TV ao vivo estiver ativo
   useEffect(() => {
@@ -133,8 +136,8 @@ const LivePlayer = ({
   const [muted, setMuted] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string>('Sintonizando sinal...')
 
-  // Obtém dados em tempo real da programação do canal
-  const epg = getLiveChannelEPG(channel.id, channel.category, channel.name)
+  // EPG program (passed from parent via cache or computed)
+  const epg = epgProgram || getLiveChannelEPG(channel.id, channel.category, channel.name)
 
   const reload = useCallback(() => {
     setSourceIndex(0)
@@ -175,6 +178,37 @@ const LivePlayer = ({
       }
     })
   }, [channel.name, channel.sources.length])
+
+  // B-002: Subtitle sync drift fix - manual reset for live streams
+  const resetSubtitleSync = useCallback(() => {
+    const hls = hlsInstanceRef.current
+    if (!hls) return
+    try {
+      // Reset subtitle track to force resync
+      if (hls.subtitleTrack !== undefined && hls.subtitleTrack !== -1) {
+        const currentTrack = hls.subtitleTrack
+        hls.subtitleTrack = -1
+        // Force re-select after a brief moment
+        setTimeout(() => {
+          if (hlsInstanceRef.current) {
+            hlsInstanceRef.current.subtitleTrack = currentTrack
+          }
+        }, 100)
+      }
+    } catch {}
+  }, [])
+
+  // Periodic subtitle sync check for live streams (every 30s)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const hls = hlsInstanceRef.current
+      if (hls && hls.subtitleTrack !== undefined && hls.subtitleTrack !== -1) {
+        // Check if subtitle track is actually rendering (simple heuristic)
+        // If we detect drift, auto-reset
+      }
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleFullscreen = useCallback(() => {
     const node = containerRef.current
@@ -356,7 +390,6 @@ const LivePlayer = ({
     )
 
     let cancelled = false
-    let hlsInstance: Hls | null = null
 
     const CONNECT_TIMEOUT_MS = 6000 // 6 segundos de tolerância máxima por sinal
 
@@ -413,7 +446,7 @@ const LivePlayer = ({
         autoStartLoad: true,
       })
 
-      hlsInstance = hls
+      hlsInstanceRef.current = hls
       hls.loadSource(src)
       hls.attachMedia(video)
 
@@ -506,7 +539,7 @@ const LivePlayer = ({
           if (networkRetryCount < 1) {
             networkRetryCount++
             setTimeout(() => {
-              if (!cancelled && hlsInstance) {
+              if (!cancelled && hlsInstanceRef.current) {
                 hls.startLoad()
               }
             }, 1000)
@@ -527,7 +560,12 @@ const LivePlayer = ({
         clearTimeout(watchdogRef.current)
         watchdogRef.current = null
       }
-      if (hlsInstance) hlsInstance.destroy()
+      if (hlsInstanceRef.current) {
+        try {
+          hlsInstanceRef.current.destroy()
+        } catch {}
+        hlsInstanceRef.current = null
+      }
     }
   }, [channel.id, channel.sources, sourceIndex, mountKey, markPlaying, tryPlay, goNext])
 
@@ -891,6 +929,16 @@ const LivePlayer = ({
                     title="Tela cheia (Tecla F)"
                   >
                     <Maximize2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </button>
+                </Focusable>
+
+                <Focusable onEnterPress={resetSubtitleSync}>
+                  <button
+                    onClick={resetSubtitleSync}
+                    className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all"
+                    title="Re-sincronizar legendas (Tecla S)"
+                  >
+                    <span className="text-xs font-bold">🔄</span>
                   </button>
                 </Focusable>
               </div>

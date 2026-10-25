@@ -28,6 +28,8 @@ import { useLicense } from '@/hooks/useLicense'
 import { useAppStore } from '@/store/useAppStore'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
 import { markBackHandled } from '@/utils/tv'
+import { startEPGBackgroundSync, getEPGProgramCached } from '@/services/epgCache'
+import { type EPGProgram } from '@/services/epg'
 
 const LiveTV = () => {
   const navigate = useNavigate()
@@ -75,6 +77,38 @@ const LiveTV = () => {
   }, [lastChannelId, selected])
 
   const lastSelectedChannelIdRef = useRef<string | null>(null)
+
+  // EPG Program cache state
+  const [epgProgram, setEpgProgram] = useState<EPGProgram | undefined>(undefined)
+  const epgLoadingRef = useRef<Set<string>>(new Set())
+
+  // Initialize EPG background sync when channels load
+  useEffect(() => {
+    if (channels.length > 0) {
+      const cleanup = startEPGBackgroundSync(channels)
+      return cleanup
+    }
+  }, [channels])
+
+  // Update EPG program for selected channel (cached first, then live)
+  useEffect(() => {
+    if (!selected) {
+      setEpgProgram(undefined)
+      return
+    }
+
+    const channelId = selected.id
+    if (epgLoadingRef.current.has(channelId)) return
+    epgLoadingRef.current.add(channelId)
+
+    // 1. Instant cache hit
+    getEPGProgramCached(selected).then((program) => {
+      setEpgProgram(program)
+      epgLoadingRef.current.delete(channelId)
+    }).catch(() => {
+      epgLoadingRef.current.delete(channelId)
+    })
+  }, [selected])
 
   useEffect(() => {
     if (selected) {
@@ -280,6 +314,7 @@ const LiveTV = () => {
               onToggleFavorite={() =>
                 setFavorites(toggleLiveFavorite(favorites, selected.id))
               }
+              epgProgram={epgProgram}
             />
           )}
 

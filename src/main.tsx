@@ -6,36 +6,44 @@ import './index.css'
 
 initObservability()
 
-// Error handler global: captura erros não tratados na inicialização
-// e evita que o app fique em tela preta em redes móveis/lentas
+// Error handler global com proteção estrita contra loop de reload infinito
 if (typeof window !== 'undefined') {
+  const CHUNK_RELOAD_KEY = 'cinebg_chunk_reload_count'
+
   window.addEventListener('error', (event) => {
-    console.error('[CineBG] Erro não tratado:', event.error || event.message)
-    // Tenta recarregar a página se o erro for crítico de carregamento
-    if (
-      event.message &&
-      (event.message.includes('Failed to load') ||
-        event.message.includes('net::') ||
-        event.message.includes('ChunkLoadError'))
-    ) {
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
+    console.error('[CineBG] Erro capturado:', event.error || event.message)
+    const msg = event.message || ''
+    const isChunkError =
+      msg.includes('ChunkLoadError') ||
+      msg.includes('Loading chunk') ||
+      (event.error && (event.error.name === 'ChunkLoadError' || event.error.message?.includes('ChunkLoadError')))
+
+    if (isChunkError) {
+      try {
+        const count = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || '0')
+        if (count < 1) {
+          sessionStorage.setItem(CHUNK_RELOAD_KEY, String(count + 1))
+          console.warn('[CineBG] ChunkLoadError detectado. Recarregando uma única vez...')
+          window.location.reload()
+        }
+      } catch {}
     }
   })
 
   window.addEventListener('unhandledrejection', (event) => {
-    console.error('[CineBG] Promise rejeitada não tratada:', event.reason)
-    if (
-      event.reason &&
-      (typeof event.reason === 'string'
-        ? event.reason.includes('Failed to load') || event.reason.includes('net::')
-        : event.reason?.message?.includes('Failed to load') ||
-          event.reason?.message?.includes('net::'))
-    ) {
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
+    console.warn('[CineBG] Promise rejeitada tratada:', event.reason)
+    const reasonStr = typeof event.reason === 'string' ? event.reason : event.reason?.message || ''
+    const isChunkError = reasonStr.includes('ChunkLoadError') || reasonStr.includes('Loading chunk')
+
+    if (isChunkError) {
+      try {
+        const count = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || '0')
+        if (count < 1) {
+          sessionStorage.setItem(CHUNK_RELOAD_KEY, String(count + 1))
+          console.warn('[CineBG] Rejeição de ChunkLoadError detectada. Recarregando uma única vez...')
+          window.location.reload()
+        }
+      } catch {}
     }
   })
 }
