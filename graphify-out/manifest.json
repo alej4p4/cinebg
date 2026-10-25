@@ -1,7 +1,7 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792933221.3939087,
-    "seen": 1792933406.349899,
+    "mtime": 1792933582.3070602,
+    "seen": 1792935251.5659325,
     "ast_hash": "2ca62872c953bb63d3d66020d0f403c4",
     "semantic_hash": ""
   },
@@ -18,9 +18,9 @@
     "semantic_hash": "c777a4127ae7213f7da22c4105bdfeab"
   },
   "android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java": {
-    "mtime": 1792933290.023751,
-    "seen": 1792933406.3499186,
-    "ast_hash": "7d2c8998c8bd0fdaba434662177cb069",
+    "mtime": 1792933582.3080592,
+    "seen": 1792935251.5659666,
+    "ast_hash": "eac648738cb755080dc5734723c9650f",
     "semantic_hash": ""
   },
   "android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java": {
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1792933221.384403,
-    "seen": 1792933406.349947,
-    "ast_hash": "7c08b90d9004e25e643c67c5370bfbca",
+    "mtime": 1792933582.362876,
+    "seen": 1792935251.5660217,
+    "ast_hash": "0e81e81a4e6d6cdd63022e1634f8a3b2",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1792933290.0227535,
-    "seen": 1792933406.3499556,
-    "ast_hash": "fc84d23c156bb6bca93b2a7da5592cdb",
+    "mtime": 1792933582.3638804,
+    "seen": 1792935251.5660388,
+    "ast_hash": "6648f0b09fb91e7d3213a4e7d40fb0e2",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -138,9 +138,9 @@
     "semantic_hash": "582012cd608852a3d274367c6f820cf3"
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1792932389.283593,
-    "seen": 1792933406.3499792,
-    "ast_hash": "c86a1ae67c1b9fc95f5f84f1d7b6f92b",
+    "mtime": 1792935098.5553677,
+    "seen": 1792935251.566087,
+    "ast_hash": "e75d92a8ab20627f7f645cd0f7e96f25",
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
@@ -342,10 +342,10 @@
     "semantic_hash": "88596bd4dfe5fd1a858b122a6e632c98"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1792509483.535729,
-    "seen": 1792598140.1743348,
-    "ast_hash": "92566f5d2ecfbde1338f75b464006541",
-    "semantic_hash": "92566f5d2ecfbde1338f75b464006541"
+    "mtime": 1792935145.7762084,
+    "seen": 1792935251.5662847,
+    "ast_hash": "8d753813ea60e2d4ab3c1cd6c3b28461",
+    "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
     "mtime": 1792509483.6054258,
@@ -396,8 +396,8 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1792933221.395907,
-    "seen": 1792933406.3501034,
+    "mtime": 1792933582.3648796,
+    "seen": 1792935251.566346,
     "ast_hash": "cf1960755c6926b6154e43a0c6a80bef",
     "semantic_hash": ""
   },
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1792933111.7777336,
-    "seen": 1792933406.3501754,
-    "ast_hash": "641d5aabeb06c57711341e7fcf640423",
+    "mtime": 1792933582.362876,
+    "seen": 1792935251.5664723,
+    "ast_hash": "bea8fd556c6b1fd4a8ad11f111d3ddc9",
     "semantic_hash": ""
   },
   "android/app/src/main/res/drawable-land-hdpi/splash.png": {
@@ -930,8 +930,8 @@
     "semantic_hash": ""
   },
   "ARCHITECTURE.md": {
-    "mtime": 1792933247.6685781,
-    "seen": 1792933406.350145,
+    "mtime": 1792933582.3040621,
+    "seen": 1792935251.5664315,
     "ast_hash": "750ba20181ab23a612e5ee7e23e47b44",
     "semantic_hash": ""
   },
@@ -942,20 +942,20 @@
     "semantic_hash": ""
   },
   "DECISIONS.md": {
-    "mtime": 1792933247.6309907,
-    "seen": 1792933406.3501532,
-    "ast_hash": "c5e3c3317853ff92578f6bc1227d9659",
+    "mtime": 1792933582.305061,
+    "seen": 1792935251.5664485,
+    "ast_hash": "2f26f458d191f67be94cb5d5027dc563",
     "semantic_hash": ""
   },
   "PROJECT_STATUS.md": {
-    "mtime": 1792933247.6515071,
-    "seen": 1792933406.3501573,
-    "ast_hash": "5b4fa3f670a33b9ffbf6126a96899a70",
+    "mtime": 1792933582.306062,
+    "seen": 1792935251.5664523,
+    "ast_hash": "965d39529cc3bc1543191262c7e1658c",
     "semantic_hash": ""
   },
   "TASKS.md": {
-    "mtime": 1792933247.653931,
-    "seen": 1792933406.3501632,
+    "mtime": 1792933582.306062,
+    "seen": 1792935251.5664601,
     "ast_hash": "e5c1a609e6240d01368781030bee372a",
     "semantic_hash": ""
   },

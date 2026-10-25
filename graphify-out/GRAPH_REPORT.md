@@ -1,7 +1,7 @@
 # Graph Report - cinebg  (2026-10-25)
 
 ## Corpus Check
-- 117 files · ~426,047 words
+- 117 files · ~426,134 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 23 file(s) not represented in the graph (top: .xml 10, (none) 3, .properties 3)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `aaeefef5`
+- Built from commit: `85d98048`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -333,16 +333,16 @@ Nodes (4): ADR-015: Correção Definitiva da Inicialização do APK e Eliminaç�
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `ADR-015: Correção Definitiva da Inicialização do APK e Eliminação do Loop de Tela Preta` connect `ADR-015: Correção Definitiva da Inicialização do APK e Eliminação do Loop de Tela Preta` to `CineBG - Architectural Decisions Log`?**
-  _High betweenness centrality (0.119) - this node is a cross-community bridge._
+  _High betweenness centrality (0.121) - this node is a cross-community bridge._
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _15 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `tmdb.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.10649350649350649 - nodes in this community are weakly interconnected._
 - **Why does `Decisão` connect `ADR-015: Correção Definitiva da Inicialização do APK e Eliminação do Loop de Tela Preta` to `SkeletonCard.tsx`, `App.tsx`, `Search.tsx`?**
-  _High betweenness centrality (0.117) - this node is a cross-community bridge._
+  _High betweenness centrality (0.118) - this node is a cross-community bridge._
 - **Should `App.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.07003129890453834 - nodes in this community are weakly interconnected._
 - **Why does `Contexto` connect `ADR-015: Correção Definitiva da Inicialização do APK e Eliminação do Loop de Tela Preta` to `MainActivity`?**
-  _High betweenness centrality (0.088) - this node is a cross-community bridge._
+  _High betweenness centrality (0.089) - this node is a cross-community bridge._
 - **Should `useLicense.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.10077519379844961 - nodes in this community are weakly interconnected._

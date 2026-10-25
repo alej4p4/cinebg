@@ -391,9 +391,9 @@ const LivePlayer = ({
 
     let cancelled = false
 
-    const CONNECT_TIMEOUT_MS = 6000 // 6 segundos de tolerância máxima por sinal
+    const CONNECT_TIMEOUT_MS = 4500 // 4.5 segundos de tolerância máxima por sinal
 
-    // Timeout estrito de 6s para TV (NÃO reseta em FRAG_LOADING para evitar loop infinito)
+    // Timeout estrito de 4.5s para TV (NÃO reseta em FRAG_LOADING para evitar loop infinito)
     if (watchdogRef.current) clearTimeout(watchdogRef.current)
     watchdogRef.current = setTimeout(() => {
       if (cancelled) return
@@ -410,6 +410,11 @@ const LivePlayer = ({
       if (cancelled || !video) return
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         try {
+          const onNativeError = () => {
+            video.removeEventListener('error', onNativeError)
+            goNext()
+          }
+          video.addEventListener('error', onNativeError, { once: true })
           video.src = src
           video.load()
           video.play().then(markPlaying).catch(() => {
@@ -495,7 +500,24 @@ const LivePlayer = ({
 
       hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
         if (cancelled) return
-        const payload = data as { fatal?: boolean; type?: string; details?: string }
+        const payload = data as {
+          fatal?: boolean
+          type?: string
+          details?: string
+          response?: { code?: number }
+        }
+
+        // Se a resposta HTTP for erro definitivo (401/403 Proibido, 404 Não Encontrado, 410, 5xx),
+        // alternar imediatamente para o próximo sinal sem atraso ou retentativas inúteis.
+        const httpStatus = payload.response?.code
+        if (httpStatus && [401, 403, 404, 410, 500, 502, 503].includes(httpStatus)) {
+          console.warn(`[LivePlayer] Erro HTTP ${httpStatus} no Sinal ${sourceIndex + 1}. Alternando imediatamente...`)
+          try {
+            hls.destroy()
+          } catch {}
+          goNext()
+          return
+        }
 
         // Se houver um stall transitório no buffer, recarrega e avança o frame travado
         if (!payload.fatal) {
