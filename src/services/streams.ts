@@ -216,10 +216,19 @@ const setResolvedCache = (key: string, value: MegaEmbedResolved) => {
 }
 
 // Normaliza URLs de CDN para HTTPS e remove portas obsoletas (:80)
+// Normaliza URLs de CDN para HTTPS e remove portas obsoletas (:80)
+// Preserva HTTP para endereços de IP numérico (que não possuem certificado SSL na porta 443)
 export const formatDirectStreamUrl = (url: string | null): string | null => {
   if (!url) return null
   let clean = url.trim()
-  if (clean.startsWith('http://') && !clean.includes('localhost') && !clean.includes('127.0.0.1')) {
+  try {
+    const u = new URL(clean)
+    const isIpHost = /^\d+\.\d+\.\d+\.\d+$/.test(u.hostname)
+    if (isIpHost || u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+      return clean
+    }
+  } catch {}
+  if (clean.startsWith('http://')) {
     clean = clean.replace('http://', 'https://').replace(':80/', '/')
   }
   return clean

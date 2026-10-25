@@ -682,6 +682,39 @@ const StreamPlayer = ({
     initAntiRedirectShield()
   }, [])
 
+  
+  // Anti-freeze watchdog para TV / conexões oscilantes: recupera playback caso o buffer trave no mesmo segundo
+  const lastPlaybackTimeRef = useRef(0)
+  const freezeCountRef = useRef(0)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const video = videoRef.current
+      if (!video || video.paused || video.ended || !loadedRef.current) return
+
+      if (Math.abs(video.currentTime - lastPlaybackTimeRef.current) < 0.05) {
+        freezeCountRef.current++
+        if (freezeCountRef.current >= 3) {
+          // Travado por mais de 5s no mesmo frame
+          freezeCountRef.current = 0
+          try {
+            if (video.buffered.length > 0) {
+              const bufEnd = video.buffered.end(video.buffered.length - 1)
+              if (video.currentTime < bufEnd - 0.5) {
+                video.currentTime = Math.min(bufEnd - 0.5, video.currentTime + 0.3)
+              }
+            }
+            video.play().catch(() => {})
+          } catch {}
+        }
+      } else {
+        lastPlaybackTimeRef.current = video.currentTime
+        freezeCountRef.current = 0
+      }
+    }, 1800)
+
+    return () => clearInterval(interval)
+  }, [])
+
   const handleStall = () => {
     if (loadedRef.current) return
     if (stallTimerRef.current) clearTimeout(stallTimerRef.current)
@@ -690,7 +723,7 @@ const StreamPlayer = ({
         console.warn('[StreamPlayer] Vídeo estagnado na rede (7s). Avançando para próxima opção...')
         handleDirectMediaError()
       }
-    }, 7000)
+    }, 5000)
   }
 
   useEffect(() => {
@@ -713,12 +746,12 @@ const StreamPlayer = ({
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout ágil para conexões residenciais e TV Boxes: 8s para buffer inicial antes de pular para a próxima opção
+    // Timeout ágil para conexões residenciais e TV Boxes: 5s para buffer inicial antes de pular para a próxima opção
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
-      console.warn(`[StreamPlayer] Timeout de carregamento (8s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
+      console.warn(`[StreamPlayer] Timeout de carregamento (5s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
       handleDirectMediaError()
-    }, 8000)
+    }, 5000)
 
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
@@ -946,6 +979,18 @@ const StreamPlayer = ({
       })
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (cancelled) return
+
+        // Intercepta erros HTTP definitivos imediatamente para não prender o usuário em tela preta
+        const httpStatus = (data as { response?: { code?: number } }).response?.code
+        if (httpStatus && [401, 403, 404, 410, 500, 502, 503].includes(httpStatus)) {
+          console.warn(`[StreamPlayer] Erro HTTP ${httpStatus} na fonte direta. Alternando imediatamente para próxima opção...`)
+          try {
+            hls.destroy()
+          } catch {}
+          handleDirectMediaError()
+          return
+        }
+
         if (data.fatal) {
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR && networkRetries < 1) {
             networkRetries += 1
