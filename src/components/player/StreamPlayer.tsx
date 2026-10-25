@@ -2165,6 +2165,7 @@ const StreamPlayer = ({
           <video
             key={`direct-${key}-${tmdbId}-${season}-${episode}-${directKind}`}
             ref={videoRef}
+            poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
             {...(directKind === 'mp4' ? { src: directSrc } : {})}
             title={title}
             autoPlay

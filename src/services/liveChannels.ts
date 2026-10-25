@@ -817,6 +817,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'https://stmv1.video.brstream.com.br/retrotv/retrotv/chunklist_w1069200121.m3u8',
+      'https://jmp2.uk/plu-655e5c4d2c46f3000877a54b.m3u8',
     ],
     quality: '720p',
     geoBlocked: false,
@@ -831,6 +832,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'https://jmp2.uk/plu-655e5c4d2c46f3000877a54b.m3u8',
+      'https://stmv1.video.brstream.com.br/retrotv/retrotv/chunklist_w1069200121.m3u8',
     ],
     quality: '720p',
     geoBlocked: false,

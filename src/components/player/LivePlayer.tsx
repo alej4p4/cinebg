@@ -433,12 +433,13 @@ const LivePlayer = ({
         enableWorker: false, // Desativa worker para evitar engasgos em Android TV / WebViews
         liveDurationInfinity: true,
         lowLatencyMode: false,
-        backBufferLength: 20,
-        maxBufferLength: 25,
-        maxMaxBufferLength: 50,
-        maxBufferSize: 30 * 1000 * 1000,
-        liveSyncDurationCount: 4,
-        liveMaxLatencyDurationCount: 12,
+        backBufferLength: 15,
+        maxBufferLength: 10,
+        maxMaxBufferLength: 20,
+        maxBufferSize: 15 * 1000 * 1000,
+        liveSyncDurationCount: 2, // Inicia imediatamente com 2 fragmentos (reduz latência de início pela metade)
+        liveMaxLatencyDurationCount: 8,
+        startFragPrefetch: true, // Pré-carrega próximo fragmento para aceleração
         manifestLoadingTimeOut: 8000,
         manifestLoadingMaxRetry: 2,
         levelLoadingTimeOut: 8000,
@@ -512,17 +513,14 @@ const LivePlayer = ({
 
       hls.on(Hls.Events.FRAG_LOADED, () => {
         tryPlay()
-        markPlaying()
       })
 
       hls.on(Hls.Events.FRAG_PARSED, () => {
         tryPlay()
-        markPlaying()
       })
 
       hls.on(Hls.Events.FRAG_BUFFERED, () => {
         tryPlay()
-        markPlaying()
       })
 
       hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
@@ -627,8 +625,14 @@ const LivePlayer = ({
       onClick={resetOsdTimer}
     >
       {/* Loading state com ações navegáveis por controle remoto na TV */}
-      {!loaded && !error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-20 gap-3 p-4">
+      <AnimatePresence>
+        {!loaded && !error && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20 gap-3 p-4"
+          >
           <div className="w-14 h-14 border-4 border-white/10 border-t-amber-400 rounded-full animate-spin" />
           {channel.logo && (
             <img
@@ -677,8 +681,9 @@ const LivePlayer = ({
               </button>
             )}
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Error state */}
       {error && (
@@ -747,6 +752,7 @@ const LivePlayer = ({
       <video
         key={`${channel.id}-${mountKey}`}
         ref={videoRef}
+        poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         title={channel.name}
         autoPlay
         playsInline
