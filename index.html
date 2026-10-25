@@ -24,26 +24,39 @@
       />
     </noscript>
     <title>CineBG — Streaming</title>
+    <script>
+      window.__cinebg_loaded = false;
+      window.addEventListener('error', function(e) {
+        var msg = (e && e.message) ? e.message : (e && e.error && e.error.message) ? e.error.message : String(e);
+        console.error('[CineBG Boot Error]', msg);
+        var subText = document.getElementById('cinebg-boot-subtext');
+        if (subText && !window.__cinebg_loaded) {
+          subText.innerHTML = '<span style="color:#ef4444;font-size:12px;">Falha ao carregar: ' + msg.substring(0, 100) + '</span><br><button onclick="location.reload()" style="margin-top:12px;background:#e50914;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:bold;cursor:pointer;">Recarregar</button>';
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root">
       <div id="cinebg-boot-loader" style="position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;background:#08070d;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ffffff;font-family:system-ui,-apple-system,sans-serif;z-index:99999;transition:opacity 0.4s ease;">
         <div style="font-size:2.5rem;font-weight:900;letter-spacing:-0.05em;color:#e50914;margin-bottom:1.5rem;">CineBG</div>
         <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.15);border-top-color:#e50914;border-radius:50%;animation:cinebg-spin 0.8s linear infinite;"></div>
+        <div id="cinebg-boot-subtext" style="margin-top:1.5rem;text-align:center;font-size:13px;color:rgba(255,255,255,0.6);">
+          Iniciando CineBG...
+        </div>
         <style>@keyframes cinebg-spin{to{transform:rotate(360deg)}}</style>
       </div>
     </div>
     <script>
-      // Watchdog de segurança: garante que o boot-loader nunca trave a tela no Android
+      // Se demorar mais de 6s e o React não montou, oferece recarregar sem deixar tela preta
       setTimeout(function() {
-        var el = document.getElementById('cinebg-boot-loader');
-        if (el) {
-          el.style.opacity = '0';
-          setTimeout(function() {
-            if (el && el.parentNode) el.parentNode.removeChild(el);
-          }, 400);
+        if (!window.__cinebg_loaded) {
+          var sub = document.getElementById('cinebg-boot-subtext');
+          if (sub) {
+            sub.innerHTML = '<span style="color:rgba(255,255,255,0.7);font-size:13px;">O aplicativo está demorando para iniciar...</span><br><button onclick="location.reload()" style="margin-top:12px;background:#e50914;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(229,9,20,0.4);">Tentar Novamente</button>';
+          }
         }
-      }, 2500);
+      }, 6000);
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
