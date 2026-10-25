@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792940476.65329,
-    "seen": 1792940518.4277225,
-    "ast_hash": "757e095bc39a8d6096e3150bd49dcdee",
+    "mtime": 1792941912.489327,
+    "seen": 1792941983.9084613,
+    "ast_hash": "9495536c7c70db103337137bf8849d2f",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792940306.6152825,
-    "seen": 1792940518.4277308,
+    "mtime": 1792941716.0890486,
+    "seen": 1792941983.9084692,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": "4d2bbe5da73933ac326a41f41302842f"
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792940306.6152825,
-    "seen": 1792940518.4277496,
+    "mtime": 1792941716.087051,
+    "seen": 1792941983.908489,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": "aa014fc13e426f53986cc2fec0130a09"
   },
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1792940476.6542897,
-    "seen": 1792940518.4277704,
-    "ast_hash": "aa4c93640078cb26470a98c957c3a47d",
+    "mtime": 1792941912.4913213,
+    "seen": 1792941983.9085093,
+    "ast_hash": "a79939fb27ff0c76d760d85c5619ce71",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1792940476.6542897,
-    "seen": 1792940518.427779,
-    "ast_hash": "fbf114269329a09944448a69cd53d077",
+    "mtime": 1792941912.492321,
+    "seen": 1792941983.9085178,
+    "ast_hash": "99ff1e852d7063fabc261502c3d27fe7",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -246,15 +246,15 @@
     "semantic_hash": "d0092149ab98b5c868296bb5097278d6"
   },
   "src/hooks/useSpatialNavigation.ts": {
-    "mtime": 1792509483.0688658,
-    "seen": 1792598140.1742687,
-    "ast_hash": "89e214f929c74836d972bc42a0655de3",
-    "semantic_hash": "89e214f929c74836d972bc42a0655de3"
+    "mtime": 1792941912.492321,
+    "seen": 1792941983.908594,
+    "ast_hash": "ec0a88f698e3e938f5e5d003a3a7a03b",
+    "semantic_hash": ""
   },
   "src/main.tsx": {
-    "mtime": 1792932389.2845926,
-    "seen": 1792933406.3500361,
-    "ast_hash": "f79b672bd1f4ed5b26b1ae64c51c3b82",
+    "mtime": 1792941912.4933197,
+    "seen": 1792941983.908598,
+    "ast_hash": "f8c537df79fba072fdf3a9e2e01e243f",
     "semantic_hash": ""
   },
   "src/pages/Anime.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1792933582.362876,
-    "seen": 1792935251.5664723,
-    "ast_hash": "bea8fd556c6b1fd4a8ad11f111d3ddc9",
+    "mtime": 1792941912.4903238,
+    "seen": 1792941983.90873,
+    "ast_hash": "86983030e706f1886536b1bd6f71ea6a",
     "semantic_hash": ""
   },
   "android/app/src/main/res/drawable-land-hdpi/splash.png": {
@@ -954,9 +954,9 @@
     "semantic_hash": ""
   },
   "TASKS.md": {
-    "mtime": 1792940476.65329,
-    "seen": 1792940518.427985,
-    "ast_hash": "f51b7a1e966d887306c1a496cc8778da",
+    "mtime": 1792941912.4888158,
+    "seen": 1792941983.908724,
+    "ast_hash": "a8ff60f6e07c866d33e1eabc5e2237a8",
     "semantic_hash": ""
   },
   "docs/STREAMS_API.md": {
