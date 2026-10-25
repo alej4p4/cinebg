@@ -1,16 +1,16 @@
 # CineBG - Task Backlog & Roadmap
 
-> **Versão**: v1.2.93  
+> **Versão**: v1.2.94  
 > **Última atualização**: 2026-10-25  
 > **Metodologia**: Kanban simples (Backlog → Doing → Done)
 
 ---
 
-## 🎯 Sprint Atual (v1.2.93 - RELEASE)
+## 🎯 Sprint Atual (v1.2.94 - RELEASE)
 
 ### ✅ Done
 - [x] Correção definitiva da tela preta na inicialização do APK Android (Issue #270)
-- [x] Release v1.2.93 gerada e publicada (Mobile + TV APKs)
+- [x] Release v1.2.94 gerada e publicada (Mobile + TV APKs)
 - [x] Fix travamento no boot loader do Android Mobile por ausência de init da navegação espacial (Issue #268)
 - [x] Release v1.2.92 gerada e publicada (Mobile + TV APKs)
 - [x] Remoção do ícone de play nativo do Android WebView e aceleração da inicialização dos canais de desenhos (Issue #266)
