@@ -223,6 +223,16 @@ iframe:focus-visible {
   -webkit-tap-highlight-color: transparent !important;
 }
 
+/* Oculta controles e botão de play nativo do Android WebView para transição fluida sem flash */
+video::-webkit-media-controls-overlay-play-button,
+video::-webkit-media-controls-start-playback-button,
+video::-webkit-media-controls-enclosure,
+video::-webkit-media-controls {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+}
+
 /* ===== FOCUS RING (TV D-PAD & CONTROLE REMOTO) - BORDA AMARELA ===== */
 .tv-focusable:focus,
 .tv-focused,
