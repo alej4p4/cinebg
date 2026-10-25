@@ -447,6 +447,9 @@ const Series = () => {
                     <Carousel title="Novelas & Séries Turcas" emoji="🇹🇷" items={turkish} />
                   )}
                   <Carousel title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classics} />
+                  {classicCartoons.length > 0 && (
+                    <Carousel title="✨ Desenhos Clássicos dos Anos 80 & 90" emoji="📺" items={classicCartoons} />
+                  )}
                   <Carousel title="Em Exibição Hoje" emoji="🔴" items={airingToday} />
                   <Carousel title="Top Séries de Todos os Tempos" emoji="⭐" items={topRated} />
                 </>
