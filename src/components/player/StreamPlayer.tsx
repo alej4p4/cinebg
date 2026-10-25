@@ -342,7 +342,7 @@ const StreamPlayer = ({
 
   const AUTO_NEXT_DELAY = 10 // seconds
 
-  const [_autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null)
+  const [autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null)
   const autoNextTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [qualityOpen, setQualityOpen] = useState(false)
 
@@ -491,7 +491,7 @@ const StreamPlayer = ({
 
   // ===== Auto-fallback state =====
   const fallbackSequence = useMemo(
-    () => (audioOption === 'dub' ? ['megaembed', 'vidlink'] : ['vidlink', 'megaembed']),
+    () => (audioOption === 'dub' ? ['megaembed', 'superflix', 'vidlink'] : ['vidlink', 'superflix', 'megaembed']),
     [audioOption]
   )
 
@@ -574,19 +574,17 @@ const StreamPlayer = ({
       setDirectKind(next.kind)
       setLoaded(false)
       setError(false)
-      showFeedback(`Conectando: ${next.label}`)
       return
     }
-    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho com áudio original e legenda PT-BR
-    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho alternativo (VidLink)...')
+    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho alternativo
+    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho alternativo...')
     nativeActiveRef.current = false
     setDirectSrc(null)
     setDirectKind(null)
-    setActiveMirror('vidlink')
+    setActiveMirror(audioOption === 'dub' ? 'superflix' : 'vidlink')
     setAllowIframe(true)
     setLoaded(false)
     setError(false)
-    showFeedback('Conectando servidor alternativo...')
   }, [showFeedback])
 
   // Alternância manual cíclica pelo botão "Opção 1 / Servidor" no controle remoto
@@ -2062,43 +2060,15 @@ const StreamPlayer = ({
             </div>
           </div>
         )}
-        {/* Loading Overlay com botões clicáveis por controle remoto na TV */}
+        {/* Loading Overlay YouCine: Minimalista, Silencioso, Foco no Conteúdo */}
         {!loaded && !error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a10] z-20 gap-3 p-4">
-            <div className="w-12 h-12 border-4 border-white/10 border-t-yellow-400 rounded-full animate-spin" />
-            <div className="text-center">
-              <p className="text-white font-black text-lg">
-                {resolvingDirect
-                  ? 'Localizando transmissão direta dublada...'
-                  : candidates[candidateIndex]?.label
-                  ? `Conectando: ${candidates[candidateIndex]?.label}`
-                  : isAutoFallback
-                  ? `Tentando ${getMirrorLabel(activeMirror)}...`
-                  : 'Carregando transmissão...'}
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-20 gap-4 p-4 select-none">
+            <div className="w-12 h-12 border-3 border-white/10 border-t-accent-red rounded-full animate-spin" />
+            {title && (
+              <p className="text-white/80 font-medium text-sm tracking-wide line-clamp-1 max-w-md text-center">
+                {title}
               </p>
-              <p className="text-white/60 text-xs mt-1">{audioLabels[audioOption]}</p>
-            </div>
-
-            {/* Ações clicáveis com o controle remoto da TV */}
-            <div className="flex flex-wrap items-center justify-center gap-3 mt-4 z-30">
-              {candidates.length > 1 && (
-                <button
-                  type="button"
-                  onClick={handleDirectMediaError}
-                  className="px-4 py-2 bg-yellow-400 text-black rounded-xl text-xs font-black hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 transition-all flex items-center gap-2 shadow-lg"
-                >
-                  <Server className="w-4 h-4" />
-                  <span>Pular Opção ({candidateIndex + 1}/{candidates.length})</span>
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => switchAudio(audioOption === 'dub' ? 'orig' : 'dub')}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 transition-all"
-              >
-                Mudar para {audioOption === 'dub' ? 'Legendado' : 'Dublado'}
-              </button>
-            </div>
+            )}
           </div>
         )}
 
@@ -2250,6 +2220,35 @@ const StreamPlayer = ({
             >
               <X className="w-3 h-3" />
             </button>
+          </div>
+        )}
+
+        {/* Card YouCine de Continuidade Automática entre Episódios */}
+        {autoNextCountdown !== null && autoNextCountdown > 0 && (
+          <div className="absolute bottom-20 right-8 z-40 bg-black/90 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-2 min-w-[260px] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <span className="text-white/60 text-xs font-medium">Próximo episódio</span>
+            <p className="text-white font-bold text-sm">
+              Iniciando em {autoNextCountdown}s...
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  cancelAutoNext()
+                  onNextEpisode?.()
+                }}
+                className="flex-1 py-2 px-3 bg-accent-red hover:bg-red-600 text-white text-xs font-bold rounded-xl transition-colors shadow-lg shadow-red-900/40"
+              >
+                Assistir Agora
+              </button>
+              <button
+                type="button"
+                onClick={cancelAutoNext}
+                className="py-2 px-3 bg-white/10 hover:bg-white/20 text-white/80 text-xs font-medium rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         )}
 

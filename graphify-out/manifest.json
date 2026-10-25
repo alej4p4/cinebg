@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792951944.7837882,
-    "seen": 1792951991.3898056,
-    "ast_hash": "a60f031b910f000b99bec5786915f321",
+    "mtime": 1792953362.042601,
+    "seen": 1792953399.3622627,
+    "ast_hash": "4b91efb3ce58e36b57312a819b6d748a",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792951761.6388497,
-    "seen": 1792951991.389814,
+    "mtime": 1792953226.0440164,
+    "seen": 1792953399.3622732,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": "4d2bbe5da73933ac326a41f41302842f"
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792951761.6378522,
-    "seen": 1792951991.3898323,
+    "mtime": 1792953226.0440164,
+    "seen": 1792953399.3623033,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": "aa014fc13e426f53986cc2fec0130a09"
   },
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1792951944.7883692,
-    "seen": 1792951991.3898525,
-    "ast_hash": "9a0af19db9352bcdd256750eaa034555",
+    "mtime": 1792953362.0436072,
+    "seen": 1792953399.3623405,
+    "ast_hash": "f9ef7da08c224694ea7c1c9d92927f1d",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1792951944.7883692,
-    "seen": 1792951991.389861,
-    "ast_hash": "8e3b1382d36e46524b28646c0702842e",
+    "mtime": 1792953362.0442975,
+    "seen": 1792953399.3623567,
+    "ast_hash": "6240e3acfbb95fa35175c71ef835a3c4",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -366,9 +366,9 @@
     "semantic_hash": ""
   },
   "src/services/tmdb.ts": {
-    "mtime": 1792937170.7577188,
-    "seen": 1792937826.730336,
-    "ast_hash": "fb4355cbc1befef7de8e520b903f3b8d",
+    "mtime": 1792953362.045329,
+    "seen": 1792953399.362613,
+    "ast_hash": "feecb7df7e786d02fb854eb1a445c803",
     "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
@@ -786,9 +786,9 @@
     "semantic_hash": ""
   },
   ".github/workflows/release.yml": {
-    "mtime": 1792778102.482167,
-    "seen": 1792931668.2325819,
-    "ast_hash": "f85dfa438cc94e32cedcd4f2cdd92e5e",
+    "mtime": 1792953362.0410347,
+    "seen": 1792953399.3627102,
+    "ast_hash": "461252d4cb20d7205d0c56ddf86415c6",
     "semantic_hash": ""
   },
   "src/components/player/PlaybackSettingsModal.tsx": {
@@ -858,15 +858,15 @@
     "semantic_hash": ""
   },
   "tests/unit/integrity.test.mjs": {
-    "mtime": 1792509484.1283038,
-    "seen": 1792598140.174685,
-    "ast_hash": "9f596cfc0c583b42b831bf05045ddabe",
-    "semantic_hash": "9f596cfc0c583b42b831bf05045ddabe"
+    "mtime": 1792953362.0463936,
+    "seen": 1792953399.3626602,
+    "ast_hash": "418886ae69655b0c6d5c6960e552faca",
+    "semantic_hash": ""
   },
   ".github/workflows/ci-quality.yml": {
-    "mtime": 1792932388.9832318,
-    "seen": 1792933406.3501365,
-    "ast_hash": "afb5dec53fa9e4d4443280e4b910b65a",
+    "mtime": 1792953362.0400355,
+    "seen": 1792953399.3627028,
+    "ast_hash": "f4961babde332c5dcc5ec118523c2994",
     "semantic_hash": ""
   },
   "codecov.yml": {
@@ -954,9 +954,9 @@
     "semantic_hash": ""
   },
   "TASKS.md": {
-    "mtime": 1792951944.7830088,
-    "seen": 1792951991.3900714,
-    "ast_hash": "361eefcc557e46a66918cd6bc85e50c6",
+    "mtime": 1792953362.0420966,
+    "seen": 1792953399.362745,
+    "ast_hash": "e670665c6633675de50d70540ca9e975",
     "semantic_hash": ""
   },
   "docs/STREAMS_API.md": {

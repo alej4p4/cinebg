@@ -214,3 +214,17 @@ test('12. Inicialização Resiliente do TMDB: Ausência de throw fatal no startu
   assert.match(tmdbContent, /DEFAULT_TMDB_KEY/, 'tmdb.ts deve fornecer DEFAULT_TMDB_KEY como fallback')
   assert.match(tmdbContent, /import.meta.env.VITE_TMDB_API_KEY || DEFAULT_TMDB_KEY/, 'tmdb.ts deve utilizar fallback se a variável de ambiente for ausente')
 })
+
+test('13. Experiência de Reprodução YouCine: Espelho SuperFlix PT-BR, ausência de mensagens técnicas e continuidade automática', () => {
+  const streamsContent = fs.readFileSync(path.join(ROOT, 'src/services/streams.ts'), 'utf8')
+  assert.match(streamsContent, /superflix/, 'streams.ts deve incluir espelho SuperFlix PT-BR')
+  assert.match(streamsContent, /superflixapi.fun/, 'streams.ts deve apontar para superflixapi.fun')
+
+  const playerContent = fs.readFileSync(path.join(ROOT, 'src/components/player/StreamPlayer.tsx'), 'utf8')
+  assert.ok(!playerContent.includes('Localizando transmissão direta dublada'), 'StreamPlayer não deve exibir mensagens técnicas de busca no loading')
+  assert.ok(!playerContent.includes('Pular Opção'), 'StreamPlayer não deve exibir botões técnicos de servidor no overlay de carregamento')
+  assert.match(playerContent, /autoNextCountdown !== null/, 'StreamPlayer deve renderizar card YouCine de próximo episódio')
+
+  const liveContent = fs.readFileSync(path.join(ROOT, 'src/components/player/LivePlayer.tsx'), 'utf8')
+  assert.ok(!liveContent.includes('Testando Sinal'), 'LivePlayer não deve exibir mensagens técnicas de testando sinal')
+})
