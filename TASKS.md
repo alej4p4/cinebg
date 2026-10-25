@@ -1,14 +1,15 @@
 # CineBG - Task Backlog & Roadmap
 
-> **Versão**: v1.2.86  
-> **Última atualização**: 2026-10-23  
+> **Versão**: v1.2.87  
+> **Última atualização**: 2026-10-25  
 > **Metodologia**: Kanban simples (Backlog → Doing → Done)
 
 ---
 
-## 🎯 Sprint Atual (v1.2.86 - RELEASED)
+## 🎯 Sprint Atual (v1.2.87 - IN PROGRESS)
 
 ### ✅ Done
+- [x] Fix definitivo tela preta ao abrir o APK no Android (Issue #250)
 - [x] Fix connection refused (removido androidScheme: 'http' do capacitor.config.ts) - Issue #249
 - [x] Fix tela preta em redes móveis (error handler global, ErrorState retry, SplashScreen watchdog) - Issue #246
 - [x] Fix tela preta ao instalar/atualizar APK (watchdog SplashScreen + limpeza cache WebView) - Issue #244
@@ -69,7 +70,7 @@
 | B-004 | **Memory leak** hls.js em navegação rápida | Medium | ✅ FIXED | `hlsInstanceRef` + try/catch destroy + null ref |
 | B-005 | **OTA false positive** versionCode same | Low | 🔄 Pendente | Verificar `versionCode` no update.json |
 | B-006 | **connection refused** localhost no Android | Critical | ✅ FIXED | Removido `server.url` do capacitor.config.ts |
-| B-007 | **Tela preta** em redes móveis (3G/4G) | Critical | ✅ FIXED | Error handler global + ErrorState retry + Splash watchdog |
+| B-007 | **Tela preta** ao abrir o APK no Android | Critical | ✅ FIXED | Remoção loop reload em main.tsx, cleartext=true, cache safe, Skeletons (#250) |
 
 ---
 

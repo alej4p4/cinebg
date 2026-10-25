@@ -19,6 +19,9 @@ import {
   openAppInstallSettings,
   canInstallUnknownApps,
   type DownloadProgress,
+  pauseDownload,
+  resumeDownload,
+  cancelDownload,
 } from '@/services/appUpdater'
 import { Capacitor } from '@capacitor/core'
 import { getDeviceFlavor, getDeviceUpdateUrl, getDeviceApkFilename } from '@/utils/tv'
@@ -71,6 +74,8 @@ const UpdateModal = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [needsPermission, setNeedsPermission] = useState(false)
   const [activeActionIndex, setActiveActionIndex] = useState<number>(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const [downloadId, setDownloadId] = useState<string | null>(null)
 
   // Referências para os botões do modal para foco direto no Android TV
   const downloadBtnRef = useRef<HTMLButtonElement | null>(null)
@@ -115,10 +120,19 @@ const UpdateModal = ({
     }
 
     try {
+      // Generate downloadId from URL
+      const downloadId = effectiveDownloadUrl
+      setDownloadId(downloadId)
+      setIsPaused(false)
+
       const result = await startAppUpdate(effectiveDownloadUrl, (p) => {
         setProgress(p)
         if (p.percent >= 99) {
           setStage('installing')
+        }
+        // Update downloadId if provided by native
+        if (p.downloadId && p.downloadId !== downloadId) {
+          setDownloadId(p.downloadId)
         }
       })
 
@@ -151,11 +165,63 @@ const UpdateModal = ({
     }
   }, [effectiveDownloadUrl])
 
+  const handlePauseDownload = useCallback(async () => {
+    if (!Capacitor.isNativePlatform() || !downloadId) return
+    try {
+      const result = await pauseDownload(downloadId)
+      if (result.paused) {
+        setIsPaused(true)
+      }
+    } catch (e: unknown) {
+      const err = e as { message?: string }
+      console.error('[UpdateModal] Erro ao pausar download:', err)
+    }
+  }, [downloadId])
+
+  const handleResumeDownload = useCallback(async () => {
+    if (!Capacitor.isNativePlatform() || !downloadId) return
+    try {
+      const result = await resumeDownload(downloadId)
+      if (result.resumed) {
+        setIsPaused(false)
+      }
+    } catch (e: unknown) {
+      const err = e as { message?: string }
+      console.error('[UpdateModal] Erro ao retomar download:', err)
+    }
+  }, [downloadId])
+
+  const handleCancelDownload = useCallback(async () => {
+    if (!Capacitor.isNativePlatform() || !downloadId) return
+    try {
+      const result = await cancelDownload(downloadId)
+      if (result.cancelled) {
+        setStage('idle')
+        setProgress({ percent: 0, bytesDownloaded: 0, totalBytes: 0 })
+        setDownloadId(null)
+        setIsPaused(false)
+      }
+    } catch (e: unknown) {
+      const err = e as { message?: string }
+      console.error('[UpdateModal] Erro ao cancelar download:', err)
+    }
+  }, [downloadId])
+
   // Foco ativo direto com sincronização entre D-Pad Spatial Navigation e elementos DOM
   const focusCurrentAction = useCallback(
     (index: number) => {
       setActiveActionIndex(index)
-      if (stage === 'downloading') return
+      if (stage === 'downloading') {
+        if (index === 0) {
+          // Pause/Resume button
+          if (doesFocusableExist('modal-download-pause')) setFocus('modal-download-pause')
+          else if (doesFocusableExist('modal-download-resume')) setFocus('modal-download-resume')
+        } else if (index === 1) {
+          // Cancel button
+          if (doesFocusableExist('modal-download-cancel')) setFocus('modal-download-cancel')
+        }
+        return
+      }
 
       if (hasUpdate && stage === 'idle') {
         if (index === 0) {
@@ -258,7 +324,7 @@ const UpdateModal = ({
 
   // Captura direta de teclas de controle remoto da TV (D-Pad, Enter, OK e Voltar)
   useEffect(() => {
-    if (!visible || stage === 'downloading') return
+    if (!visible) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const code = e.keyCode || e.which
@@ -266,9 +332,36 @@ const UpdateModal = ({
 
       // Back / Voltar / Esc
       if (code === 27 || code === 4 || code === 8 || key === 'escape' || key === 'back') {
+        if (stage === 'downloading') {
+          // During download, Esc triggers cancel
+          e.preventDefault()
+          e.stopPropagation()
+          handleCancelDownload()
+          return
+        }
         e.preventDefault()
         e.stopPropagation()
         onDismiss()
+        return
+      }
+
+      // Pause/Resume: P or Space (during download)
+      if (stage === 'downloading' && (key === 'p' || key === ' ')) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (isPaused) {
+          handleResumeDownload()
+        } else {
+          handlePauseDownload()
+        }
+        return
+      }
+
+      // Cancel: C (during download)
+      if (stage === 'downloading' && key === 'c') {
+        e.preventDefault()
+        e.stopPropagation()
+        handleCancelDownload()
         return
       }
 
@@ -282,6 +375,8 @@ const UpdateModal = ({
         totalActions = Capacitor.isNativePlatform() ? 3 : 2
       } else if (!hasUpdate && !isChecking) {
         totalActions = onCheckAgain ? 3 : 2
+      } else if (stage === 'downloading') {
+        totalActions = 2 // Pause/Resume, Cancel
       }
 
       // D-Pad Left / Up
@@ -385,6 +480,10 @@ const UpdateModal = ({
     onCheckAgain,
     handleOpenBrowserFallback,
     handleStartUpdate,
+    handlePauseDownload,
+    handleResumeDownload,
+    handleCancelDownload,
+    isPaused,
   ])
 
   return (
@@ -464,6 +563,67 @@ const UpdateModal = ({
                       ? `${formatBytes(progress.bytesDownloaded)} / ${formatBytes(progress.totalBytes)}`
                       : formatBytes(progress.bytesDownloaded)}
                   </span>
+                </div>
+
+                <div className="w-full flex items-center justify-between text-xs text-white/60 px-1 font-mono">
+                  <span>{progress.percent}% concluído</span>
+                  <span>
+                    {progress.totalBytes > 0
+                      ? `${formatBytes(progress.bytesDownloaded)} / ${formatBytes(progress.totalBytes)}`
+                      : formatBytes(progress.bytesDownloaded)}
+                  </span>
+                </div>
+
+                {/* Botões de controle de download: Pausar/Retomar/Cancelar */}
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  {isPaused ? (
+                    <Focusable
+                      focusKey="modal-download-resume"
+                      onEnterPress={handleResumeDownload}
+                      onFocus={() => setActiveActionIndex(0)}
+                    >
+                      <button
+                        type="button"
+                        onClick={handleResumeDownload}
+                        onFocus={() => setActiveActionIndex(0)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all"
+                      >
+                        <span className="h-3.5 w-3.5">▶</span>
+                        <span>Retomar</span>
+                      </button>
+                    </Focusable>
+                  ) : (
+                    <Focusable
+                      focusKey="modal-download-pause"
+                      onEnterPress={handlePauseDownload}
+                      onFocus={() => setActiveActionIndex(0)}
+                    >
+                      <button
+                        type="button"
+                        onClick={handlePauseDownload}
+                        onFocus={() => setActiveActionIndex(0)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all"
+                      >
+                        <span className="h-3.5 w-3.5">⏸</span>
+                        <span>Pausar</span>
+                      </button>
+                    </Focusable>
+                  )}
+                  <Focusable
+                    focusKey="modal-download-cancel"
+                    onEnterPress={handleCancelDownload}
+                    onFocus={() => setActiveActionIndex(isPaused ? 1 : 1)}
+                  >
+                    <button
+                      type="button"
+                      onClick={handleCancelDownload}
+                      onFocus={() => setActiveActionIndex(isPaused ? 1 : 1)}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      <span>Cancelar</span>
+                    </button>
+                  </Focusable>
                 </div>
 
                 {needsPermission && (

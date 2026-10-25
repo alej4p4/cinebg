@@ -297,9 +297,7 @@ const { isLicensed, isTrial, loading } = useLicense()
       </AnimatePresence>
 
       {loading && showSplash ? null : loading ? (
-        <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-white/10 border-t-accent-red rounded-full animate-spin" />
-        </div>
+        <PageFallback />
       ) : !isVipOrTrialActive ? (
         <>
           <ErrorBoundary>

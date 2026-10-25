@@ -44,3 +44,12 @@ android/cinebg-release.jks
 # Local scratch files
 resultado.txt
 *.apk
+
+# Test and analysis outputs
+coverage/
+.stryker-tmp/
+playwright-report/
+test-results/
+graphify-out/cache/
+graphify-out/2026-*/
+graphify-out/*.tmp

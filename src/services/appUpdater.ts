@@ -5,6 +5,8 @@ export interface DownloadProgress {
   percent: number
   bytesDownloaded: number
   totalBytes: number
+  downloadId?: string
+  cancelled?: boolean
 }
 
 interface AppInstallerPluginInterface {
@@ -14,7 +16,11 @@ interface AppInstallerPluginInterface {
   downloadAndInstall: (options: {
     url: string
     filename?: string
-  }) => Promise<{ success: boolean; filePath: string }>
+    downloadId?: string
+  }) => Promise<{ success: boolean; filePath?: string; cancelled?: boolean }>
+  pauseDownload: (options: { downloadId: string }) => Promise<{ paused: boolean; bytesDownloaded?: number; alreadyPaused?: boolean }>
+  resumeDownload: (options: { downloadId: string }) => Promise<{ resumed: boolean; alreadyResumed?: boolean }>
+  cancelDownload: (options: { downloadId: string }) => Promise<{ cancelled: boolean }>
   addListener: (
     eventName: 'downloadProgress',
     listenerFunc: (progress: DownloadProgress) => void
@@ -26,6 +32,7 @@ const AppInstaller = registerPlugin<AppInstallerPluginInterface>('AppInstaller')
 export interface UpdateExecutionResult {
   success: boolean
   error?: string
+  cancelled?: boolean
 }
 
 export const canInstallUnknownApps = async (): Promise<boolean> => {
@@ -45,12 +52,42 @@ export const openAppInstallSettings = async (): Promise<void> => {
   } catch {}
 }
 
+export const pauseDownload = async (downloadId: string): Promise<{ paused: boolean; bytesDownloaded?: number; alreadyPaused?: boolean; error?: string }> => {
+  if (!Capacitor.isNativePlatform()) return { paused: false, error: 'Não disponível no navegador' }
+  try {
+    return await AppInstaller.pauseDownload({ downloadId })
+  } catch (e: unknown) {
+    const err = e as { message?: string }
+    return { paused: false, error: err?.message || 'Falha ao pausar download.' }
+  }
+}
+
+export const resumeDownload = async (downloadId: string): Promise<{ resumed: boolean; alreadyResumed?: boolean; error?: string }> => {
+  if (!Capacitor.isNativePlatform()) return { resumed: false, error: 'Não disponível no navegador' }
+  try {
+    return await AppInstaller.resumeDownload({ downloadId })
+  } catch (e: unknown) {
+    const err = e as { message?: string }
+    return { resumed: false, error: err?.message || 'Falha ao retomar download.' }
+  }
+}
+
+export const cancelDownload = async (downloadId: string): Promise<{ cancelled: boolean; error?: string }> => {
+  if (!Capacitor.isNativePlatform()) return { cancelled: false, error: 'Não disponível no navegador' }
+  try {
+    return await AppInstaller.cancelDownload({ downloadId })
+  } catch (e: unknown) {
+    const err = e as { message?: string }
+    return { cancelled: false, error: err?.message || 'Falha ao cancelar download.' }
+  }
+}
+
 export const startAppUpdate = async (
   downloadUrl: string,
   onProgress?: (progress: DownloadProgress) => void
 ): Promise<UpdateExecutionResult> => {
   const resolvedUrl = getDeviceUpdateUrl(downloadUrl)
-  const resolvedFilename = getDeviceApkFilename()
+  const downloadId = resolvedUrl // Use URL as downloadId
 
   if (Capacitor.isNativePlatform()) {
     try {
@@ -63,7 +100,8 @@ export const startAppUpdate = async (
 
       await AppInstaller.downloadAndInstall({
         url: resolvedUrl,
-        filename: resolvedFilename,
+        filename: getDeviceApkFilename(),
+        downloadId,
       })
 
       if (listenerHandle) {
@@ -84,8 +122,8 @@ export const startAppUpdate = async (
   // Fallback para Web / Navegador desktop ou mobile
   try {
     const a = document.createElement('a')
-    a.href = resolvedUrl
-    a.download = resolvedFilename
+    a.href = getDeviceUpdateUrl(downloadUrl)
+    a.download = getDeviceApkFilename()
     a.target = '_blank'
     a.rel = 'noopener noreferrer'
     document.body.appendChild(a)

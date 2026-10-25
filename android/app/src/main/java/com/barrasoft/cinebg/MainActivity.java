@@ -208,12 +208,6 @@ public class MainActivity extends BridgeActivity {
                 webView.getSettings().setUserAgentString(currentUa + flavorTag);
             }
 
-            // Limpa cache do WebView a cada inicialização para evitar conteúdo antigo
-            // após atualização de APK (causa tela preta / conteúdo desatualizado)
-            try {
-                webView.clearCache(true);
-                webView.clearHistory();
-            } catch (Exception ignored) {}
         }
     }
 
@@ -418,32 +412,6 @@ public class MainActivity extends BridgeActivity {
                         }
                     }, "CineBGNative");
 
-                    // Bloqueio rigoroso de pop-ups, novas janelas e alertas de spam (Chrome Client)
-                    webView.setWebChromeClient(new WebChromeClient() {
-                        @Override
-                        public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
-                            return false; // Bloqueia 100% de novas abas/janelas de anúncios
-                        }
-
-                        @Override
-                        public boolean onJsAlert(WebView view, String url, String message, android.webkit.JsResult result) {
-                            result.confirm();
-                            return true;
-                        }
-
-                        @Override
-                        public boolean onJsConfirm(WebView view, String url, String message, android.webkit.JsResult result) {
-                            result.confirm();
-                            return true;
-                        }
-
-                        @Override
-                        public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, android.webkit.JsPromptResult result) {
-                            result.cancel();
-                            return true;
-                        }
-                    });
-
                     // Bloqueio de rede nativo de URLs de anúncios, redirecionamentos e sequestro de tela
                     webView.setWebViewClient(new BridgeWebViewClient(getBridge()) {
                         @Override
@@ -505,7 +473,7 @@ public class MainActivity extends BridgeActivity {
                                     return true;
                                 }
                             }
-                            return false;
+                            return super.shouldOverrideUrlLoading(view, url);
                         }
 
                         @Override
