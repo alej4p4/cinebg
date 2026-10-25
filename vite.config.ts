@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {
@@ -12,6 +13,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    target: ['es2020', 'chrome80', 'safari13'],
     // hls.js (~520 kB) é isolado em chunk próprio e carregado só no player
     chunkSizeWarningLimit: 750,
     rollupOptions: {

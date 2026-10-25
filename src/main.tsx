@@ -59,6 +59,23 @@ if (typeof window !== 'undefined') {
   })
 }
 
+declare global {
+  interface Window {
+    __cinebg_loaded?: boolean
+  }
+}
+
+window.__cinebg_loaded = true
+const bootLoader = document.getElementById('cinebg-boot-loader')
+if (bootLoader) {
+  bootLoader.style.opacity = '0'
+  setTimeout(() => {
+    if (bootLoader && bootLoader.parentNode) {
+      bootLoader.parentNode.removeChild(bootLoader)
+    }
+  }, 400)
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
