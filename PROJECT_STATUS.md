@@ -1,8 +1,8 @@
 # CineBG - Project Status
 
 > **Última atualização**: 2026-10-25  
-> **Versão atual**: v1.2.87 (web) / versionCode 77 (Android)
-> **Release publicado**: https://github.com/alej4p4/cinebg/releases/tag/v1.2.87
+> **Versão atual**: v1.2.88 (web) / versionCode 78 (Android)
+> **Release publicado**: https://github.com/alej4p4/cinebg/releases/tag/v1.2.88
 
 ---
 
@@ -16,11 +16,11 @@
 - **Build Android**: ✅ APKs gerados (Mobile + TV)
 - **CI/CD**: ✅ Funcionando (GitHub Actions - release.yml)
 
-### Release v1.2.87
-- **Tag**: `v1.2.87`
+### Release v1.2.88
+- **Tag**: `v1.2.88`
 - **APKs**: `CineBG-Mobile-release.apk` + `CineBG-Tv-release.apk`
-- **versionCode**: 77 (ambos)
-- **URL**: https://github.com/alej4p4/cinebg/releases/tag/v1.2.87
+- **versionCode**: 78 (ambos)
+- **URL**: https://github.com/alej4p4/cinebg/releases/tag/v1.2.88
 - **update.json**: versão 1.2.85 apontando para v1.2.86
 
 ### Releases Recentes
@@ -146,7 +146,7 @@
 
 - **GitHub Issues**: https://github.com/alej4p4/cinebg/issues
 - **GitHub PRs**: https://github.com/alej4p4/cinebg/pulls
-- **Release v1.2.86**: https://github.com/alej4p4/cinebg/releases/tag/v1.2.87
+- **Release v1.2.86**: https://github.com/alej4p4/cinebg/releases/tag/v1.2.88
 - **CI Pipeline**: https://github.com/alej4p4/cinebg/actions
 - **APK Mobile**: https://github.com/alej4p4/cinebg/releases/download/v1.2.86/CineBG-Mobile-release.apk
 - **APK TV**: https://github.com/alej4p4/cinebg/releases/download/v1.2.86/CineBG-Tv-release.apk
