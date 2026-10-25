@@ -644,24 +644,9 @@ const LivePlayer = ({
               }}
             />
           )}
-          <p className="text-white font-bold text-base tracking-wide">{statusMessage}</p>
-          {channel.sources.length > 1 && (
-            <p className="text-amber-400 text-xs font-mono font-bold">
-              Testando Sinal {sourceIndex + 1} de {channel.sources.length}
-            </p>
+          {channel.name && (
+            <p className="text-white/80 font-medium text-sm tracking-wide">{channel.name}</p>
           )}
-
-          {/* Ações rápidas com o controle remoto enquanto sincroniza */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-4 z-30">
-            {channel.sources.length > 1 && (
-              <button
-                type="button"
-                onClick={() => selectSource((sourceIndex + 1) % channel.sources.length)}
-                className="px-4 py-2.5 bg-amber-400 text-black rounded-xl text-xs font-black hover:bg-amber-300 focus:outline-none focus:ring-4 focus:ring-amber-400 focus:scale-105 transition-all flex items-center gap-2 shadow-lg"
-              >
-                <span>Pular para Próximo Sinal ({((sourceIndex + 1) % channel.sources.length) + 1})</span>
-              </button>
-            )}
             {onNextChannel && (
               <button
                 type="button"
@@ -680,7 +665,6 @@ const LivePlayer = ({
                 <span>Voltar (ESC)</span>
               </button>
             )}
-          </div>
           </motion.div>
         )}
       </AnimatePresence>

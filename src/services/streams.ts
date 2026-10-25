@@ -26,7 +26,7 @@ const normalizeAudio = (audio: AudioOption | Language): AudioOption => {
 export const MIRRORS: StreamMirror[] = [
   {
     id: 'megaembed',
-    name: 'CineBG Dublado (MegaEmbed)',
+    name: 'CineBG Direto (MegaEmbed)',
     flagEmoji: '🇧🇷',
     quality: 'FHD 1080p',
     type: 'dubbed_br',
@@ -34,6 +34,17 @@ export const MIRRORS: StreamMirror[] = [
     getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}?autoplay=1&ads=0&adblock=1`,
     getShowUrl: (tmdbId, season, episode) =>
       `https://mgeb.site/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1`,
+  },
+  {
+    id: 'superflix',
+    name: 'CineBG YouCine (SuperFlix PT-BR)',
+    flagEmoji: '🇧🇷',
+    quality: 'FHD 1080p',
+    type: 'dubbed_br',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://superflixapi.fun/filme/${tmdbId}`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://superflixapi.fun/serie/${tmdbId}/${season}/${episode}`,
   },
   {
     id: 'vidlink',
@@ -52,8 +63,8 @@ export const MIRRORS: StreamMirror[] = [
 export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'dub'): string => {
   const sequence =
     audio === 'dub'
-      ? ['megaembed', 'vidlink']
-      : ['vidlink', 'megaembed']
+      ? ['megaembed', 'superflix', 'vidlink']
+      : ['vidlink', 'superflix', 'megaembed']
 
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
