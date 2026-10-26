@@ -399,3 +399,29 @@ test('COMPAT-3: Sincronização nativa de orientação paisagem no StreamPlayer'
   assert.match(player, /setNativePlayerLandscape\(false\)/, 'StreamPlayer deve sincronizar rotação para retrato na ponte nativa')
   assert.match(player, /setNativePlayerLandscape\(true\)/, 'StreamPlayer deve sincronizar rotação para paisagem na ponte nativa')
 })
+
+
+// =====================================================================
+// 10. SISTEMA DE ASSINATURAS E RESILIÊNCIA VIP (ISSUE #282)
+// =====================================================================
+test('SUB-1: Resiliência de cópia de chave Pix e fallback em LicenseGate', () => {
+  const gateCode = read('src/components/LicenseGate.tsx')
+  assert.match(gateCode, /fallbackCopyText/, 'LicenseGate deve possuir fallbackCopyText para WebViews sem API Clipboard')
+  assert.match(gateCode, /document\.execCommand\('copy'\)/, 'fallbackCopyText deve usar execCommand como alternativa')
+})
+
+test('SUB-2: Integridade de planos VIP e coerência com dias de ativação manual', async () => {
+  const mp = await compile('src/services/mercadoPago.ts')
+  const licModule = await compile('src/hooks/useLicense.ts')
+
+  const validDays = licModule.VALID_ACTIVATION_DAYS
+  const planDays = mp.VIP_PLANS.map((p) => p.days)
+
+  assert.deepEqual(planDays, Array.from(validDays), 'Planos de mercadoPago devem corresponder exatamente aos planos válidos de ativação')
+})
+
+test('SUB-3: Sincronização persistente de licença com SharedPreferences nativa', () => {
+  const hookCode = read('src/hooks/useLicense.ts')
+  assert.match(hookCode, /saveLicense\?\.\(serialized\)/, 'useLicense deve sincronizar ativação com a ponte nativa Android')
+  assert.match(hookCode, /getSavedLicense\(\)/, 'useLicense deve recuperar licença nativa salva se localStorage for limpo')
+})

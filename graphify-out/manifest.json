@@ -102,9 +102,9 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1793032706.5645213,
-    "seen": 1793032798.947114,
-    "ast_hash": "4dba36df026d264ab601a41507f4ac3f",
+    "mtime": 1793032848.366821,
+    "seen": 1793033099.9802504,
+    "ast_hash": "dc4437829083a3f47ebed616005362df",
     "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
@@ -114,10 +114,10 @@
     "semantic_hash": "00dc5c375269e6cf3cab3750b945cead"
   },
   "src/components/LicenseGate.tsx": {
-    "mtime": 1792515552.4895198,
-    "seen": 1792598140.1739736,
-    "ast_hash": "36a87429a3a6e77a98de32f5ec13013c",
-    "semantic_hash": "36a87429a3a6e77a98de32f5ec13013c"
+    "mtime": 1793032988.8514376,
+    "seen": 1793033099.9802551,
+    "ast_hash": "08063e4ffaa27b45c01e13371e56491a",
+    "semantic_hash": ""
   },
   "src/components/UpdateModal.tsx": {
     "mtime": 1792932389.2825935,
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1793032706.5735314,
-    "seen": 1793032798.9471357,
-    "ast_hash": "71e8a61d7739a4ffaa21e711ddd40ef1",
+    "mtime": 1793032848.3688192,
+    "seen": 1793033099.9802744,
+    "ast_hash": "b28ac5177db5e32966a482b75fee7a65",
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
@@ -396,9 +396,9 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1793032706.5745785,
-    "seen": 1793032798.9472601,
-    "ast_hash": "ba49b91fc2ad4e7f23390bd247942690",
+    "mtime": 1793032848.3698184,
+    "seen": 1793033099.980398,
+    "ast_hash": "8849479fd59476467db3453619e37ec1",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793032725.5179234,
-    "seen": 1793032798.9472728,
-    "ast_hash": "3c1926eac02b24fb7db0833619cca189",
+    "mtime": 1793033000.037465,
+    "seen": 1793033099.9804106,
+    "ast_hash": "61dd838470fba38605da523499612f19",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {

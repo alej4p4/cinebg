@@ -176,10 +176,31 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
     }
   }
 
+  const fallbackCopyText = (text: string) => {
+    try {
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-9999px'
+      textArea.style.top = '0'
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+    } catch {}
+  }
+
   const handleCopyPix = () => {
     const code = pixData?.qrCode
     if (!code) return
-    navigator.clipboard.writeText(code)
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(code).catch(() => {
+        fallbackCopyText(code)
+      })
+    } else {
+      fallbackCopyText(code)
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
   }
