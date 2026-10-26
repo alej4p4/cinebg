@@ -10,7 +10,7 @@
     "lint:biome": "npx @biomejs/biome check ./src",
     "check:knip": "npx knip",
     "test:arch": "node scripts/arch-contract.mjs",
-    "test:unit": "c8 node tests/unit/integrity.test.mjs tests/unit/qa-audit.test.mjs tests/unit/trial.test.mjs",
+    "test:unit": "c8 node --test tests/unit/integrity.test.mjs tests/unit/qa-audit.test.mjs tests/unit/trial.test.mjs",
     "test:e2e": "npx playwright test",
     "test:mutation": "npx stryker run",
     "preview": "vite preview",
