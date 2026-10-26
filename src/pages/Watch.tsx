@@ -256,7 +256,7 @@ const Watch = () => {
     return (
       <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center text-white p-4">
         <h2 className="text-2xl font-bold mb-2">Mídia não encontrada</h2>
-        <button onClick={() => navigate(-1)} className="text-accent-red hover:underline mt-4">
+        <button onClick={() => navigate('/', { replace: true })} className="text-accent-red hover:underline mt-4">
           Voltar
         </button>
       </div>
@@ -286,12 +286,8 @@ const Watch = () => {
           onSelectEpisode={handleEpisodeSelect}
           onBack={() => {
             markBackHandled()
-            const historyIdx = window.history.state?.idx ?? 0
-            if (historyIdx > 0) {
-              navigate(-1)
-            } else {
-              navigate(`/details/${type}/${mediaId}`, { replace: true })
-            }
+            // Sempre retorna diretamente para a tela de Sinopse/Detalhes daquele filme ou série
+            navigate(`/details/${type}/${mediaId}`, { replace: true })
           }}
           onDownload={handleDownload}
         />

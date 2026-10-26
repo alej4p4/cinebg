@@ -22,6 +22,7 @@ import { getLiveChannelEPG } from '@/services/epg'
 import Focusable from '@/components/tv/Focusable'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 import { markBackHandled, setNativePlayerLandscape, isTVDevice } from '@/utils/tv'
+import { logLiveChannelError } from '@/services/observability'
 
 interface LivePlayerProps {
   channel: LiveChannel
@@ -74,6 +75,15 @@ const LivePlayer = ({
       onClose?.()
     }
   }, [onClose])
+
+  // Escuta evento global de fechamento seguro do player de TV ao vivo (ex: botão Voltar nativo Android)
+  useEffect(() => {
+    const handleRemoteClose = () => {
+      handleClose()
+    }
+    window.addEventListener('cinebg:close-live-player', handleRemoteClose)
+    return () => window.removeEventListener('cinebg:close-live-player', handleRemoteClose)
+  }, [handleClose])
 
   // OSD auto-hiding (oculta após 3.5 segundos sem interação)
   const [showOsd, setShowOsd] = useState(true)
@@ -214,6 +224,14 @@ const LivePlayer = ({
         console.info(
           `[LivePlayer] Sinal ${prev + 1} indisponível. Alternando para sinal ${next + 1}...`
         )
+        logLiveChannelError({
+          channelId: channel.id,
+          channelName: channel.name,
+          sourceIndex: prev,
+          sourceUrl: channel.sources[prev] || '',
+          errorType: 'signal_unavailable',
+          details: `Sinal ${prev + 1} indisponível. Alternando para sinal ${next + 1}...`,
+        })
         setLoaded(false)
         setError(false)
         setStatusMessage(`Sintonizando Sinal ${next + 1}...`)
@@ -221,11 +239,19 @@ const LivePlayer = ({
         return next
       } else {
         console.warn(`[LivePlayer] Todos os sinais de ${channel.name} falharam.`)
+        logLiveChannelError({
+          channelId: channel.id,
+          channelName: channel.name,
+          sourceIndex: prev,
+          sourceUrl: channel.sources[prev] || '',
+          errorType: 'all_signals_failed',
+          details: `Todos os ${channel.sources.length} sinais do canal ${channel.name} falharam.`,
+        })
         setError(true)
         return prev
       }
     })
-  }, [channel.name, channel.sources.length])
+  }, [channel.id, channel.name, channel.sources])
 
   // B-002: Subtitle sync drift fix - manual reset for live streams
   const resetSubtitleSync = useCallback(() => {
@@ -585,6 +611,14 @@ const LivePlayer = ({
         const httpStatus = payload.response?.code
         if (httpStatus && [401, 403, 404, 410, 500, 502, 503].includes(httpStatus)) {
           console.warn(`[LivePlayer] Erro HTTP ${httpStatus} no Sinal ${sourceIndex + 1}. Alternando imediatamente...`)
+          logLiveChannelError({
+            channelId: channel.id,
+            channelName: channel.name,
+            sourceIndex,
+            sourceUrl: src,
+            errorType: `http_${httpStatus}`,
+            details: `Erro HTTP ${httpStatus} retornado pelo servidor no Sinal ${sourceIndex + 1}`,
+          })
           try {
             hls.destroy()
           } catch {}
