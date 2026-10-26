@@ -75,11 +75,7 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
     trackRouteView(location.pathname)
   }, [location.pathname])
 
-  useEffect(() => {
-    if (!isVipActive) {
-      setVipModalOpen(true)
-    }
-  }, [isVipActive, setVipModalOpen])
+  // Navegação livre: tela de pagamento só abre sob demanda ou ao reproduzir mídia premium
 
   // Tratamento universal do botao Voltar do controle remoto e do Android (Sem disparo duplo e sem pular para a Home)
   useEffect(() => {
@@ -320,24 +316,6 @@ const { isLicensed, isTrial, loading } = useLicense()
 
       {loading && showSplash ? null : loading ? (
         <PageFallback />
-      ) : !isVipOrTrialActive ? (
-        <>
-          <ErrorBoundary>
-            <LicenseGate isModal={false} />
-            {!isMobileDevice() && <TvCursorOverlay />}
-          </ErrorBoundary>
-          <UpdateModal
-            visible={updateModalOpen}
-            downloadUrl={updateInfo.downloadUrl}
-            currentVersion={updateInfo.currentVersion}
-            latestVersion={updateInfo.latestVersion}
-            hasUpdate={updateInfo.hasUpdate}
-            isChecking={isCheckingUpdate}
-            onDismiss={() => setUpdateModalOpen(false)}
-            onCheckAgain={() => checkForUpdates(true)}
-            onUpdateComplete={handleUpdateComplete}
-          />
-        </>
       ) : (
         <BrowserRouter>
           <ErrorBoundary>
