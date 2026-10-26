@@ -635,3 +635,12 @@ test('MOBILE-ROTATION-4: BottomNav oculta navegação inferior durante a reprodu
   const navSrc = read('src/components/layout/BottomNav.tsx')
   assert.ok(navSrc.includes('cinebg-video-playing'), 'BottomNav deve verificar cinebg-video-playing para ocultar a barra de navegação')
 })
+
+
+test('MOBILE-ROTATION-5: LivePlayer possui botão de cadeado e overlay de bloqueio de tela com desbloqueio central e de canto', () => {
+  const lpSrc = read('src/components/player/LivePlayer.tsx')
+  assert.ok(lpSrc.includes('live-btn-lock'), 'LivePlayer deve possuir botão live-btn-lock')
+  assert.ok(lpSrc.includes('live-btn-unlock-center'), 'LivePlayer deve possuir botão live-btn-unlock-center')
+  assert.ok(lpSrc.includes('live-btn-unlock-corner'), 'LivePlayer deve possuir botão live-btn-unlock-corner')
+  assert.ok(lpSrc.includes('toggleLock'), 'LivePlayer deve implementar toggleLock')
+})

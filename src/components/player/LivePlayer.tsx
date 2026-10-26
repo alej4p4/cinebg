@@ -12,6 +12,8 @@ import {
   ChevronRight,
   Tv,
   X,
+  Lock,
+  Unlock,
 } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import type { LiveChannel } from '@/services/liveChannels'
@@ -19,7 +21,7 @@ import { categoryLabel } from '@/services/liveChannels'
 import { getLiveChannelEPG } from '@/services/epg'
 import Focusable from '@/components/tv/Focusable'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
-import { markBackHandled, setNativePlayerLandscape } from '@/utils/tv'
+import { markBackHandled, setNativePlayerLandscape, isTVDevice } from '@/utils/tv'
 
 interface LivePlayerProps {
   channel: LiveChannel
@@ -77,7 +79,34 @@ const LivePlayer = ({
   const [showOsd, setShowOsd] = useState(true)
   const osdTimerRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Bloqueio de tela (Lock HUD) exclusivo para celular contra toques acidentais
+  const [isLocked, setIsLocked] = useState(false)
+  const [showLockPrompt, setShowLockPrompt] = useState(false)
+  const lockPromptTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleLockTap = useCallback(() => {
+    if (!isLocked) return
+    setShowLockPrompt(true)
+    if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
+    lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
+  }, [isLocked])
+
+  const toggleLock = useCallback(() => {
+    if (isTVDevice()) return
+    setIsLocked((prev) => {
+      const next = !prev
+      if (next) {
+        setShowOsd(false)
+        setShowLockPrompt(true)
+        if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
+        lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
+      }
+      return next
+    })
+  }, [])
+
   const resetOsdTimer = () => {
+    if (isLocked) return
     setShowOsd(true)
     if (osdTimerRef.current) clearTimeout(osdTimerRef.current)
     osdTimerRef.current = setTimeout(() => {
@@ -794,6 +823,10 @@ const LivePlayer = ({
           }
         }}
         onClick={() => {
+          if (isLocked) {
+            handleLockTap()
+            return
+          }
           resetOsdTimer()
           const v = videoRef.current
           if (!v) return
@@ -861,6 +894,22 @@ const LivePlayer = ({
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
+              {!isTVDevice() && (
+                <button
+                  type="button"
+                  id="live-btn-lock"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleLock()
+                  }}
+                  className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-black/60 hover:bg-black/80 border border-white/10 text-white/80 hover:text-white transition-all active:scale-95 flex items-center gap-1.5 text-xs font-bold shadow-lg"
+                  title="Bloquear tela contra toques acidentais"
+                  aria-label="Bloquear tela"
+                >
+                  <Unlock className="w-4 h-4 text-yellow-400" />
+                  <span className="hidden sm:inline">Bloquear</span>
+                </button>
+              )}
               {onToggleFavorite && (
                 <Focusable onEnterPress={onToggleFavorite}>
                   <button
@@ -1009,6 +1058,86 @@ const LivePlayer = ({
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Overlay de Bloqueio de Tela contra toques acidentais no celular */}
+      {isLocked && !isTVDevice() && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation()
+            handleLockTap()
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation()
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation()
+            handleLockTap()
+          }}
+          className="absolute inset-0 z-50 cursor-pointer flex items-center justify-center bg-black/20 backdrop-blur-[2px] select-none"
+        >
+          <AnimatePresence>
+            {showLockPrompt && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col items-center gap-3 bg-black/90 backdrop-blur-xl border border-white/20 p-6 rounded-3xl shadow-2xl max-w-xs text-center"
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                onTouchEnd={(e: React.TouchEvent) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  id="live-btn-unlock-center"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleLock()
+                  }}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation()
+                    toggleLock()
+                  }}
+                  className="w-16 h-16 rounded-full bg-accent-red hover:bg-red-600 text-white flex items-center justify-center shadow-lg shadow-red-900/60 active:scale-90 transition-transform cursor-pointer"
+                  title="Toque para desbloquear a tela"
+                  aria-label="Desbloquear tela"
+                >
+                  <Lock className="w-8 h-8" />
+                </button>
+                <div className="flex flex-col gap-1">
+                  <span className="text-white font-black text-sm">Tela Bloqueada</span>
+                  <span className="text-white/60 text-xs">Toque no cadeado para liberar os controles</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Botão de desbloqueio persistente no canto superior */}
+          <div
+            className={`absolute top-[max(1rem,env(safe-area-inset-top,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] transition-opacity duration-300 ${
+              showLockPrompt ? 'opacity-100 pointer-events-auto' : 'opacity-40 hover:opacity-100 pointer-events-auto'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              id="live-btn-unlock-corner"
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleLock()
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation()
+                toggleLock()
+              }}
+              className="p-3 rounded-full bg-black/80 border border-white/20 text-white hover:bg-black flex items-center justify-center shadow-lg cursor-pointer"
+              title="Desbloquear tela"
+              aria-label="Desbloquear tela"
+            >
+              <Lock className="w-5 h-5 text-yellow-400" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
