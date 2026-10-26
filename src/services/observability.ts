@@ -331,6 +331,82 @@ export function trackStreamPlayback(event: {
 /**
  * Global Initialization (Sentry + Datadog + New Relic + OpenTelemetry)
  */
+export interface LiveChannelErrorLog {
+  timestamp: number
+  isoDate: string
+  channelId: string
+  channelName: string
+  sourceIndex: number
+  sourceUrl: string
+  errorType: string
+  details?: string
+  platform: string
+}
+
+const LIVE_ERRORS_STORAGE_KEY = 'cinebg_live_channel_errors'
+const MAX_LIVE_ERROR_LOGS = 100
+
+/**
+ * Registra e persiste erros de inicialização e reprodução de canais ao vivo (Live TV).
+ * Salva no armazenamento local (localStorage) e propaga para a telemetria full-stack.
+ */
+export function logLiveChannelError(entry: {
+  channelId: string
+  channelName: string
+  sourceIndex: number
+  sourceUrl: string
+  errorType: string
+  details?: string
+}): void {
+  const logItem: LiveChannelErrorLog = {
+    timestamp: Date.now(),
+    isoDate: new Date().toISOString(),
+    channelId: entry.channelId,
+    channelName: entry.channelName,
+    sourceIndex: entry.sourceIndex,
+    sourceUrl: entry.sourceUrl,
+    errorType: entry.errorType,
+    details: entry.details,
+    platform: isTVDevice() ? 'smart-tv' : isMobileDevice() ? 'mobile' : 'desktop',
+  }
+
+  // 1. Armazenamento persistente local (ring buffer resiliente)
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(LIVE_ERRORS_STORAGE_KEY)
+      const list: LiveChannelErrorLog[] = raw ? JSON.parse(raw) : []
+      list.unshift(logItem)
+      if (list.length > MAX_LIVE_ERROR_LOGS) {
+        list.length = MAX_LIVE_ERROR_LOGS
+      }
+      localStorage.setItem(LIVE_ERRORS_STORAGE_KEY, JSON.stringify(list))
+    }
+  } catch {}
+
+  // 2. Telemetria Full-Stack (Sentry breadcrumbs, Datadog RUM e New Relic)
+  addBreadcrumb('live_channel', `Live Channel ${entry.channelName} error: ${entry.errorType}`, 'error', logItem as unknown as Record<string, unknown>)
+  logDatadogEvent('error', `Live Channel ${entry.channelName} failed: ${entry.errorType}`, logItem as unknown as Record<string, unknown>)
+  recordNewRelicEvent('LiveStreamError', logItem as unknown as Record<string, unknown>)
+}
+
+export function getLiveChannelErrorLogs(): LiveChannelErrorLog[] {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(LIVE_ERRORS_STORAGE_KEY)
+      return raw ? JSON.parse(raw) : []
+    }
+  } catch {}
+  return []
+}
+
+export function clearLiveChannelErrorLogs(): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(LIVE_ERRORS_STORAGE_KEY)
+    }
+  } catch {}
+}
+
 export function initObservability(): void {
   if (isInitialized) return
   isInitialized = true

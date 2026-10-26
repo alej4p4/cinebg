@@ -87,14 +87,18 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
         return
       }
 
-      // Se estiver no player (/watch/:type/:id), volta sempre para a tela de Sinopse/Detalhes (/details/:type/:id)
+      // 1. Se o player de TV ao vivo estiver ativo em tela cheia na rota /live, fecha o canal sem sair de /live
+      const isLivePlayerOpen = Boolean(
+        document.querySelector('[data-live-player="true"], .live-player-container')
+      )
+      if (isLivePlayerOpen) {
+        window.dispatchEvent(new CustomEvent('cinebg:close-live-player'))
+        return
+      }
+
+      // 2. Se estiver no player (/watch/:type/:id), volta sempre para a tela de Sinopse/Detalhes (/details/:type/:id)
       if (location.pathname.startsWith('/watch/')) {
-        const historyIdx = window.history.state?.idx ?? 0
-        if (historyIdx > 0) {
-          navigate(-1)
-        } else {
-          navigate(location.pathname.replace('/watch/', '/details/'), { replace: true })
-        }
+        navigate(location.pathname.replace('/watch/', '/details/'), { replace: true })
         return
       }
 
@@ -111,6 +115,24 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
     try {
       CapApp.addListener('backButton', () => {
         if (wasBackRecentlyHandled(600)) return
+
+        // Se o player de TV ao vivo estiver aberto, fecha o player e permanece na rota de TV
+        const isLivePlayerOpen = Boolean(
+          document.querySelector('[data-live-player="true"], .live-player-container')
+        )
+        if (isLivePlayerOpen) {
+          markBackHandled()
+          window.dispatchEvent(new CustomEvent('cinebg:close-live-player'))
+          return
+        }
+
+        // Se estiver no player de filme/série, retorna diretamente para os detalhes do título
+        if (location.pathname.startsWith('/watch/')) {
+          markBackHandled()
+          navigate(location.pathname.replace('/watch/', '/details/'), { replace: true })
+          return
+        }
+
         if (location.pathname === '/') {
           CapApp.exitApp()
         } else {
@@ -152,6 +174,27 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
         if (hasModalOpen) {
           return
         }
+        // Se o player de TV ao vivo estiver aberto, fecha apenas o canal e mantém na tela de TV
+        const isLivePlayerOpen = Boolean(
+          document.querySelector('[data-live-player="true"], .live-player-container')
+        )
+        if (isLivePlayerOpen) {
+          e.preventDefault()
+          e.stopPropagation()
+          markBackHandled()
+          window.dispatchEvent(new CustomEvent('cinebg:close-live-player'))
+          return
+        }
+
+        // Se estiver assistindo a filme ou série, volta sempre para a tela de Detalhes
+        if (location.pathname.startsWith('/watch/')) {
+          e.preventDefault()
+          e.stopPropagation()
+          markBackHandled()
+          navigate(location.pathname.replace('/watch/', '/details/'), { replace: true })
+          return
+        }
+
         if (location.pathname !== '/') {
           e.preventDefault()
           performSafeBack()

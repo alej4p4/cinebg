@@ -28,6 +28,7 @@ import { useLicense } from '@/hooks/useLicense'
 import { useAppStore } from '@/store/useAppStore'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
 import { markBackHandled } from '@/utils/tv'
+import { App as CapApp } from '@capacitor/app'
 import { startEPGBackgroundSync, getEPGProgramCached } from '@/services/epgCache'
 import { type EPGProgram } from '@/services/epg'
 
@@ -203,9 +204,34 @@ const LiveTV = () => {
     return () => window.removeEventListener('keydown', handleEnsureFocus)
   }, [selected, channels, lastChannelId])
 
+  // Intercepta botão voltar nativo do Android quando o player estiver aberto na tela de TV
   useEffect(() => {
-    if (selected) return
+    if (!selected) return
 
+    let removeListener: (() => void) | null = null
+    let disposed = false
+    try {
+      CapApp.addListener('backButton', () => {
+        markBackHandled()
+        handleClosePlayer()
+      })
+        .then((h) => {
+          if (disposed) {
+            h.remove()
+          } else {
+            removeListener = () => h.remove()
+          }
+        })
+        .catch(() => {})
+    } catch {}
+
+    return () => {
+      disposed = true
+      if (removeListener) removeListener()
+    }
+  }, [selected, handleClosePlayer])
+
+  useEffect(() => {
     const handleGridBackKey = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         if (e.key === 'Escape') {
@@ -226,11 +252,25 @@ const LiveTV = () => {
         code === 461 ||
         code === 283
       ) {
+        if (selected) {
+          e.preventDefault()
+          e.stopPropagation()
+          markBackHandled()
+          handleClosePlayer()
+          return
+        }
         if (query) {
           e.preventDefault()
           e.stopPropagation()
           markBackHandled()
           setQuery('')
+          return
+        }
+        if (category !== 'todos') {
+          e.preventDefault()
+          e.stopPropagation()
+          markBackHandled()
+          setCategory('todos')
           return
         }
         e.preventDefault()
@@ -242,7 +282,7 @@ const LiveTV = () => {
 
     window.addEventListener('keydown', handleGridBackKey)
     return () => window.removeEventListener('keydown', handleGridBackKey)
-  }, [selected, query, navigate])
+  }, [selected, query, category, navigate, handleClosePlayer])
 
   useEffect(() => {
     if (!loading && channels.length > 0 && !selected) {

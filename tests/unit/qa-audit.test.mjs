@@ -664,3 +664,26 @@ test('MOBILE-COFILE-3: streams.ts filtra playercdnx.workers.dev e protege URLs c
   assert.ok(streamsSrc.includes('playercdnx.workers.dev'), 'BROKEN_IP_LOCKED_HOSTS deve incluir playercdnx.workers.dev')
   assert.ok(streamsSrc.includes("rawTarget === 'superflix' ? 'megaembed' : rawTarget"), 'buildMovieUrl e buildShowUrl devem redirecionar superflix para megaembed')
 })
+
+
+test('LIVE-LOG-1: logLiveChannelError registra erros no modulo de observabilidade', () => {
+  const obsSrc = fs.readFileSync('src/services/observability.ts', 'utf8')
+  assert.ok(obsSrc.includes('export function logLiveChannelError'), 'observability.ts deve exportar logLiveChannelError')
+  assert.ok(obsSrc.includes('cinebg_live_channel_errors'), 'observability.ts deve persistir erros em localStorage')
+  assert.ok(obsSrc.includes('export function getLiveChannelErrorLogs'), 'observability.ts deve exportar getLiveChannelErrorLogs')
+})
+
+test('NAV-PRESERVE-1: Watch.tsx redireciona diretamente para details sem pular para a tela inicial', () => {
+  const watchSrc = fs.readFileSync('src/pages/Watch.tsx', 'utf8')
+  assert.ok(watchSrc.includes('navigate(') && watchSrc.includes('/details/'), 'Watch.tsx deve navegar diretamente para a tela de Detalhes do filme/serie')
+  assert.ok(!watchSrc.includes('navigate(-1)'), 'Watch.tsx nao deve usar navigate(-1) para evitar salto para Home')
+})
+
+test('NAV-PRESERVE-2: App.tsx e LiveTV.tsx protegem rota ao vivo e retornam para o canal selecionado', () => {
+  const appSrc = fs.readFileSync('src/App.tsx', 'utf8')
+  assert.ok(appSrc.includes('cinebg:close-live-player'), 'App.tsx deve despachar evento cinebg:close-live-player ao pressionar voltar no player de TV')
+  assert.ok(appSrc.includes("location.pathname.replace('/watch/', '/details/')"), 'App.tsx deve mapear /watch diretamente para /details')
+
+  const liveTvSrc = fs.readFileSync('src/pages/LiveTV.tsx', 'utf8')
+  assert.ok(liveTvSrc.includes('handleClosePlayer()'), 'LiveTV.tsx deve fechar o canal selecionado ao pressionar voltar')
+})
