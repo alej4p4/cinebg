@@ -516,3 +516,30 @@ test('ACCESS-4: Bloqueio estrito de reprodução no player (Watch / PremiumConte
   assert.match(gate, /Conteúdo Exclusivo para Assinantes/, 'PremiumContentGate deve exibir mensagem de exclusividade para assinantes')
   assert.match(gate, /👑 Contratar Assinatura/, 'PremiumContentGate deve oferecer botão para contratar assinatura')
 })
+
+
+// =====================================================================
+// 14. CANAIS RETRO CARTOON, DESENHOS CLÁSSICOS E 24H (ISSUE #292)
+// =====================================================================
+test('LIVE-24H-1: Canais 24h não possuem URLs com tokens de chunklist estáticos expirados', () => {
+  const liveSrc = read('src/services/liveChannels.ts')
+  assert.doesNotMatch(liveSrc, /chunklist_w\d+/, 'Nenhum canal deve conter URL de chunklist estático/expirado')
+  assert.match(liveSrc, /stmv1\.video\.brstream\.com\.br\/retrotv\/retrotv\/playlist\.m3u8/, 'Retro Cartoon deve apontar para master playlist canônica')
+})
+
+test('LIVE-24H-2: Ausência de fontes com bloqueio restritivo de CORS (jmp2.uk)', () => {
+  const liveSrc = read('src/services/liveChannels.ts')
+  assert.doesNotMatch(liveSrc, /jmp2\.uk/, 'Nenhum canal deve depender de jmp2.uk sujeito a bloqueio CORS por navegadores/WebViews')
+})
+
+test('LIVE-24H-3: Redundância mínima de 3 fontes para os canais temáticos e clássicos', () => {
+  const liveSrc = read('src/services/liveChannels.ts')
+  const channelsToCheck = ['retro-cartoon-24h', 'desenhos-classicos-24h', 'nickelodeon-classico-24h', 'bob-esponja-24h', 'adrenalina-pura-24h', 'masterchef-24h']
+  for (const chId of channelsToCheck) {
+    const regex = new RegExp(`id:\\s*'${chId}'[\\s\\S]*?sources:\\s*\\[([\\s\\S]*?)\\]`)
+    const match = liveSrc.match(regex)
+    assert.ok(match, `Canal ${chId} deve existir no catálogo`)
+    const urls = match[1].split(',').filter(u => u.trim().length > 5)
+    assert.ok(urls.length >= 3, `Canal ${chId} deve ter no mínimo 3 fontes de contingência, possui ${urls.length}`)
+  }
+})
