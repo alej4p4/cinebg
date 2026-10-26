@@ -483,3 +483,36 @@ test('TV-PAY-4: Fechamento desimpedido do modal de pagamento para navegação no
   const gateCode = read('src/components/LicenseGate.tsx')
   assert.match(gateCode, /const canDismiss = Boolean\(isModal && onClose\)/, 'LicenseGate deve permitir fechar o modal com canDismiss para que a navegação continue livre')
 })
+
+
+// =====================================================================
+// 13. REGRAS DE ACESSO PARA USUÁRIOS GRATUITOS E ASSINANTES (ISSUE #288)
+// =====================================================================
+test('ACCESS-1: Navegação e visualização de catálogo liberadas para todos os usuários', () => {
+  for (const page of ['Movies', 'Series', 'Anime']) {
+    const src = read(`src/pages/${page}.tsx`)
+    assert.doesNotMatch(src, /<PremiumContentGate/, `${page}.tsx não deve conter PremiumContentGate envolvendo o catálogo`)
+  }
+})
+
+test('ACCESS-2: TV ao vivo gratuita e sem bloqueio de canais', () => {
+  const live = read('src/pages/LiveTV.tsx')
+  assert.doesNotMatch(live, /<PremiumContentGate/, 'LiveTV.tsx não deve ter PremiumContentGate')
+  assert.match(live, /Modo TV Aberta Gratuita Ativo/, 'LiveTV deve explicitar modo TV aberta gratuito')
+})
+
+test('ACCESS-3: Bloqueio de reprodução em Details com aviso de conteúdo exclusivo para assinantes', () => {
+  const details = read('src/pages/Details.tsx')
+  assert.match(details, /if \(!isSubscriber\) \{\s*setSubscriberModalOpen\(true\)/, 'Details.tsx deve barrar reprodução quando não for assinante')
+  assert.match(details, /Conteúdo Exclusivo para Assinantes/, 'Details.tsx deve exibir mensagem de exclusividade para assinantes')
+  assert.match(details, /👑 Contratar Assinatura/, 'Details.tsx deve fornecer opção de contratar assinatura')
+})
+
+test('ACCESS-4: Bloqueio estrito de reprodução no player (Watch / PremiumContentGate)', () => {
+  const watch = read('src/pages/Watch.tsx')
+  assert.match(watch, /<PremiumContentGate/, 'Watch.tsx deve proteger o player com PremiumContentGate')
+
+  const gate = read('src/components/PremiumContentGate.tsx')
+  assert.match(gate, /Conteúdo Exclusivo para Assinantes/, 'PremiumContentGate deve exibir mensagem de exclusividade para assinantes')
+  assert.match(gate, /👑 Contratar Assinatura/, 'PremiumContentGate deve oferecer botão para contratar assinatura')
+})

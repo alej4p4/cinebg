@@ -21,7 +21,6 @@ import {
 } from '@/services/tmdb'
 import type { MediaItem } from '@/types'
 import { PAGE_VARIANTS } from '@/utils/motion'
-import PremiumContentGate from '@/components/PremiumContentGate'
 
 const SERIES_GENRES = [
   { id: 10759, name: 'Ação & Aventura' },
@@ -258,7 +257,7 @@ const Series = () => {
   }, [airingToday, popular, topRated])
 
   return (
-    <PremiumContentGate contentType="tv">
+    <>
       <ProgressBar isLoading={loading || filterLoading} />
       <motion.div
         className="min-h-screen bg-bg-primary pb-16"
@@ -458,7 +457,7 @@ const Series = () => {
           )}
         </div>
       </motion.div>
-    </PremiumContentGate>
+    </>
   )
 }
 
