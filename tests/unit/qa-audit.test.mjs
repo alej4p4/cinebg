@@ -51,9 +51,11 @@ const compile = async (entry) => {
 
 let lic
 let tv
+let mp
 before(async () => {
   lic = await compile('src/hooks/useLicense.ts')
   tv = await compile('src/utils/tv.ts')
+  mp = await compile('src/services/mercadoPago.ts')
 })
 
 const codeFor = (deviceId, days) => `CINEBG-${days}-${lic.computeActivationChecksum(deviceId, days)}`
@@ -542,4 +544,61 @@ test('LIVE-24H-3: Redundância mínima de 3 fontes para os canais temáticos e c
     const urls = match[1].split(',').filter(u => u.trim().length > 5)
     assert.ok(urls.length >= 3, `Canal ${chId} deve ter no mínimo 3 fontes de contingência, possui ${urls.length}`)
   }
+})
+
+
+// =====================================================================
+// 15. AUDITORIA COMPLETA DE SISTEMAS (ISSUE #296)
+// =====================================================================
+test('PIX-EMV-1: Formatação de campos TLV e cálculo de CRC16-CCITT para Pix Copia e Cola (Banco Central)', () => {
+  assert.equal(mp.formatPixField('00', '01'), '000201')
+  assert.equal(mp.formatPixField('58', 'BR'), '5802BR')
+  assert.equal(mp.formatPixField('54', '11.99'), '540511.99')
+
+  // Verificação de checksum CRC16-CCITT padronizado (0x1021)
+  const sample = '00020126330014BR.GOV.BCB.PIX011166996175239520400005303986540511.995802BR5906CINEBG6009SAO PAULO62120508DEV123456304'
+  const crc = mp.computePixCrc16(sample)
+  assert.match(crc, /^[0-9A-F]{4}$/, 'CRC16 deve ser string hexadecimal de 4 caracteres')
+  assert.equal(crc, '9B42')
+})
+
+test('PIX-EMV-2: Código Pix de fallback possui tags obrigatórias do padrão BR Code', () => {
+  const code = mp.buildPixBrCode({
+    pixKey: '66996175239',
+    amount: 11.99,
+    merchantName: 'CINEBG',
+    merchantCity: 'SAO PAULO',
+    txid: 'DEVTEST123',
+  })
+
+  assert.ok(code.startsWith('000201'), 'Deve iniciar com Tag 00 Payload Format Indicator')
+  assert.ok(code.includes('BR.GOV.BCB.PIX'), 'Deve conter identificador do Pix do BCB')
+  assert.ok(code.includes('5303986'), 'Deve conter moeda 986 (BRL)')
+  assert.ok(code.includes('540511.99'), 'Deve conter valor 11.99 com tamanho 05')
+  assert.ok(code.includes('5802BR'), 'Deve conter código de país BR')
+  assert.ok(code.includes('6304'), 'Deve conter campo de CRC 6304 seguido por 4 caracteres hexadecimais')
+  assert.equal(code.slice(-4), mp.computePixCrc16(code.slice(0, -4)))
+})
+
+test('ROUTING-1: Rotas canônicas e atalhos de TV (/tv, /aovivo, /canais) redirecionam para /live no App.tsx', () => {
+  const appSrc = read('src/App.tsx')
+  assert.ok(appSrc.includes('<Route path="/tv" element={<Navigate to="/live" replace />} />'), 'Atalho /tv deve redirecionar para /live')
+  assert.ok(appSrc.includes('<Route path="/aovivo" element={<Navigate to="/live" replace />} />'), 'Atalho /aovivo deve redirecionar para /live')
+  assert.ok(appSrc.includes('<Route path="/canais" element={<Navigate to="/live" replace />} />'), 'Atalho /canais deve redirecionar para /live')
+})
+
+test('VERSION-1: Versão do app é única e centralizada (CURRENT_APP_VERSION = 1.2.97)', () => {
+  const pkg = JSON.parse(read('package.json'))
+  assert.equal(tv.CURRENT_APP_VERSION, pkg.version, 'CURRENT_APP_VERSION deve ser igual a package.json')
+  assert.equal(tv.getNativeAppVersion(), pkg.version, 'getNativeAppVersion fallback deve retornar a versão atual')
+
+  const updateJson = JSON.parse(read('public/update.json'))
+  assert.equal(updateJson.version, pkg.version, 'update.json version deve ser igual a package.json')
+})
+
+test('DETAILS-1: Modal de assinante em Details trata tecla Voltar sem fechar a tela inteira', () => {
+  const detailsSrc = read('src/pages/Details.tsx')
+  assert.ok(detailsSrc.includes('if (subscriberModalOpen) {'), 'Deve verificar subscriberModalOpen ao pressionar tecla')
+  assert.ok(detailsSrc.includes('setSubscriberModalOpen(false)'), 'Deve fechar o modal')
+  assert.ok(detailsSrc.includes("setFocus('details-fullscreen')"), 'Deve devolver foco ao botão fullscreen')
 })
