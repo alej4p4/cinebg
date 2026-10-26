@@ -295,3 +295,50 @@ test('REG-4: observabilidade usa a versão nativa real (sem versão fixa antiga)
   assert.doesNotMatch(obs, /'1\.2\.57'/)
   assert.match(obs, /getNativeAppVersion\(\)/)
 })
+
+// =====================================================================
+// 7. CORREÇÃO DE ÁUDIO E LEGENDAS (ISSUE #276)
+// =====================================================================
+test('AUDIO-1: heurística robusta de detecção de áudio PT-BR e produções nacionais', async () => {
+  const streams = await compile('src/services/streams.ts')
+  const isPt = streams.isPortugueseAudioCandidate
+
+  // 1. Produções nacionais brasileiras (originalLanguage === 'pt')
+  assert.equal(isPt('Opcao 1', 'https://cdn.example.com/video.mp4', 'pt'), true, 'produções em PT devem ser detectadas como áudio em português')
+
+  // 2. Rótulos variados com termos em português
+  assert.equal(isPt('Opção 1 (Português)', 'https://cdn.example.com/video.mp4', 'en'), true)
+  assert.equal(isPt('Audio PT-BR', 'https://cdn.example.com/video.mp4', 'en'), true)
+  assert.equal(isPt('Filme Dublado 1080p', 'https://cdn.example.com/video.mp4', 'en'), true)
+  assert.equal(isPt('Versão Nacional', 'https://cdn.example.com/video.mp4', 'en'), true)
+
+  // 3. URLs contendo termos de áudio em português
+  assert.equal(isPt('Opção 1', 'https://cdn.example.com/filme-pt-br.mp4', 'en'), true)
+  assert.equal(isPt('Opção 1', 'https://fontedecanais.com/stream.m3u8', 'en'), true)
+
+  // 4. Fontes originais estrangeiras sem indicação de português
+  assert.equal(isPt('English Original', 'https://cdn.example.com/movie-en.mp4', 'en'), false)
+})
+
+test('AUDIO-2: priorização automática de áudio PT-BR no StreamPlayer sem poluição de perfil global', () => {
+  const player = read('src/components/player/StreamPlayer.tsx')
+
+  // Não deve sobrescrever o perfil do usuário permanentemente ao tocar filme legendado
+  assert.doesNotMatch(player, /setAudioOption\((hasDubbedSource \? 'dub' : 'orig'|'orig')\)/, 'StreamPlayer não deve reescrever setAudioOption global ao carregar mídia')
+
+  // Deve selecionar áudio dublado automaticamente se disponível
+  assert.match(player, /if \(hasDubbedSource\)[\s\S]*?setActiveAudio\('dub'\)/, 'StreamPlayer deve selecionar áudio em português automaticamente quando disponível')
+
+  // Deve inicializar áudio ativo via initialAudio ou 'dub' por padrão
+  assert.match(player, /const \[activeAudio, setActiveAudio\] = useState/, 'StreamPlayer deve manter activeAudio específico da sessão')
+})
+
+test('AUDIO-3: PlaybackSettingsModal e HUD com suporte dinâmico a áudio e controle remoto TV', () => {
+  const modal = read('src/components/player/PlaybackSettingsModal.tsx')
+  assert.match(modal, /dubbedLabel/, 'PlaybackSettingsModal deve exibir rótulo contextual de dublado ou original nacional')
+  assert.match(modal, /origLabel/, 'PlaybackSettingsModal deve exibir o idioma original dinâmico')
+
+  const player = read('src/components/player/StreamPlayer.tsx')
+  assert.match(player, /activeAudio === 'dub' \? 'orig' : 'dub'/, 'HUD e atalhos devem alternar activeAudio da sessão')
+  assert.match(player, /hls\.audioTrack =/, 'StreamPlayer deve alternar hls.audioTrack de forma transparente em transmissões multi-áudio')
+})

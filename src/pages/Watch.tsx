@@ -21,6 +21,7 @@ const Watch = () => {
   const isMovie = type === 'movie'
   const querySeason = Number(searchParams.get('season')) || null
   const queryEpisode = Number(searchParams.get('episode')) || null
+  const queryAudio = (searchParams.get('audio') as 'dub' | 'orig' | null) || undefined
 
   // Hidratação instantânea via cache em 0ms (sem bloquear a abertura do vídeo)
   const cachedMovie = isMovie ? getCachedMediaDetails<TMDBMovieDetails>(mediaId, 'movie') : null
@@ -166,12 +167,16 @@ const Watch = () => {
     }
   }
 
+  const title = isMovie ? movieData?.title : showData?.name
+  const posterPath = isMovie ? movieData?.poster_path : showData?.poster_path
+  const originalLanguage = isMovie ? movieData?.original_language : showData?.original_language
+
   // Pré-resolve o próximo episódio em background para troca instantânea em 0ms
   useEffect(() => {
     if (!isMovie && mediaId) {
-      resolveMegaEmbed(mediaId, 'tv', season, episode + 1).catch(() => {})
+      resolveMegaEmbed(mediaId, 'tv', season, episode + 1, originalLanguage).catch(() => {})
     }
-  }, [isMovie, mediaId, season, episode])
+  }, [isMovie, mediaId, season, episode, originalLanguage])
 
   const handleNextEpisode = () => {
     const realSeasons = showData?.seasons?.filter((s) => s.season_number > 0) || []
@@ -196,10 +201,6 @@ const Watch = () => {
     updateHistoryProgress(mediaId, Math.floor(seconds))
   }
 
-  const title = isMovie ? movieData?.title : showData?.name
-  const posterPath = isMovie ? movieData?.poster_path : showData?.poster_path
-  const originalLanguage = isMovie ? movieData?.original_language : showData?.original_language
-
   const handleDownload = async () => {
     if (!downloadsSupported()) {
       alert('Downloads estão disponíveis apenas no aplicativo Android.')
@@ -213,6 +214,7 @@ const Watch = () => {
         type === 'movie' ? 'movie' : 'tv',
         season,
         episode,
+        originalLanguage,
       )
       if (!resolved.dubbedMp4) {
         alert('Esta fonte não está disponível para download. Tente novamente mais tarde.')
@@ -268,6 +270,7 @@ const Watch = () => {
           episode={episode}
           title={title || initialLastWatched?.title || 'Carregando...'}
           originalLanguage={originalLanguage}
+          initialAudio={queryAudio}
           onNextEpisode={type !== 'movie' ? handleNextEpisode : undefined}
           startAt={resumeAt}
           onProgress={handleProgress}

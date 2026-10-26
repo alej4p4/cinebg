@@ -17,6 +17,8 @@ export interface PlaybackSettingsProps {
   onChangeSubtitleSize: (size: 'sm' | 'md' | 'lg') => void
   subtitleStyle: 'white' | 'yellow' | 'boxed'
   onChangeSubtitleStyle: (style: 'white' | 'yellow' | 'boxed') => void
+  originalLanguage?: string
+  hasDubbedAvailable?: boolean
 }
 
 export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
@@ -33,7 +35,26 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
   onChangeSubtitleSize,
   subtitleStyle,
   onChangeSubtitleStyle,
+  originalLanguage,
+  hasDubbedAvailable = true,
 }) => {
+  const isPtOriginal = (originalLanguage || '').toLowerCase() === 'pt'
+  const dubbedLabel = isPtOriginal ? 'Português (Original Nacional)' : 'Português (Dublado)'
+  const origName = (() => {
+    switch ((originalLanguage || '').toLowerCase()) {
+      case 'en': return 'Inglês'
+      case 'es': return 'Espanhol'
+      case 'fr': return 'Francês'
+      case 'ja': return 'Japonês'
+      case 'ko': return 'Coreano'
+      case 'tr': return 'Turco'
+      case 'it': return 'Italiano'
+      case 'de': return 'Alemão'
+      case 'pt': return 'Nacional'
+      default: return 'Idioma Original'
+    }
+  })()
+  const origLabel = isPtOriginal ? 'Português (Padrão)' : `${origName} (Original)`
   // Navegação D-Pad para controle remoto de Smart TV / Android TV:
   // Row 0: Áudio (2 colunas: dub, orig)
   // Row 1: Idioma Legenda (3 colunas: off, pt, en)
@@ -311,7 +332,12 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                   >
                     {audioOption === 'dub' && <Check className="w-3 h-3 text-black stroke-[3.5]" />}
                   </span>
-                  <span>Português (Dublado)</span>
+                  <span>{dubbedLabel}</span>
+                  {!hasDubbedAvailable && !isPtOriginal && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/60 ml-1">
+                      (Sem Dublagem)
+                    </span>
+                  )}
                 </button>
 
                 <button
@@ -340,7 +366,7 @@ export const PlaybackSettingsModal: React.FC<PlaybackSettingsProps> = ({
                   >
                     {audioOption === 'orig' && <Check className="w-3 h-3 text-black stroke-[3.5]" />}
                   </span>
-                  <span>Inglês (Original)</span>
+                  <span>{origLabel}</span>
                 </button>
               </div>
             </div>
