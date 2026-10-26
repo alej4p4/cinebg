@@ -765,7 +765,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     geoBlocked: false,
     genres: ['Natureza', 'Exploração', 'Ciência'],
   },
-  // ===== CANAIS 24H E TEMÁTICOS (FAST & IPTV SELECIONADOS) =====
+  // ===== CANAIS 24H E TEMÁTICOS (STREAMS VERIFICADOS COM SUPORTE UNIVERSAL CORS) =====
   {
     id: 'avatar-24h',
     name: 'Avatar: A Lenda de Aang (24h)',
@@ -774,7 +774,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'https://jmp2.uk/plu-6759eeb1bd523200083b4f29.m3u8',
+      'http://45.162.64.114/CARTOON_NETWORK/index.m3u8',
+      'http://170.83.49.66:8083/BOXKIDSHD/index.m3u8',
+      'http://181.78.197.59:8000/play/a07c/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -788,7 +790,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'https://jmp2.uk/plu-609ae66b359b270007869ff1.m3u8',
+      'http://181.78.197.59:8000/play/a08f/index.m3u8',
+      'http://45.162.64.114/SPACE/index.m3u8',
+      'http://45.162.64.114/TNT/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -802,7 +806,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'https://jmp2.uk/plu-5f997e44949bc70007a6941e.m3u8',
+      'https://stmv1.video.brstream.com.br/retrotv/retrotv/playlist.m3u8',
+      'http://170.83.49.66:8083/BOXKIDSHD/index.m3u8',
+      'http://45.162.64.114/BOOMERANG/index.m3u8',
     ],
     quality: '720p',
     geoBlocked: false,
@@ -816,8 +822,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'https://stmv1.video.brstream.com.br/retrotv/retrotv/chunklist_w1069200121.m3u8',
-      'https://jmp2.uk/plu-655e5c4d2c46f3000877a54b.m3u8',
+      'https://stmv1.video.brstream.com.br/retrotv/retrotv/playlist.m3u8',
+      'http://45.162.64.114/BOOMERANG/index.m3u8',
+      'http://45.162.64.114/CARTOON_NETWORK/index.m3u8',
     ],
     quality: '720p',
     geoBlocked: false,
@@ -831,8 +838,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'https://jmp2.uk/plu-655e5c4d2c46f3000877a54b.m3u8',
-      'https://stmv1.video.brstream.com.br/retrotv/retrotv/chunklist_w1069200121.m3u8',
+      'http://45.162.64.114/BOOMERANG/index.m3u8',
+      'https://stmv1.video.brstream.com.br/retrotv/retrotv/playlist.m3u8',
+      'http://170.83.49.66:8083/BOXKIDSHD/index.m3u8',
     ],
     quality: '720p',
     geoBlocked: false,
@@ -846,7 +854,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'https://jmp2.uk/plu-6824ce10c5d53e1351ceb8d1.m3u8',
+      'https://x1colegal.com/hls/stream.m3u8',
+      'http://181.78.197.59:8000/play/a07c/index.m3u8',
+      'http://45.162.64.114/CARTOON_NETWORK/index.m3u8',
     ],
     quality: '720p',
     geoBlocked: false,
@@ -860,13 +870,14 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'https://jmp2.uk/plu-62545c0b002f4b0007688b61.m3u8',
+      'https://x1colegal.com/hls/stream.m3u8',
+      'http://170.83.49.66:8083/BOXKIDSHD/index.m3u8',
+      'http://45.162.64.114/ZOOMOO_KIDS/index.m3u8',
     ],
     quality: '720p',
     geoBlocked: false,
     genres: ['Animação', 'Comédia', 'Infantil', '24h'],
   },
-
   {
     id: 'adrenalina-pura-24h',
     name: 'Adrenalina Pura (Filmes 24h)',
@@ -875,7 +886,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'https://jmp2.uk/plu-61b790b985706b00072cb797.m3u8',
+      'http://45.162.64.114/SONY_MOVIES/index.m3u8',
+      'http://170.83.49.66:8083/AMCHD/index.m3u8',
+      'http://45.162.64.114/SPACE/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -889,7 +902,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'https://jmp2.uk/plu-6077045b6031bd00078de127.m3u8',
+      'https://appletree-mytime-samsungbrazil.amagi.tv/playlist.m3u8',
+      'https://video02.logicahost.com.br/tvpetropolis/tvpetropolis/playlist.m3u8',
+      'http://45.162.64.114/BAND_NEWS/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
