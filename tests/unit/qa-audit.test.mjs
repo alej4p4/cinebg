@@ -653,10 +653,11 @@ test('MOBILE-COFILE-1: StreamPlayer nunca realiza fallback automático para supe
   assert.ok(playerSrc.includes("activeAudio === 'dub' ? ['megaembed', 'vidlink'] : ['vidlink', 'megaembed']"), 'fallbackSequence deve conter apenas megaembed e vidlink')
 })
 
-test('MOBILE-COFILE-2: StreamPlayer iframe possui sandbox restritivo sem allow-top-navigation para impedir desvio de tela', () => {
+test('MOBILE-COFILE-2: StreamPlayer iframe não possui sandbox restritivo para não acionar erro anti-tamper', () => {
   const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
-  assert.ok(playerSrc.includes('sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"'), 'iframe do StreamPlayer deve possuir sandbox estrito')
-  assert.ok(!playerSrc.includes('allow-top-navigation'), 'iframe do StreamPlayer não deve ter permissão de navegar a janela principal (allow-top-navigation)')
+  assert.ok(!playerSrc.includes('sandbox="allow-scripts'), 'iframe do StreamPlayer não deve possuir sandbox para evitar erro "SANDBOX DETECTED"')
+  assert.ok(!playerSrc.includes('allow-top-navigation'), 'iframe do StreamPlayer não deve ter permissão de navegar a janela principal')
+  assert.ok(playerSrc.includes('setAntiRedirectShieldActive(showIframe)'), 'Escudo anti-redirect deve ser ativado dinamicamente quando o iframe é exibido')
 })
 
 test('MOBILE-COFILE-3: streams.ts filtra playercdnx.workers.dev e protege URLs contra redirecionamento externo', () => {

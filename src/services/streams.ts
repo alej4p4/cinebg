@@ -31,9 +31,9 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'FHD 1080p',
     type: 'dubbed_br',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://mgeb.site/embed/${tmdbId}?autoplay=1&ads=0&adblock=1`,
+    getMovieUrl: (tmdbId) => `https://mgeb.lat/embed/${tmdbId}?autoplay=1&ads=0&adblock=1`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://mgeb.site/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1`,
+      `https://mgeb.lat/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1`,
   },
   {
     id: 'superflix',
@@ -111,7 +111,7 @@ export const buildShowUrl = (
 // =========================================================================
 // SELEÇÃO INTELIGENTE DE FONTES DIRETAS (MegaEmbed) & FILTRO ANTI-1XBET/CAMRIP
 // =========================================================================
-const MEGAEMBED_EMBED_BASE = 'https://mgeb.site/embed'
+const MEGAEMBED_EMBED_BASE = 'https://mgeb.lat/embed'
 
 // Hosts confirmados com áudio Dublado PT-BR no MegaEmbed
 const DUBBED_HOST_HINTS = [
@@ -289,7 +289,7 @@ const fetchMegaEmbedSources = async (
 ): Promise<MegaEmbedSource[]> => {
   const targetPath =
     mediaType === 'movie' ? `${tmdbId}` : `${tmdbId}/${season}/${episode}`
-  const targetUrl = `https://mgeb.site/embed/${targetPath}`
+  const targetUrl = `https://mgeb.lat/embed/${targetPath}`
 
   // 1. No app nativo Android (Capacitor), usa CapacitorHttp com timeout seguro de 8s
   if (Capacitor.isNativePlatform()) {

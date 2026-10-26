@@ -2441,7 +2441,6 @@ const StreamPlayer = ({
             src={embedUrl}
             title={title}
             className="w-full h-full border-0"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
             allowFullScreen
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
             referrerPolicy="no-referrer"
