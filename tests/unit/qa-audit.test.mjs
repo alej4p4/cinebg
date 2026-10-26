@@ -377,3 +377,25 @@ test('PLAYER-2: Navegação D-Pad em Smart TV e teclas de mídia física do cont
   assert.match(player, /key === 'l'/, 'Deve suportar atalho l (avançar 10s)')
 })
 
+
+
+// =====================================================================
+// 9. COMPATIBILIDADE CELULARES E SMART TVS (ISSUE #280)
+// =====================================================================
+test('COMPAT-1: Detecção e separação de ecossistemas (Celular/Tablet vs Smart TV/TV Box)', () => {
+  const tvCode = read('src/utils/tv.ts')
+  assert.match(tvCode, /Tablets e iPads/, 'tv.ts deve identificar tablets e iPads com tela de toque mesmo em alta resolução')
+  assert.match(tvCode, /setPlayerLandscape/, 'tv.ts deve suportar sincronização de orientação com a ponte nativa')
+})
+
+test('COMPAT-2: Layout adaptativo e isolamento de tela cheia no player para celulares', () => {
+  const appCode = read('src/App.tsx')
+  assert.match(appCode, /const MainLayout =/, 'App.tsx deve possuir MainLayout com controle dinâmico de rota')
+  assert.match(appCode, /isWatch[\s\S]*?pb-0 overflow-hidden/, 'Na rota /watch o padding inferior deve ser zerado para evitar barra residual')
+})
+
+test('COMPAT-3: Sincronização nativa de orientação paisagem no StreamPlayer', () => {
+  const player = read('src/components/player/StreamPlayer.tsx')
+  assert.match(player, /setNativePlayerLandscape\(false\)/, 'StreamPlayer deve sincronizar rotação para retrato na ponte nativa')
+  assert.match(player, /setNativePlayerLandscape\(true\)/, 'StreamPlayer deve sincronizar rotação para paisagem na ponte nativa')
+})
