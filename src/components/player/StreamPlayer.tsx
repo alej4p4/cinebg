@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Hls from 'hls.js'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   RefreshCw,
   AlertCircle,
@@ -457,6 +458,10 @@ const StreamPlayer = ({
   }
 
   const resetHudTimer = useCallback(() => {
+    if (isLocked) {
+      setShowHud(false)
+      return
+    }
     setShowHud(true)
     if (hudTimerRef.current) clearTimeout(hudTimerRef.current)
     hudTimerRef.current = setTimeout(() => {
@@ -471,7 +476,7 @@ const StreamPlayer = ({
         setShowHud(false)
       }
     }, 3000)
-  }, [settingsModalOpen, episodesDrawerOpen, speedOpen, subsOpen, qualityOpen])
+  }, [isLocked, settingsModalOpen, episodesDrawerOpen, speedOpen, subsOpen, qualityOpen])
 
   useEffect(() => {
     resetHudTimer()
@@ -1227,9 +1232,14 @@ const StreamPlayer = ({
       const next = !prev
       if (next) {
         showFeedback('🔒 Tela Bloqueada')
-        setShowLockPrompt(false)
+        setShowHud(false)
+        setShowLockPrompt(true)
+        if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
+        lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
       } else {
         showFeedback('🔓 Tela Desbloqueada')
+        setShowLockPrompt(false)
+        resetHudTimer()
       }
       return next
     })
@@ -2085,6 +2095,10 @@ const StreamPlayer = ({
       ref={containerRef}
       tabIndex={0}
       onTouchStart={(e) => {
+        if (isLocked) {
+          handleLockTap()
+          return
+        }
         resetHudTimer()
         if (e.touches.length > 0) {
           touchStartRef.current = {
@@ -2116,7 +2130,7 @@ const StreamPlayer = ({
         }
         handlePlayerTap(e.clientX, e.clientY)
       }}
-      onMouseMove={resetHudTimer}
+      onMouseMove={() => { if (!isLocked) resetHudTimer() }}
       style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
       className="player-container relative w-full h-full min-h-screen bg-black overflow-hidden flex flex-col justify-between outline-none ring-0 border-0 select-none cursor-pointer"
     >
@@ -2158,6 +2172,25 @@ const StreamPlayer = ({
           <span className="bg-black/60 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white/90 backdrop-blur-md">
             {activeAudio === 'dub' ? '🇧🇷 Dublado' : '🇺🇸 Legendado'}
           </span>
+
+          {/* Botão de Bloqueio de Tela no topo (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
+          {directSrc && !isTv && isMobileDevice() && (
+            <button
+              type="button"
+              id="hud-btn-lock"
+              data-hud-btn="true"
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleLock()
+              }}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-black/60 hover:bg-black/80 border border-white/10 text-white/80 hover:text-white transition-all active:scale-95 flex items-center gap-1.5 text-xs font-bold shadow-lg"
+              title="Bloquear tela contra toques acidentais"
+              aria-label="Bloquear tela"
+            >
+              <Unlock className="w-4 h-4 text-yellow-400" />
+              <span className="hidden sm:inline">Bloquear</span>
+            </button>
+          )}
         </div>
       </div>
         {feedback && (
@@ -2224,46 +2257,84 @@ const StreamPlayer = ({
           </button>
         )}
 
-        {/* Botão de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
-        {directSrc && !isTv && isMobileDevice() && (
-          <div className="absolute top-[max(0.75rem,env(safe-area-inset-top,0px))] left-[max(0.75rem,env(safe-area-inset-left,0px))] z-40">
-            <button
-              onClick={toggleLock}
-              className={`p-2.5 rounded-full transition-all duration-200 backdrop-blur-md ${
-                isLocked
-                  ? 'bg-accent-red text-white shadow-lg shadow-red-900/60 scale-110'
-                  : 'bg-black/60 hover:bg-black/80 text-white/70 hover:text-white'
-              }`}
-              title={isLocked ? 'Desbloquear tela' : 'Bloquear tela'}
-            >
-              {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-            </button>
-          </div>
-        )}
-
-        {/* Overlay de Bloqueio de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
+        {/* Overlay de Bloqueio Total de Tela (Exclusivo para Mobile com tela de toque; Oculto em TV) */}
         {isLocked && !isTv && isMobileDevice() && (
           <div
-            onClick={handleLockTap}
-            className="absolute inset-0 z-30 cursor-pointer flex items-center justify-center bg-transparent select-none"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleLockTap()
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation()
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation()
+              handleLockTap()
+            }}
+            className="absolute inset-0 z-50 cursor-pointer flex items-center justify-center bg-black/20 backdrop-blur-[2px] select-none"
           >
-            {showLockPrompt && (
-              <div className="bg-black/85 backdrop-blur-md border border-white/10 px-5 py-3 rounded-2xl flex items-center gap-3 animate-in fade-in zoom-in duration-200 shadow-2xl">
-                <Lock className="h-5 w-5 text-accent-red" />
-                <span className="text-white text-xs sm:text-sm font-semibold">
-                  Tela bloqueada. Toque no cadeado para liberar.
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    toggleLock()
-                  }}
-                  className="px-3 py-1 bg-accent-red text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors shadow-md"
+            <AnimatePresence>
+              {showLockPrompt && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center gap-3 bg-black/90 backdrop-blur-xl border border-white/20 p-6 rounded-3xl shadow-2xl max-w-xs text-center"
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  onTouchEnd={(e: React.TouchEvent) => e.stopPropagation()}
                 >
-                  Desbloquear
-                </button>
-              </div>
-            )}
+                  <button
+                    type="button"
+                    id="hud-btn-unlock-center"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleLock()
+                    }}
+                    onTouchEnd={(e) => {
+                      e.stopPropagation()
+                      toggleLock()
+                    }}
+                    className="w-16 h-16 rounded-full bg-accent-red hover:bg-red-600 text-white flex items-center justify-center shadow-lg shadow-red-900/60 active:scale-90 transition-transform cursor-pointer"
+                    title="Toque para desbloquear a tela"
+                    aria-label="Desbloquear tela"
+                  >
+                    <Lock className="w-8 h-8" />
+                  </button>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-white font-black text-sm">Tela Bloqueada</span>
+                    <span className="text-white/60 text-xs">Toque no cadeado para liberar os controles</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Botão de desbloqueio persistente no canto superior */}
+            <div
+              className={`absolute top-[max(1rem,env(safe-area-inset-top,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] transition-opacity duration-300 ${
+                showLockPrompt ? 'opacity-100 pointer-events-auto' : 'opacity-40 hover:opacity-100 pointer-events-auto'
+              }`}
+              onClick={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                id="hud-btn-unlock-corner"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleLock()
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation()
+                  toggleLock()
+                }}
+                className="p-3 bg-black/80 hover:bg-black border border-white/20 rounded-full text-white shadow-xl active:scale-90 transition-all flex items-center gap-2 cursor-pointer"
+                title="Toque para desbloquear"
+              >
+                <Lock className="w-5 h-5 text-accent-red" />
+                <span className="text-xs font-bold pr-1">Desbloquear</span>
+              </button>
+            </div>
           </div>
         )}
 

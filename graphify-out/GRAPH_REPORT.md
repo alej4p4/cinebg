@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-10-26)
 
 ## Corpus Check
-- 117 files · ~429,487 words
+- 117 files · ~429,853 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 23 file(s) not represented in the graph (top: .xml 10, (none) 3, .properties 3)
 
 ## Summary
-- 1143 nodes · 2499 edges · 81 communities (61 shown, 20 thin omitted)
+- 1143 nodes · 2500 edges · 80 communities (60 shown, 20 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 67 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a0319924`
+- Built from commit: `3a42a4d5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -61,7 +61,6 @@
 - EmptyState.tsx
 - CineBG Streams API Documentation
 - resolveMegaEmbed
-- Navbar.tsx
 - StreamPlayer
 - Filtros & Utilitários
 - CineBG - Architecture Documentation
@@ -90,7 +89,7 @@
 1. `useAppStore` - 46 edges
 2. `Focusable()` - 41 edges
 3. `react` - 39 edges
-4. `framer-motion` - 31 edges
+4. `framer-motion` - 32 edges
 5. `lucide-react` - 30 edges
 6. `isMobileDevice()` - 30 edges
 7. `@noriginmedia/norigin-spatial-navigation` - 25 edges
@@ -113,7 +112,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (81 total, 20 thin omitted)
+## Communities (80 total, 20 thin omitted)
 
 ### Community 0 - "UpdateModal.tsx"
 Cohesion: 0.13
@@ -124,8 +123,8 @@ Cohesion: 0.14
 Nodes (23): 2.2 CRÍTICO - Funcionalidade / Estabilidade, @capacitor/app, @capacitor/local-notifications, useEpisodeNotifications(), COLORS, EMOJIS, ProfileCard(), Profiles() (+15 more)
 
 ### Community 2 - "tv.ts"
-Cohesion: 0.22
-Nodes (17): Direction, getDirectionFromEvent(), isEnterEvent(), isToggleModeEvent(), NavigationMode, TvCursorOverlayContent(), useOrientationFullscreen(), useSpatialNavigation() (+9 more)
+Cohesion: 0.18
+Nodes (19): BOTTOM_NAV_ITEMS, BottomNav(), Direction, getDirectionFromEvent(), isEnterEvent(), isToggleModeEvent(), NavigationMode, TvCursorOverlayContent() (+11 more)
 
 ### Community 3 - "useLicense.ts"
 Cohesion: 0.10
@@ -172,8 +171,8 @@ Cohesion: 0.10
 Nodes (20): compilerOptions, allowImportingTsExtensions, baseUrl, isolatedModules, jsx, lib, module, moduleResolution (+12 more)
 
 ### Community 16 - "App.tsx"
-Cohesion: 0.19
-Nodes (21): AnimatedRoutes(), Anime, App(), Details, Downloads, Favorites, History, Home (+13 more)
+Cohesion: 0.14
+Nodes (24): AnimatedRoutes(), Anime, App(), Details, Downloads, Favorites, History, Home (+16 more)
 
 ### Community 17 - "dependencies"
 Cohesion: 0.11
@@ -220,8 +219,8 @@ Cohesion: 0.09
 Nodes (42): @capacitor/status-bar, LivePlayer(), SkeletonLiveTVGrid(), LiveTV(), ChannelScheduleSlot, DailyScheduleItem, EPGProgram, formatSlotTitle() (+34 more)
 
 ### Community 29 - "Focusable"
-Cohesion: 0.27
-Nodes (10): CONTENT_LABEL, PremiumContentGate(), PremiumContentGateProps, PremiumContentType, Focusable(), FocusableProps, ErrorState(), ErrorStateProps (+2 more)
+Cohesion: 0.23
+Nodes (12): CONTENT_LABEL, PremiumContentGate(), PremiumContentGateProps, PremiumContentType, Focusable(), FocusableProps, YuCineChannelCard(), ErrorState() (+4 more)
 
 ### Community 30 - "compilerOptions"
 Cohesion: 0.22
@@ -256,8 +255,8 @@ Cohesion: 0.40
 Nodes (4): 📊 Benefícios Esperados, ✅ Critérios de Aceite, 💡 Oportunidade de Melhoria, 🚀 Proposta de Solução
 
 ### Community 50 - "react"
-Cohesion: 0.12
-Nodes (23): framer-motion, hls.js, lucide-react, @noriginmedia/norigin-spatial-navigation, react, react-router-dom, BOTTOM_NAV_ITEMS, LivePlayerProps (+15 more)
+Cohesion: 0.13
+Nodes (22): framer-motion, hls.js, lucide-react, @noriginmedia/norigin-spatial-navigation, react, react-router-dom, CATEGORIES_GRID, NAV_LINKS (+14 more)
 
 ### Community 51 - "EmptyState.tsx"
 Cohesion: 0.26
@@ -270,10 +269,6 @@ Nodes (21): Android Nativo (Capacitor), 🧠 Cache LRU, CineBG Streams API Docum
 ### Community 53 - "resolveMegaEmbed"
 Cohesion: 0.27
 Nodes (11): `getCachedMegaEmbed()`, Resolução de Streams, `resolveMegaEmbed()`, `resolveMegaEmbedDubbedSource()`, fetchMegaEmbedSources(), getCachedMegaEmbed(), getValidCachedEntry(), isPortugueseAudioCandidate() (+3 more)
-
-### Community 54 - "Navbar.tsx"
-Cohesion: 0.27
-Nodes (6): CATEGORIES_GRID, NAV_LINKS, CineBGLogo(), CineBGLogoProps, SplashScreen(), SplashScreenProps
 
 ### Community 55 - "StreamPlayer"
 Cohesion: 0.52
