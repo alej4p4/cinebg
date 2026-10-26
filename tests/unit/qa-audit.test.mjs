@@ -425,3 +425,33 @@ test('SUB-3: Sincronização persistente de licença com SharedPreferences nativ
   assert.match(hookCode, /saveLicense\?\.\(serialized\)/, 'useLicense deve sincronizar ativação com a ponte nativa Android')
   assert.match(hookCode, /getSavedLicense\(\)/, 'useLicense deve recuperar licença nativa salva se localStorage for limpo')
 })
+
+
+// =====================================================================
+// 11. BLOQUEIO DE TELA DO PLAYER (ISSUE #284)
+// =====================================================================
+test('LOCK-1: Botão de bloqueio de tela sem colisão com o botão voltar', () => {
+  const player = read('src/components/player/StreamPlayer.tsx')
+
+  // Botão de cadeado na barra superior ao lado do áudio
+  assert.match(player, /id="hud-btn-lock"/, 'StreamPlayer deve possuir botão de cadeado no topo')
+  assert.match(player, /!isTv && isMobileDevice\(\)/, 'Botão de bloqueio deve ser exclusivo de mobile')
+})
+
+test('LOCK-2: Overlay z-50 de bloqueio total contra toques acidentais', () => {
+  const player = read('src/components/player/StreamPlayer.tsx')
+
+  // Overlay com z-50 cobrindo toda a tela
+  assert.match(player, /absolute inset-0 z-50 cursor-pointer/, 'Overlay de bloqueio deve usar z-50 para sobrepor todos os controles')
+  assert.match(player, /id="hud-btn-unlock-center"/, 'Deve exibir botão central de desbloqueio')
+  assert.match(player, /id="hud-btn-unlock-corner"/, 'Deve exibir botão de canto de desbloqueio')
+
+  // resetHudTimer não abre HUD se tela estiver bloqueada
+  assert.match(player, /if \(isLocked\) \{\s*setShowHud\(false\)\s*return\s*\}/, 'resetHudTimer deve suprimir a exibição do HUD quando bloqueado')
+})
+
+test('LOCK-3: Preservação ininterrupta da reprodução durante o bloqueio', () => {
+  const player = read('src/components/player/StreamPlayer.tsx')
+  // toggleLock altera apenas o estado isLocked sem invocar pause()
+  assert.doesNotMatch(player, /toggleLock[\s\S]*?videoRef\.current\.pause\(\)/, 'toggleLock não deve pausar o vídeo')
+})

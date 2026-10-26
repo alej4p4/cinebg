@@ -114,9 +114,9 @@
     "semantic_hash": "00dc5c375269e6cf3cab3750b945cead"
   },
   "src/components/LicenseGate.tsx": {
-    "mtime": 1793032988.8514376,
-    "seen": 1793033099.9802551,
-    "ast_hash": "08063e4ffaa27b45c01e13371e56491a",
+    "mtime": 1793033165.8491678,
+    "seen": 1793033540.4433362,
+    "ast_hash": "e961735517982c34cbfe68a9c83ea1ae",
     "semantic_hash": ""
   },
   "src/components/UpdateModal.tsx": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1793032848.3688192,
-    "seen": 1793033099.9802744,
-    "ast_hash": "b28ac5177db5e32966a482b75fee7a65",
+    "mtime": 1793033472.375319,
+    "seen": 1793033540.4433548,
+    "ast_hash": "a55d4b9248c49c4ff1e34602800d719c",
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793033000.037465,
-    "seen": 1793033099.9804106,
-    "ast_hash": "61dd838470fba38605da523499612f19",
+    "mtime": 1793033375.8006854,
+    "seen": 1793033540.4434907,
+    "ast_hash": "ebe0f29dff4e978370481724ca09d4fd",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {
