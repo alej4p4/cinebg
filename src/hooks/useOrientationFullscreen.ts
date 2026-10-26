@@ -3,21 +3,24 @@ import { Capacitor } from '@capacitor/core'
 import { isMobileDevice, setNativePlayerLandscape } from '@/utils/tv'
 
 /**
- * Em celulares (Mobile), garante que todas as telas de navegação fiquem em Retrato (vertical),
- * ativando modo paisagem/tela cheia apenas dentro do player (/watch).
+ * Em celulares (Mobile), garante que as telas de navegação fiquem em Retrato (vertical),
+ * ativando modo paisagem (landscape) e tela cheia imersiva sempre que um reprodutor de vídeo
+ * (filmes/séries em /watch ou canal de TV ao vivo em /live) estiver ativo.
  */
 export const useOrientationFullscreen = () => {
   const fullscreenRequested = useRef(false)
 
   useEffect(() => {
-    // Se for celular e não estiver no player de vídeo (/watch), garante orientação Retrato (em pé)
-    if (isMobileDevice() && !window.location.pathname.startsWith('/watch')) {
-      setNativePlayerLandscape(false)
-      try {
-        if (typeof screen !== 'undefined' && screen.orientation && 'unlock' in screen.orientation) {
-          screen.orientation.unlock()
-        }
-      } catch {}
+    const isVideoPlayerActive = () => {
+      if (typeof window === 'undefined') return false
+      const isWatchRoute = window.location.pathname.startsWith('/watch')
+      const hasVideoClass =
+        document.documentElement.classList.contains('cinebg-video-playing') ||
+        document.body.classList.contains('cinebg-video-playing')
+      const hasLivePlayer = Boolean(
+        document.querySelector('.live-player-container, [data-live-player="true"]')
+      )
+      return isWatchRoute || hasVideoClass || hasLivePlayer
     }
 
     const isLandscape = () => {
@@ -50,14 +53,20 @@ export const useOrientationFullscreen = () => {
     }
 
     const update = async () => {
-      const isWatchRoute = window.location.pathname.startsWith('/watch')
+      const isPlayer = isVideoPlayerActive()
       const landscape = isLandscape()
 
-      if (isMobileDevice() && !isWatchRoute) {
+      // Se for celular e NÃO houver player de vídeo ativo, garante orientação Retrato (vertical)
+      if (isMobileDevice() && !isPlayer) {
         setNativePlayerLandscape(false)
         document.documentElement.classList.remove('cinebg-landscape')
         if (document.fullscreenElement) {
           await exitFullscreen()
+        }
+        if (typeof screen !== 'undefined' && screen.orientation && 'unlock' in screen.orientation) {
+          try {
+            screen.orientation.unlock()
+          } catch {}
         }
         if (Capacitor.isNativePlatform()) {
           try {
@@ -68,23 +77,33 @@ export const useOrientationFullscreen = () => {
         return
       }
 
+      // Se houver player de vídeo ativo em celular, assegura landscape nativo e tela cheia
+      if (isPlayer && isMobileDevice()) {
+        setNativePlayerLandscape(true)
+        if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
+          try {
+            ;(screen.orientation as unknown as { lock: (o: string) => Promise<void> }).lock('landscape').catch(() => {})
+          } catch {}
+        }
+      }
+
       if (Capacitor.isNativePlatform()) {
         try {
           const { StatusBar } = await import('@capacitor/status-bar')
           await StatusBar.setOverlaysWebView({ overlay: true })
-          if (landscape && isWatchRoute) await StatusBar.hide()
-          else if (isMobileDevice()) await StatusBar.show()
+          if (landscape && isPlayer) await StatusBar.hide()
+          else if (isMobileDevice() && !isPlayer) await StatusBar.show()
         } catch {
           /* StatusBar indisponivel neste contexto */
         }
       }
 
-      document.documentElement.classList.toggle('cinebg-landscape', landscape && isWatchRoute)
+      document.documentElement.classList.toggle('cinebg-landscape', landscape && isPlayer)
 
-      // Auto fullscreen no mobile apenas dentro do player (/watch)
-      if (isWatchRoute && landscape && !fullscreenRequested.current && !document.fullscreenElement) {
+      // Auto fullscreen no mobile quando o player estiver ativo
+      if (isPlayer && !fullscreenRequested.current && !document.fullscreenElement) {
         await requestFullscreen()
-      } else if ((!landscape || !isWatchRoute) && fullscreenRequested.current && document.fullscreenElement) {
+      } else if (!isPlayer && fullscreenRequested.current && document.fullscreenElement) {
         await exitFullscreen()
       }
     }
@@ -96,6 +115,7 @@ export const useOrientationFullscreen = () => {
     const events: Array<[string, EventTarget]> = [
       ['resize', window],
       ['orientationchange', window],
+      ['cinebg:player-state', window],
     ]
     if (typeof screen !== 'undefined' && screen.orientation) {
       events.push(['change', screen.orientation])
@@ -106,7 +126,6 @@ export const useOrientationFullscreen = () => {
 
     return () => {
       events.forEach(([event, target]) => target.removeEventListener(event, safeUpdate))
-      // Não sair do fullscreen automaticamente ao desmontar - deixar o usuário controlar
     }
   }, [])
 }

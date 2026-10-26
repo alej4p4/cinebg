@@ -602,3 +602,36 @@ test('DETAILS-1: Modal de assinante em Details trata tecla Voltar sem fechar a t
   assert.ok(detailsSrc.includes('setSubscriberModalOpen(false)'), 'Deve fechar o modal')
   assert.ok(detailsSrc.includes("setFocus('details-fullscreen')"), 'Deve devolver foco ao botão fullscreen')
 })
+
+
+// =====================================================================
+// 16. ORIENTAÇÃO AUTOMÁTICA EM DISPOSITIVOS MÓVEIS (ISSUE #300)
+// =====================================================================
+test('MOBILE-ROTATION-1: LivePlayer ativa rotação para paisagem, trava orientação e adiciona classe cinebg-video-playing no celular', () => {
+  const livePlayerSrc = read('src/components/player/LivePlayer.tsx')
+  assert.ok(livePlayerSrc.includes('setNativePlayerLandscape(true)'), 'LivePlayer deve chamar setNativePlayerLandscape(true)')
+  assert.ok(livePlayerSrc.includes("document.documentElement.classList.add('cinebg-video-playing')"), 'Deve adicionar classe cinebg-video-playing')
+  assert.ok(livePlayerSrc.includes(".lock('landscape')"), 'Deve travar orientação para landscape')
+  assert.ok(livePlayerSrc.includes('live-player-container'), 'Container deve possuir classe live-player-container')
+  assert.ok(livePlayerSrc.includes('data-live-player="true"'), 'Container deve possuir atributo data-live-player')
+})
+
+test('MOBILE-ROTATION-2: LivePlayer restaura orientação para retrato e remove classe ao fechar o canal', () => {
+  const livePlayerSrc = read('src/components/player/LivePlayer.tsx')
+  assert.ok(livePlayerSrc.includes('setNativePlayerLandscape(false)'), 'LivePlayer deve chamar setNativePlayerLandscape(false) no cleanup')
+  assert.ok(livePlayerSrc.includes("document.documentElement.classList.remove('cinebg-video-playing')"), 'Deve remover classe cinebg-video-playing no cleanup')
+  assert.ok(livePlayerSrc.includes('screen.orientation.unlock()'), 'Deve destravar orientação na saída')
+})
+
+test('MOBILE-ROTATION-3: useOrientationFullscreen reconhece player de TV ao vivo e não força retrato indevidamente', () => {
+  const hookSrc = read('src/hooks/useOrientationFullscreen.ts')
+  assert.ok(hookSrc.includes('isVideoPlayerActive'), 'Hook deve implementar função isVideoPlayerActive')
+  assert.ok(hookSrc.includes('cinebg-video-playing'), 'Hook deve verificar classe cinebg-video-playing')
+  assert.ok(hookSrc.includes('live-player-container'), 'Hook deve verificar live-player-container')
+  assert.ok(hookSrc.includes('cinebg:player-state'), 'Hook deve escutar evento de ciclo de vida cinebg:player-state')
+})
+
+test('MOBILE-ROTATION-4: BottomNav oculta navegação inferior durante a reprodução de TV ao vivo', () => {
+  const navSrc = read('src/components/layout/BottomNav.tsx')
+  assert.ok(navSrc.includes('cinebg-video-playing'), 'BottomNav deve verificar cinebg-video-playing para ocultar a barra de navegação')
+})

@@ -85,9 +85,14 @@ const LivePlayer = ({
     }, 3500)
   }
 
-  // Ao abrir o canal, entra em tela cheia imediata (estilo YuCine)
+  // Ao abrir o canal, entra em tela cheia imediata e gira a tela para paisagem no celular (estilo YuCine)
   useEffect(() => {
     setNativePlayerLandscape(true)
+    document.documentElement.classList.add('cinebg-video-playing')
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cinebg:player-state', { detail: { active: true } }))
+    }
+
     if (Capacitor.isNativePlatform()) {
       import('@capacitor/status-bar')
         .then(({ StatusBar }) => {
@@ -98,12 +103,26 @@ const LivePlayer = ({
     if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {})
     }
+    if (typeof screen !== 'undefined' && screen.orientation && 'lock' in screen.orientation) {
+      try {
+        ;(screen.orientation as unknown as { lock: (o: string) => Promise<void> }).lock('landscape').catch(() => {})
+      } catch {}
+    }
 
     resetOsdTimer()
 
     return () => {
       setNativePlayerLandscape(false)
+      document.documentElement.classList.remove('cinebg-video-playing')
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cinebg:player-state', { detail: { active: false } }))
+      }
       if (osdTimerRef.current) clearTimeout(osdTimerRef.current)
+      if (typeof screen !== 'undefined' && screen.orientation && 'unlock' in screen.orientation) {
+        try {
+          screen.orientation.unlock()
+        } catch {}
+      }
       if (document.fullscreenElement && document.exitFullscreen) {
         document.exitFullscreen().catch(() => {})
       }
@@ -619,7 +638,8 @@ const LivePlayer = ({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] w-screen h-screen bg-black overflow-hidden flex items-center justify-center select-none"
+      className="fixed inset-0 z-[9999] w-screen h-screen bg-black overflow-hidden flex items-center justify-center select-none live-player-container"
+      data-live-player="true"
       onMouseMove={resetOsdTimer}
       onTouchStart={resetOsdTimer}
       onClick={resetOsdTimer}
