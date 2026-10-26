@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1793035465.7944252,
-    "seen": 1793038882.1853838,
-    "ast_hash": "a05ffad25be44f807006e579efa82f16",
+    "mtime": 1793039462.471677,
+    "seen": 1793039659.5560482,
+    "ast_hash": "e2549ebd6ad61af46550e8a91fe137aa",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1793038779.852155,
-    "seen": 1793038882.185398,
+    "mtime": 1793039536.255228,
+    "seen": 1793039659.5560575,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": "4d2bbe5da73933ac326a41f41302842f"
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1793038779.852155,
-    "seen": 1793038882.1854348,
+    "mtime": 1793039536.2547252,
+    "seen": 1793039659.5560803,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": "aa014fc13e426f53986cc2fec0130a09"
   },
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793035465.800381,
-    "seen": 1793038882.1854856,
-    "ast_hash": "e9bbbac17ac3168864f4802a2d3cf09f",
+    "mtime": 1793039462.364304,
+    "seen": 1793039659.556105,
+    "ast_hash": "4f136004b4d837628f9fea0bb579b35b",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1793035465.8012023,
-    "seen": 1793038882.1855068,
-    "ast_hash": "2054ed35d7b9724c454bf60daa104a42",
+    "mtime": 1793039462.471677,
+    "seen": 1793039659.5561154,
+    "ast_hash": "7b3d3f2ae9fe155bc3d6f90168da6372",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -342,9 +342,9 @@
     "semantic_hash": "88596bd4dfe5fd1a858b122a6e632c98"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1793038652.142805,
-    "seen": 1793038882.185822,
-    "ast_hash": "b8ed9beafb89cf33758785d755e236a7",
+    "mtime": 1793038935.0867732,
+    "seen": 1793039659.5562897,
+    "ast_hash": "36e84c87b4b7e8168a5f45c7dd9b4459",
     "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793038684.315373,
-    "seen": 1793038882.185931,
-    "ast_hash": "4e6c7ac492269f41a13dcdf65c1bc2ca",
+    "mtime": 1793038935.0887718,
+    "seen": 1793039659.556371,
+    "ast_hash": "d50479d9a20b45283600767d2ddcad32",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {
