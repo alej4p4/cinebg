@@ -587,7 +587,7 @@ test('ROUTING-1: Rotas canônicas e atalhos de TV (/tv, /aovivo, /canais) redire
   assert.ok(appSrc.includes('<Route path="/canais" element={<Navigate to="/live" replace />} />'), 'Atalho /canais deve redirecionar para /live')
 })
 
-test('VERSION-1: Versão do app é única e centralizada (CURRENT_APP_VERSION = 1.2.97)', () => {
+test('VERSION-1: Versão do app é única e centralizada (CURRENT_APP_VERSION coincide com package.json)', () => {
   const pkg = JSON.parse(read('package.json'))
   assert.equal(tv.CURRENT_APP_VERSION, pkg.version, 'CURRENT_APP_VERSION deve ser igual a package.json')
   assert.equal(tv.getNativeAppVersion(), pkg.version, 'getNativeAppVersion fallback deve retornar a versão atual')
