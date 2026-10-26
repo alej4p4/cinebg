@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1792956336.8526359,
-    "seen": 1792956373.844737,
-    "ast_hash": "25e4ff840f6c928279a35cd4e1d31e02",
+    "mtime": 1793035231.7833142,
+    "seen": 1793035410.2236211,
+    "ast_hash": "a1079992b1ecea30f57128f700bf7f0e",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1792956176.1119084,
-    "seen": 1792956373.8447452,
+    "mtime": 1793035301.6352165,
+    "seen": 1793035410.2236292,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": "4d2bbe5da73933ac326a41f41302842f"
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1792956176.1119084,
-    "seen": 1792956373.8447642,
+    "mtime": 1793035301.6352165,
+    "seen": 1793035410.223649,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": "aa014fc13e426f53986cc2fec0130a09"
   },
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793034256.1906323,
-    "seen": 1793034855.9792924,
-    "ast_hash": "ac7687c6e4b0d6259baee562a4102e42",
+    "mtime": 1793035231.7607286,
+    "seen": 1793035410.2236695,
+    "ast_hash": "eb525015828a809b6acb0835060e13b2",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1792956336.874623,
-    "seen": 1792956373.8447933,
-    "ast_hash": "5377ec2a8eecdacb746b7a104ce914c5",
+    "mtime": 1793035231.7833142,
+    "seen": 1793035410.2236788,
+    "ast_hash": "66bd08eb13be5281d8fee863b8e5e89c",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -258,15 +258,15 @@
     "semantic_hash": ""
   },
   "src/pages/Anime.tsx": {
-    "mtime": 1793034783.942938,
-    "seen": 1793034855.9793918,
-    "ast_hash": "4d90ccbdf100b48f0ef84cc19acc325d",
+    "mtime": 1793034930.20516,
+    "seen": 1793035410.223767,
+    "ast_hash": "3772a21954e54ce2f8182b2492bce5c0",
     "semantic_hash": ""
   },
   "src/pages/Details.tsx": {
-    "mtime": 1793034713.8197658,
-    "seen": 1793034855.9793935,
-    "ast_hash": "2753d74ff23ba84876ce3d0f8c20fc77",
+    "mtime": 1793034930.2061594,
+    "seen": 1793035410.2237685,
+    "ast_hash": "5e2dfd2cfc57f1f39ffd18ba10ffe3cf",
     "semantic_hash": ""
   },
   "src/pages/Downloads.tsx": {
@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "src/pages/Movies.tsx": {
-    "mtime": 1793034783.9401672,
-    "seen": 1793034855.979406,
-    "ast_hash": "2c1a1e99895426521b9f9d478da2922d",
+    "mtime": 1793034930.20716,
+    "seen": 1793035410.2237809,
+    "ast_hash": "25ebda40a196dbd9ab8c6ee37192c0fd",
     "semantic_hash": ""
   },
   "src/pages/MyList.tsx": {
@@ -324,9 +324,9 @@
     "semantic_hash": "6d75e47f55f0a0260efe46572f11e1a3"
   },
   "src/pages/Series.tsx": {
-    "mtime": 1793034783.9424272,
-    "seen": 1793034855.979415,
-    "ast_hash": "be89313b568bcfd1d938903d633ef87d",
+    "mtime": 1793034930.208158,
+    "seen": 1793035410.223789,
+    "ast_hash": "9b46a2707ddcdf756cadd36586e4d450",
     "semantic_hash": ""
   },
   "src/pages/Watch.tsx": {
@@ -876,9 +876,9 @@
     "semantic_hash": ""
   },
   "src/components/PremiumContentGate.tsx": {
-    "mtime": 1793034654.4912517,
-    "seen": 1793034855.9793167,
-    "ast_hash": "191759038656cbb82b4f4658268c3948",
+    "mtime": 1793034930.20516,
+    "seen": 1793035410.2236922,
+    "ast_hash": "1d50a420453956198bd214d487b94249",
     "semantic_hash": ""
   },
   "src/services/trial.ts": {
@@ -888,15 +888,15 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793034665.9821796,
-    "seen": 1793034855.9794793,
-    "ast_hash": "104ae9dbcffdaadd2c2c36f38434cb72",
+    "mtime": 1793034930.2091582,
+    "seen": 1793035410.2238476,
+    "ast_hash": "766fb025ca79b28dcd3635274428db16",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {
-    "mtime": 1793034654.4940267,
-    "seen": 1793034855.9794815,
-    "ast_hash": "b7b3172c551a5cf8b0822f9c65e14b7d",
+    "mtime": 1793034930.210157,
+    "seen": 1793035410.2238495,
+    "ast_hash": "fdf9ea20bdf5b188becb610758c821f2",
     "semantic_hash": ""
   },
   "AUDIT_REPORT.md": {
