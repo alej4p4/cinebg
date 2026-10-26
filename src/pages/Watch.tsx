@@ -47,6 +47,10 @@ const Watch = () => {
   // Ao dar o Play e entrar na rota /watch, entra em tela cheia imediata e trava em paisagem (estilo YuCine)
   useEffect(() => {
     setNativePlayerLandscape(true)
+    document.documentElement.classList.add('cinebg-video-playing')
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cinebg:player-state', { detail: { active: true } }))
+    }
     if (Capacitor.isNativePlatform()) {
       import('@capacitor/status-bar')
         .then(({ StatusBar }) => {
@@ -65,6 +69,10 @@ const Watch = () => {
 
     return () => {
       setNativePlayerLandscape(false)
+      document.documentElement.classList.remove('cinebg-video-playing')
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cinebg:player-state', { detail: { active: false } }))
+      }
       if (typeof screen !== 'undefined' && screen.orientation && 'unlock' in screen.orientation) {
         try {
           screen.orientation.unlock()

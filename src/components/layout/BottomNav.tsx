@@ -21,8 +21,11 @@ export const BottomNav = () => {
     return null
   }
 
-  // Ocultar dentro do player de vídeo para tela cheia imersiva
-  if (location.pathname.startsWith('/watch')) {
+  // Ocultar dentro do player de vídeo (/watch) ou canal de TV ao vivo para tela cheia imersiva
+  if (
+    location.pathname.startsWith('/watch') ||
+    (typeof document !== 'undefined' && document.documentElement.classList.contains('cinebg-video-playing'))
+  ) {
     return null
   }
 
