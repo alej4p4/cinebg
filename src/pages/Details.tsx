@@ -78,11 +78,13 @@ const Details = () => {
     }
   }, [mediaId, isMovie, getLastWatched])
 
+  const originalLanguage = (movieData?.original_language || showData?.original_language || '')
+
   // Pré-resolve a fonte direta do filme/episódio em background (estilo YouCine, sem trailer do YouTube e sem ocupar o MediaCodec antes do Play)
   useEffect(() => {
     if (!mediaId || Number.isNaN(mediaId)) return
-    resolveMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', selectedSeason, selectedEpisode).catch(() => {})
-  }, [mediaId, isMovie, selectedSeason, selectedEpisode])
+    resolveMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', selectedSeason, selectedEpisode, originalLanguage).catch(() => {})
+  }, [mediaId, isMovie, selectedSeason, selectedEpisode, originalLanguage])
 
   useEffect(() => {
     if (!id || !type) return
@@ -253,10 +255,11 @@ const Details = () => {
   }
 
   const handlePlayFullscreen = (ep = selectedEpisode) => {
+    const audioQuery = audioOption === 'orig' ? 'audio=orig' : 'audio=dub'
     if (isMovie) {
-      navigate(`/watch/movie/${mediaId}`)
+      navigate(`/watch/movie/${mediaId}?${audioQuery}`)
     } else {
-      navigate(`/watch/${type}/${mediaId}?season=${selectedSeason}&episode=${ep}`)
+      navigate(`/watch/${type}/${mediaId}?season=${selectedSeason}&episode=${ep}&${audioQuery}`)
     }
   }
 
@@ -288,7 +291,8 @@ const Details = () => {
         mediaId,
         isMovie ? 'movie' : 'tv',
         selectedSeason,
-        selectedEpisode
+        selectedEpisode,
+        originalLanguage
       )
       if (!resolved.dubbedMp4) {
         alert('Fonte direta não disponível para download no momento.')

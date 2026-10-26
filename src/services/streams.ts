@@ -125,6 +125,25 @@ const DUBBED_HOST_HINTS = [
   'playspelis.com',
 ]
 
+/**
+ * Heurística robusta para identificar candidatos com áudio em Português (Dublado ou Nacional).
+ * Detecta termos no rótulo, URL e produções originais brasileiras/portuguesas (originalLanguage === 'pt').
+ */
+export const isPortugueseAudioCandidate = (
+  label?: string | null,
+  url?: string | null,
+  originalLanguage?: string | null
+): boolean => {
+  if ((originalLanguage || '').toLowerCase() === 'pt') return true
+  const l = (label || '').toLowerCase()
+  const u = (url || '').toLowerCase()
+  return (
+    DUBBED_HOST_HINTS.some((hint) => u.includes(hint)) ||
+    /dub|dublado|portugu[eê]s|pt[-_]?br|audio[-_ ]?pt|nacional|\bbr\b/i.test(l) ||
+    /dublado|audio[-_]pt|-dub|pt[-_]br|portugues|portuguese/i.test(u)
+  )
+}
+
 // Hosts com token travado por IP do servidor backend (retornam text/html ou 404 no cliente)
 const BROKEN_IP_LOCKED_HOSTS = [
   'streamtape.com',
@@ -338,19 +357,21 @@ export const getCachedMegaEmbed = (
   tmdbId: number,
   mediaType: 'movie' | 'tv',
   season = 1,
-  episode = 1
+  episode = 1,
+  originalLanguage?: string
 ): MegaEmbedResolved | null => {
-  const cacheKey = `${mediaType}-${tmdbId}-${season}-${episode}`
-  return getValidCachedEntry(cacheKey)
+  const cacheKey = `${mediaType}-${tmdbId}-${season}-${episode}${originalLanguage ? `-${originalLanguage}` : ''}`
+  return getValidCachedEntry(cacheKey) || getValidCachedEntry(`${mediaType}-${tmdbId}-${season}-${episode}`)
 }
 
 export const resolveMegaEmbed = async (
   tmdbId: number,
   mediaType: 'movie' | 'tv',
   season = 1,
-  episode = 1
+  episode = 1,
+  originalLanguage?: string
 ): Promise<MegaEmbedResolved> => {
-  const cacheKey = `${mediaType}-${tmdbId}-${season}-${episode}`
+  const cacheKey = `${mediaType}-${tmdbId}-${season}-${episode}${originalLanguage ? `-${originalLanguage}` : ''}`
   const cached = getValidCachedEntry(cacheKey)
   if (cached) {
     return cached
@@ -395,18 +416,15 @@ export const resolveMegaEmbed = async (
         lowerUrl.includes('/hls') ||
         lowerUrl.includes('/includes/hls.php')
 
-      const isKnownDubbedHost = DUBBED_HOST_HINTS.some((hint) => lowerUrl.includes(hint))
-      const isDubbed =
-        isKnownDubbedHost ||
-        /dub/i.test(s.label || '') ||
-        lowerUrl.includes('dublado') ||
-        lowerUrl.includes('audio-pt') ||
-        lowerUrl.includes('-dub')
+      const isDubbed = isPortugueseAudioCandidate(s.label, cleanUrl, originalLanguage)
+      const isPtOriginal = (originalLanguage || '').toLowerCase() === 'pt'
 
       candidates.push({
         url: cleanUrl,
         kind: isHls ? 'hls' : 'mp4',
-        label: isDubbed
+        label: isPtOriginal
+          ? `Opção ${candidates.length + 1} (Português Original)`
+          : isDubbed
           ? `Opção Dublada ${candidates.length + 1}`
           : `Opção ${candidates.length + 1}`,
         isDubbedHint: isDubbed,
@@ -425,14 +443,20 @@ export const resolveMegaEmbed = async (
       return 0
     })
 
+    const isPtOriginal = (originalLanguage || '').toLowerCase() === 'pt'
     // Renumera os rótulos na ordem final limpa (Opção 1, Opção 2...)
     candidates.forEach((c, idx) => {
-      c.label = c.isDubbedHint ? `Opção ${idx + 1} (Dublado)` : `Opção ${idx + 1}`
+      c.label = isPtOriginal
+        ? `Opção ${idx + 1} (Português Original)`
+        : c.isDubbedHint
+        ? `Opção ${idx + 1} (Dublado)`
+        : `Opção ${idx + 1}`
     })
 
     const dubbed =
       candidates.find((c) => c.isDubbedHint && c.kind === 'mp4') ||
       candidates.find((c) => c.isDubbedHint) ||
+      (isPtOriginal ? candidates[0] : null) ||
       candidates.find((c) => c.kind === 'mp4') ||
       candidates[0]
 
@@ -470,8 +494,9 @@ export const resolveMegaEmbedDubbedSource = async (
   tmdbId: number,
   mediaType: 'movie' | 'tv',
   season = 1,
-  episode = 1
-): Promise<string | null> => (await resolveMegaEmbed(tmdbId, mediaType, season, episode)).dubbedMp4
+  episode = 1,
+  originalLanguage?: string
+): Promise<string | null> => (await resolveMegaEmbed(tmdbId, mediaType, season, episode, originalLanguage)).dubbedMp4
 
 // Limpa o cache de fontes resolvidas (útil para forçar nova busca após falha de iframe externo)
 export const clearResolvedSourcesCache = (): void => {
