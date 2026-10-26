@@ -644,3 +644,23 @@ test('MOBILE-ROTATION-5: LivePlayer possui botão de cadeado e overlay de bloque
   assert.ok(lpSrc.includes('live-btn-unlock-corner'), 'LivePlayer deve possuir botão live-btn-unlock-corner')
   assert.ok(lpSrc.includes('toggleLock'), 'LivePlayer deve implementar toggleLock')
 })
+
+
+test('MOBILE-COFILE-1: StreamPlayer nunca realiza fallback automático para superflix/superflixapi.fun', () => {
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+  assert.ok(!playerSrc.includes("activeAudio === 'dub' ? ['megaembed', 'superflix', 'vidlink']"), 'fallbackSequence não deve conter superflix no áudio dublado')
+  assert.ok(!playerSrc.includes("activeAudio === 'dub' ? 'superflix' : 'vidlink'"), 'handleDirectMediaError não deve alternar diretamente para superflix')
+  assert.ok(playerSrc.includes("activeAudio === 'dub' ? ['megaembed', 'vidlink'] : ['vidlink', 'megaembed']"), 'fallbackSequence deve conter apenas megaembed e vidlink')
+})
+
+test('MOBILE-COFILE-2: StreamPlayer iframe possui sandbox restritivo sem allow-top-navigation para impedir desvio de tela', () => {
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+  assert.ok(playerSrc.includes('sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"'), 'iframe do StreamPlayer deve possuir sandbox estrito')
+  assert.ok(!playerSrc.includes('allow-top-navigation'), 'iframe do StreamPlayer não deve ter permissão de navegar a janela principal (allow-top-navigation)')
+})
+
+test('MOBILE-COFILE-3: streams.ts filtra playercdnx.workers.dev e protege URLs contra redirecionamento externo', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  assert.ok(streamsSrc.includes('playercdnx.workers.dev'), 'BROKEN_IP_LOCKED_HOSTS deve incluir playercdnx.workers.dev')
+  assert.ok(streamsSrc.includes("rawTarget === 'superflix' ? 'megaembed' : rawTarget"), 'buildMovieUrl e buildShowUrl devem redirecionar superflix para megaembed')
+})

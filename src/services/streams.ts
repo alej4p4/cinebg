@@ -63,8 +63,8 @@ export const MIRRORS: StreamMirror[] = [
 export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'dub'): string => {
   const sequence =
     audio === 'dub'
-      ? ['megaembed', 'superflix', 'vidlink']
-      : ['vidlink', 'superflix', 'megaembed']
+      ? ['megaembed', 'vidlink']
+      : ['vidlink', 'megaembed']
 
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
@@ -88,7 +88,8 @@ export const buildMovieUrl = (
   mirrorId?: string
 ): string => {
   const normAudio = normalizeAudio(audio)
-  const targetId = mirrorId || getInitialMirrorForAudio(normAudio)
+  const rawTarget = mirrorId || getInitialMirrorForAudio(normAudio)
+  const targetId = rawTarget === 'superflix' ? 'megaembed' : rawTarget
   const mirror = MIRRORS.find((m) => m.id === targetId) || MIRRORS[0]
   return mirror.getMovieUrl(tmdbId, normAudio)
 }
@@ -101,7 +102,8 @@ export const buildShowUrl = (
   mirrorId?: string
 ): string => {
   const normAudio = normalizeAudio(audio)
-  const targetId = mirrorId || getInitialMirrorForAudio(normAudio)
+  const rawTarget = mirrorId || getInitialMirrorForAudio(normAudio)
+  const targetId = rawTarget === 'superflix' ? 'megaembed' : rawTarget
   const mirror = MIRRORS.find((m) => m.id === targetId) || MIRRORS[0]
   return mirror.getShowUrl(tmdbId, season, episode, normAudio)
 }
@@ -148,6 +150,7 @@ export const isPortugueseAudioCandidate = (
 const BROKEN_IP_LOCKED_HOSTS = [
   'streamtape.com',
   '97bf1.com',
+  'playercdnx.workers.dev',
 ]
 
 // Palavras-chave proibidas de propagandas de apostas (1xBet / 1xbt) e gravações de cinema (HDCAM / CAMRIP / TS)
@@ -330,7 +333,7 @@ const fetchMegaEmbedSources = async (
   for (const url of endpoints) {
     try {
       const controller = new AbortController()
-      const tId = setTimeout(() => controller.abort(), 5000)
+      const tId = setTimeout(() => controller.abort(), 9000)
       const res = await fetch(url, {
         credentials: 'omit',
         referrerPolicy: 'no-referrer',
