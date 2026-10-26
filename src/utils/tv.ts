@@ -1,7 +1,9 @@
+export const CURRENT_APP_VERSION = '1.2.97'
+
 export const DEFAULT_TV_APK_URL =
-  'https://github.com/alej4p4/cinebg/releases/download/v1.2.88/CineBG-Tv-release.apk'
+  'https://github.com/alej4p4/cinebg/releases/download/v1.2.97/CineBG-Tv-release.apk'
 export const DEFAULT_MOBILE_APK_URL =
-  'https://github.com/alej4p4/cinebg/releases/download/v1.2.88/CineBG-Mobile-release.apk'
+  'https://github.com/alej4p4/cinebg/releases/download/v1.2.97/CineBG-Mobile-release.apk'
 
 export interface CineBGNativeBridge {
   getDeviceType?: () => string
@@ -26,7 +28,7 @@ export const getCineBGNativeBridge = (): CineBGNativeBridge | null => {
   }
 }
 
-export const getNativeAppVersion = (fallback = '1.2.88'): string => {
+export const getNativeAppVersion = (fallback = CURRENT_APP_VERSION): string => {
   try {
     const bridge = getCineBGNativeBridge()
     if (bridge && typeof bridge.getAppVersion === 'function') {

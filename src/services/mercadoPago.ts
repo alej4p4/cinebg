@@ -296,6 +296,87 @@ export async function checkMercadoPagoStatus(
 }
 
 /**
+ * Formata um campo TLV (Tag-Length-Value) padrão EMV / BR Code Pix
+ */
+export function formatPixField(id: string, value: string): string {
+  const len = value.length.toString().padStart(2, '0')
+  return `${id}${len}${value}`
+}
+
+/**
+ * Calcula o checksum CRC16-CCITT (polinômio 0x1021, valor inicial 0xFFFF)
+ * exigido pela especificação oficial do Banco Central do Brasil para BR Code Pix.
+ */
+export function computePixCrc16(payload: string): string {
+  let crc = 0xffff
+  for (let i = 0; i < payload.length; i += 1) {
+    crc ^= payload.charCodeAt(i) << 8
+    for (let j = 0; j < 8; j += 1) {
+      if ((crc & 0x8000) !== 0) {
+        crc = ((crc << 1) ^ 0x1021) & 0xffff
+      } else {
+        crc = (crc << 1) & 0xffff
+      }
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0')
+}
+
+/**
+ * Constrói a string Pix Copia e Cola em estrita conformidade com o padrão EMV / BR Code do Banco Central.
+ * Compatível com todos os aplicativos bancários (Nubank, Itaú, Bradesco, Banco do Brasil, Inter, etc.).
+ */
+export function buildPixBrCode(params: {
+  pixKey: string
+  amount: number
+  merchantName?: string
+  merchantCity?: string
+  txid?: string
+}): string {
+  const pixKey = params.pixKey.replace(/\s+/g, '')
+  const amountStr = params.amount.toFixed(2)
+  const merchantName = (params.merchantName || 'CINEBG').slice(0, 25).toUpperCase()
+  const merchantCity = (params.merchantCity || 'SAO PAULO').slice(0, 15).toUpperCase()
+  const txid = (params.txid || '***').replace(/[^a-zA-Z0-9]/g, '').slice(0, 25) || '***'
+
+  // Tag 00: Payload Format Indicator ("01")
+  const f00 = formatPixField('00', '01')
+
+  // Tag 26: Merchant Account Information - Pix
+  const gui = formatPixField('00', 'BR.GOV.BCB.PIX')
+  const key = formatPixField('01', pixKey)
+  const f26 = formatPixField('26', gui + key)
+
+  // Tag 52: Merchant Category Code ("0000")
+  const f52 = formatPixField('52', '0000')
+
+  // Tag 53: Transaction Currency ("986" = BRL)
+  const f53 = formatPixField('53', '986')
+
+  // Tag 54: Transaction Amount
+  const f54 = formatPixField('54', amountStr)
+
+  // Tag 58: Country Code ("BR")
+  const f58 = formatPixField('58', 'BR')
+
+  // Tag 59: Merchant Name
+  const f59 = formatPixField('59', merchantName)
+
+  // Tag 60: Merchant City
+  const f60 = formatPixField('60', merchantCity)
+
+  // Tag 62: Additional Data Field (Reference Label / TXID)
+  const subTxid = formatPixField('05', txid)
+  const f62 = formatPixField('62', subTxid)
+
+  // Tag 63: CRC16 (Header "6304" + 4 hex digits calculados sobre toda a string incluindo "6304")
+  const rawPayload = `${f00}${f26}${f52}${f53}${f54}${f58}${f59}${f60}${f62}6304`
+  const crc = computePixCrc16(rawPayload)
+
+  return `${rawPayload}${crc}`
+}
+
+/**
  * Gera Pix estático de fallback caso o Mercado Pago esteja sem token configurado ou indisponível
  */
 function generateFallbackPix(
@@ -304,7 +385,13 @@ function generateFallbackPix(
   reason: string
 ): CreatePixPaymentResult {
   const pixKey = DEFAULT_PIX_KEY
-  const fallbackCode = `00020126580014BR.GOV.BCB.PIX0136${pixKey}520400005303986540${plan.price.toFixed(2)}5802BR5906CINEBG6009SAO PAULO62170513${deviceId.slice(0, 13)}6304`
+  const fallbackCode = buildPixBrCode({
+    pixKey,
+    amount: plan.price,
+    merchantName: 'CINEBG',
+    merchantCity: 'SAO PAULO',
+    txid: deviceId.slice(0, 13),
+  })
 
   return {
     success: true,

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { isMobileDevice, getDeviceUpdateUrl, getNativeAppVersion, isVersionNewer, type UpdateUrlPayload } from '@/utils/tv'
+import { isMobileDevice, getDeviceUpdateUrl, getNativeAppVersion, isVersionNewer, CURRENT_APP_VERSION, type UpdateUrlPayload } from '@/utils/tv'
 import type { DownloadItem, FavoriteItem, WatchHistoryItem } from '@/types'
 
 export type Language = 'pt' | 'en'
@@ -152,8 +152,8 @@ export const useAppStore = create<AppState>()(
       setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
       isCheckingUpdate: false,
       updateInfo: {
-        currentVersion: getNativeAppVersion('1.2.64'),
-        latestVersion: getNativeAppVersion('1.2.64'),
+        currentVersion: getNativeAppVersion(CURRENT_APP_VERSION),
+        latestVersion: getNativeAppVersion(CURRENT_APP_VERSION),
         hasUpdate: false,
         downloadUrl: getDeviceUpdateUrl(),
         mandatory: false,
@@ -163,7 +163,7 @@ export const useAppStore = create<AppState>()(
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
         try {
-          const currentVersion = getNativeAppVersion('1.2.64')
+          const currentVersion = getNativeAppVersion(CURRENT_APP_VERSION)
           const candidateUrls = [
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,

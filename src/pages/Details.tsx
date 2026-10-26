@@ -171,7 +171,13 @@ const Details = () => {
         code === 461 ||
         code === 283
       ) {
-        if (idiomaModalOpen) {
+        if (subscriberModalOpen) {
+          markBackHandled()
+          e.preventDefault()
+          e.stopPropagation()
+          setSubscriberModalOpen(false)
+          setTimeout(() => setFocus('details-fullscreen'), 50)
+        } else if (idiomaModalOpen) {
           markBackHandled()
           e.preventDefault()
           e.stopPropagation()
@@ -188,7 +194,7 @@ const Details = () => {
     }
     window.addEventListener('keydown', handleModalKeyDown, { capture: true })
     return () => window.removeEventListener('keydown', handleModalKeyDown, { capture: true })
-  }, [idiomaModalOpen, resolucaoModalOpen])
+  }, [idiomaModalOpen, resolucaoModalOpen, subscriberModalOpen])
 
   if (loading) {
     return (

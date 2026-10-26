@@ -26,7 +26,7 @@ import {
 import { Capacitor } from '@capacitor/core'
 import { getDeviceFlavor, getDeviceUpdateUrl, getDeviceApkFilename } from '@/utils/tv'
 import { App as CapApp } from '@capacitor/app'
-import { getNativeAppVersion } from '@/utils/tv'
+import { getNativeAppVersion, CURRENT_APP_VERSION } from '@/utils/tv'
 
 interface UpdateModalProps {
   visible: boolean
@@ -45,8 +45,8 @@ type UpdateStage = 'idle' | 'downloading' | 'installing' | 'error'
 const UpdateModal = ({
   visible,
   downloadUrl,
-  currentVersion = '1.2.64',
-  latestVersion = '1.2.64',
+  currentVersion = CURRENT_APP_VERSION,
+  latestVersion = CURRENT_APP_VERSION,
   hasUpdate = false,
   isChecking = false,
   onDismiss,

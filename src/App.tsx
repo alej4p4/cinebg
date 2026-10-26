@@ -11,7 +11,7 @@ import { useEpisodeNotifications } from '@/hooks/useEpisodeNotifications'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
 import { useAppStore } from '@/store/useAppStore'
-import { isTVDevice, isMobileDevice, markBackHandled, wasBackRecentlyHandled } from '@/utils/tv'
+import { isTVDevice, isMobileDevice, markBackHandled, wasBackRecentlyHandled, CURRENT_APP_VERSION } from '@/utils/tv'
 import { trackRouteView } from '@/services/observability'
 import UpdateModal from '@/components/UpdateModal'
 import { useLicense } from '@/hooks/useLicense'
@@ -186,6 +186,9 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
           <Route path="/details/:type/:id" element={<Details />} />
 
           {/* Rotas canônicas e atalhos estilo YuCine */}
+          <Route path="/tv" element={<Navigate to="/live" replace />} />
+          <Route path="/aovivo" element={<Navigate to="/live" replace />} />
+          <Route path="/canais" element={<Navigate to="/live" replace />} />
           <Route path="/movie" element={<Navigate to="/movies" replace />} />
           <Route path="/filmes" element={<Navigate to="/movies" replace />} />
           <Route path="/filme" element={<Navigate to="/movies" replace />} />
@@ -209,7 +212,7 @@ const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
 function App() {
   useEpisodeNotifications()
   useOrientationFullscreen()
-  const appVersion = import.meta.env.VITE_APP_VERSION || '1.2.76'
+  const appVersion = import.meta.env.VITE_APP_VERSION || CURRENT_APP_VERSION
 const { isLicensed, isTrial, loading } = useLicense()
   const [appError, setAppError] = useState<string | null>(null)
 
