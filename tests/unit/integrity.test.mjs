@@ -186,10 +186,10 @@ test('11. Persistência de Atualização OTA sem Loop, Bloqueio Estrito de 3 Dia
   assert.match(licenseContent, /TRIAL_DAYS = 3/, 'useLicense.ts deve definir estritamente 3 dias de teste')
 
   const appContent = fs.readFileSync(path.join(ROOT, 'src/App.tsx'), 'utf8')
-  assert.match(appContent, /!isVipOrTrialActive[\s\S]*?<LicenseGate isModal=\{false\}/, 'App.tsx deve forçar a tela de ativação paga (LicenseGate) após o vencimento dos 3 dias de teste')
+  assert.match(appContent, /vipModalOpen[\s\S]*?<LicenseGate isModal=\{true\}/, 'App.tsx deve exibir LicenseGate sob demanda sem bloquear a navegação pelo aplicativo')
 
   const gateContent = fs.readFileSync(path.join(ROOT, 'src/components/LicenseGate.tsx'), 'utf8')
-  assert.match(gateContent, /const canDismiss = Boolean\(isModal && onClose && \(isLicensed \|\| isTrial\)\)/, 'LicenseGate.tsx deve impedir o fechamento do paywall quando os 3 dias de teste vencerem')
+  assert.match(gateContent, /const canDismiss = Boolean\(isModal && onClose\)/, 'LicenseGate.tsx deve permitir o fechamento para navegação normal pelo app')
 
   const streamsContent = fs.readFileSync(path.join(ROOT, 'src/services/streams.ts'), 'utf8')
   assert.match(streamsContent, /BANNED_AD_STREAM_HINTS/, 'streams.ts deve definir lista de bloqueio contra streams com propaganda 1xBet (1xbt) e camrips')

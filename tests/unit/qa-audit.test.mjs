@@ -455,3 +455,31 @@ test('LOCK-3: Preservação ininterrupta da reprodução durante o bloqueio', ()
   // toggleLock altera apenas o estado isLocked sem invocar pause()
   assert.doesNotMatch(player, /toggleLock[\s\S]*?videoRef\.current\.pause\(\)/, 'toggleLock não deve pausar o vídeo')
 })
+
+
+// =====================================================================
+// 12. TELA DE PAGAMENTO NAS SMART TVS (ISSUE #286)
+// =====================================================================
+test('TV-PAY-1: Ausência de popup intrusivo automático em App.tsx / AnimatedRoutes', () => {
+  const appCode = read('src/App.tsx')
+  assert.doesNotMatch(appCode, /if\s*\(!isVipActive\)\s*\{\s*setVipModalOpen\(true\)\s*\}/, 'App.tsx não deve abrir tela de pagamento automaticamente ao navegar')
+  assert.match(appCode, /<BrowserRouter>[\s\S]*?<MainLayout/, 'App.tsx deve sempre renderizar a navegação principal (BrowserRouter) para livre exploração')
+})
+
+test('TV-PAY-2: Geração local e de alta definição de QR Code via QRCode.toDataURL', () => {
+  const gateCode = read('src/components/LicenseGate.tsx')
+  assert.match(gateCode, /import QRCode from 'qrcode'/, 'LicenseGate deve importar biblioteca qrcode nativa/local')
+  assert.match(gateCode, /QRCode\.toDataURL\(target,\s*\{\s*width:\s*360/, 'LicenseGate deve gerar QR Code em 360x360 de alta resolução para TVs')
+  assert.doesNotMatch(gateCode, /api\.qrserver\.com/, 'LicenseGate não deve depender de serviços HTTP externos vulneráveis a bloqueios de rede')
+})
+
+test('TV-PAY-3: Alternador de modo câmera do celular vs aplicativo bancário', () => {
+  const gateCode = read('src/components/LicenseGate.tsx')
+  assert.match(gateCode, /qrMode === 'url' && pixData\.ticketUrl/, 'LicenseGate deve suportar modo ticketUrl para leitura com câmera do celular')
+  assert.match(gateCode, /setQrMode\('pix'\)/, 'LicenseGate deve suportar modo Pix direto para leitura em app de banco')
+})
+
+test('TV-PAY-4: Fechamento desimpedido do modal de pagamento para navegação normal', () => {
+  const gateCode = read('src/components/LicenseGate.tsx')
+  assert.match(gateCode, /const canDismiss = Boolean\(isModal && onClose\)/, 'LicenseGate deve permitir fechar o modal com canDismiss para que a navegação continue livre')
+})

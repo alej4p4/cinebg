@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793032403.075086,
-    "seen": 1793032798.9470975,
-    "ast_hash": "830a045979563b02d147166483bc7ed2",
+    "mtime": 1793033813.034674,
+    "seen": 1793034208.60032,
+    "ast_hash": "ac7687c6e4b0d6259baee562a4102e42",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -102,9 +102,9 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1793032848.366821,
-    "seen": 1793033099.9802504,
-    "ast_hash": "dc4437829083a3f47ebed616005362df",
+    "mtime": 1793033970.337613,
+    "seen": 1793034208.6003368,
+    "ast_hash": "4be7b9d59400fd8d79f9adf3036328b9",
     "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
@@ -114,9 +114,9 @@
     "semantic_hash": "00dc5c375269e6cf3cab3750b945cead"
   },
   "src/components/LicenseGate.tsx": {
-    "mtime": 1793033165.8491678,
-    "seen": 1793033540.4433362,
-    "ast_hash": "e961735517982c34cbfe68a9c83ea1ae",
+    "mtime": 1793034131.1451058,
+    "seen": 1793034208.600341,
+    "ast_hash": "674093478e1af98e0d58f0a780bf1b3f",
     "semantic_hash": ""
   },
   "src/components/UpdateModal.tsx": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1793033472.375319,
-    "seen": 1793033540.4433548,
-    "ast_hash": "a55d4b9248c49c4ff1e34602800d719c",
+    "mtime": 1793033611.5184443,
+    "seen": 1793034208.6003597,
+    "ast_hash": "3bdc1ba839a00c54b73cc27636411cca",
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
@@ -858,9 +858,9 @@
     "semantic_hash": ""
   },
   "tests/unit/integrity.test.mjs": {
-    "mtime": 1792956336.87962,
-    "seen": 1792956373.844953,
-    "ast_hash": "8ac3153f84dc51101d6a01ef0f02f827",
+    "mtime": 1793033970.3386672,
+    "seen": 1793034208.6005013,
+    "ast_hash": "88457c00aa7acd9f6224f7e402cc9840",
     "semantic_hash": ""
   },
   ".github/workflows/ci-quality.yml": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793033375.8006854,
-    "seen": 1793033540.4434907,
-    "ast_hash": "ebe0f29dff4e978370481724ca09d4fd",
+    "mtime": 1793034035.6208346,
+    "seen": 1793034208.600503,
+    "ast_hash": "5fb3ea42c2e0aa5f690fcb7798f5f27e",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {

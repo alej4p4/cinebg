@@ -1,3 +1,4 @@
+import QRCode from 'qrcode'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -42,7 +43,7 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
     license,
   } = useLicense()
 
-  const canDismiss = Boolean(isModal && onClose && (isLicensed || isTrial))
+  const canDismiss = Boolean(isModal && onClose)
 
   const [selectedPlanIndex, setSelectedPlanIndex] = useState(0)
   const [loadingPix, setLoadingPix] = useState(false)
@@ -55,6 +56,8 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
   const [checkingStatus, setCheckingStatus] = useState(false)
   const [showManualSection, setShowManualSection] = useState(false)
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null)
+  const [qrMode, setQrMode] = useState<'url' | 'pix'>('url')
+  const [qrDataUrl, setQrDataUrl] = useState<string>('')
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
   const deviceId = getDeviceId()
@@ -134,24 +137,59 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
     [activateLicense, onClose]
   )
 
-  const handleGeneratePix = async () => {
+  const handleGeneratePix = useCallback(async (planToUse?: VipPlan | unknown) => {
+    const plan = (planToUse && typeof planToUse === "object" && "days" in planToUse) ? (planToUse as VipPlan) : currentPlan
     setLoadingPix(true)
     setPixData(null)
     if (pollingRef.current) clearInterval(pollingRef.current)
 
     try {
-      const result = await createMercadoPagoPix(currentPlan, deviceId)
+      const result = await createMercadoPagoPix(plan, deviceId)
       setPixData(result)
 
       if (result.success && result.paymentId && !result.isFallback) {
-        startPolling(result.paymentId, currentPlan)
+        startPolling(result.paymentId, plan)
       }
     } catch {
       // Tratamento silencioso
     } finally {
       setLoadingPix(false)
     }
-  }
+  }, [currentPlan, deviceId, startPolling])
+
+  // Gera o Pix e QR Code automaticamente ao abrir a tela ou alternar plano
+  useEffect(() => {
+    handleGeneratePix(currentPlan)
+  }, [selectedPlanIndex])
+
+  // Gera o QR Code localmente em alta resolução via QRCode.toDataURL (zero falha de rede na TV)
+  useEffect(() => {
+    if (!pixData) {
+      setQrDataUrl('')
+      return
+    }
+
+    const target =
+      qrMode === 'url' && pixData.ticketUrl
+        ? pixData.ticketUrl
+        : pixData.qrCode || pixData.ticketUrl || DEFAULT_PIX_KEY
+
+    QRCode.toDataURL(target, {
+      width: 360,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+      errorCorrectionLevel: 'M',
+    })
+      .then((url) => setQrDataUrl(url))
+      .catch(() => {
+        if (pixData.qrCodeBase64) {
+          setQrDataUrl(`data:image/png;base64,${pixData.qrCodeBase64}`)
+        }
+      })
+  }, [pixData, qrMode])
 
   const handleCheckNow = async () => {
     if (!pixData?.paymentId || pixData.isFallback) return
@@ -431,10 +469,10 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
             <p className="text-white/60 text-sm mb-4">
               Clique abaixo para gerar o código Pix e QR Code oficial do Mercado Pago para o plano selecionado.
             </p>
-            <Focusable focusKey="vip-generate-pix" onEnterPress={handleGeneratePix} className="inline-block rounded-xl">
+            <Focusable focusKey="vip-generate-pix" onEnterPress={() => handleGeneratePix()} className="inline-block rounded-xl">
               <button
                 type="button"
-                onClick={handleGeneratePix}
+                onClick={() => handleGeneratePix()}
                 disabled={loadingPix}
                 className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white font-bold py-3.5 px-8 rounded-xl transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50"
               >
@@ -461,25 +499,61 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
               </div>
             )}
 
-            {/* QR Code Container */}
-            <div className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center max-w-[240px] mx-auto shadow-inner">
-              {pixData.qrCodeBase64 ? (
+            {/* Alternador de Modo do QR Code (Link Web vs Pix Direto) */}
+            {pixData.ticketUrl && (
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setQrMode('url')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    qrMode === 'url'
+                      ? 'bg-amber-400 text-black shadow-md'
+                      : 'bg-white/10 text-white/70 hover:bg-white/20'
+                  }`}
+                >
+                  📱 Abrir com Câmera do Celular
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQrMode('pix')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    qrMode === 'pix'
+                      ? 'bg-emerald-400 text-black shadow-md'
+                      : 'bg-white/10 text-white/70 hover:bg-white/20'
+                  }`}
+                >
+                  🏦 Escanear no App do Banco
+                </button>
+              </div>
+            )}
+
+            {/* QR Code Container Centralizado em Alta Resolução (Perfeito para Smart TVs) */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 flex flex-col items-center justify-center w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 mx-auto shadow-2xl border-4 border-amber-400/30 my-2">
+              {qrDataUrl ? (
+                <img
+                  src={qrDataUrl}
+                  alt="QR Code de Pagamento"
+                  className="w-full h-full object-contain drop-shadow-md select-none"
+                />
+              ) : pixData.qrCodeBase64 ? (
                 <img
                   src={`data:image/png;base64,${pixData.qrCodeBase64}`}
                   alt="QR Code Pix Mercado Pago"
-                  className="w-48 h-48 object-contain"
+                  className="w-full h-full object-contain"
                 />
               ) : (
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                    pixData.qrCode || DEFAULT_PIX_KEY
-                  )}`}
-                  alt="QR Code Pix"
-                  className="w-44 h-44 object-contain"
-                />
+                <div className="flex flex-col items-center justify-center gap-2 text-black/50 text-xs">
+                  <RefreshCw className="h-6 w-6 animate-spin text-amber-500" />
+                  <span>Gerando QR Code...</span>
+                </div>
               )}
-              <span className="text-black/60 text-[11px] font-semibold mt-2">
-                Abra seu banco e pague via Pix
+            </div>
+
+            <div className="text-center mb-1">
+              <span className="text-amber-300 text-xs sm:text-sm font-semibold">
+                {qrMode === 'url' && pixData.ticketUrl
+                  ? '📲 Aponte a câmera do celular para abrir a página oficial de pagamento do Mercado Pago'
+                  : '🏦 Abra o aplicativo do seu banco, escolha Pix e aponte para o QR Code'}
               </span>
             </div>
 
