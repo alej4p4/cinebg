@@ -46,7 +46,7 @@ import type { TMDBSeason } from '@/types'
 import EpisodeSelector from './EpisodeSelector'
 import PlaybackSettingsModal from './PlaybackSettingsModal'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
-import { isTVDevice, isMobileDevice, markBackHandled } from '@/utils/tv'
+import { isTVDevice, isMobileDevice, markBackHandled, setNativePlayerLandscape } from '@/utils/tv'
 import { trackStreamPlayback } from '@/services/observability'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
@@ -433,6 +433,7 @@ const StreamPlayer = ({
     try {
       const isCurrentlyLandscape = window.innerWidth > window.innerHeight
       if (isCurrentlyLandscape) {
+        setNativePlayerLandscape(false)
         if (typeof screen !== 'undefined' && screen.orientation) {
           if ('unlock' in screen.orientation) {
             screen.orientation.unlock()
@@ -443,6 +444,7 @@ const StreamPlayer = ({
         }
         showFeedback('Retrato 📱')
       } else {
+        setNativePlayerLandscape(true)
         if (containerRef.current && !document.fullscreenElement) {
           await containerRef.current.requestFullscreen().catch(() => {})
         }

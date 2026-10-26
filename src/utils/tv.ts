@@ -129,6 +129,18 @@ export const isMobileDevice = (): boolean => {
     return true
   }
 
+  // 4b. Tablets e iPads em orientação paisagem (mesmo com resolução superior a 960px)
+  if (
+    hasTouchScreen &&
+    !isDedicatedTvUa &&
+    (PHONE_MOBILE_UA_REGEX.test(ua) ||
+      ua.includes('Tablet') ||
+      ua.includes('iPad') ||
+      (ua.includes('Android') && !ua.includes('Windows')))
+  ) {
+    return true
+  }
+
   // 5. Dispositivo em orientação retrato ou largura estreita
   if ((window.innerHeight > window.innerWidth || window.innerWidth < 600) && !isDedicatedTvUa) {
     return true

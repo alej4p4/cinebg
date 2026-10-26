@@ -43,6 +43,28 @@ const PageFallback = () => (
   </div>
 )
 
+const MainLayout = ({ isVipActive }: { isVipActive: boolean }) => {
+  const location = useLocation()
+  const isWatch = location.pathname.startsWith('/watch')
+
+  return (
+    <div
+      className={`min-h-screen bg-bg-primary text-text-primary ${
+        isWatch
+          ? 'pb-0 overflow-hidden'
+          : 'pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0'
+      }`}
+    >
+      <Navbar />
+      <main>
+        <AnimatedRoutes isVipActive={isVipActive} />
+      </main>
+      <BottomNav />
+      {!isMobileDevice() && <TvCursorOverlay />}
+    </div>
+  )
+}
+
 const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -319,14 +341,7 @@ const { isLicensed, isTrial, loading } = useLicense()
       ) : (
         <BrowserRouter>
           <ErrorBoundary>
-            <div className="min-h-screen bg-bg-primary text-text-primary pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
-              <Navbar />
-              <main>
-                <AnimatedRoutes isVipActive={isVipOrTrialActive} />
-              </main>
-              <BottomNav />
-              {!isMobileDevice() && <TvCursorOverlay />}
-            </div>
+            <MainLayout isVipActive={isVipOrTrialActive} />
           </ErrorBoundary>
           <UpdateModal
             visible={updateModalOpen}
