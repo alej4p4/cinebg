@@ -72,8 +72,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793033813.034674,
-    "seen": 1793034208.60032,
+    "mtime": 1793034256.1906323,
+    "seen": 1793034855.9792924,
     "ast_hash": "ac7687c6e4b0d6259baee562a4102e42",
     "semantic_hash": ""
   },
@@ -102,9 +102,9 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1793033970.337613,
-    "seen": 1793034208.6003368,
-    "ast_hash": "4be7b9d59400fd8d79f9adf3036328b9",
+    "mtime": 1793034256.1916318,
+    "seen": 1793034855.97931,
+    "ast_hash": "0beba3a76df7ec21d19d9db86d22a630",
     "semantic_hash": ""
   },
   "src/components/ErrorBoundary.tsx": {
@@ -114,9 +114,9 @@
     "semantic_hash": "00dc5c375269e6cf3cab3750b945cead"
   },
   "src/components/LicenseGate.tsx": {
-    "mtime": 1793034131.1451058,
-    "seen": 1793034208.600341,
-    "ast_hash": "674093478e1af98e0d58f0a780bf1b3f",
+    "mtime": 1793034256.1926289,
+    "seen": 1793034855.9793143,
+    "ast_hash": "ad99d855ebb319197a7b16c5218d4ad4",
     "semantic_hash": ""
   },
   "src/components/UpdateModal.tsx": {
@@ -258,15 +258,15 @@
     "semantic_hash": ""
   },
   "src/pages/Anime.tsx": {
-    "mtime": 1792533939.1841948,
-    "seen": 1792598140.1742785,
-    "ast_hash": "0d3db663e90df2c2c92493a691f5e839",
-    "semantic_hash": "0d3db663e90df2c2c92493a691f5e839"
+    "mtime": 1793034783.942938,
+    "seen": 1793034855.9793918,
+    "ast_hash": "4d90ccbdf100b48f0ef84cc19acc325d",
+    "semantic_hash": ""
   },
   "src/pages/Details.tsx": {
-    "mtime": 1793032403.101884,
-    "seen": 1793032798.9471948,
-    "ast_hash": "1aa1a59e57c41f0e24219d4f61656863",
+    "mtime": 1793034713.8197658,
+    "seen": 1793034855.9793935,
+    "ast_hash": "2753d74ff23ba84876ce3d0f8c20fc77",
     "semantic_hash": ""
   },
   "src/pages/Downloads.tsx": {
@@ -300,10 +300,10 @@
     "semantic_hash": ""
   },
   "src/pages/Movies.tsx": {
-    "mtime": 1792533939.1862135,
-    "seen": 1792598140.1743033,
-    "ast_hash": "3a1f92d89cbe1e6bc1806069548589db",
-    "semantic_hash": "3a1f92d89cbe1e6bc1806069548589db"
+    "mtime": 1793034783.9401672,
+    "seen": 1793034855.979406,
+    "ast_hash": "2c1a1e99895426521b9f9d478da2922d",
+    "semantic_hash": ""
   },
   "src/pages/MyList.tsx": {
     "mtime": 1792509483.3427997,
@@ -324,9 +324,9 @@
     "semantic_hash": "6d75e47f55f0a0260efe46572f11e1a3"
   },
   "src/pages/Series.tsx": {
-    "mtime": 1792938202.5665278,
-    "seen": 1792939584.5863018,
-    "ast_hash": "42c17a33f4d16153dd4e62d5a85f283a",
+    "mtime": 1793034783.9424272,
+    "seen": 1793034855.979415,
+    "ast_hash": "be89313b568bcfd1d938903d633ef87d",
     "semantic_hash": ""
   },
   "src/pages/Watch.tsx": {
@@ -858,9 +858,9 @@
     "semantic_hash": ""
   },
   "tests/unit/integrity.test.mjs": {
-    "mtime": 1793033970.3386672,
-    "seen": 1793034208.6005013,
-    "ast_hash": "88457c00aa7acd9f6224f7e402cc9840",
+    "mtime": 1793034256.1937852,
+    "seen": 1793034855.9794772,
+    "ast_hash": "c18a0cb70763fb848d3f3363e0ecaf92",
     "semantic_hash": ""
   },
   ".github/workflows/ci-quality.yml": {
@@ -876,10 +876,10 @@
     "semantic_hash": ""
   },
   "src/components/PremiumContentGate.tsx": {
-    "mtime": 1792533939.1809874,
-    "seen": 1792598140.173977,
-    "ast_hash": "4a1a38c94cff51be61726ca91d9b943b",
-    "semantic_hash": "4a1a38c94cff51be61726ca91d9b943b"
+    "mtime": 1793034654.4912517,
+    "seen": 1793034855.9793167,
+    "ast_hash": "191759038656cbb82b4f4658268c3948",
+    "semantic_hash": ""
   },
   "src/services/trial.ts": {
     "mtime": 1792777768.1235366,
@@ -888,16 +888,16 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793034035.6208346,
-    "seen": 1793034208.600503,
-    "ast_hash": "5fb3ea42c2e0aa5f690fcb7798f5f27e",
+    "mtime": 1793034665.9821796,
+    "seen": 1793034855.9794793,
+    "ast_hash": "104ae9dbcffdaadd2c2c36f38434cb72",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {
-    "mtime": 1792533939.1862135,
-    "seen": 1792598140.1746922,
-    "ast_hash": "1fe58aee99e3a3649097acb7b8132697",
-    "semantic_hash": "1fe58aee99e3a3649097acb7b8132697"
+    "mtime": 1793034654.4940267,
+    "seen": 1793034855.9794815,
+    "ast_hash": "b7b3172c551a5cf8b0822f9c65e14b7d",
+    "semantic_hash": ""
   },
   "AUDIT_REPORT.md": {
     "mtime": 1792522465.9435024,

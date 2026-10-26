@@ -5,6 +5,7 @@ import {
   ArrowLeft, Play, Star, Heart,
   X, Check, MessageSquare, Sliders, Download,
   ChevronLeft, ChevronRight,
+  Crown,
 } from 'lucide-react'
 import { SkeletonDetailPage } from '@/components/ui/SkeletonCard'
 import ProgressBar from '@/components/ui/ProgressBar'
@@ -17,6 +18,7 @@ import {
   getCachedMediaDetails,
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
+import { useLicense } from '@/hooks/useLicense'
 import { markBackHandled } from '@/utils/tv'
 import { downloadsSupported, buildFileName, downloadVideo } from '@/services/downloads'
 import { resolveMegaEmbed } from '@/services/streams'
@@ -57,6 +59,10 @@ const Details = () => {
   const [resolucaoModalOpen, setResolucaoModalOpen] = useState(false)
   const [selectedResolution, setSelectedResolution] = useState('1080p')
   const [isDownloading, setIsDownloading] = useState(false)
+  const [subscriberModalOpen, setSubscriberModalOpen] = useState(false)
+  const { isLicensed, isTrial } = useLicense()
+  const isSubscriber = isLicensed || isTrial
+  const setVipModalOpen = useAppStore((s) => s.setVipModalOpen)
 
   const fullscreenBtnRef = useRef<HTMLButtonElement | null>(null)
 
@@ -255,6 +261,10 @@ const Details = () => {
   }
 
   const handlePlayFullscreen = (ep = selectedEpisode) => {
+    if (!isSubscriber) {
+      setSubscriberModalOpen(true)
+      return
+    }
     const audioQuery = audioOption === 'orig' ? 'audio=orig' : 'audio=dub'
     if (isMovie) {
       navigate(`/watch/movie/${mediaId}?${audioQuery}`)
@@ -281,6 +291,10 @@ const Details = () => {
   }
 
   const handleDownload = async () => {
+    if (!isSubscriber) {
+      setSubscriberModalOpen(true)
+      return
+    }
     if (!downloadsSupported()) {
       alert('Downloads estão disponíveis no aplicativo Android.')
       return
@@ -1024,6 +1038,78 @@ const Details = () => {
                     </button>
                   </Focusable>
                 ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+{/* Modal de Conteúdo Exclusivo para Assinantes ao tentar reproduzir sem assinatura */}
+      <AnimatePresence>
+        {subscriberModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-[#18181b] border border-amber-400/40 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl"
+            >
+              <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+                <Crown className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                Conteúdo Exclusivo para Assinantes
+              </h3>
+              <p className="text-white/70 text-sm mb-6 leading-relaxed">
+                A reprodução de filmes e séries é exclusiva para assinantes do CineBG. Contrate um plano agora mesmo para liberar o acesso ilimitado a todo o nosso catálogo!
+              </p>
+
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-6 flex items-center justify-between text-xs text-amber-200">
+                <span className="flex items-center gap-2">
+                  <span className="text-base">📺</span> TV ao vivo gratuita liberada
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubscriberModalOpen(false)
+                    navigate('/tv')
+                  }}
+                  className="text-amber-400 font-bold hover:underline"
+                >
+                  Assistir TV
+                </button>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Focusable
+                  focusKey="details-modal-subscribe"
+                  onEnterPress={() => {
+                    setSubscriberModalOpen(false)
+                    setVipModalOpen(true)
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubscriberModalOpen(false)
+                      setVipModalOpen(true)
+                    }}
+                    className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-extrabold rounded-xl transition-all shadow-lg active:scale-95"
+                  >
+                    👑 Contratar Assinatura
+                  </button>
+                </Focusable>
+                <Focusable
+                  focusKey="details-modal-cancel"
+                  onEnterPress={() => setSubscriberModalOpen(false)}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSubscriberModalOpen(false)}
+                    className="w-full sm:w-auto px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all"
+                  >
+                    Continuar Navegando
+                  </button>
+                </Focusable>
               </div>
             </motion.div>
           </div>

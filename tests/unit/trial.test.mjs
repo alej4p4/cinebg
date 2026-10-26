@@ -142,13 +142,18 @@ test('SEC-1: serviço de teste não faz chamadas de rede nem depende de relógio
   assert.doesNotMatch(src, /worldtimeapi|fetch\(/, 'trial.ts não deve depender de rede')
 })
 
-test('SEC-2: páginas premium usam o gate e LiveTV permanece livre', () => {
-  for (const page of ['Movies', 'Series', 'Anime', 'Watch']) {
+test('SEC-2: reprodução de filmes e séries é restrita a assinantes (Watch/Details), enquanto catálogo e LiveTV são livres', () => {
+  const watch = fs.readFileSync(path.join(ROOT, 'src/pages/Watch.tsx'), 'utf8')
+  assert.match(watch, /<PremiumContentGate/, 'Watch.tsx deve usar PremiumContentGate para barrar reprodução não autorizada')
+
+  const details = fs.readFileSync(path.join(ROOT, 'src/pages/Details.tsx'), 'utf8')
+  assert.match(details, /Conteúdo Exclusivo para Assinantes/, 'Details.tsx deve exibir aviso de conteúdo exclusivo para assinantes ao tentar reproduzir')
+
+  // Catálogo livre para navegação e visualização
+  for (const page of ['Movies', 'Series', 'Anime', 'LiveTV']) {
     const src = fs.readFileSync(path.join(ROOT, `src/pages/${page}.tsx`), 'utf8')
-    assert.match(src, /<PremiumContentGate/, `${page}.tsx deve usar PremiumContentGate`)
+    assert.doesNotMatch(src, /<PremiumContentGate/, `${page}.tsx deve permitir navegação livre pelo catálogo`)
   }
-  const live = fs.readFileSync(path.join(ROOT, 'src/pages/LiveTV.tsx'), 'utf8')
-  assert.doesNotMatch(live, /PremiumContentGate/, 'LiveTV (TV aberta) não deve ser bloqueada')
 })
 
 test('OTA-1: versionName do APK coincide com update.json (OTA consegue comparar versões)', () => {
