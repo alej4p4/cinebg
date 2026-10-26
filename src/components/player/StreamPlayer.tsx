@@ -518,7 +518,7 @@ const StreamPlayer = ({
 
   // ===== Auto-fallback state =====
   const fallbackSequence = useMemo(
-    () => (activeAudio === 'dub' ? ['megaembed', 'superflix', 'vidlink'] : ['vidlink', 'superflix', 'megaembed']),
+    () => (activeAudio === 'dub' ? ['megaembed', 'vidlink'] : ['vidlink', 'megaembed']),
     [activeAudio]
   )
 
@@ -639,12 +639,12 @@ const StreamPlayer = ({
       setError(false)
       return
     }
-    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho alternativo
-    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho alternativo...')
+    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho nativo megaembed
+    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho limpo MegaEmbed...')
     nativeActiveRef.current = false
     setDirectSrc(null)
     setDirectKind(null)
-    setActiveMirror(activeAudio === 'dub' ? 'superflix' : 'vidlink')
+    setActiveMirror(activeAudio === 'dub' ? 'megaembed' : 'vidlink')
     setAllowIframe(true)
     setLoaded(false)
     setError(false)
@@ -2441,6 +2441,7 @@ const StreamPlayer = ({
             src={embedUrl}
             title={title}
             className="w-full h-full border-0"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
             allowFullScreen
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
             referrerPolicy="no-referrer"
