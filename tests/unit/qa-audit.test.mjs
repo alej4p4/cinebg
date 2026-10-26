@@ -342,3 +342,38 @@ test('AUDIO-3: PlaybackSettingsModal e HUD com suporte dinâmico a áudio e cont
   assert.match(player, /activeAudio === 'dub' \? 'orig' : 'dub'/, 'HUD e atalhos devem alternar activeAudio da sessão')
   assert.match(player, /hls\.audioTrack =/, 'StreamPlayer deve alternar hls.audioTrack de forma transparente em transmissões multi-áudio')
 })
+
+// =====================================================================
+// 8. CONTROLES DO PLAYER E NAVEGAÇÃO SMART TV / TOUCH (ISSUE #278)
+// =====================================================================
+test('PLAYER-1: Controles dedicados de retroceder, reproduzir/pausar e avançar com suporte touch e pointer', () => {
+  const player = read('src/components/player/StreamPlayer.tsx')
+
+  // Botões dedicados no HUD
+  assert.match(player, /id="hud-btn-rewind"/, 'HUD deve conter botão dedicado de retroceder 10s')
+  assert.match(player, /id="hud-btn-play"/, 'HUD deve conter botão de play/pause')
+  assert.match(player, /id="hud-btn-forward"/, 'HUD deve conter botão dedicado de avançar 10s')
+
+  // Scrubber com eventos de pointer e touch para evitar desync durante o arraste
+  assert.match(player, /onPointerDown=\{handleScrubberStart\}/, 'Scrubber deve sinalizar início do arraste no ponteiro')
+  assert.match(player, /onTouchStart=\{handleScrubberStart\}/, 'Scrubber deve sinalizar início do arraste no touch')
+  assert.match(player, /onPointerUp=/, 'Scrubber deve comitar o seek no término do ponteiro')
+  assert.match(player, /onTouchEnd=/, 'Scrubber deve comitar o seek no término do touch')
+  assert.match(player, /isScrubbingRef\.current/, 'handleTimeUpdate deve respeitar arraste do usuário sem forçar recuo da barra')
+})
+
+test('PLAYER-2: Navegação D-Pad em Smart TV e teclas de mídia física do controle remoto', () => {
+  const player = read('src/components/player/StreamPlayer.tsx')
+
+  // getBottomHudButtons deve isolar os botões de controle da linha do player
+  assert.match(player, /btn\.id !== 'hud-btn-rewind'/, 'getBottomHudButtons não deve misturar hud-btn-rewind com ações de rodapé')
+  assert.match(player, /btn\.id !== 'hud-btn-forward'/, 'getBottomHudButtons não deve misturar hud-btn-forward com ações de rodapé')
+
+  // Teclas de controle remoto de TV e atalhos universais
+  assert.match(player, /MediaPlayPause|179/, 'Deve suportar botão MediaPlayPause físico de controle remoto TV')
+  assert.match(player, /MediaRewind|227/, 'Deve suportar botão MediaRewind físico de controle remoto TV')
+  assert.match(player, /MediaFastForward|228/, 'Deve suportar botão MediaFastForward físico de controle remoto TV')
+  assert.match(player, /key === 'j'/, 'Deve suportar atalho j (retroceder 10s)')
+  assert.match(player, /key === 'l'/, 'Deve suportar atalho l (avançar 10s)')
+})
+

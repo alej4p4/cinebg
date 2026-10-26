@@ -373,6 +373,8 @@ const StreamPlayer = ({
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isScrubbing, setIsScrubbing] = useState(false)
+  const isScrubbingRef = useRef(false)
   const hudTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ===== Gestos Touch & Toque Duplo (Avançar/Voltar 10s) =====
@@ -489,10 +491,21 @@ const StreamPlayer = ({
 
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = Number(e.target.value)
+    setCurrentTime(val)
+  }
+
+  const handleScrubberStart = () => {
+    isScrubbingRef.current = true
+    setIsScrubbing(true)
+  }
+
+  const handleScrubberCommit = (val: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = val
       setCurrentTime(val)
     }
+    isScrubbingRef.current = false
+    setIsScrubbing(false)
     resetHudTimer()
   }
 
@@ -1223,12 +1236,23 @@ const StreamPlayer = ({
   const seekBy = useCallback((delta: number, showDefaultFeedback = true) => {
     const video = videoRef.current
     if (!video) return
+    resetHudTimer()
     const max = Number.isFinite(video.duration) ? video.duration : Infinity
-    video.currentTime = Math.max(0, Math.min(max, video.currentTime + delta))
+    const target = Math.max(0, Math.min(max, video.currentTime + delta))
+    video.currentTime = target
+    setCurrentTime(target)
     if (showDefaultFeedback) {
-      showFeedback(delta > 0 ? `+${delta}s` : `${delta}s`)
+      showFeedback(delta > 0 ? `+${delta}s ⏩` : `${delta}s ⏪`)
     }
-  }, [showFeedback])
+  }, [resetHudTimer, showFeedback])
+
+  const handleRewind10 = useCallback(() => {
+    seekBy(-10)
+  }, [seekBy])
+
+  const handleForward10 = useCallback(() => {
+    seekBy(10)
+  }, [seekBy])
 
   const handleSkipIntro = () => {
     hasSkippedIntroRef.current = true
@@ -1282,12 +1306,30 @@ const StreamPlayer = ({
     })
   }, [showFeedback])
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     const video = videoRef.current
     if (!video) return
-    if (video.paused) video.play().catch(() => {})
-    else video.pause()
-  }
+    resetHudTimer()
+    if (video.paused) {
+      video.play().then(() => {
+        setIsPlaying(true)
+        showFeedback('▶ Reproduzindo')
+      }).catch(() => {
+        try {
+          video.muted = true
+          video.play().then(() => {
+            video.muted = false
+            setIsPlaying(true)
+            showFeedback('▶ Reproduzindo')
+          }).catch(() => {})
+        } catch {}
+      })
+    } else {
+      video.pause()
+      setIsPlaying(false)
+      showFeedback('⏸ Pausado')
+    }
+  }, [resetHudTimer, showFeedback])
 
   const toggleMute = () => {
     const video = videoRef.current
@@ -1498,7 +1540,9 @@ const StreamPlayer = ({
     const video = videoRef.current
     if (!video) return
     const current = video.currentTime
-    setCurrentTime(current)
+    if (!isScrubbingRef.current) {
+      setCurrentTime(current)
+    }
     const dur = Number.isFinite(video.duration) ? video.duration : 0
     setDuration(dur)
     setIsPlaying(!video.paused)
@@ -1580,24 +1624,45 @@ const StreamPlayer = ({
       // Qualquer tecla no controle remoto reativa e exibe o HUD
       resetHudTimer()
 
-      // Lista de botões inferiores do HUD
+      // Lista de botões inferiores do HUD (exclui player controls e voltar)
       const getBottomHudButtons = (): HTMLElement[] => {
         if (!containerRef.current) return []
         return Array.from(
           containerRef.current.querySelectorAll<HTMLElement>(
             'button[data-hud-btn="true"]:not([disabled])'
           )
-        ).filter((btn) => btn.id !== 'hud-btn-back' && btn.id !== 'hud-btn-play')
+        ).filter(
+          (btn) =>
+            btn.id !== 'hud-btn-back' &&
+            btn.id !== 'hud-btn-rewind' &&
+            btn.id !== 'hud-btn-play' &&
+            btn.id !== 'hud-btn-forward'
+        )
       }
 
       const currentFocused = document.activeElement as HTMLElement | null
       const isFocusedOnBottomBtn =
         !!currentFocused &&
         currentFocused.matches('button[data-hud-btn="true"]') &&
-        currentFocused.id !== 'hud-btn-back' &&
-        currentFocused.id !== 'hud-btn-play'
+        btnMatchesBottom(currentFocused)
 
-      // Tecla D-Pad Para Baixo (NUNCA altera o volume! Navega exclusivamente até os botões do player)
+      function btnMatchesBottom(el: HTMLElement): boolean {
+        return (
+          el.id !== 'hud-btn-back' &&
+          el.id !== 'hud-btn-rewind' &&
+          el.id !== 'hud-btn-play' &&
+          el.id !== 'hud-btn-forward'
+        )
+      }
+
+      const isFocusedOnPlayerRow =
+        !!currentFocused &&
+        (currentFocused.id === 'hud-btn-rewind' ||
+          currentFocused.id === 'hud-btn-play' ||
+          currentFocused.id === 'hud-btn-forward' ||
+          currentFocused.id === 'hud-scrubber')
+
+      // Tecla D-Pad Para Baixo (Navega verticalmente: Voltar -> Player Controls -> Botões de Ação)
       if (key === 'ArrowDown' || code === 40 || code === 20) {
         e.preventDefault()
         e.stopPropagation()
@@ -1609,17 +1674,22 @@ const StreamPlayer = ({
         if (!showHud) {
           setShowHud(true)
           setTimeout(() => {
-            defaultBottomBtn?.focus()
+            document.getElementById('hud-btn-play')?.focus()
           }, 40)
           return
         }
 
         if (currentFocused?.id === 'hud-btn-back') {
-          const playOrScrubber =
+          const playOrBtn =
             document.getElementById('hud-btn-play') ||
-            document.getElementById('hud-scrubber') ||
+            document.getElementById('hud-btn-rewind') ||
             defaultBottomBtn
-          playOrScrubber?.focus()
+          playOrBtn?.focus()
+          return
+        }
+
+        if (isFocusedOnPlayerRow) {
+          defaultBottomBtn?.focus()
           return
         }
 
@@ -1629,48 +1699,66 @@ const StreamPlayer = ({
         return
       }
 
-      // Tecla D-Pad Para Cima (NUNCA altera o volume! Navega dos botões para a barra de progresso / botão Voltar)
+      // Tecla D-Pad Para Cima (Navega verticalmente: Botões de Ação -> Player Controls -> Voltar)
       if (key === 'ArrowUp' || code === 38 || code === 19) {
         e.preventDefault()
         e.stopPropagation()
-        const defaultBottomBtn =
-          document.getElementById('hud-btn-audio') ||
-          document.getElementById('hud-btn-subtitles') ||
-          getBottomHudButtons()[0]
 
         if (!showHud) {
           setShowHud(true)
           setTimeout(() => {
-            defaultBottomBtn?.focus()
+            document.getElementById('hud-btn-play')?.focus()
           }, 40)
           return
         }
 
         if (isFocusedOnBottomBtn) {
-          const playOrBack =
+          const playOrBtn =
             document.getElementById('hud-btn-play') ||
+            document.getElementById('hud-btn-rewind') ||
             document.getElementById('hud-scrubber') ||
             document.getElementById('hud-btn-back')
-          playOrBack?.focus()
+          playOrBtn?.focus()
           return
         }
 
-        if (currentFocused?.id === 'hud-btn-play' || currentFocused?.id === 'hud-scrubber') {
+        if (isFocusedOnPlayerRow) {
           document.getElementById('hud-btn-back')?.focus()
           return
         }
 
-        defaultBottomBtn?.focus()
+        document.getElementById('hud-btn-back')?.focus()
         return
       }
 
-      // Tecla D-Pad Para a Esquerda (Navega entre os botões sem avançar/voltar o vídeo!)
+      // Tecla D-Pad Para a Esquerda (Navega horizontalmente no player: scrubber -> forward -> play -> rewind)
       if (key === 'ArrowLeft' || code === 37 || code === 21) {
         e.preventDefault()
         e.stopPropagation()
 
-        // Só volta -10s se o foco estiver na barra de tempo (#hud-scrubber) ou se o HUD estiver fechado
-        if (currentFocused?.id === 'hud-scrubber' || !showHud) {
+        // Se o HUD estiver fechado, volta -10s
+        if (!showHud) {
+          seekBy(-10)
+          return
+        }
+
+        // Se o foco estiver na barra de tempo (#hud-scrubber), ajusta -10s
+        if (currentFocused?.id === 'hud-scrubber') {
+          seekBy(-10)
+          return
+        }
+
+        if (currentFocused?.id === 'hud-btn-forward') {
+          document.getElementById('hud-btn-play')?.focus()
+          return
+        }
+
+        if (currentFocused?.id === 'hud-btn-play') {
+          document.getElementById('hud-btn-rewind')?.focus()
+          return
+        }
+
+        if (currentFocused?.id === 'hud-btn-rewind') {
           seekBy(-10)
           return
         }
@@ -1682,12 +1770,7 @@ const StreamPlayer = ({
           return
         }
         if (activeIndex === 0) {
-          // Já está no primeiro botão da fila: permanece nele sem pular o vídeo
           bottomBtns[0].focus()
-          return
-        }
-        if (currentFocused?.id === 'hud-scrubber') {
-          document.getElementById('hud-btn-play')?.focus()
           return
         }
         if (bottomBtns.length > 0) {
@@ -1696,18 +1779,34 @@ const StreamPlayer = ({
         return
       }
 
-      // Tecla D-Pad Para a Direita (Navega entre os botões sem acelerar/avançar o vídeo!)
+      // Tecla D-Pad Para a Direita (Navega horizontalmente no player: rewind -> play -> forward -> scrubber)
       if (key === 'ArrowRight' || code === 39 || code === 22) {
         e.preventDefault()
         e.stopPropagation()
 
-        // Só avança +10s se o foco estiver na barra de tempo (#hud-scrubber) ou se o HUD estiver fechado
-        if (currentFocused?.id === 'hud-scrubber' || !showHud) {
+        // Se o HUD estiver fechado, avança +10s
+        if (!showHud) {
           seekBy(10)
           return
         }
 
+        // Se o foco estiver na barra de tempo (#hud-scrubber), ajusta +10s
+        if (currentFocused?.id === 'hud-scrubber') {
+          seekBy(10)
+          return
+        }
+
+        if (currentFocused?.id === 'hud-btn-rewind') {
+          document.getElementById('hud-btn-play')?.focus()
+          return
+        }
+
         if (currentFocused?.id === 'hud-btn-play') {
+          document.getElementById('hud-btn-forward')?.focus()
+          return
+        }
+
+        if (currentFocused?.id === 'hud-btn-forward') {
           const scrubber = document.getElementById('hud-scrubber')
           if (scrubber) {
             scrubber.focus()
@@ -1722,7 +1821,6 @@ const StreamPlayer = ({
           return
         }
         if (activeIndex === bottomBtns.length - 1 && bottomBtns.length > 0) {
-          // Já está no último botão da fila: permanece nele sem avançar o vídeo
           bottomBtns[bottomBtns.length - 1].focus()
           return
         }
@@ -1734,12 +1832,17 @@ const StreamPlayer = ({
 
       // Tecla Enter / OK / D-Pad Center
       if (key === 'Enter' || code === 13 || code === 23 || code === 66) {
-        // Se o foco já está em um botão do HUD (Dublado, Sem Legenda, Ajustes, Voltar, etc.),
-        // aciona exclusivamente o clique desse botão sem pausar o filme!
         if (currentFocused && currentFocused.tagName === 'BUTTON') {
           e.preventDefault()
           e.stopPropagation()
           currentFocused.click()
+          return
+        }
+
+        if (currentFocused?.id === 'hud-scrubber') {
+          e.preventDefault()
+          e.stopPropagation()
+          togglePlay()
           return
         }
 
@@ -1749,9 +1852,9 @@ const StreamPlayer = ({
           setShowHud(true)
           setTimeout(() => {
             const defaultBtn =
+              document.getElementById('hud-btn-play') ||
               document.getElementById('hud-btn-audio') ||
-              document.getElementById('hud-btn-subtitles') ||
-              document.getElementById('hud-btn-play')
+              document.getElementById('hud-btn-subtitles')
             defaultBtn?.focus()
           }, 40)
           return
@@ -1763,19 +1866,38 @@ const StreamPlayer = ({
         return
       }
 
-      // Teclas de atalho dedicadas:
+      // Teclas de atalho dedicadas (Teclado & Controles Remotos de TV):
       if (
         key === ' ' ||
         key === 'k' ||
         key === 'K' ||
         key === 'MediaPlay' ||
         key === 'MediaPause' ||
-        key === 'MediaPlayPause'
+        key === 'MediaPlayPause' ||
+        code === 179
       ) {
         if (currentFocused?.tagName !== 'BUTTON') {
           e.preventDefault()
           togglePlay()
         }
+      } else if (
+        key === 'MediaRewind' ||
+        code === 227 ||
+        code === 89 ||
+        key === 'j' ||
+        key === 'J'
+      ) {
+        e.preventDefault()
+        handleRewind10()
+      } else if (
+        key === 'MediaFastForward' ||
+        code === 228 ||
+        code === 90 ||
+        key === 'l' ||
+        key === 'L'
+      ) {
+        e.preventDefault()
+        handleForward10()
       } else if (key === 'f' || key === 'F') {
         e.preventDefault()
         handleFullscreen()
@@ -1836,6 +1958,9 @@ const StreamPlayer = ({
     switchAudio,
     toggleFitMode,
     showFeedback,
+    togglePlay,
+    handleRewind10,
+    handleForward10,
   ])
 
   // Tratamento inteligente de toque mobile e cliques na tela do player
@@ -2391,18 +2516,46 @@ const StreamPlayer = ({
             e.stopPropagation()
           }}
         >
-          {/* Linha do Tempo / Scrubber */}
-          {directSrc && duration > 0 && (
-            <div className="flex items-center gap-3 sm:gap-4 mb-4">
+          {/* Linha do Tempo / Scrubber & Controles Principais */}
+          {directSrc && (
+            <div className="flex items-center gap-2 sm:gap-4 mb-4">
+              {/* Botão Retroceder 10s */}
+              <button
+                type="button"
+                id="hud-btn-rewind"
+                data-hud-btn="true"
+                onClick={handleRewind10}
+                className="p-2 sm:p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:bg-yellow-400 focus:text-black flex items-center justify-center"
+                title="Voltar 10 segundos (-10s)"
+                aria-label="Voltar 10 segundos"
+              >
+                <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+
+              {/* Botão Reproduzir / Pausar */}
               <button
                 type="button"
                 id="hud-btn-play"
                 data-hud-btn="true"
                 onClick={togglePlay}
-                className="p-2 sm:p-2.5 bg-yellow-400 hover:bg-yellow-300 text-black rounded-full font-bold transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                className="p-2 sm:p-2.5 bg-yellow-400 hover:bg-yellow-300 text-black rounded-full font-bold transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400 flex items-center justify-center shadow-lg shadow-yellow-500/30"
                 title={isPlaying ? 'Pausar' : 'Reproduzir'}
+                aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
               >
                 {isPlaying ? <Pause className="w-5 h-5 fill-black" /> : <Play className="w-5 h-5 fill-black ml-0.5" />}
+              </button>
+
+              {/* Botão Avançar 10s */}
+              <button
+                type="button"
+                id="hud-btn-forward"
+                data-hud-btn="true"
+                onClick={handleForward10}
+                className="p-2 sm:p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:bg-yellow-400 focus:text-black flex items-center justify-center"
+                title="Avançar 10 segundos (+10s)"
+                aria-label="Avançar 10 segundos"
+              >
+                <FastForward className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               <span className="text-xs sm:text-sm font-mono text-white/90 min-w-[45px] select-none">
@@ -2417,8 +2570,15 @@ const StreamPlayer = ({
                   max={duration || 100}
                   step={1}
                   value={currentTime}
+                  onPointerDown={handleScrubberStart}
+                  onTouchStart={handleScrubberStart}
+                  onMouseDown={handleScrubberStart}
+                  onPointerUp={(e) => handleScrubberCommit(Number(e.currentTarget.value))}
+                  onTouchEnd={(e) => handleScrubberCommit(Number(e.currentTarget.value))}
+                  onMouseUp={(e) => handleScrubberCommit(Number(e.currentTarget.value))}
                   onChange={handleSeekChange}
-                  className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-yellow-400 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                  aria-label="Barra de progresso do vídeo"
                 />
               </div>
 
