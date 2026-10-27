@@ -86,11 +86,32 @@ export const isKidsMode = (): boolean => {
   return profiles.find((p) => p.id === activeProfileId)?.kids ?? false
 }
 
+/**
+ * Validador estrito de disponibilidade em Português:
+ * 1. Produções com idioma original em Português ('pt') são aceitas integralmente.
+ * 2. Títulos internacionais devem possuir localização em PT-BR (título traduzido e sinopse em português com no mínimo 15 caracteres).
+ * 3. Títulos sem tradução oficial ou vazios no TMDB são descartados pois não possuem distribuição dublada no Brasil.
+ */
+export const isPortugueseAvailableItem = (item: MediaItem): boolean => {
+  if (!isCleanDigitalCatalogItem(item)) return false
+
+  const origLang = (item.originalLanguage || '').toLowerCase()
+  if (origLang === 'pt') return true
+
+  const overview = (item.overview || '').trim()
+  if (overview.length < 15) return false
+
+  // Detecta se a sinopse está localizada em português por termos comuns do idioma
+  const isPtOverview = /\b(o|a|os|as|um|uma|de|do|da|dos|das|em|no|na|nos|nas|com|por|para|que|se|ao|aos|seu|sua|seus|suas|ele|ela|eles|elas|quando|onde|como|mais|muito|vida|hist[oó]ria|mundo|ap[oó]s|durante|filho|fam[ií]lia|anos|contra|sobre|entre|grande|novo|nova)\b/i.test(overview)
+
+  return isPtOverview
+}
+
 const forKids = (items: MediaItem[]): MediaItem[] => {
-  const cleanItems = items.filter(isCleanDigitalCatalogItem)
+  const ptItems = items.filter(isPortugueseAvailableItem)
   return isKidsMode()
-    ? cleanItems.filter((item) => item.genreIds.some((g) => KIDS_GENRES.has(g)))
-    : cleanItems
+    ? ptItems.filter((item) => item.genreIds.some((g) => KIDS_GENRES.has(g)))
+    : ptItems
 }
 
 // ===== Image URLs (Com Otimização de Memória VRAM para Android TV / Fire TV) =====
@@ -127,8 +148,27 @@ const requestCache = new Map<string, { data: unknown; expiresAt: number; sizeByt
 const inflightMap = new Map<string, Promise<unknown>>()
 
 const STORAGE_PREFIX = 'cinebg_tmdb_v4_'
-const DEFAULT_CATALOG_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas para catálogos
-const DETAILS_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 dias para detalhes de filmes/séries
+const DYNAMIC_FEED_TTL_MS = 2 * 60 * 60 * 1000 // 2 horas para feeds de novos episódios/filmes
+const DEFAULT_CATALOG_TTL_MS = 12 * 60 * 60 * 1000 // 12 horas para catálogos gerais
+const DETAILS_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas para detalhes
+const RETURNING_SHOW_TTL_MS = 4 * 60 * 60 * 1000 // 4 horas para séries contínuas em exibição
+
+/**
+ * Invalida e sincroniza em background o catálogo de filmes, séries e novas temporadas em português.
+ */
+export const syncPortugueseCatalog = async (): Promise<void> => {
+  try {
+    const now = Date.now()
+    for (const [key, val] of requestCache.entries()) {
+      if (val.expiresAt <= now) {
+        requestCache.delete(key)
+      }
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cinebg:catalog-synced', { detail: { timestamp: now } }))
+    }
+  } catch {}
+}
 
 const estimateSizeBytes = (data: unknown): number => {
   try {
@@ -350,7 +390,12 @@ const cachedGet = async <T>(url: string, params?: Record<string, unknown>): Prom
   try {
     const data = await promise
     const isDetails = url.startsWith('/movie/') || url.startsWith('/tv/')
-    const ttl = isDetails ? DETAILS_TTL_MS : DEFAULT_CATALOG_TTL_MS
+    const isDynamicFeed =
+      url.includes('/trending/') ||
+      url.includes('/airing_today') ||
+      url.includes('/now_playing') ||
+      url.includes('/discover/')
+    const ttl = isDetails ? DETAILS_TTL_MS : isDynamicFeed ? DYNAMIC_FEED_TTL_MS : DEFAULT_CATALOG_TTL_MS
     setMemoryCache(key, { data, expiresAt: now + ttl })
     saveToLocalStorage(key, data, ttl)
     return data
@@ -372,6 +417,7 @@ export const movieToMediaItem = (movie: TMDBMovie): MediaItem => ({
   voteCount: movie.vote_count,
   type: 'movie',
   genreIds: movie.genre_ids,
+  originalLanguage: movie.original_language,
 })
 
 export const showToMediaItem = (show: TMDBShow, type: MediaType = 'tv'): MediaItem => ({
@@ -385,6 +431,7 @@ export const showToMediaItem = (show: TMDBShow, type: MediaType = 'tv'): MediaIt
   voteCount: show.vote_count,
   type,
   genreIds: show.genre_ids,
+  originalLanguage: show.original_language,
 })
 
 type RawCatalogPayload = (TMDBMovie | TMDBShow) & {
@@ -517,7 +564,7 @@ export const getClassicMovies = async (page = 1): Promise<{ items: MediaItem[]; 
 }
 
 export const getPopularShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/popular', { page })
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/popular', { page, watch_region: 'BR' })
   return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 
@@ -536,7 +583,7 @@ export const getClassicShows = async (page = 1): Promise<{ items: MediaItem[]; t
 }
 
 export const getAiringToday = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
-  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/airing_today', { page })
+  const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/tv/airing_today', { page, watch_region: 'BR' })
   return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 

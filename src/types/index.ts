@@ -142,6 +142,7 @@ export interface MediaItem {
   voteCount: number
   type: MediaType
   genreIds: number[]
+  originalLanguage?: string
 }
 
 export interface StreamSource {
