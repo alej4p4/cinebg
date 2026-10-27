@@ -138,6 +138,32 @@ test('NEG-7: isVersionNewer nunca oferece downgrade ou mesma versão (anti-loop 
   assert.equal(tv.isVersionNewer('1.2.63', '1.2.63'), false)
   assert.equal(tv.isVersionNewer('1.2.62', '1.2.63'), false)
   assert.equal(tv.isVersionNewer('', '1.2.63'), false)
+  assert.equal(tv.isVersionNewer('1.3.10', '1.3.10'), false)
+  assert.equal(tv.isVersionNewer('1.3.09', '1.3.10'), false)
+  assert.equal(tv.isVersionNewer('1.3.10', '1.3.09'), true)
+  assert.equal(tv.isVersionNewer('1.3.09', '1.3.9'), false)
+})
+
+test('NEG-8: snooze de atualização não obrigatória persiste no localStorage e impede loop de prompt', () => {
+  storage.clear()
+  const version = '1.3.10'
+  storage.setItem('cinebg_dismissed_update', JSON.stringify({ version, timestamp: Date.now() }))
+
+  const raw = storage.getItem('cinebg_dismissed_update')
+  assert.ok(raw, 'cinebg_dismissed_update deve existir no storage')
+  const parsed = JSON.parse(raw)
+  const isSnoozed = parsed.version === version && (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000)
+  assert.equal(isSnoozed, true, 'versão dispensada deve permanecer em snooze por 24h')
+
+  // Se surgir uma versão posterior mais recente, o snooze da versão anterior é ignorado
+  const isDifferentVersionSnoozed = parsed.version === '1.3.11' && (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000)
+  assert.equal(isDifferentVersionSnoozed, false, 'nova versão não é bloqueada pelo snooze da versão anterior')
+})
+
+test('NEG-9: AppInstallerPlugin.java não possui fallback para releases/latest/download (previne download de versão antiga)', () => {
+  const javaCode = read('android/app/src/main/java/com/barrasoft/cinebg/AppInstallerPlugin.java')
+  assert.equal(javaCode.includes('releases/latest/download'), false, 'Não deve fazer fallback silencioso para latest/download')
+  assert.ok(javaCode.includes('statusCode == 404'), 'Deve tratar HTTP 404 explicitamente')
 })
 
 // =====================================================================

@@ -130,19 +130,21 @@ public class AppInstallerPlugin extends Plugin {
 
                 HttpURLConnection conn = connectWithRedirects(downloadUrl);
 
-                // Fallback seguro mantendo estritamente o sabor correto (Mobile vs TV)
-                if (conn == null || conn.getResponseCode() == 404) {
-                    if (conn != null) {
-                        try { conn.disconnect(); } catch (Exception ignored) {}
-                    }
-                    String canonicalFallback = downloadTvApk
-                        ? "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Tv-release.apk"
-                        : "https://github.com/alej4p4/cinebg/releases/latest/download/CineBG-Mobile-release.apk";
-                    conn = connectWithRedirects(canonicalFallback);
+                if (conn == null) {
+                    call.reject("Falha de conexão com o servidor de atualização.");
+                    return;
                 }
 
-                if (conn == null || conn.getResponseCode() < 200 || conn.getResponseCode() >= 300) {
-                    call.reject("Servidor retornou erro HTTP: " + (conn != null ? conn.getResponseCode() : -1));
+                int statusCode = conn.getResponseCode();
+                if (statusCode == 404) {
+                    try { conn.disconnect(); } catch (Exception ignored) {}
+                    call.reject("O instalador desta versão ainda está sendo compilado no servidor. Por favor, aguarde alguns instantes e tente novamente.");
+                    return;
+                }
+
+                if (statusCode < 200 || statusCode >= 300) {
+                    try { conn.disconnect(); } catch (Exception ignored) {}
+                    call.reject("Servidor retornou erro HTTP: " + statusCode);
                     return;
                 }
 

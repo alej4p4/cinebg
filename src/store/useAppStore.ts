@@ -147,9 +147,23 @@ export const useAppStore = create<AppState>()(
       downloads: [],
       vipModalOpen: false,
 
-      // Atualização do App
+      // Atualização do App (com proteção anti-loop, cooldown de checagem e persistência de snooze)
       updateModalOpen: false,
-      setUpdateModalOpen: (open) => set({ updateModalOpen: open }),
+      setUpdateModalOpen: (open) => {
+        if (!open) {
+          try {
+            const state = get()
+            const version = state.updateInfo?.latestVersion
+            if (version && state.updateInfo?.hasUpdate) {
+              localStorage.setItem(
+                'cinebg_dismissed_update',
+                JSON.stringify({ version, timestamp: Date.now() })
+              )
+            }
+          } catch {}
+        }
+        set({ updateModalOpen: open })
+      },
       isCheckingUpdate: false,
       updateInfo: {
         currentVersion: getNativeAppVersion(CURRENT_APP_VERSION),
@@ -159,6 +173,15 @@ export const useAppStore = create<AppState>()(
         mandatory: false,
       },
       checkForUpdates: async (manual = false) => {
+        const AUTO_CHECK_COOLDOWN_MS = 6 * 60 * 60 * 1000 // 6 horas entre verificações silenciosas automáticas
+        const SNOOZE_DISMISS_MS = 24 * 60 * 60 * 1000 // 24 horas de silêncio se o usuário dispensar atualização não obrigatória
+        const DISMISSED_KEY = 'cinebg_dismissed_update'
+
+        const lastChecked = get().updateInfo?.lastChecked || 0
+        if (!manual && Date.now() - lastChecked < AUTO_CHECK_COOLDOWN_MS) {
+          return
+        }
+
         if (manual) {
           set({ isCheckingUpdate: true, updateModalOpen: true })
         }
@@ -191,17 +214,37 @@ export const useAppStore = create<AppState>()(
             const remoteVersion = data.version || currentVersion
             const downloadUrl = getDeviceUpdateUrl(data)
             const hasUpdate = isVersionNewer(remoteVersion, currentVersion)
+            const isMandatory = !!data.mandatory
+
+            let isDismissed = false
+            if (hasUpdate && !isMandatory) {
+              try {
+                const raw = localStorage.getItem(DISMISSED_KEY)
+                if (raw) {
+                  const parsed = JSON.parse(raw)
+                  if (
+                    parsed.version === remoteVersion &&
+                    Date.now() - Number(parsed.timestamp || 0) < SNOOZE_DISMISS_MS
+                  ) {
+                    isDismissed = true
+                  }
+                }
+              } catch {}
+            }
+
+            const shouldOpenModal = manual ? true : (hasUpdate && (isMandatory || !isDismissed))
+
             set({
               updateInfo: {
                 currentVersion,
                 latestVersion: hasUpdate ? remoteVersion : currentVersion,
                 hasUpdate,
                 downloadUrl,
-                mandatory: !!data.mandatory,
+                mandatory: isMandatory,
                 lastChecked: Date.now(),
               },
               isCheckingUpdate: false,
-              updateModalOpen: manual ? true : hasUpdate,
+              updateModalOpen: shouldOpenModal,
             })
             return
           }

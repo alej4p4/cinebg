@@ -100,6 +100,18 @@ const UpdateModal = ({
     }
   }, [visible])
 
+  const handleDismiss = useCallback(() => {
+    try {
+      if (latestVersion && hasUpdate) {
+        localStorage.setItem(
+          'cinebg_dismissed_update',
+          JSON.stringify({ version: latestVersion, timestamp: Date.now() })
+        )
+      }
+    } catch {}
+    onDismiss()
+  }, [latestVersion, hasUpdate, onDismiss])
+
   const formatBytes = (bytes: number): string => {
     if (!bytes || bytes <= 0) return '0 MB'
     const mb = bytes / (1024 * 1024)
@@ -341,7 +353,7 @@ const UpdateModal = ({
         }
         e.preventDefault()
         e.stopPropagation()
-        onDismiss()
+        handleDismiss()
         return
       }
 
@@ -437,13 +449,13 @@ const UpdateModal = ({
           if (activeActionIndex === 0) {
             handleStartUpdate()
           } else {
-            onDismiss()
+            handleDismiss()
           }
         } else if (stage === 'installing') {
           if (activeActionIndex === 0) {
             handleStartUpdate()
           } else {
-            onDismiss()
+            handleDismiss()
           }
         } else if (stage === 'error') {
           if (activeActionIndex === 0) {
@@ -459,7 +471,7 @@ const UpdateModal = ({
           } else if (activeActionIndex === 1 && onCheckAgain) {
             onCheckAgain()
           } else {
-            onDismiss()
+            handleDismiss()
           }
         }
       }
@@ -477,6 +489,7 @@ const UpdateModal = ({
     activeActionIndex,
     focusCurrentAction,
     onDismiss,
+    handleDismiss,
     onCheckAgain,
     handleOpenBrowserFallback,
     handleStartUpdate,
@@ -495,7 +508,7 @@ const UpdateModal = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-md"
-            onClick={stage === 'downloading' ? undefined : onDismiss}
+            onClick={stage === 'downloading' ? undefined : handleDismiss}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 15 }}
@@ -507,7 +520,7 @@ const UpdateModal = ({
             {/* Botão fechar */}
             {stage !== 'downloading' && (
               <button
-                onClick={onDismiss}
+                onClick={handleDismiss}
                 className="absolute top-4 right-4 p-2 text-white/40 hover:text-white rounded-full hover:bg-white/10 transition-colors"
                 title="Fechar"
               >
@@ -686,13 +699,13 @@ const UpdateModal = ({
 
                   <Focusable
                     focusKey="modal-install-close"
-                    onEnterPress={onDismiss}
+                    onEnterPress={handleDismiss}
                     onFocus={() => setActiveActionIndex(1)}
                   >
                     <button
                       ref={installDismissBtnRef}
                       type="button"
-                      onClick={onDismiss}
+                      onClick={handleDismiss}
                       onFocus={() => setActiveActionIndex(1)}
                       className={`w-full sm:w-auto py-3.5 px-5 font-bold rounded-xl text-xs uppercase tracking-wider transition-all outline-none ${
                         activeActionIndex === 1
@@ -832,13 +845,13 @@ const UpdateModal = ({
 
                   <Focusable
                     focusKey="modal-update-dismiss"
-                    onEnterPress={onDismiss}
+                    onEnterPress={handleDismiss}
                     onFocus={() => setActiveActionIndex(1)}
                   >
                     <button
                       ref={dismissBtnRef}
                       type="button"
-                      onClick={onDismiss}
+                      onClick={handleDismiss}
                       onFocus={() => setActiveActionIndex(1)}
                       className={`w-full sm:w-auto px-6 py-3.5 rounded-xl text-sm font-semibold transition-all outline-none ${
                         activeActionIndex === 1
