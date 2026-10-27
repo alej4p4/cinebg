@@ -1,11 +1,11 @@
 {
-  "version": "1.3.03",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.03/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.03/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.03/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.03/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.03/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.03/CineBG-Tv-release.apk",
+  "version": "1.3.04",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.04/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.04/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.04/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.04/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.04/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.04/CineBG-Tv-release.apk",
   "mandatory": false,
-  "releaseNotes": "Eliminada detecção de sandbox em filmes/séries, priorização de rotas diretas MegaEmbed/VidLink estilo YouCine e estabilidade aprimorada."
+  "releaseNotes": "Controle Remoto Smart TV ativado em players legendados externos (VidLink), foco automático, centralização do cursor em Play/Som e parâmetros de áudio desmutado."
 }

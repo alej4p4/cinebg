@@ -54,9 +54,9 @@ export const MIRRORS: StreamMirror[] = [
     type: 'multi_sub',
     sandboxed: false,
     getMovieUrl: (tmdbId) =>
-      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&ads=0`,
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&muted=false&fallback=true&ads=0`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&ads=0`,
+      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&muted=false&fallback=true&ads=0`,
   },
 ]
 
