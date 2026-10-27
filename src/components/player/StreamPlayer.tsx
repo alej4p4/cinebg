@@ -93,6 +93,8 @@ const StreamPlayer = ({
     addFavorite,
     removeFavorite,
     tvMode,
+    virtualCursor,
+    setVirtualCursor,
   } = useAppStore()
   const isTv =
     isTVDevice() ||
@@ -2090,6 +2092,26 @@ const StreamPlayer = ({
     setAntiRedirectShieldActive(showIframe)
   }, [showIframe])
 
+  // Na Smart TV, quando o player exibe o iframe externo (como o VidLink legendado):
+  // Ativa o cursor virtual para que o controle remoto D-Pad consiga interagir com Play/Som
+  const [showTvIframeHint, setShowTvIframeHint] = useState(true)
+  useEffect(() => {
+    if (showIframe && isTv) {
+      setVirtualCursor(true)
+      setShowTvIframeHint(true)
+      const t = setTimeout(() => {
+        iframeRef.current?.focus()
+      }, 500)
+      const tHint = setTimeout(() => {
+        setShowTvIframeHint(false)
+      }, 8000)
+      return () => {
+        clearTimeout(t)
+        clearTimeout(tHint)
+      }
+    }
+  }, [showIframe, isTv, setVirtualCursor])
+
   return (
     <div
       ref={containerRef}
@@ -2447,6 +2469,16 @@ const StreamPlayer = ({
             onLoad={handleIframeLoad}
             onError={handleStreamFailure}
           />
+        )}
+
+        {/* Banner de Ajuda do Controle Remoto Smart TV para Players Externos */}
+        {showIframe && isTv && showTvIframeHint && (
+          <div className="absolute top-4 inset-x-4 z-50 pointer-events-none flex justify-center animate-fade-in">
+            <div className="flex items-center gap-2.5 bg-black/90 border border-yellow-400/60 px-4 py-2 rounded-full text-xs font-semibold text-white shadow-2xl backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+              <span>Controle TV: Pressione <b>OK</b> no centro para Play • Mova as setas até o Som para desmutar • <b>MENU</b> alterna cursor</span>
+            </div>
+          </div>
         )}
 
         {/* Fonte nativa direta: MP4 dublado (PT-BR) ou HLS proxy (hls.js).

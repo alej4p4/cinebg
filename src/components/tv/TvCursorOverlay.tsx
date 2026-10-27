@@ -113,6 +113,17 @@ const TvCursorOverlayContent: React.FC = () => {
 
     const alignToInitialTarget = () => {
       if (typeof window === 'undefined') return
+      const iframeEl = document.querySelector('iframe')
+      if (iframeEl) {
+        // Centraliza exatamente sobre o botão Play central do player externo/VidLink
+        const centerPos = {
+          x: Math.round(window.innerWidth * 0.5),
+          y: Math.round(window.innerHeight * 0.5),
+        }
+        posRef.current = centerPos
+        setCursorPos(centerPos)
+        return
+      }
       const targetEl =
         document.querySelector('[data-focus-key="hero-watch-btn"]') ||
         document.querySelector('[data-focus-key="card-0-0"]') ||
@@ -292,6 +303,25 @@ const TvCursorOverlayContent: React.FC = () => {
             }
             elementToClick.dispatchEvent(new MouseEvent('mousedown', mouseOpts))
             elementToClick.dispatchEvent(new MouseEvent('mouseup', mouseOpts))
+            elementToClick.dispatchEvent(new MouseEvent('click', mouseOpts))
+
+            // Se for iframe na Smart TV, despacha PointerEvents e foca para acionar Play/Som
+            if (elementToClick.tagName === 'IFRAME') {
+              try {
+                const pointerOpts = {
+                  bubbles: true,
+                  cancelable: true,
+                  view: window,
+                  clientX: posRef.current.x,
+                  clientY: posRef.current.y,
+                  pointerId: 1,
+                  pointerType: 'touch',
+                  isPrimary: true,
+                }
+                elementToClick.dispatchEvent(new PointerEvent('pointerdown', pointerOpts))
+                elementToClick.dispatchEvent(new PointerEvent('pointerup', pointerOpts))
+              } catch {}
+            }
           } catch {}
         }
       }
