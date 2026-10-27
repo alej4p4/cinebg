@@ -212,6 +212,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private static final String[] AD_HOST_KEYWORDS = new String[] {
+        "shopee", "shopeebr", "aliexpress", "shein", "temu", "magazineluiza", "mercadolivre",
         "doubleclick", "googlesyndication", "googleadservices", "popads", "adsterra",
         "propellerads", "onclickmega", "exoclick", "juicyads", "monetag", "trafficjunky",
         "bet365", "1xbet", "1xbt", "xbet", "melbet", "mostbet", "linebet", "betwinner",
@@ -237,6 +238,11 @@ public class MainActivity extends BridgeActivity {
     private static boolean isAdUrl(String url) {
         if (url == null) return false;
         String lower = url.toLowerCase();
+
+        // Bloqueia imediatamente esquemas de deep links e apps de afiliados/propaganda
+        if (lower.startsWith("shopeebr://") || lower.startsWith("intent://") || lower.startsWith("market://")) {
+            return true;
+        }
 
         // Bloqueia imediatamente qualquer propaganda de casas de apostas (1xBet / 1xbt / etc.) ou preroll
         // mesmo que o arquivo termine em .mp4 ou .m3u8
@@ -302,6 +308,75 @@ public class MainActivity extends BridgeActivity {
 
                 if (!adBlockerInstalled) {
                     adBlockerInstalled = true;
+
+                    // Blindagem ativa do WebView contra ads, popups e erros de scheme (ERR_UNKNOWN_URL_SCHEME)
+                    getBridge().setWebViewClient(new BridgeWebViewClient(getBridge()) {
+                        @Override
+                        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                            if (request != null && request.getUrl() != null) {
+                                String url = request.getUrl().toString();
+                                if (isAdUrl(url)) {
+                                    return new WebResourceResponse("text/plain", "utf-8", 200, "OK", null, new ByteArrayInputStream(new byte[0]));
+                                }
+                            }
+                            return super.shouldInterceptRequest(view, request);
+                        }
+
+                        @Override
+                        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                            if (request == null || request.getUrl() == null) return false;
+                            android.net.Uri uri = request.getUrl();
+                            String scheme = uri.getScheme();
+                            String host = uri.getHost();
+
+                            // 1. Bloqueia qualquer tentativa de scheme não padrão/desconhecido (como shopeebr://, intent://, market://)
+                            if (scheme != null && !scheme.equalsIgnoreCase("http") &&
+                                !scheme.equalsIgnoreCase("https") &&
+                                !scheme.equalsIgnoreCase("capacitor") &&
+                                !scheme.equalsIgnoreCase("file") &&
+                                !scheme.equalsIgnoreCase("blob") &&
+                                !scheme.equalsIgnoreCase("data")) {
+                                android.util.Log.w("CineBGAdBlock", "Tentativa de abrir esquema externo desconhecido bloqueada: " + uri);
+                                return true; // Consumido: WebView não tentará carregar, prevenindo net::ERR_UNKNOWN_URL_SCHEME
+                            }
+
+                            // 2. Proteção do Frame Principal: o frame principal NUNCA deve sair do app local
+                            if (request.isForMainFrame()) {
+                                if (host != null && !host.equalsIgnoreCase("localhost") && !host.equalsIgnoreCase("127.0.0.1")) {
+                                    android.util.Log.w("CineBGNavGuard", "Navegação do frame principal para host externo bloqueada: " + uri);
+                                    return true;
+                                }
+                            }
+
+                            // 3. Bloqueia se for URL de anúncio conhecida mesmo via HTTP/HTTPS
+                            if (isAdUrl(uri.toString())) {
+                                android.util.Log.w("CineBGAdBlock", "Navegação para URL de anúncio bloqueada: " + uri);
+                                return true;
+                            }
+
+                            return super.shouldOverrideUrlLoading(view, request);
+                        }
+
+                        @Deprecated
+                        @Override
+                        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                            if (url == null) return false;
+                            if (isAdUrl(url) || (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("capacitor://") && !url.startsWith("file://"))) {
+                                return true;
+                            }
+                            return super.shouldOverrideUrlLoading(view, url);
+                        }
+
+                        @Override
+                        public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
+                            if (request != null && request.isForMainFrame()) {
+                                android.util.Log.e("CineBGNavGuard", "Erro de carregamento no main frame. Recuperando para localhost: " + request.getUrl());
+                                view.post(() -> view.loadUrl("http://localhost/"));
+                                return;
+                            }
+                            super.onReceivedError(view, request, error);
+                        }
+                    });
 
                     // Ponte nativa síncrona para o JavaScript identificar dispositivo, versão real do APK e licença/trial
                     webView.addJavascriptInterface(new Object() {
