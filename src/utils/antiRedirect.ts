@@ -12,14 +12,13 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
   // Apenas cancela o evento se aplicável sem atribuir e.returnValue
   // para evitar o modal nativo "Confirmar navegação / Sair desta página"
   if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
-    console.warn('[CineBG Anti-Ad] Redirecionamento de iframe bloqueado!')
+    console.warn('[CineBG Anti-Ad] Redirecionamento de iframe detectado e suprimido!')
     try {
       reportAdInterception({
         blockedUrl: window.location.href,
         interceptionSource: 'iframe_top_navigation',
       })
     } catch {}
-    e.preventDefault()
   }
 }
 

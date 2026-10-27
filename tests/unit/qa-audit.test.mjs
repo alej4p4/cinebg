@@ -724,3 +724,19 @@ test('INCIDENT-REPORT-3: Profiles.tsx exibe painel de diagnostico e copia relato
   assert.ok(profSrc.includes('formatIncidentsAsGitHubMarkdown'), 'Profiles.tsx deve integrar formatIncidentsAsGitHubMarkdown')
   assert.ok(profSrc.includes('getStreamIncidentLogs'), 'Profiles.tsx deve ler logs de incidentes')
 })
+
+
+test('SERIES-DUB-1: streams.ts segue redirecionamentos 301/302 para extrair fontes dubladas de series', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  assert.ok(streamsSrc.includes('resp.status >= 300 && resp.status < 400'), 'streams.ts deve capturar status 300-399 de redirecionamento')
+  assert.ok(streamsSrc.includes('redirectHop'), 'streams.ts deve implementar loop de redirecionamento para series')
+  assert.ok(streamsSrc.includes("redirect: 'follow'"), 'streams.ts fetch deve seguir redirecionamentos nativamente')
+})
+
+test('NO-NAV-DIALOG-1: antiRedirect.ts nao chama e.preventDefault() em beforeunload para eliminar modal "Confirmar navegacao"', () => {
+  const antiSrc = fs.readFileSync('src/utils/antiRedirect.ts', 'utf8')
+  const beforeUnloadMatch = antiSrc.match(/handleBeforeUnload\s*=\s*\([^)]*\)\s*=>\s*{([\s\S]*?)(?=\n\s*\/\/)/)
+  const beforeUnloadBody = beforeUnloadMatch ? beforeUnloadMatch[1] : ''
+  assert.ok(!beforeUnloadBody.includes('e.preventDefault()'), 'handleBeforeUnload nunca deve chamar e.preventDefault() para nao disparar dialogo nativo')
+  assert.ok(antiSrc.includes('Redirecionamento de iframe detectado e suprimido!'), 'antiRedirect.ts deve suprimir silenciosamente o redirecionamento')
+})
