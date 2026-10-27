@@ -375,36 +375,23 @@ const Profiles = () => {
               </Focusable>
             </div>
 
-            {/* Opção para Cursor Virtual de Mouse na TV */}
+            {/* Navegação Nativa por Controle Remoto (D-Pad) */}
             <div className="mt-5 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-shrink-0">
-                  <MousePointer2 className="h-5 w-5" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                  <Tv className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm">Cursor Virtual (Modo Mouse no Controle)</h3>
+                  <h3 className="font-bold text-white text-sm">Controle Remoto Smart TV (D-Pad)</h3>
                   <p className="text-text-secondary text-xs mt-0.5">
-                    Exibe um cursor na tela movimentado pelas setas do controle remoto da TV Box. Ideal para controles sem mouse físico.
+                    Navegação 100% nativa por setas direcionais, OK e Voltar. Sem ponteiros de mouse na tela.
                   </p>
                 </div>
               </div>
 
-              <Focusable
-                focusKey="profile-cursor-btn"
-                onEnterPress={() => setVirtualCursor(!virtualCursor)}
-                className="rounded-xl flex-shrink-0"
-              >
-                <button
-                  onClick={() => setVirtualCursor(!virtualCursor)}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${
-                    virtualCursor
-                      ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20'
-                      : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/10'
-                  }`}
-                >
-                  {virtualCursor ? '✓ Cursor Ativado' : 'Ativar Cursor Virtual'}
-                </button>
-              </Focusable>
+              <div className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex-shrink-0">
+                ✓ D-Pad Ativo
+              </div>
             </div>
           </div>
         )}
