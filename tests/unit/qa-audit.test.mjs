@@ -688,3 +688,12 @@ test('NAV-PRESERVE-2: App.tsx e LiveTV.tsx protegem rota ao vivo e retornam para
   const liveTvSrc = fs.readFileSync('src/pages/LiveTV.tsx', 'utf8')
   assert.ok(liveTvSrc.includes('handleClosePlayer()'), 'LiveTV.tsx deve fechar o canal selecionado ao pressionar voltar')
 })
+
+test('NAV-PRESERVE-3: tv.ts e App.tsx protegem permanencia na tela de Detalhes apos saida do player', () => {
+  const tvSrc = fs.readFileSync('src/utils/tv.ts', 'utf8')
+  assert.ok(tvSrc.includes('markPlayerExited'), 'tv.ts deve exportar markPlayerExited')
+  assert.ok(tvSrc.includes('wasPlayerRecentlyExited'), 'tv.ts deve exportar wasPlayerRecentlyExited')
+
+  const appSrc = fs.readFileSync('src/App.tsx', 'utf8')
+  assert.ok(appSrc.includes('wasPlayerRecentlyExited(1500)'), 'App.tsx deve usar wasPlayerRecentlyExited para proteger rota /details/')
+})

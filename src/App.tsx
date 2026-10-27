@@ -11,7 +11,7 @@ import { useEpisodeNotifications } from '@/hooks/useEpisodeNotifications'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useOrientationFullscreen } from '@/hooks/useOrientationFullscreen'
 import { useAppStore } from '@/store/useAppStore'
-import { isTVDevice, isMobileDevice, markBackHandled, wasBackRecentlyHandled, CURRENT_APP_VERSION } from '@/utils/tv'
+import { isTVDevice, isMobileDevice, markBackHandled, wasBackRecentlyHandled, markPlayerExited, wasPlayerRecentlyExited, CURRENT_APP_VERSION } from '@/utils/tv'
 import { trackRouteView } from '@/services/observability'
 import UpdateModal from '@/components/UpdateModal'
 import { useLicense } from '@/hooks/useLicense'
@@ -98,7 +98,13 @@ const AnimatedRoutes = (_props?: { isVipActive?: boolean }) => {
 
       // 2. Se estiver no player (/watch/:type/:id), volta sempre para a tela de Sinopse/Detalhes (/details/:type/:id)
       if (location.pathname.startsWith('/watch/')) {
+        markPlayerExited()
         navigate(location.pathname.replace('/watch/', '/details/'), { replace: true })
+        return
+      }
+
+      // Se acabou de sair do player de vídeo, preserva a permanência na tela de Detalhes daquele filme/série
+      if (location.pathname.startsWith('/details/') && wasPlayerRecentlyExited(1500)) {
         return
       }
 
@@ -128,8 +134,13 @@ const AnimatedRoutes = (_props?: { isVipActive?: boolean }) => {
 
         // Se estiver no player de filme/série, retorna diretamente para os detalhes do título
         if (location.pathname.startsWith('/watch/')) {
-          markBackHandled()
+          markPlayerExited()
           navigate(location.pathname.replace('/watch/', '/details/'), { replace: true })
+          return
+        }
+
+        // Se acabou de sair do player, não fecha o app nem pula para a Home
+        if (location.pathname.startsWith('/details/') && wasPlayerRecentlyExited(1500)) {
           return
         }
 
@@ -190,8 +201,15 @@ const AnimatedRoutes = (_props?: { isVipActive?: boolean }) => {
         if (location.pathname.startsWith('/watch/')) {
           e.preventDefault()
           e.stopPropagation()
-          markBackHandled()
+          markPlayerExited()
           navigate(location.pathname.replace('/watch/', '/details/'), { replace: true })
+          return
+        }
+
+        // Se acabou de sair do player de vídeo, consome o evento e permanece na tela de Detalhes
+        if (location.pathname.startsWith('/details/') && wasPlayerRecentlyExited(1500)) {
+          e.preventDefault()
+          e.stopPropagation()
           return
         }
 
