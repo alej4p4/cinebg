@@ -672,11 +672,27 @@ test('MOBILE-ROTATION-5: LivePlayer possui botão de cadeado e overlay de bloque
 })
 
 
-test('MOBILE-COFILE-1: StreamPlayer nunca realiza fallback automático para superflix/superflixapi.fun', () => {
+test('NO-SUBTITLED-PLAYER-1: Erradicação total do VidLink e de players legendados externos', () => {
   const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
-  assert.ok(!playerSrc.includes("activeAudio === 'dub' ? ['megaembed', 'superflix', 'vidlink']"), 'fallbackSequence não deve conter superflix no áudio dublado')
-  assert.ok(!playerSrc.includes("activeAudio === 'dub' ? 'superflix' : 'vidlink'"), 'handleDirectMediaError não deve alternar diretamente para superflix')
-  assert.ok(playerSrc.includes("activeAudio === 'dub' ? ['megaembed', 'vidlink'] : ['vidlink', 'megaembed']"), 'fallbackSequence deve conter apenas megaembed e vidlink')
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  assert.ok(!playerSrc.includes('vidlink'), 'StreamPlayer não deve conter referências ao player vidlink')
+  assert.ok(!streamsSrc.includes("id: 'vidlink'"), 'streams.ts não deve conter o espelho vidlink')
+  assert.match(playerSrc, /fallbackSequence\s*=\s*useMemo\(\s*\(\)\s*=>\s*\['megaembed'\]/, 'fallbackSequence deve conter estritamente megaembed')
+})
+
+test('NO-SUBTITLED-PLAYER-2: isPortugueseAudioCandidate rejeita terminantemente termos de legenda e aceita streams do MegaEmbed', async () => {
+  const streams = await compile('src/services/streams.ts')
+  const isPt = streams.isPortugueseAudioCandidate
+
+  // Fontes explicitamente legendadas são rejeitadas
+  assert.equal(isPt('[LEG] Legendado 1080p', 'https://mgeb.space/video.m3u8', 'en'), false, 'rótulo [LEG] deve ser rejeitado')
+  assert.equal(isPt('Versão Legendada', 'https://mgeb.space/video.m3u8', 'en'), false, 'rótulo com Legendada deve ser rejeitado')
+  assert.equal(isPt('Opção 1', 'https://cdn.example.com/sub/video.m3u8', 'en'), false, 'URL com /sub/ deve ser rejeitada')
+  assert.equal(isPt('Subtitled English', 'https://cdn.example.com/video.mp4', 'en'), false, 'inglês/subtitled deve ser rejeitado')
+
+  // Fontes MegaEmbed padrão sem marcação de legenda são tratadas como áudio em português
+  assert.equal(isPt('Opção 1', 'https://mgeb.space/stream.m3u8', 'en'), true, 'fontes mgeb padrão são tratadas como dubladas')
+  assert.equal(isPt('FHD 1080p', 'https://mgeb.lat/embed/123.m3u8', 'en'), true, 'fontes mgeb FHD são tratadas como dubladas')
 })
 
 test('MOBILE-COFILE-2: StreamPlayer iframe não possui sandbox restritivo para não acionar erro anti-tamper', () => {

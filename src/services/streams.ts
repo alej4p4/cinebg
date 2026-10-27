@@ -46,26 +46,10 @@ export const MIRRORS: StreamMirror[] = [
     getShowUrl: (tmdbId, season, episode) =>
       `https://superflixapi.fun/serie/${tmdbId}/${season}/${episode}`,
   },
-  {
-    id: 'vidlink',
-    name: 'CineBG Ultra (VidLink Pro)',
-    flagEmoji: '🚀',
-    quality: 'FHD 1080p',
-    type: 'multi_sub',
-    sandboxed: false,
-    getMovieUrl: (tmdbId) =>
-      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&muted=false&fallback=true&ads=0`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&muted=false&fallback=true&ads=0`,
-  },
 ]
 
-export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'dub'): string => {
-  const sequence =
-    audio === 'dub'
-      ? ['megaembed', 'vidlink']
-      : ['vidlink', 'megaembed']
-
+export const getNextSilentMirrorId = (currentId: string, _audio: AudioOption = 'dub'): string => {
+  const sequence = ['megaembed', 'superflix']
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
     return sequence[0]
@@ -113,11 +97,12 @@ export const buildShowUrl = (
 // =========================================================================
 const MEGAEMBED_EMBED_BASE = 'https://mgeb.lat/embed'
 
-// Hosts confirmados com áudio Dublado PT-BR no MegaEmbed
+// Hosts confirmados com acervo em Português / Dublado
 const DUBBED_HOST_HINTS = [
   'fontedecanais',
   'gviudclrb.com',
-  'mgeb.space/cache/hls',
+  'mgeb.space',
+  'mgeb.lat',
   '123flmsfree.com',
   '321moviesfree.com',
   '123pelicula.com',
@@ -125,25 +110,56 @@ const DUBBED_HOST_HINTS = [
   'onfilom.com',
   'cuevana4br.com',
   'playspelis.com',
+  'superflix',
 ]
 
 /**
  * Heurística robusta para identificar candidatos com áudio em Português (Dublado ou Nacional).
  * Detecta termos no rótulo, URL e produções originais brasileiras/portuguesas (originalLanguage === 'pt').
+ * Exclui terminantemente qualquer fonte que contenha indicação explícita de legenda ou áudio estrangeiro.
  */
 export const isPortugueseAudioCandidate = (
   label?: string | null,
   url?: string | null,
   originalLanguage?: string | null
 ): boolean => {
-  if ((originalLanguage || '').toLowerCase() === 'pt') return true
+  const isPtOriginal = (originalLanguage || '').toLowerCase() === 'pt'
   const l = (label || '').toLowerCase()
   const u = (url || '').toLowerCase()
-  return (
-    DUBBED_HOST_HINTS.some((hint) => u.includes(hint)) ||
+
+  // 1. Rejeita terminantemente fontes com indicação explícita de legenda ou áudio em inglês/estrangeiro
+  if (
+    /\b(legendad[oa]|leg|sub|subtitled|legendas|ingl[eê]s|english)\b/i.test(l) ||
+    /(\[leg\]|\(leg\)|\bleg\b|-leg\b|_leg\b|sub_lang)/i.test(l) ||
+    /(\blegendad[oa]\b|\bsubtitled\b|\/sub\/|sub_lang=)/i.test(u)
+  ) {
+    return false
+  }
+
+  // 2. Produção com idioma original português é sempre aceita
+  if (isPtOriginal) return true
+
+  // 3. Hosts conhecidos de CDN com acervo dublado no Brasil
+  if (DUBBED_HOST_HINTS.some((hint) => u.includes(hint))) {
+    return true
+  }
+
+  // 4. Termos positivos de áudio dublado ou nacional
+  if (
     /dub|dublado|portugu[eê]s|pt[-_]?br|audio[-_ ]?pt|nacional|\bbr\b/i.test(l) ||
     /dublado|audio[-_]pt|-dub|pt[-_]br|portugues|portuguese/i.test(u)
-  )
+  ) {
+    return true
+  }
+
+  // 5. No ecossistema MegaEmbed (mgeb.lat), fontes diretas retornadas para filmes/séries que não
+  // possuam marcação explícita de legenda/inglês são streams padrão dubladas em português
+  const isEmbedCdnStream = u.includes('mgeb.') || u.includes('/embed') || u.includes('/hls') || u.includes('.m3u8')
+  if (isEmbedCdnStream && !l.includes('leg') && !l.includes('sub')) {
+    return true
+  }
+
+  return false
 }
 
 // Hosts com token travado por IP do servidor backend (retornam text/html ou 404 no cliente)
@@ -435,6 +451,11 @@ export const resolveMegaEmbed = async (
 
       const isDubbed = isPortugueseAudioCandidate(s.label, cleanUrl, originalLanguage)
       const isPtOriginal = (originalLanguage || '').toLowerCase() === 'pt'
+
+      // Filtro rigoroso: descarta qualquer fonte sem áudio em português para erradicar reprodução de legendados
+      if (!isDubbed && !isPtOriginal) {
+        continue
+      }
 
       candidates.push({
         url: cleanUrl,
