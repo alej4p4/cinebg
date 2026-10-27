@@ -849,3 +849,12 @@ test('AD-GUARD-2: StreamPlayer.tsx aciona anti-redirect dinâmico e antiRedirect
   assert.ok(antiSrc.includes('isUnknownScheme'), 'antiRedirect.ts deve verificar esquemas desconhecidos na navegação')
   assert.ok(antiSrc.includes('!href.startsWith(\'capacitor://\')'), 'antiRedirect.ts deve preservar apenas navegações internas/web legítimas')
 })
+
+
+test('MOBILE-SETTINGS-MODAL-1: Navbar.tsx utiliza createPortal e centralizacao de tela cheia sem corte em mobile', () => {
+  const navbarSrc = fs.readFileSync('src/components/layout/Navbar.tsx', 'utf8')
+  assert.ok(navbarSrc.includes("import { createPortal } from 'react-dom'"), 'Navbar.tsx deve importar createPortal do react-dom')
+  assert.ok(navbarSrc.includes('createPortal('), 'Navbar.tsx deve utilizar createPortal para desanexar modais do overflow do header')
+  assert.ok(navbarSrc.includes('z-[9999] flex items-center justify-center p-4'), 'Modal de configuracoes deve ter centralizacao z-[9999]')
+  assert.ok(navbarSrc.includes('Atualizar Versão Agora'), 'Modal de configuracoes deve conter botao com largura completa Atualizar Versao Agora')
+})
