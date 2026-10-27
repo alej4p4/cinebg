@@ -96,12 +96,29 @@ export const isPortugueseAvailableItem = (item: MediaItem): boolean => {
   if (!isCleanDigitalCatalogItem(item)) return false
 
   const origLang = (item.originalLanguage || '').toLowerCase()
+  // 1. Produções originárias de países de língua portuguesa ('pt') são 100% dubladas/nacionais
   if (origLang === 'pt') return true
 
-  const overview = (item.overview || '').trim()
-  if (overview.length < 15) return false
+  // 2. Idiomas com distribuição predominantemente legendada no Brasil (sem dublagem comercial ampla)
+  // são bloqueados do catálogo para erradicar conteúdos estritamente legendados
+  const purelySubtitledLangs = new Set([
+    'tr', 'ru', 'ar', 'pl', 'cs', 'da', 'nl', 'no', 'sv', 'fi', 'el', 'he', 'hi', 'th', 'vi', 'id', 'fa', 'uk', 'ro', 'hu'
+  ])
+  if (purelySubtitledLangs.has(origLang)) {
+    return false
+  }
 
-  // Detecta se a sinopse está localizada em português por termos comuns do idioma
+  // 3. Títulos internacionais devem possuir sinopse oficial detalhada em Português (mínimo 25 caracteres)
+  const overview = (item.overview || '').trim()
+  if (overview.length < 25) return false
+
+  // 4. Bloqueia termos explícitos que indiquem conteúdo apenas legendado
+  const titleAndOverview = `${item.title} ${overview}`.toLowerCase()
+  if (/(\bapenas legendad[oa]\b|\bsomente legendad[oa]\b|\bsem dublagem\b|\bvers[aã]o legendada\b)/i.test(titleAndOverview)) {
+    return false
+  }
+
+  // 5. Valida palavras de estrutura gramatical exclusivas da língua portuguesa
   const isPtOverview = /\b(o|a|os|as|um|uma|de|do|da|dos|das|em|no|na|nos|nas|com|por|para|que|se|ao|aos|seu|sua|seus|suas|ele|ela|eles|elas|quando|onde|como|mais|muito|vida|hist[oó]ria|mundo|ap[oó]s|durante|filho|fam[ií]lia|anos|contra|sobre|entre|grande|novo|nova)\b/i.test(overview)
 
   return isPtOverview
@@ -147,7 +164,7 @@ const MAX_MEMORY_CACHE_TOTAL_SIZE_MB = 50
 const requestCache = new Map<string, { data: unknown; expiresAt: number; sizeBytes: number }>()
 const inflightMap = new Map<string, Promise<unknown>>()
 
-const STORAGE_PREFIX = 'cinebg_tmdb_v4_'
+const STORAGE_PREFIX = 'cinebg_tmdb_v6_'
 const DYNAMIC_FEED_TTL_MS = 2 * 60 * 60 * 1000 // 2 horas para feeds de novos episódios/filmes
 const DEFAULT_CATALOG_TTL_MS = 12 * 60 * 60 * 1000 // 12 horas para catálogos gerais
 const DETAILS_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas para detalhes
@@ -221,9 +238,8 @@ if (typeof window !== 'undefined') {
         const k = localStorage.key(i)
         if (
           k &&
-          (k.startsWith('cinebg_tmdb_cache_') ||
-            k.startsWith('cinebg_tmdb_v2_') ||
-            k.startsWith('cinebg_tmdb_v3_'))
+          k.startsWith('cinebg_tmdb_') &&
+          !k.startsWith('cinebg_tmdb_v6_')
         ) {
           legacyKeys.push(k)
         }
@@ -605,23 +621,27 @@ export const discoverShows = async (params: {
     sort_by: params.sort || 'popularity.desc',
     'vote_average.gte': params.minRating,
     with_networks: params.withNetworks,
-    with_watch_providers: params.withWatchProviders,
-    watch_region: params.withWatchProviders ? 'BR' : undefined,
+    with_watch_providers: params.isAnime ? '8|283|337|119' : params.withWatchProviders,
+    watch_region: 'BR',
     with_keywords: params.isAnime ? '210024|287501' : undefined,
-    with_original_language: params.isAnime ? 'ja' : params.withOriginalLanguage,
+    with_original_language: params.isAnime ? undefined : params.withOriginalLanguage,
   })
   const type: MediaType = params.isAnime ? 'anime' : 'tv'
   return { items: forKids(data.results.map((s) => showToMediaItem(s, type))), totalPages: data.total_pages }
 }
 
-export const getTurkishShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
+export const getBrazilianShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
   const data = await cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
     page,
     sort_by: 'popularity.desc',
-    with_original_language: 'tr',
+    with_original_language: 'pt',
+    watch_region: 'BR',
   })
   return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
+
+// Retrocompatibilidade: Novelas & Séries Nacionais (100% áudio em português)
+export const getTurkishShows = getBrazilianShows
 
 export const getMovieDetails = async (id: number): Promise<TMDBMovieDetails> => {
   const data = await cachedGet<TMDBMovieDetails>(`/movie/${id}`, {
