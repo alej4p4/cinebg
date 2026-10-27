@@ -140,10 +140,7 @@ export const useAppStore = create<AppState>()(
       subtitleOption: 'off',
       notificationsEnabled: false,
       tvMode: false,
-      virtualCursor:
-        typeof window !== 'undefined'
-          ? (!isMobileDevice() && localStorage.getItem('cinebg_virtual_cursor') === 'true')
-          : false,
+      virtualCursor: false,
       downloads: [],
       vipModalOpen: false,
 
@@ -473,24 +470,13 @@ export const useAppStore = create<AppState>()(
         set({ tvMode: effectiveEnabled })
       },
 
-      setVirtualCursor: (enabled) => {
-        const isMobile = isMobileDevice()
-        const effectiveEnabled = isMobile ? false : enabled
+      setVirtualCursor: (_enabled) => {
         try {
           if (typeof window !== 'undefined') {
-            if (isMobile) {
-              localStorage.removeItem('cinebg_virtual_cursor')
-              localStorage.removeItem('cinebg_tv_mode')
-              document.body.classList.remove('tv-mode', 'tv-remote-active')
-            } else {
-              localStorage.setItem('cinebg_virtual_cursor', effectiveEnabled ? 'true' : 'false')
-              if (effectiveEnabled) {
-                document.body.classList.add('tv-mode', 'tv-remote-active')
-              }
-            }
+            localStorage.removeItem('cinebg_virtual_cursor')
           }
         } catch {}
-        set({ virtualCursor: effectiveEnabled })
+        set({ virtualCursor: false })
       },
 
       addDownload: (item) =>
@@ -573,15 +559,15 @@ export const useAppStore = create<AppState>()(
       // Recalcula os espelhos após reidratar (não persistem sozinhos).
       merge: (persisted, current) => {
         const merged = { ...current, ...(persisted as object) } as AppState
-        if (isMobileDevice()) {
-          merged.tvMode = false
-          merged.virtualCursor = false
-          try {
+        merged.virtualCursor = false
+        try {
+          localStorage.removeItem('cinebg_virtual_cursor')
+          if (isMobileDevice()) {
+            merged.tvMode = false
             localStorage.removeItem('cinebg_tv_mode')
-            localStorage.removeItem('cinebg_virtual_cursor')
             document.body.classList.remove('tv-mode', 'tv-remote-active')
-          } catch {}
-        }
+          }
+        } catch {}
         const data = dataFor(merged)
         return {
           ...merged,

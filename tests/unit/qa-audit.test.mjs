@@ -672,6 +672,19 @@ test('MOBILE-ROTATION-5: LivePlayer possui botão de cadeado e overlay de bloque
 })
 
 
+test('NO-MOUSE-POINTER-1: TvCursorOverlay desativado e virtualCursor permanentemente falso', () => {
+  const overlaySrc = read('src/components/tv/TvCursorOverlay.tsx')
+  assert.ok(overlaySrc.includes('return null'), 'TvCursorOverlay deve retornar null permanentemente')
+  assert.ok(!overlaySrc.includes('viewBox="0 0 24 24"'), 'TvCursorOverlay não deve renderizar SVG de ponteiro de mouse')
+
+  const storeSrc = read('src/store/useAppStore.ts')
+  assert.ok(storeSrc.includes('virtualCursor: false'), 'virtualCursor deve ser permanentemente falso')
+
+  const profilesSrc = read('src/pages/Profiles.tsx')
+  assert.ok(!profilesSrc.includes('Cursor Virtual (Modo Mouse no Controle)'), 'Profiles.tsx não deve oferecer cursor de mouse')
+  assert.ok(profilesSrc.includes('Controle Remoto Smart TV (D-Pad)'), 'Profiles.tsx deve exibir status D-Pad nativo')
+})
+
 test('NO-SUBTITLED-PLAYER-1: Erradicação total do VidLink e de players legendados externos', () => {
   const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
   const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
