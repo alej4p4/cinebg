@@ -740,3 +740,20 @@ test('NO-NAV-DIALOG-1: antiRedirect.ts nao chama e.preventDefault() em beforeunl
   assert.ok(!beforeUnloadBody.includes('e.preventDefault()'), 'handleBeforeUnload nunca deve chamar e.preventDefault() para nao disparar dialogo nativo')
   assert.ok(antiSrc.includes('Redirecionamento de iframe detectado e suprimido!'), 'antiRedirect.ts deve suprimir silenciosamente o redirecionamento')
 })
+
+
+test('PT-CATALOG-1: tmdb.ts implementa isPortugueseAvailableItem e filtra estritamente titulos em portugues', () => {
+  const tmdbSrc = fs.readFileSync('src/services/tmdb.ts', 'utf8')
+  assert.ok(tmdbSrc.includes('export const isPortugueseAvailableItem'), 'tmdb.ts deve exportar isPortugueseAvailableItem')
+  assert.ok(tmdbSrc.includes("origLang === 'pt'"), 'Producoes com idioma original pt devem ser sempre aceitas')
+  assert.ok(tmdbSrc.includes('isPtOverview'), 'Deve verificar se sinopse esta localizada em portugues')
+  assert.ok(tmdbSrc.includes('const ptItems = items.filter(isPortugueseAvailableItem)'), 'forKids deve aplicar filtro de conteudo em portugues')
+})
+
+test('PT-CATALOG-2: tmdb.ts exporta syncPortugueseCatalog e define TTL dinâmico para novos titulos e temporadas', () => {
+  const tmdbSrc = fs.readFileSync('src/services/tmdb.ts', 'utf8')
+  assert.ok(tmdbSrc.includes('export const syncPortugueseCatalog'), 'tmdb.ts deve exportar syncPortugueseCatalog')
+  assert.ok(tmdbSrc.includes('DYNAMIC_FEED_TTL_MS = 2 * 60 * 60 * 1000'), 'Feeds dinamicos devem expirar em 2 horas')
+  assert.ok(tmdbSrc.includes('RETURNING_SHOW_TTL_MS = 4 * 60 * 60 * 1000'), 'Series em exibicao devem atualizar temporadas em 4 horas')
+  assert.ok(tmdbSrc.includes("watch_region: 'BR'"), 'Consultas TMDB devem priorizar regiao Brasil (BR)')
+})
