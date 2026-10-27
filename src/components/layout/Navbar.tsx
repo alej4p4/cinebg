@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -397,115 +398,7 @@ const Navbar = () => {
 
         </div>
 
-        {/* Settings Modal */}
-      <AnimatePresence>
-        {settingsOpen && (
-          <>
-            <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" onClick={() => setSettingsOpen(false)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90vw] max-w-sm bg-[#13131c] border border-white/10 rounded-2xl p-6 shadow-2xl"
-            >
-              <h2 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
-                <Settings className="h-5 w-5 text-accent-red" />
-                Configurações
-              </h2>
 
-              <div className="space-y-5">
-                <div>
-                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Idioma</p>
-                  <div className="flex gap-2">
-                    {([['pt', 'Português'], ['en', 'English']] as const).map(([lang, label]) => (
-                      <Focusable key={lang} onEnterPress={() => setLanguage(lang)} className="flex-1">
-                        <button
-                          onClick={() => setLanguage(lang)}
-                          className={`w-full py-2 rounded-lg text-sm font-semibold transition-all ${
-                            language === lang
-                              ? 'bg-accent-red text-white'
-                              : 'bg-white/5 text-white/60 hover:bg-white/10'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      </Focusable>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Áudio Padrão</p>
-                  <div className="flex gap-2">
-                    {([['dub', 'Dublado'], ['orig', 'Original']] as const).map(([opt, label]) => (
-                      <Focusable key={opt} onEnterPress={() => setAudioOption(opt)} className="flex-1">
-                        <button
-                          onClick={() => setAudioOption(opt)}
-                          className={`w-full py-2 rounded-lg text-sm font-semibold transition-all ${
-                            audioOption === opt
-                              ? 'bg-accent-red text-white'
-                              : 'bg-white/5 text-white/60 hover:bg-white/10'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      </Focusable>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Versão do Aplicativo</p>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-white text-sm font-bold">CineBG v{updateInfo.currentVersion}</p>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                          isMobileDevice()
-                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        }`}>
-                          {isMobileDevice() ? '📱 Mobile' : '📺 TV'}
-                        </span>
-                      </div>
-                      <p className="text-white/40 text-xs">
-                        {isMobileDevice() ? 'Instalação Mobile' : 'Instalação Smart TV'}
-                      </p>
-                    </div>
-                    <Focusable
-                      onEnterPress={() => {
-                        setSettingsOpen(false)
-                        checkForUpdates(true)
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSettingsOpen(false)
-                          checkForUpdates(true)
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-red hover:bg-red-600 text-white text-xs font-bold transition-colors shadow-md shadow-red-900/40"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        Atualizar
-                      </button>
-                    </Focusable>
-                  </div>
-                </div>
-              </div>
-
-              <Focusable onEnterPress={() => setSettingsOpen(false)}>
-                <button
-                  onClick={() => setSettingsOpen(false)}
-                  className="w-full mt-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold transition-colors"
-                >
-                  Fechar
-                </button>
-              </Focusable>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
       </div>
 
       {/* Barra de Categorias Rápida no Mobile (Estilo YuCine) */}
@@ -631,100 +524,237 @@ const Navbar = () => {
         )}
       </AnimatePresence>
 
-      {/* Grade de Categorias Mobile (Modal Estilo YuCine) */}
-      <AnimatePresence>
-        {gridMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md z-50"
-              onClick={() => setGridMenuOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: -20 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="fixed inset-x-4 top-16 z-50 bg-[#12111a] border border-white/10 rounded-2xl p-5 shadow-2xl max-w-md mx-auto"
-            >
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-amber-400/20 border border-amber-400/40">
-                    <LayoutGrid className="h-5 w-5 text-amber-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-white uppercase tracking-wider">
-                      Grade de Conteúdos
+      {/* Modal de Configurações via React Portal (Centralização e Responsividade Absoluta) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {settingsOpen && (
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/80 backdrop-blur-md"
+                  onClick={() => setSettingsOpen(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                  className="relative z-10 w-full max-w-sm bg-[#13131c] border border-white/10 rounded-2xl p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-white font-bold text-lg flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-accent-red" />
+                      <span>Configurações</span>
                     </h2>
-                    <p className="text-[11px] text-white/50">
-                      Navegue entre filmes, séries, TV ao vivo e mais
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setGridMenuOpen(false)}
-                  className="p-1.5 rounded-full bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2.5">
-                {CATEGORIES_GRID.map((cat) => {
-                  const active = location.pathname === cat.to
-                  return (
                     <button
-                      key={cat.to}
-                      onClick={() => {
-                        navigate(cat.to)
-                        setGridMenuOpen(false)
-                      }}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all active:scale-95 ${
-                        active
-                          ? 'bg-amber-400/20 border-amber-400 text-amber-300 shadow-[0_0_14px_rgba(251,191,36,0.3)]'
-                          : 'bg-white/5 border-white/5 text-white/80 hover:bg-white/10 hover:border-white/15'
-                      }`}
+                      type="button"
+                      onClick={() => setSettingsOpen(false)}
+                      className="p-1.5 rounded-full bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                      title="Fechar"
                     >
-                      <span className="text-2xl mb-1">{cat.emoji}</span>
-                      <span className="text-xs font-bold text-center leading-tight">
-                        {cat.label}
-                      </span>
+                      <X className="h-5 w-5" />
                     </button>
-                  )
-                })}
-              </div>
+                  </div>
 
-              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-white/40 font-mono">
-                    CineBG v{updateInfo.currentVersion}
-                  </span>
-                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                    isMobileDevice()
-                      ? 'bg-blue-500/20 text-blue-400'
-                      : 'bg-amber-500/20 text-amber-400'
-                  }`}>
-                    {isMobileDevice() ? 'Mobile' : 'TV'}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGridMenuOpen(false)
-                    checkForUpdates(true)
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-accent-red/20 hover:bg-accent-red/30 border border-accent-red/40 text-red-200 text-xs font-bold transition-colors"
-                >
-                  <Download className="h-3 w-3 text-accent-red" />
-                  <span>Atualizar Versão</span>
-                </button>
+                  <div className="space-y-5">
+                    <div>
+                      <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Idioma</p>
+                      <div className="flex gap-2">
+                        {([['pt', 'Português'], ['en', 'English']] as const).map(([lang, label]) => (
+                          <Focusable key={lang} onEnterPress={() => setLanguage(lang)} className="flex-1">
+                            <button
+                              onClick={() => setLanguage(lang)}
+                              className={`w-full py-2 rounded-lg text-sm font-semibold transition-all ${
+                                language === lang
+                                  ? 'bg-accent-red text-white'
+                                  : 'bg-white/5 text-white/60 hover:bg-white/10'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          </Focusable>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Áudio Padrão</p>
+                      <div className="flex gap-2">
+                        {([['dub', 'Dublado'], ['orig', 'Original']] as const).map(([opt, label]) => (
+                          <Focusable key={opt} onEnterPress={() => setAudioOption(opt)} className="flex-1">
+                            <button
+                              onClick={() => setAudioOption(opt)}
+                              className={`w-full py-2 rounded-lg text-sm font-semibold transition-all ${
+                                audioOption === opt
+                                  ? 'bg-accent-red text-white'
+                                  : 'bg-white/5 text-white/60 hover:bg-white/10'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          </Focusable>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Versão do Aplicativo</p>
+                      <div className="p-3.5 rounded-xl bg-white/5 border border-white/5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-white text-sm font-bold truncate">CineBG v{updateInfo.currentVersion}</p>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex-shrink-0 ${
+                                isMobileDevice()
+                                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                  : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              }`}>
+                                {isMobileDevice() ? '📱 Mobile' : '📺 TV'}
+                              </span>
+                            </div>
+                            <p className="text-white/40 text-xs mt-0.5">
+                              {isMobileDevice() ? 'Instalação Mobile' : 'Instalação Smart TV'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Focusable
+                          onEnterPress={() => {
+                            setSettingsOpen(false)
+                            checkForUpdates(true)
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSettingsOpen(false)
+                              checkForUpdates(true)
+                            }}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-accent-red hover:bg-red-600 active:scale-95 text-white text-xs font-bold transition-all shadow-md shadow-red-900/40"
+                          >
+                            <Download className="h-4 w-4" />
+                            <span>Atualizar Versão Agora</span>
+                          </button>
+                        </Focusable>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Focusable onEnterPress={() => setSettingsOpen(false)}>
+                    <button
+                      onClick={() => setSettingsOpen(false)}
+                      className="w-full mt-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold transition-colors"
+                    >
+                      Fechar
+                    </button>
+                  </Focusable>
+                </motion.div>
               </div>
-            </motion.div>
-          </>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
+
+      {/* Grade de Categorias Mobile (Modal Estilo YuCine via Portal) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {gridMenuOpen && (
+              <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-16">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/80 backdrop-blur-md"
+                  onClick={() => setGridMenuOpen(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92, y: -20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: -20 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="relative z-10 w-full max-w-md bg-[#12111a] border border-white/10 rounded-2xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto"
+                >
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-amber-400/20 border border-amber-400/40">
+                        <LayoutGrid className="h-5 w-5 text-amber-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-white uppercase tracking-wider">
+                          Grade de Conteúdos
+                        </h2>
+                        <p className="text-[11px] text-white/50">
+                          Navegue entre filmes, séries, TV ao vivo e mais
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setGridMenuOpen(false)}
+                      className="p-1.5 rounded-full bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {CATEGORIES_GRID.map((cat) => {
+                      const active = location.pathname === cat.to
+                      return (
+                        <button
+                          key={cat.to}
+                          onClick={() => {
+                            navigate(cat.to)
+                            setGridMenuOpen(false)
+                          }}
+                          className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all active:scale-95 ${
+                            active
+                              ? 'bg-amber-400/20 border-amber-400 text-amber-300 shadow-[0_0_14px_rgba(251,191,36,0.3)]'
+                              : 'bg-white/5 border-white/5 text-white/80 hover:bg-white/10 hover:border-white/15'
+                          }`}
+                        >
+                          <span className="text-2xl mb-1">{cat.emoji}</span>
+                          <span className="text-xs font-bold text-center leading-tight">
+                            {cat.label}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-white/40 font-mono">
+                        CineBG v{updateInfo.currentVersion}
+                      </span>
+                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                        isMobileDevice()
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'bg-amber-500/20 text-amber-400'
+                      }`}>
+                        {isMobileDevice() ? 'Mobile' : 'TV'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGridMenuOpen(false)
+                        checkForUpdates(true)
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-accent-red/20 hover:bg-accent-red/30 border border-accent-red/40 text-red-200 text-xs font-bold transition-colors"
+                    >
+                      <Download className="h-3 w-3 text-accent-red" />
+                      <span>Atualizar Versão</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </header>
   )
 }
