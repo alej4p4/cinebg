@@ -1,3 +1,4 @@
+import { reportAdInterception } from '@/services/observability'
 // ============================================================
 // ESCUDO ANTI-REDIRECIONAMENTO E ANTI-POPUP DO CINEBG
 // Impede que iframes de terceiros façam redirecionamentos
@@ -12,6 +13,12 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
   // para evitar o modal nativo "Confirmar navegação / Sair desta página"
   if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
     console.warn('[CineBG Anti-Ad] Redirecionamento de iframe bloqueado!')
+    try {
+      reportAdInterception({
+        blockedUrl: window.location.href,
+        interceptionSource: 'iframe_top_navigation',
+      })
+    } catch {}
     e.preventDefault()
   }
 }
@@ -34,6 +41,12 @@ export const initAntiRedirectShield = () => {
 
   window.open = function (url?: string | URL, _target?: string, _features?: string) {
     console.warn('[CineBG Anti-Ad] Tentativa de pop-up bloqueada:', url)
+    try {
+      reportAdInterception({
+        blockedUrl: String(url || 'unknown_popup'),
+        interceptionSource: 'window.open',
+      })
+    } catch {}
     return dummyWindow
   }
 
@@ -59,6 +72,12 @@ export const initAntiRedirectShield = () => {
           e.preventDefault()
           e.stopPropagation()
           console.warn('[CineBG Anti-Ad] Clique de anúncio interceptado e bloqueado:', href)
+          try {
+            reportAdInterception({
+              blockedUrl: href,
+              interceptionSource: 'external_click',
+            })
+          } catch {}
         }
       }
     },

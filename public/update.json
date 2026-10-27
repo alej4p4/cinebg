@@ -1,11 +1,11 @@
 {
-  "version": "1.3.05",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.05/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.05/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.05/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.05/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.05/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.05/CineBG-Tv-release.apk",
+  "version": "1.3.06",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.06/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.06/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.06/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.06/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.06/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.06/CineBG-Tv-release.apk",
   "mandatory": false,
-  "releaseNotes": "Preservação de permanência na tela do filme/série ao sair do vídeo, sem pular para o início do aplicativo; botão Voltar permanente no player e debouncing estrito em Smart TV e Mobile."
+  "releaseNotes": "Telemetria ativa de falhas de streams estilo YouCine: auto-fallback silencioso, escudo anti-anúncios integrado com relatórios de incidentes e painel de diagnóstico para o repositório."
 }

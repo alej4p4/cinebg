@@ -697,3 +697,30 @@ test('NAV-PRESERVE-3: tv.ts e App.tsx protegem permanencia na tela de Detalhes a
   const appSrc = fs.readFileSync('src/App.tsx', 'utf8')
   assert.ok(appSrc.includes('wasPlayerRecentlyExited(1500)'), 'App.tsx deve usar wasPlayerRecentlyExited para proteger rota /details/')
 })
+
+
+test('INCIDENT-REPORT-1: observability.ts exporta funcoes de incidentes, contexto e relatorio GitHub', () => {
+  const obsSrc = fs.readFileSync('src/services/observability.ts', 'utf8')
+  assert.ok(obsSrc.includes('export function reportStreamIncident'), 'observability.ts deve exportar reportStreamIncident')
+  assert.ok(obsSrc.includes('export function reportAdInterception'), 'observability.ts deve exportar reportAdInterception')
+  assert.ok(obsSrc.includes('export function getStreamIncidentLogs'), 'observability.ts deve exportar getStreamIncidentLogs')
+  assert.ok(obsSrc.includes('export function formatIncidentsAsGitHubMarkdown'), 'observability.ts deve exportar formatIncidentsAsGitHubMarkdown')
+  assert.ok(obsSrc.includes('export function setActivePlaybackContext'), 'observability.ts deve exportar setActivePlaybackContext')
+  assert.ok(obsSrc.includes('cinebg_stream_incidents'), 'observability.ts deve persistir incidentes em cinebg_stream_incidents')
+})
+
+test('INCIDENT-REPORT-2: antiRedirect.ts e StreamPlayer.tsx disparam telemetria de incidentes e anuncios', () => {
+  const antiSrc = fs.readFileSync('src/utils/antiRedirect.ts', 'utf8')
+  assert.ok(antiSrc.includes('reportAdInterception'), 'antiRedirect.ts deve disparar reportAdInterception ao bloquear popup/anuncio')
+
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+  assert.ok(playerSrc.includes('reportStreamIncident'), 'StreamPlayer.tsx deve disparar reportStreamIncident em falhas de reproducao')
+  assert.ok(playerSrc.includes('setActivePlaybackContext'), 'StreamPlayer.tsx deve registrar contexto ativo de reproducao')
+})
+
+test('INCIDENT-REPORT-3: Profiles.tsx exibe painel de diagnostico e copia relatorio de incidentes', () => {
+  const profSrc = fs.readFileSync('src/pages/Profiles.tsx', 'utf8')
+  assert.ok(profSrc.includes('Diagnóstico de Streams & Relatórios'), 'Profiles.tsx deve conter secao de diagnostico de streams')
+  assert.ok(profSrc.includes('formatIncidentsAsGitHubMarkdown'), 'Profiles.tsx deve integrar formatIncidentsAsGitHubMarkdown')
+  assert.ok(profSrc.includes('getStreamIncidentLogs'), 'Profiles.tsx deve ler logs de incidentes')
+})
