@@ -333,7 +333,7 @@ const Home = () => {
                       <Carousel rowIndex={rowIdx++} title="Séries Populares" emoji="📺" items={popularShows} />
                     )}
                     {turkishShows.length > 0 && (
-                      <Carousel rowIndex={rowIdx++} title="Novelas & Séries Turcas" emoji="🇹🇷" items={turkishShows} />
+                      <Carousel rowIndex={rowIdx++} title="Séries & Novelas Nacionais" emoji="🇧🇷" items={turkishShows} />
                     )}
                     {airingNow.length > 0 && (
                       <Carousel rowIndex={rowIdx++} title="Em Exibição Hoje" emoji="🔴" items={airingNow} />

@@ -1,11 +1,11 @@
 {
-  "version": "1.3.08",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.08/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.08/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.08/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.08/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.08/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.08/CineBG-Tv-release.apk",
+  "version": "1.3.09",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.09/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.09/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.09/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.09/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.09/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.09/CineBG-Tv-release.apk",
   "mandatory": false,
-  "releaseNotes": "Catálogo exclusivo para filmes e séries disponíveis em Português (PT-BR) com filtragem de localização brasileira e sincronização automática de novos lançamentos e temporadas."
+  "releaseNotes": "Varredura completa e purga de conteúdos legendados: bloqueio de idiomas sem dublagem comercial no Brasil, substituição de novelas turcas por produções nacionais em português e limpeza de cache legada (v6)."
 }

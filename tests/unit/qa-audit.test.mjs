@@ -757,3 +757,19 @@ test('PT-CATALOG-2: tmdb.ts exporta syncPortugueseCatalog e define TTL dinâmico
   assert.ok(tmdbSrc.includes('RETURNING_SHOW_TTL_MS = 4 * 60 * 60 * 1000'), 'Series em exibicao devem atualizar temporadas em 4 horas')
   assert.ok(tmdbSrc.includes("watch_region: 'BR'"), 'Consultas TMDB devem priorizar regiao Brasil (BR)')
 })
+
+
+test('SWEEP-LEGENDADOS-1: isPortugueseAvailableItem bloqueia linguas predominantemente legendadas e termos de legenda', () => {
+  const tmdbSrc = fs.readFileSync('src/services/tmdb.ts', 'utf8')
+  assert.ok(tmdbSrc.includes('purelySubtitledLangs'), 'tmdb.ts deve definir lista de linguas predominantemente legendadas')
+  assert.ok(tmdbSrc.includes("'tr'"), 'Lista de linguas legendadas deve incluir turco (tr)')
+  assert.ok(tmdbSrc.includes("'ru'"), 'Lista de linguas legendadas deve incluir russo (ru)')
+  assert.ok(tmdbSrc.includes('apenas legendad'), 'Deve bloquear titulos com marcacao de apenas legendado')
+})
+
+test('SWEEP-LEGENDADOS-2: tmdb.ts utiliza STORAGE_PREFIX v6 com purga de caches antigos e mapeia series nacionais', () => {
+  const tmdbSrc = fs.readFileSync('src/services/tmdb.ts', 'utf8')
+  assert.ok(tmdbSrc.includes("STORAGE_PREFIX = 'cinebg_tmdb_v6_'"), 'tmdb.ts deve usar prefixo v6 para limpar catalogo legendado antigo')
+  assert.ok(tmdbSrc.includes('getBrazilianShows'), 'tmdb.ts deve exportar getBrazilianShows')
+  assert.ok(tmdbSrc.includes('getTurkishShows = getBrazilianShows'), 'getTurkishShows deve apontar para producoes nacionais dubladas')
+})

@@ -47,7 +47,7 @@ interface StreamingPlatform {
 
 const STREAMING_PLATFORMS: StreamingPlatform[] = [
   { id: 'cartoons', name: 'Desenhos Antigos', providerId: 0, networkId: 0, emoji: '📺', isCartoons: true },
-  { id: 'turkish', name: 'Novelas Turcas', providerId: 0, networkId: 0, emoji: '🇹🇷', isTurkish: true },
+  { id: 'national', name: 'Séries Nacionais', providerId: 0, networkId: 0, emoji: '🇧🇷', isTurkish: true },
   { id: 'netflix', name: 'Netflix', providerId: 8, networkId: 213, emoji: '🔴' },
   { id: 'hbo', name: 'Max (HBO)', providerId: 384, networkId: 49, emoji: '🟣' },
   { id: 'disney', name: 'Disney+', providerId: 337, networkId: 2739, emoji: '🔵' },
@@ -121,7 +121,7 @@ const Series = () => {
       return
     }
     setActiveFilter(filterKey)
-    setFilterTitle(platform.id === 'turkish' ? 'Novelas & Séries Turcas' : `Séries ${platform.name}`)
+    setFilterTitle(platform.id === 'national' || platform.id === 'turkish' ? 'Séries & Novelas Nacionais (PT-BR)' : `Séries ${platform.name}`)
     setShowGenreBar(false)
     setSelectedGenreId(null)
     setFilterLoading(true)
@@ -443,7 +443,7 @@ const Series = () => {
                 <>
                   <Carousel title="Séries Populares" emoji="📺" items={popular} />
                   {turkish.length > 0 && (
-                    <Carousel title="Novelas & Séries Turcas" emoji="🇹🇷" items={turkish} />
+                    <Carousel title="Séries & Novelas Nacionais (PT-BR)" emoji="🇧🇷" items={turkish} />
                   )}
                   <Carousel title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classics} />
                   {classicCartoons.length > 0 && (

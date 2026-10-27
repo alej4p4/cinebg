@@ -1,4 +1,4 @@
-export const CURRENT_APP_VERSION = '1.3.08'
+export const CURRENT_APP_VERSION = '1.3.09'
 
 export const DEFAULT_TV_APK_URL =
   'https://github.com/alej4p4/cinebg/releases/download/v1.3.05/CineBG-Tv-release.apk'
