@@ -65,10 +65,10 @@ const MainLayout = ({ isVipActive }: { isVipActive: boolean }) => {
   )
 }
 
-const AnimatedRoutes = ({ isVipActive }: { isVipActive: boolean }) => {
+const AnimatedRoutes = (_props?: { isVipActive?: boolean }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { tvMode, setVipModalOpen } = useAppStore()
+  const { tvMode } = useAppStore()
   useSpatialNavigation(tvMode || isTVDevice(), location.pathname)
 
   useEffect(() => {
