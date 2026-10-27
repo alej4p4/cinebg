@@ -48,7 +48,7 @@ import EpisodeSelector from './EpisodeSelector'
 import PlaybackSettingsModal from './PlaybackSettingsModal'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
 import { isTVDevice, isMobileDevice, markBackHandled, markPlayerExited, setNativePlayerLandscape } from '@/utils/tv'
-import { trackStreamPlayback } from '@/services/observability'
+import { trackStreamPlayback, reportStreamIncident, setActivePlaybackContext } from '@/services/observability'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
 interface StreamPlayerProps {
@@ -626,6 +626,20 @@ const StreamPlayer = ({
   // Falha na reprodução direta da fonte atual: testa a próxima opção limpa da lista sem closure obsoleta
   const handleDirectMediaError = useCallback(() => {
     const list = candidatesRef.current
+    const currentFailed = list[candidateIndexRef.current]
+    if (currentFailed) {
+      reportStreamIncident({
+        incidentType: 'STREAM_ERROR',
+        tmdbId,
+        mediaType: type,
+        title,
+        season,
+        episode,
+        sourceName: currentFailed.label,
+        sourceUrl: currentFailed.url,
+        errorDetails: `Falha na fonte direta (${candidateIndexRef.current + 1}/${list.length}). Alternando silenciosamente.`,
+      })
+    }
     const nextIndex = candidateIndexRef.current + 1
     console.warn(`[StreamPlayer] Falha na opção atual (${candidateIndexRef.current + 1}/${list.length}). Buscando próxima opção limpa...`)
     if (nextIndex < list.length) {
@@ -711,7 +725,17 @@ const StreamPlayer = ({
           setKey((k) => k + 1)
           return nextAttempt
         }
-        // Todos os espelhos esgotados: mostra erro limpo sem botão de retry
+        // Todos os espelhos esgotados: reporta incidente e mostra erro limpo
+        reportStreamIncident({
+          incidentType: 'ALL_MIRRORS_FAILED',
+          tmdbId,
+          mediaType: type,
+          title,
+          season,
+          episode,
+          sourceName: activeMirror,
+          errorDetails: `Todos os ${fallbackSequence.length} espelhos e fontes diretas falharam para este título.`,
+        })
         setError(true)
         return prev
       })
@@ -743,7 +767,19 @@ const StreamPlayer = ({
 
   useEffect(() => {
     initAntiRedirectShield()
-  }, [])
+    setActivePlaybackContext({
+      tmdbId,
+      mediaType: type,
+      title,
+      season,
+      episode,
+      sourceName: candidates[candidateIndex]?.label || activeMirror,
+      sourceUrl: directSrc || undefined,
+    })
+    return () => {
+      setActivePlaybackContext(null)
+    }
+  }, [tmdbId, type, title, season, episode, candidateIndex, activeMirror, directSrc, candidates])
 
   
   // Anti-freeze watchdog para TV / conexões oscilantes: recupera playback caso o buffer trave no mesmo segundo

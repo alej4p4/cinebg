@@ -1,6 +1,7 @@
+import { getStreamIncidentLogs, clearStreamIncidentLogs, formatIncidentsAsGitHubMarkdown } from '@/services/observability'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode, Download, RefreshCw, MousePointer2 } from 'lucide-react'
+import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode, Download, RefreshCw, MousePointer2, ShieldAlert, Copy, CheckCircle2 } from 'lucide-react'
 import { useAppStore, type UserProfile } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
@@ -45,6 +46,25 @@ const Profiles = () => {
   const [kids, setKids] = useState(false)
   const [optimizing, setOptimizing] = useState(false)
   const [optimizedMsg, setOptimizedMsg] = useState<string | null>(null)
+  const [copiedReport, setCopiedReport] = useState(false)
+  const [clearedReport, setClearedReport] = useState(false)
+  const incidentLogs = getStreamIncidentLogs()
+
+  const handleCopyReport = () => {
+    const md = formatIncidentsAsGitHubMarkdown()
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(md).then(() => {
+        setCopiedReport(true)
+        setTimeout(() => setCopiedReport(false), 3500)
+      }).catch(() => {})
+    }
+  }
+
+  const handleClearReports = () => {
+    clearStreamIncidentLogs()
+    setClearedReport(true)
+    setTimeout(() => setClearedReport(false), 3000)
+  }
 
   const handleCleanCache = () => {
     setOptimizing(true)
@@ -423,6 +443,73 @@ const Profiles = () => {
                 <span>{optimizing ? 'Otimizando...' : 'Limpar Cache'}</span>
               </button>
             </Focusable>
+          </div>
+        </div>
+
+        {/* Diagnóstico de Streams & Relatórios estilo YouCine */}
+        <div className="glass rounded-xl p-5 mt-8 border border-white/10 bg-gradient-to-r from-white/5 to-transparent">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-shrink-0 shadow-lg shadow-amber-900/30">
+                <ShieldAlert className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-black text-white text-lg">Diagnóstico de Streams & Relatórios</h2>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    incidentLogs.length > 0
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  }`}>
+                    {incidentLogs.length > 0 ? `${incidentLogs.length} incidentes` : '100% Saudável'}
+                  </span>
+                </div>
+                <p className="text-text-secondary text-xs mt-0.5">
+                  Monitoramento contínuo estilo YouCine: falhas de mídia e anúncios bloqueados são registrados para envio ao repositório.
+                </p>
+                {copiedReport && (
+                  <p className="text-emerald-400 text-xs font-semibold mt-1 animate-pulse flex items-center gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Relatório copiado para a área de transferência!
+                  </p>
+                )}
+                {clearedReport && (
+                  <p className="text-blue-400 text-xs font-semibold mt-1">
+                    Registros de diagnóstico zerados com sucesso.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-stretch sm:self-auto">
+              <Focusable
+                focusKey="btn-copy-incident-report"
+                onEnterPress={handleCopyReport}
+              >
+                <button
+                  type="button"
+                  onClick={handleCopyReport}
+                  className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all border border-white/10"
+                >
+                  <Copy className="h-4 w-4" />
+                  <span>{copiedReport ? 'Copiado!' : 'Copiar Relatório'}</span>
+                </button>
+              </Focusable>
+
+              {incidentLogs.length > 0 && (
+                <Focusable
+                  focusKey="btn-clear-incident-report"
+                  onEnterPress={handleClearReports}
+                >
+                  <button
+                    type="button"
+                    onClick={handleClearReports}
+                    className="flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold px-3 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all border border-red-500/20"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </Focusable>
+              )}
+            </div>
           </div>
         </div>
 

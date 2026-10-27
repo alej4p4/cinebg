@@ -407,6 +407,227 @@ export function clearLiveChannelErrorLogs(): void {
   } catch {}
 }
 
+/**
+ * ============================================================================
+ * 5. Telemetria de Falhas de Stream & Anúncios (Estilo YouCine)
+ * Captura, deduplica temporalmente e dispara relatórios de incidentes.
+ * ============================================================================
+ */
+export type IncidentType = 'STREAM_ERROR' | 'AD_DETECTED' | 'STREAM_TIMEOUT' | 'ALL_MIRRORS_FAILED'
+
+export interface ActivePlaybackContext {
+  tmdbId: number
+  mediaType: 'movie' | 'tv' | 'anime'
+  title?: string
+  season?: number
+  episode?: number
+  sourceName?: string
+  sourceUrl?: string
+}
+
+export interface StreamIncidentReport {
+  id: string
+  timestamp: number
+  isoDate: string
+  incidentType: IncidentType
+  tmdbId: number
+  mediaType: string
+  title?: string
+  season?: number
+  episode?: number
+  sourceName: string
+  sourceUrl?: string
+  errorDetails?: string
+  adUrl?: string
+  platform: 'smart-tv' | 'mobile' | 'desktop'
+  appVersion: string
+  occurrences: number
+}
+
+const STREAM_INCIDENTS_STORAGE_KEY = 'cinebg_stream_incidents'
+const MAX_STREAM_INCIDENTS = 100
+const DEDUPLICATION_WINDOW_MS = 3 * 60 * 1000 // 3 minutos
+
+let currentPlaybackContext: ActivePlaybackContext | null = null
+
+export function setActivePlaybackContext(ctx: ActivePlaybackContext | null): void {
+  currentPlaybackContext = ctx
+}
+
+export function getActivePlaybackContext(): ActivePlaybackContext | null {
+  return currentPlaybackContext
+}
+
+export function getStreamIncidentLogs(): StreamIncidentReport[] {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(STREAM_INCIDENTS_STORAGE_KEY)
+      return raw ? JSON.parse(raw) : []
+    }
+  } catch {}
+  return []
+}
+
+export function clearStreamIncidentLogs(): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(STREAM_INCIDENTS_STORAGE_KEY)
+    }
+  } catch {}
+}
+
+/**
+ * Registra um incidente de stream (erro de mídia, timeout, codec ou propaganda).
+ * Deduplica registros repetidos no intervalo de 3 minutos incrementando a contagem de ocorrências.
+ */
+export function reportStreamIncident(entry: {
+  incidentType: IncidentType
+  tmdbId?: number
+  mediaType?: string
+  title?: string
+  season?: number
+  episode?: number
+  sourceName?: string
+  sourceUrl?: string
+  errorDetails?: string
+  adUrl?: string
+}): StreamIncidentReport {
+  const config = getObservabilityConfig()
+  const ctx = currentPlaybackContext
+
+  const tmdbId = entry.tmdbId ?? ctx?.tmdbId ?? 0
+  const mediaType = entry.mediaType ?? ctx?.mediaType ?? 'movie'
+  const title = entry.title ?? ctx?.title ?? 'Título Desconhecido'
+  const season = entry.season ?? ctx?.season
+  const episode = entry.episode ?? ctx?.episode
+  const sourceName = entry.sourceName ?? ctx?.sourceName ?? 'default-mirror'
+  const sourceUrl = entry.sourceUrl ?? ctx?.sourceUrl
+  const platform: 'smart-tv' | 'mobile' | 'desktop' = isTVDevice() ? 'smart-tv' : isMobileDevice() ? 'mobile' : 'desktop'
+
+  const dedupeKey = `${entry.incidentType}:${tmdbId}:${season || 0}:${episode || 0}:${sourceName}`
+  const now = Date.now()
+
+  let incidents = getStreamIncidentLogs()
+  const existingIndex = incidents.findIndex((item) => {
+    const itemKey = `${item.incidentType}:${item.tmdbId}:${item.season || 0}:${item.episode || 0}:${item.sourceName}`
+    return itemKey === dedupeKey && (now - item.timestamp) < DEDUPLICATION_WINDOW_MS
+  })
+
+  let incident: StreamIncidentReport
+
+  if (existingIndex >= 0) {
+    incident = {
+      ...incidents[existingIndex],
+      occurrences: incidents[existingIndex].occurrences + 1,
+      timestamp: now,
+      isoDate: new Date(now).toISOString(),
+      errorDetails: entry.errorDetails || incidents[existingIndex].errorDetails,
+      adUrl: entry.adUrl || incidents[existingIndex].adUrl,
+    }
+    incidents[existingIndex] = incident
+  } else {
+    incident = {
+      id: randomHex(16),
+      timestamp: now,
+      isoDate: new Date(now).toISOString(),
+      incidentType: entry.incidentType,
+      tmdbId,
+      mediaType,
+      title,
+      season,
+      episode,
+      sourceName,
+      sourceUrl,
+      errorDetails: entry.errorDetails,
+      adUrl: entry.adUrl,
+      platform,
+      appVersion: config.release,
+      occurrences: 1,
+    }
+    incidents.unshift(incident)
+    if (incidents.length > MAX_STREAM_INCIDENTS) {
+      incidents = incidents.slice(0, MAX_STREAM_INCIDENTS)
+    }
+  }
+
+  // 1. Armazenamento persistente local
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STREAM_INCIDENTS_STORAGE_KEY, JSON.stringify(incidents))
+    }
+  } catch {}
+
+  // 2. Propagação para Sentry, Datadog e New Relic
+  addBreadcrumb(
+    'stream_incident',
+    `[${entry.incidentType}] ${title} (${sourceName}): ${entry.errorDetails || entry.adUrl || ''}`,
+    'warning',
+    incident as unknown as Record<string, unknown>
+  )
+  logDatadogEvent('warn', `Stream Incident: ${entry.incidentType} - ${title}`, incident as unknown as Record<string, unknown>)
+  recordNewRelicEvent('StreamIncident', incident as unknown as Record<string, unknown>)
+
+  // 3. Disparo remoto se endpoint de relatórios estiver configurado
+  const incidentEndpoint = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_STREAM_INCIDENT_ENDPOINT
+  if (incidentEndpoint && typeof fetch !== 'undefined') {
+    fetch(incidentEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(incident),
+      keepalive: true,
+    }).catch(() => {})
+  }
+
+  return incident
+}
+
+/**
+ * Interceptação de anúncio ou popup com vinculação automática da mídia em reprodução
+ */
+export function reportAdInterception(entry: {
+  blockedUrl: string
+  interceptionSource: string
+}): StreamIncidentReport {
+  const ctx = currentPlaybackContext
+  return reportStreamIncident({
+    incidentType: 'AD_DETECTED',
+    tmdbId: ctx?.tmdbId,
+    mediaType: ctx?.mediaType,
+    title: ctx?.title,
+    season: ctx?.season,
+    episode: ctx?.episode,
+    sourceName: ctx?.sourceName || entry.interceptionSource,
+    sourceUrl: ctx?.sourceUrl,
+    adUrl: entry.blockedUrl,
+    errorDetails: `Anúncio ou redirecionamento bloqueado via [${entry.interceptionSource}]: ${entry.blockedUrl}`,
+  })
+}
+
+/**
+ * Formata os incidentes em relatório Markdown padronizado para issues do GitHub.
+ */
+export function formatIncidentsAsGitHubMarkdown(incidents?: StreamIncidentReport[]): string {
+  const list = incidents || getStreamIncidentLogs()
+  if (list.length === 0) {
+    return '### Nenhum incidente de reprodução registrado.\nTodos os vídeos e canais operando normalmente.'
+  }
+
+  let md = '## 🚨 Relatório de Incidentes de Reprodução (CineBG)\n\n'
+  md += `**Total de Incidentes**: ${list.length} | **Gerado em**: ${new Date().toLocaleString('pt-BR')}\n\n`
+  md += '| Tipo | Título (TMDB) | Fonte / Espelho | Dispositivo | Ocorrências | Detalhes |\n'
+  md += '| :--- | :--- | :--- | :--- | :---: | :--- |\n'
+
+  for (const item of list.slice(0, 30)) {
+    const epInfo = item.season ? ` (S${item.season}E${item.episode || 1})` : ''
+    const titleCol = `${item.title || 'Desconhecido'} (TMDB: ${item.tmdbId})${epInfo}`
+    const detailCol = (item.adUrl || item.errorDetails || 'N/A').replace(/\|/g, '\\|')
+    md += `| \`${item.incidentType}\` | ${titleCol} | \`${item.sourceName}\` | ${item.platform} | **${item.occurrences}x** | ${detailCol} |\n`
+  }
+
+  return md
+}
+
+
 export function initObservability(): void {
   if (isInitialized) return
   isInitialized = true
