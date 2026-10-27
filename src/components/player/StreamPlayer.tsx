@@ -47,7 +47,7 @@ import type { TMDBSeason } from '@/types'
 import EpisodeSelector from './EpisodeSelector'
 import PlaybackSettingsModal from './PlaybackSettingsModal'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
-import { isTVDevice, isMobileDevice, markBackHandled, setNativePlayerLandscape } from '@/utils/tv'
+import { isTVDevice, isMobileDevice, markBackHandled, markPlayerExited, setNativePlayerLandscape } from '@/utils/tv'
 import { trackStreamPlayback } from '@/services/observability'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
@@ -2456,6 +2456,21 @@ const StreamPlayer = ({
           e pela camada de segurança do Capacitor/WebView, sem utilizar o atributo `sandbox`
           que ativa detectores de anti-tamper (como "Please disable sandbox" no VidLink/VidSrc).
         */}
+        {showIframe && (
+          <button
+            type="button"
+            onClick={() => {
+              markPlayerExited()
+              onBack?.()
+            }}
+            className="absolute top-4 left-4 z-50 flex items-center gap-2 bg-black/80 hover:bg-black text-white px-3.5 py-2 rounded-xl text-xs font-bold backdrop-blur-md border border-white/20 shadow-2xl transition-all hover:scale-105 active:scale-95 focus:ring-2 focus:ring-yellow-400"
+            title="Voltar para a tela do filme/série"
+            aria-label="Voltar para os detalhes"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Voltar</span>
+          </button>
+        )}
         {showIframe && (
           <iframe
             key={`stream-${key}-${tmdbId}-${season}-${episode}-${audioOption}-${activeMirror}`}

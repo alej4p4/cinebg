@@ -8,7 +8,7 @@ import { resolveMegaEmbed } from '@/services/streams'
 import { buildFileName, downloadVideo, downloadsSupported } from '@/services/downloads'
 import { useAppStore } from '@/store/useAppStore'
 import PremiumContentGate from '@/components/PremiumContentGate'
-import { markBackHandled, setNativePlayerLandscape } from '@/utils/tv'
+import { markBackHandled, markPlayerExited, setNativePlayerLandscape } from '@/utils/tv'
 import type { DownloadItem, MediaType, TMDBMovieDetails, TMDBShowDetails } from '@/types'
 
 const Watch = () => {
