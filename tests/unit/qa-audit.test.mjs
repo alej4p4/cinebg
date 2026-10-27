@@ -828,3 +828,24 @@ test('SWEEP-LEGENDADOS-2: tmdb.ts utiliza STORAGE_PREFIX v6 com purga de caches 
   assert.ok(tmdbSrc.includes('getBrazilianShows'), 'tmdb.ts deve exportar getBrazilianShows')
   assert.ok(tmdbSrc.includes('getTurkishShows = getBrazilianShows'), 'getTurkishShows deve apontar para producoes nacionais dubladas')
 })
+
+
+test('AD-GUARD-1: MainActivity.java instala BridgeWebViewClient blindado contra ad redirects e net::ERR_UNKNOWN_URL_SCHEME', () => {
+  const mainActivity = fs.readFileSync('android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java', 'utf8')
+  assert.ok(mainActivity.includes('getBridge().setWebViewClient(new BridgeWebViewClient(getBridge())'), 'MainActivity deve instalar custom BridgeWebViewClient')
+  assert.ok(mainActivity.includes('isAdUrl'), 'MainActivity deve verificar isAdUrl')
+  assert.ok(mainActivity.includes('shopeebr://'), 'MainActivity deve bloquear expressamente shopeebr://')
+  assert.ok(mainActivity.includes('ERR_UNKNOWN_URL_SCHEME'), 'MainActivity deve possuir blindagem comentada para ERR_UNKNOWN_URL_SCHEME')
+  assert.ok(mainActivity.includes('request.isForMainFrame()'), 'MainActivity deve proteger o frame principal de redirecionamentos externos')
+  assert.ok(mainActivity.includes('localhost'), 'MainActivity deve garantir que o main frame permaneça no localhost')
+})
+
+test('AD-GUARD-2: StreamPlayer.tsx aciona anti-redirect dinâmico e antiRedirect.ts barra esquemas externos', () => {
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+  assert.ok(playerSrc.includes('setAntiRedirectShieldActive(showIframe)'), 'StreamPlayer deve ativar escudo anti-redirect quando showIframe está ativo')
+  assert.ok(!playerSrc.includes('allow-top-navigation'), 'iframe do StreamPlayer NUNCA deve conter allow-top-navigation')
+
+  const antiSrc = fs.readFileSync('src/utils/antiRedirect.ts', 'utf8')
+  assert.ok(antiSrc.includes('isUnknownScheme'), 'antiRedirect.ts deve verificar esquemas desconhecidos na navegação')
+  assert.ok(antiSrc.includes('!href.startsWith(\'capacitor://\')'), 'antiRedirect.ts deve preservar apenas navegações internas/web legítimas')
+})

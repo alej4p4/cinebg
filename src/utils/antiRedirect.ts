@@ -58,10 +58,17 @@ export const initAntiRedirectShield = () => {
       if (link) {
         const href = link.getAttribute('href') || ''
         const targetAttr = link.getAttribute('target')
+        const isUnknownScheme =
+          href.includes('://') &&
+          !href.startsWith('http://') &&
+          !href.startsWith('https://') &&
+          !href.startsWith('capacitor://')
+
         const isExternal =
           href.startsWith('http://') ||
           href.startsWith('https://') ||
-          targetAttr === '_blank'
+          targetAttr === '_blank' ||
+          isUnknownScheme
 
         if (
           isExternal &&
