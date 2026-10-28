@@ -605,23 +605,42 @@ export function reportAdInterception(entry: {
 
 /**
  * Formata os incidentes em relatório Markdown padronizado para issues do GitHub.
+ * Unifica incidentes de Filmes/Séries (VOD) e Canais Ao Vivo (Live TV).
  */
 export function formatIncidentsAsGitHubMarkdown(incidents?: StreamIncidentReport[]): string {
   const list = incidents || getStreamIncidentLogs()
-  if (list.length === 0) {
+  const liveList = getLiveChannelErrorLogs()
+
+  if (list.length === 0 && liveList.length === 0) {
     return '### Nenhum incidente de reprodução registrado.\nTodos os vídeos e canais operando normalmente.'
   }
 
   let md = '## 🚨 Relatório de Incidentes de Reprodução (CineBG)\n\n'
-  md += `**Total de Incidentes**: ${list.length} | **Gerado em**: ${new Date().toLocaleString('pt-BR')}\n\n`
-  md += '| Tipo | Título (TMDB) | Fonte / Espelho | Dispositivo | Ocorrências | Detalhes |\n'
-  md += '| :--- | :--- | :--- | :--- | :---: | :--- |\n'
+  md += `**Total de Incidentes**: ${list.length + liveList.length} | **Gerado em**: ${new Date().toLocaleString('pt-BR')}\n\n`
 
-  for (const item of list.slice(0, 30)) {
-    const epInfo = item.season ? ` (S${item.season}E${item.episode || 1})` : ''
-    const titleCol = `${item.title || 'Desconhecido'} (TMDB: ${item.tmdbId})${epInfo}`
-    const detailCol = (item.adUrl || item.errorDetails || 'N/A').replace(/\|/g, '\\|')
-    md += `| \`${item.incidentType}\` | ${titleCol} | \`${item.sourceName}\` | ${item.platform} | **${item.occurrences}x** | ${detailCol} |\n`
+  if (liveList.length > 0) {
+    md += '### 📺 Canais Ao Vivo (Live TV)\n\n'
+    md += '| Canal | Sinal | Erro | Dispositivo | Data/Hora | Detalhes |\n'
+    md += '| :--- | :---: | :--- | :---: | :--- | :--- |\n'
+    for (const item of liveList.slice(0, 20)) {
+      const timeStr = item.isoDate ? item.isoDate.slice(11, 19) : ''
+      const details = (item.details || item.sourceUrl || 'N/A').replace(/\|/g, '\\|')
+      md += `| **${item.channelName}** (\`${item.channelId}\`) | Sinal ${item.sourceIndex + 1} | \`${item.errorType}\` | ${item.platform} | ${timeStr} | ${details} |\n`
+    }
+    md += '\n'
+  }
+
+  if (list.length > 0) {
+    md += '### 🎬 Filmes e Séries (VOD)\n\n'
+    md += '| Tipo | Título (TMDB) | Fonte / Espelho | Dispositivo | Ocorrências | Detalhes |\n'
+    md += '| :--- | :--- | :--- | :--- | :---: | :--- |\n'
+
+    for (const item of list.slice(0, 30)) {
+      const epInfo = item.season ? ` (S${item.season}E${item.episode || 1})` : ''
+      const titleCol = `${item.title || 'Desconhecido'} (TMDB: ${item.tmdbId})${epInfo}`
+      const detailCol = (item.adUrl || item.errorDetails || 'N/A').replace(/\|/g, '\\|')
+      md += `| \`${item.incidentType}\` | ${titleCol} | \`${item.sourceName}\` | ${item.platform} | **${item.occurrences}x** | ${detailCol} |\n`
+    }
   }
 
   return md
