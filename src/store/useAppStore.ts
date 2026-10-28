@@ -229,7 +229,7 @@ export const useAppStore = create<AppState>()(
               } catch {}
             }
 
-            const shouldOpenModal = manual ? true : (hasUpdate && (isMandatory || !isDismissed))
+            const shouldOpenModal = manual ? true : (hasUpdate && isMandatory)
 
             set({
               updateInfo: {
