@@ -354,6 +354,7 @@ const StreamPlayer = ({
 
   const [autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null)
   const autoNextTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const autoNextDismissedRef = useRef(false)
   const [qualityOpen, setQualityOpen] = useState(false)
 
   // ===== Aprimoramentos YuCine (Modo Lock, Pular Abertura, Gaveta de Episódios) =====
@@ -902,6 +903,11 @@ const StreamPlayer = ({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, mediaKey, tmdbId, season, episode, type, originalLanguage, initialAudio])
+
+  useEffect(() => {
+    cancelAutoNext()
+    autoNextDismissedRef.current = false
+  }, [season, episode, tmdbId])
 
   const handleIframeLoad = () => {
     loadedRef.current = true
@@ -1469,6 +1475,7 @@ const StreamPlayer = ({
   const cancelAutoNext = () => {
     if (autoNextTimerRef.current) clearInterval(autoNextTimerRef.current)
     setAutoNextCountdown(null)
+    autoNextDismissedRef.current = true
   }
 
   // Ao carregar os metadados: lÃª legendas e retoma da posi§�o salva.
@@ -1510,6 +1517,17 @@ const StreamPlayer = ({
         setShowSkipIntro(true)
       } else if (current > 115 || current < 5) {
         setShowSkipIntro(false)
+      }
+
+      // Auto-Play com contagem regressiva para o próximo episódio estilo YouCine / Netflix
+      if (
+        onNextEpisode &&
+        dur > 90 &&
+        (dur - current <= 25 || current / dur >= 0.95) &&
+        autoNextCountdown === null &&
+        !autoNextDismissedRef.current
+      ) {
+        startAutoNextCountdown()
       }
     }
 
