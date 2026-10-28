@@ -424,6 +424,25 @@ const LivePlayer = ({
   }, [])
 
   const playPendingRef = useRef(false)
+    const handleTapToPlay = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    playPendingRef.current = true
+    video.play().then(() => {
+      playPendingRef.current = false
+      markPlaying()
+    }).catch(() => {
+      video.muted = true
+      setMuted(true)
+      video.play().then(() => {
+        playPendingRef.current = false
+        markPlaying()
+      }).catch(() => {
+        playPendingRef.current = false
+      })
+    })
+  }, [markPlaying])
+
   const tryPlay = useCallback(() => {
     const video = videoRef.current
     if (!video || playPendingRef.current) return
@@ -461,6 +480,9 @@ const LivePlayer = ({
   useEffect(() => {
     const video = videoRef.current
     const src = channel.sources[sourceIndex]
+    if (video && isMobileDevice()) {
+      video.defaultMuted = true
+    }
     if (!video || !src) {
       setError(true)
       return
@@ -598,6 +620,10 @@ const LivePlayer = ({
       hls.on(Hls.Events.FRAG_BUFFERED, () => {
         resetWatchdog(12000)
         tryPlay()
+        const v = videoRef.current
+        if (v && v.buffered.length > 0 && v.buffered.end(0) > 0.5) {
+          markPlaying()
+        }
       })
 
       hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
@@ -725,7 +751,7 @@ const LivePlayer = ({
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            onClick={tryPlay}
+            onClick={handleTapToPlay}
             className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20 gap-3 p-4 cursor-pointer"
           >
           <div className="w-14 h-14 border-4 border-white/10 border-t-amber-400 rounded-full animate-spin" />
@@ -838,6 +864,12 @@ const LivePlayer = ({
         playsInline
         muted={muted}
         className="w-full h-full object-contain bg-black cursor-pointer"
+        onProgress={() => {
+          const v = videoRef.current
+          if (v && v.buffered.length > 0 && v.buffered.end(0) > 0.3 && !loadedRef.current) {
+            tryPlay()
+          }
+        }}
         onLoadedMetadata={() => {
           tryPlay()
         }}
