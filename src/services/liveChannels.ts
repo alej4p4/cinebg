@@ -824,6 +824,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'https://stmv1.video.brstream.com.br/retrotv/retrotv/playlist.m3u8',
+      'http://170.83.49.66:8083/BOXKIDSHD/index.m3u8',
       'http://45.162.64.114/BOOMERANG/index.m3u8',
       'http://45.162.64.114/CARTOON_NETWORK/index.m3u8',
     ],
