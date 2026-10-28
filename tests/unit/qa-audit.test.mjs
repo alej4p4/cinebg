@@ -858,3 +858,20 @@ test('MOBILE-SETTINGS-MODAL-1: Navbar.tsx utiliza createPortal e centralizacao d
   assert.ok(navbarSrc.includes('z-[9999] flex items-center justify-center p-4'), 'Modal de configuracoes deve ter centralizacao z-[9999]')
   assert.ok(navbarSrc.includes('Atualizar Versão Agora'), 'Modal de configuracoes deve conter botao com largura completa Atualizar Versao Agora')
 })
+
+test('CLASSIC-CHANNELS-1: liveChannels.ts configura fontes resilientes para canais 24h e desenhos classicos', () => {
+  const channelsSrc = fs.readFileSync('src/services/liveChannels.ts', 'utf8')
+  assert.ok(channelsSrc.includes("id: 'desenhos-classicos-24h'"), 'Deve conter canal de desenhos clássicos')
+  assert.ok(channelsSrc.includes('https://stmv1.video.brstream.com.br/retrotv/retrotv/playlist.m3u8'), 'Desenhos clássicos deve ter RetroTV como sinal principal HTTPS')
+  assert.ok(channelsSrc.includes("id: 'turma-monica-24h'"), 'Deve conter canal da Turma da Mônica')
+  assert.ok(channelsSrc.includes("id: 'retro-cartoon-24h'"), 'Deve conter canal Retro Cartoon')
+  assert.ok(channelsSrc.includes("id: 'nickelodeon-classico-24h'"), 'Deve conter canal Nickelodeon Clássico')
+})
+
+test('LIVE-PLAYER-RESILIENCE-1: LivePlayer.tsx possui watchdog adaptativo de 15s, extensao de buffer e recuperacao de codec de audio', () => {
+  const playerSrc = fs.readFileSync('src/components/player/LivePlayer.tsx', 'utf8')
+  assert.ok(playerSrc.includes('CONNECT_TIMEOUT_MS = 15000'), 'Watchdog deve possuir tolerância de 15s para chunks longos de Smart TV')
+  assert.ok(playerSrc.includes('resetWatchdog'), 'Deve implementar função de reset de watchdog adaptativo')
+  assert.ok(playerSrc.includes('liveSyncDurationCount: 3'), 'HLS deve sincronizar com 3 fragmentos para evitar bufferStalledError')
+  assert.ok(playerSrc.includes('hls.swapAudioCodec()'), 'Deve tentar recuperação com troca de codec de áudio para streams mono/broadcast')
+})

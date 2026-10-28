@@ -777,7 +777,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     sources: [
       'http://45.162.64.114/CARTOON_NETWORK/index.m3u8',
       'http://170.83.49.66:8083/BOXKIDSHD/index.m3u8',
-      'http://181.78.197.59:8000/play/a07c/index.m3u8',
+      'https://stmv1.video.brstream.com.br/retrotv/retrotv/playlist.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -791,9 +791,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'http://181.78.197.59:8000/play/a08f/index.m3u8',
       'http://45.162.64.114/SPACE/index.m3u8',
       'http://45.162.64.114/TNT/index.m3u8',
+      'http://170.83.49.66:8083/AMCHD/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -839,8 +839,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'canais24h',
     country: 'BR',
     sources: [
-      'http://45.162.64.114/BOOMERANG/index.m3u8',
       'https://stmv1.video.brstream.com.br/retrotv/retrotv/playlist.m3u8',
+      'http://45.162.64.114/BOOMERANG/index.m3u8',
       'http://170.83.49.66:8083/BOXKIDSHD/index.m3u8',
     ],
     quality: '720p',
@@ -856,7 +856,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'https://x1colegal.com/hls/stream.m3u8',
-      'http://181.78.197.59:8000/play/a07c/index.m3u8',
+      'http://170.83.49.66:8083/BOXKIDSHD/index.m3u8',
       'http://45.162.64.114/CARTOON_NETWORK/index.m3u8',
     ],
     quality: '720p',

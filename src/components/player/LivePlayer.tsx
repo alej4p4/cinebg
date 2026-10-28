@@ -452,10 +452,6 @@ const LivePlayer = ({
           video.muted = true
           setMuted(true)
           video.play().then(() => {
-            try {
-              video.muted = false
-              setMuted(false)
-            } catch {}
             markPlaying()
           }).catch(() => {})
         }
@@ -489,20 +485,23 @@ const LivePlayer = ({
 
     let cancelled = false
 
-    const CONNECT_TIMEOUT_MS = 8000 // 8 segundos de tolerância por sinal para redes móveis e TV Box
+    const CONNECT_TIMEOUT_MS = 15000 // 15s de tolerância para download de chunks longos (10s) e conexões lentas em TV Box
 
-    // Timeout estrito de 4.5s para TV (NÃO reseta em FRAG_LOADING para evitar loop infinito)
-    if (watchdogRef.current) clearTimeout(watchdogRef.current)
-    watchdogRef.current = setTimeout(() => {
-      if (cancelled) return
-      if (loadedRef.current || playingRef.current) return
-      const v = videoRef.current
-      if (v && !v.paused && v.currentTime > 0) {
-        markPlaying()
-        return
-      }
-      goNext()
-    }, CONNECT_TIMEOUT_MS)
+    const resetWatchdog = (timeoutMs = CONNECT_TIMEOUT_MS) => {
+      if (watchdogRef.current) clearTimeout(watchdogRef.current)
+      watchdogRef.current = setTimeout(() => {
+        if (cancelled) return
+        if (loadedRef.current || playingRef.current) return
+        const v = videoRef.current
+        if (v && !v.paused && v.currentTime > 0) {
+          markPlaying()
+          return
+        }
+        goNext()
+      }, timeoutMs)
+    }
+
+    resetWatchdog(CONNECT_TIMEOUT_MS)
 
     const tryNativeHls = () => {
       if (cancelled || !video) return
@@ -531,22 +530,22 @@ const LivePlayer = ({
         enableWorker: false, // Desativa worker para evitar engasgos em Android TV / WebViews
         liveDurationInfinity: true,
         lowLatencyMode: false,
-        backBufferLength: 15,
-        maxBufferLength: 10,
-        maxMaxBufferLength: 20,
-        maxBufferSize: 15 * 1000 * 1000,
-        liveSyncDurationCount: 2, // Inicia imediatamente com 2 fragmentos (reduz latência de início pela metade)
-        liveMaxLatencyDurationCount: 8,
+        backBufferLength: 20,
+        maxBufferLength: 20,
+        maxMaxBufferLength: 40,
+        maxBufferSize: 30 * 1000 * 1000,
+        liveSyncDurationCount: 3, // 3 fragmentos garante sincronismo seguro sem bufferStalledError
+        liveMaxLatencyDurationCount: 10,
         startFragPrefetch: true, // Pré-carrega próximo fragmento para aceleração
-        manifestLoadingTimeOut: 8000,
-        manifestLoadingMaxRetry: 2,
-        levelLoadingTimeOut: 8000,
-        levelLoadingMaxRetry: 2,
-        fragLoadingTimeOut: 12000,
-        fragLoadingMaxRetry: 3,
-        nudgeOffset: 0.3,
-        nudgeMaxRetry: 6,
-        maxFragLookUpTolerance: 0.35,
+        manifestLoadingTimeOut: 12000,
+        manifestLoadingMaxRetry: 3,
+        levelLoadingTimeOut: 12000,
+        levelLoadingMaxRetry: 3,
+        fragLoadingTimeOut: 15000,
+        fragLoadingMaxRetry: 4,
+        nudgeOffset: 0.5,
+        nudgeMaxRetry: 8,
+        maxFragLookUpTolerance: 0.4,
         autoStartLoad: true,
       })
 
@@ -555,6 +554,7 @@ const LivePlayer = ({
       hls.attachMedia(video)
 
       let networkRetryCount = 0
+      let mediaRecoveryCount = 0
 
       // Seleção automática do áudio em Português / Dublado
       const selectPortugueseAudio = () => {
@@ -580,44 +580,25 @@ const LivePlayer = ({
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         selectPortugueseAudio()
         tryPlay()
-        if (watchdogRef.current && !loadedRef.current && !playingRef.current) {
-          clearTimeout(watchdogRef.current)
-          watchdogRef.current = setTimeout(() => {
-            if (cancelled || loadedRef.current || playingRef.current) return
-            const v = videoRef.current
-            if (v && !v.paused && v.currentTime > 0) {
-              markPlaying()
-              return
-            }
-            goNext()
-          }, CONNECT_TIMEOUT_MS)
-        }
+        resetWatchdog(CONNECT_TIMEOUT_MS)
       })
 
       hls.on(Hls.Events.FRAG_LOADING, () => {
-        if (watchdogRef.current && !loadedRef.current && !playingRef.current) {
-          clearTimeout(watchdogRef.current)
-          watchdogRef.current = setTimeout(() => {
-            if (cancelled || loadedRef.current || playingRef.current) return
-            const v = videoRef.current
-            if (v && !v.paused && v.currentTime > 0) {
-              markPlaying()
-              return
-            }
-            goNext()
-          }, CONNECT_TIMEOUT_MS)
-        }
+        resetWatchdog(15000)
       })
 
       hls.on(Hls.Events.FRAG_LOADED, () => {
+        resetWatchdog(12000)
         tryPlay()
       })
 
       hls.on(Hls.Events.FRAG_PARSED, () => {
+        resetWatchdog(12000)
         tryPlay()
       })
 
       hls.on(Hls.Events.FRAG_BUFFERED, () => {
+        resetWatchdog(12000)
         tryPlay()
       })
 
@@ -681,8 +662,16 @@ const LivePlayer = ({
 
         if (payload.type === Hls.ErrorTypes.MEDIA_ERROR) {
           try {
-            hls.recoverMediaError()
-            return
+            if (mediaRecoveryCount === 0) {
+              mediaRecoveryCount++
+              hls.recoverMediaError()
+              return
+            } else if (mediaRecoveryCount === 1) {
+              mediaRecoveryCount++
+              hls.swapAudioCodec()
+              hls.recoverMediaError()
+              return
+            }
           } catch {
             /* prossegue para o próximo sinal se falhar recuperação de mídia */
           }
