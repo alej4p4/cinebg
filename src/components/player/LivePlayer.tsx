@@ -199,19 +199,7 @@ const LivePlayer = ({
     }
   }, [channel.id])
 
-  // Recupera o último sinal funcional salvo para este canal ou inicia em 0
-  const getInitialSignal = useCallback(() => {
-    try {
-      const saved = sessionStorage.getItem(`cinebg_signal_${channel.id}`)
-      if (saved !== null) {
-        const idx = Number(saved)
-        if (!isNaN(idx) && idx >= 0 && idx < channel.sources.length) return idx
-      }
-    } catch {}
-    return 0
-  }, [channel.id, channel.sources.length])
-
-  const [sourceIndex, setSourceIndex] = useState(getInitialSignal)
+  const [sourceIndex, setSourceIndex] = useState(0)
   const [mountKey, setMountKey] = useState(0)
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
@@ -379,19 +367,18 @@ const LivePlayer = ({
 
   // Reinicia o player quando o canal muda.
   useEffect(() => {
-    const initIdx = getInitialSignal()
     loadedRef.current = false
     playingRef.current = false
     if (watchdogRef.current) {
       clearTimeout(watchdogRef.current)
       watchdogRef.current = null
     }
-    setSourceIndex(initIdx)
+    setSourceIndex(0)
     setMountKey(0)
     setLoaded(false)
     setError(false)
-    setStatusMessage(initIdx > 0 ? `Sintonizando Sinal ${initIdx + 1}...` : 'Sintonizando sinal...')
-  }, [channel.id, getInitialSignal])
+    setStatusMessage('Sintonizando sinal...')
+  }, [channel.id])
 
   // Monitor anti-congelamento (anti-freeze watchdog) para TV: detecta micro-travamentos e recupera o fluxo
   const lastTimeRef = useRef(0)
@@ -434,28 +421,39 @@ const LivePlayer = ({
       clearTimeout(watchdogRef.current)
       watchdogRef.current = null
     }
-    try {
-      sessionStorage.setItem(`cinebg_signal_${channel.id}`, String(sourceIndex))
-    } catch {}
-  }, [channel.id, sourceIndex])
+  }, [])
 
+  const playPendingRef = useRef(false)
   const tryPlay = useCallback(() => {
     const video = videoRef.current
-    if (!video) return
-    const p = video.play()
-    if (p !== undefined) {
-      p.then(() => {
-        markPlaying()
-      }).catch(() => {
-        // Se a política de autoplay barrar som inicial, muta e reproduz imediatamente
-        if (video) {
-          video.muted = true
-          setMuted(true)
-          video.play().then(() => {
-            markPlaying()
-          }).catch(() => {})
-        }
-      })
+    if (!video || playPendingRef.current) return
+    try {
+      playPendingRef.current = true
+      const p = video.play()
+      if (p !== undefined) {
+        p.then(() => {
+          playPendingRef.current = false
+          markPlaying()
+        }).catch(() => {
+          playPendingRef.current = false
+          // Se a política de autoplay barrar som inicial, muta e reproduz imediatamente
+          if (videoRef.current) {
+            videoRef.current.muted = true
+            setMuted(true)
+            playPendingRef.current = true
+            videoRef.current.play().then(() => {
+              playPendingRef.current = false
+              markPlaying()
+            }).catch(() => {
+              playPendingRef.current = false
+            })
+          }
+        })
+      } else {
+        playPendingRef.current = false
+      }
+    } catch {
+      playPendingRef.current = false
     }
   }, [markPlaying])
 
