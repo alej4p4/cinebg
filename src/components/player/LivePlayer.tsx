@@ -448,12 +448,17 @@ const LivePlayer = ({
     if (!video || playPendingRef.current) return
     try {
       playPendingRef.current = true
+      const unlockTimer = setTimeout(() => {
+        playPendingRef.current = false
+      }, 2500)
       const p = video.play()
       if (p !== undefined) {
         p.then(() => {
+          clearTimeout(unlockTimer)
           playPendingRef.current = false
           markPlaying()
         }).catch(() => {
+          clearTimeout(unlockTimer)
           playPendingRef.current = false
           // Se a política de autoplay barrar som inicial, muta e reproduz imediatamente
           if (videoRef.current) {
@@ -604,24 +609,24 @@ const LivePlayer = ({
       })
 
       hls.on(Hls.Events.FRAG_LOADING, () => {
-        resetWatchdog(15000)
+        resetWatchdog(25000)
       })
 
       hls.on(Hls.Events.FRAG_LOADED, () => {
-        resetWatchdog(12000)
+        resetWatchdog(25000)
         tryPlay()
       })
 
       hls.on(Hls.Events.FRAG_PARSED, () => {
-        resetWatchdog(12000)
+        resetWatchdog(25000)
         tryPlay()
       })
 
       hls.on(Hls.Events.FRAG_BUFFERED, () => {
-        resetWatchdog(12000)
+        resetWatchdog(25000)
         tryPlay()
         const v = videoRef.current
-        if (v && v.buffered.length > 0 && v.buffered.end(0) > 0.5) {
+        if (v && v.buffered.length > 0 && v.buffered.end(0) > 0.1) {
           markPlaying()
         }
       })
