@@ -228,6 +228,26 @@ const Navbar = () => {
             </button>
           </Focusable>
 
+          {/* Botão de Nova Versão Suave (quando disponível, sem interromper o usuário) */}
+          {updateInfo.hasUpdate && (
+            <Focusable
+              focusKey="nav-update-badge"
+              onEnterPress={() => checkForUpdates(true)}
+              onArrowPress={(dir) => (dir === 'down' ? handleNavDown() : true)}
+            >
+              <button
+                type="button"
+                onClick={() => checkForUpdates(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold transition-all shadow-sm group"
+                title={`Nova versão v${updateInfo.latestVersion} disponível. Clique para atualizar.`}
+              >
+                <Download className="h-3.5 w-3.5 text-amber-400 group-hover:animate-bounce" />
+                <span className="hidden sm:inline">Atualização</span>
+                <span className="text-[10px] bg-amber-500/30 px-1.5 py-0.5 rounded text-white font-mono">v{updateInfo.latestVersion}</span>
+              </button>
+            </Focusable>
+          )}
+
           {/* Configurações (Acesso direto no topo para TV e Mobile) */}
           <Focusable
             focusKey="nav-settings"
@@ -241,6 +261,12 @@ const Navbar = () => {
               title="Configurações"
             >
               <Settings className="h-4 w-4" />
+              {updateInfo.hasUpdate && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                </span>
+              )}
             </button>
           </Focusable>
 
