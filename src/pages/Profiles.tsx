@@ -48,7 +48,15 @@ const Profiles = () => {
   const [optimizedMsg, setOptimizedMsg] = useState<string | null>(null)
   const [copiedReport, setCopiedReport] = useState(false)
   const [clearedReport, setClearedReport] = useState(false)
-  const incidentLogs = getStreamIncidentLogs()
+  const [incidentLogs, setIncidentLogs] = useState(() => getStreamIncidentLogs())
+  const [isRefreshingIncidents, setIsRefreshingIncidents] = useState(false)
+
+  const handleRefreshIncidents = () => {
+    setIsRefreshingIncidents(true)
+    const logs = getStreamIncidentLogs()
+    setIncidentLogs([...logs])
+    setTimeout(() => setIsRefreshingIncidents(false), 500)
+  }
 
   const handleCopyReport = () => {
     const md = formatIncidentsAsGitHubMarkdown()
@@ -62,6 +70,7 @@ const Profiles = () => {
 
   const handleClearReports = () => {
     clearStreamIncidentLogs()
+    setIncidentLogs([])
     setClearedReport(true)
     setTimeout(() => setClearedReport(false), 3000)
   }
@@ -468,6 +477,21 @@ const Profiles = () => {
             </div>
 
             <div className="flex items-center gap-2 self-stretch sm:self-auto">
+              <Focusable
+                focusKey="btn-refresh-incident-report"
+                onEnterPress={handleRefreshIncidents}
+              >
+                <button
+                  type="button"
+                  onClick={handleRefreshIncidents}
+                  title="Atualizar lista de erros e incidentes"
+                  className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all border border-white/10"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshingIncidents ? 'animate-spin' : ''}`} />
+                  <span>{isRefreshingIncidents ? 'Atualizando...' : 'Atualizar Erros'}</span>
+                </button>
+              </Focusable>
+
               <Focusable
                 focusKey="btn-copy-incident-report"
                 onEnterPress={handleCopyReport}
