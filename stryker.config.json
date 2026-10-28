@@ -1,7 +1,11 @@
 {
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
   "packageManager": "npm",
-  "reporters": ["html", "clear-text", "progress"],
+  "reporters": [
+    "html",
+    "clear-text",
+    "progress"
+  ],
   "testRunner": "command",
   "commandRunner": {
     "command": "npm run test:unit"
@@ -16,5 +20,6 @@
     "high": 80,
     "low": 60,
     "break": 50
-  }
+  },
+  "symlinkNodeModules": true
 }
