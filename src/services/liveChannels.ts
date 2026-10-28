@@ -584,6 +584,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     sources: [
       'http://45.162.64.114/CARTOON_NETWORK/index.m3u8',
       'http://udq.me:80/live/7SyrYN0fMy/3772288787/12932.m3u8',
+      'http://udq.me:80/live/7SyrYN0fMy/3772288787/12932.m3u8',
       'http://udq.me:80/live/7SyrYN0fMy/3772288787/13401.m3u8',
       'http://45.162.64.114/BOOMERANG/index.m3u8',
     ],
