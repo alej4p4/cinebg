@@ -22,6 +22,7 @@ import {
   Download,
   ArrowLeft,
   Sliders,
+  PictureInPicture,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -206,7 +207,10 @@ const StreamPlayer = ({
   const [speedOpen, setSpeedOpen] = useState(false)
   const [_tracks, setTracks] = useState<{ index: number; label: string; isForced?: boolean }[]>([])
   const [subsOpen, setSubsOpen] = useState(false)
-  const [_pipActive, setPipActive] = useState(false)
+  const [pipActive, setPipActive] = useState(false)
+  const isPipSupported = typeof document !== 'undefined' && 'pictureInPictureEnabled' in document && !!document.pictureInPictureEnabled
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false)
+  const [networkToast, setNetworkToast] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const activeTrackRef = useRef(-1)
@@ -1143,6 +1147,31 @@ const StreamPlayer = ({
     }
   }, [type, tmdbId, season, episode])
 
+  // Monitor de conectividade e auto-recuperação de rede
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false)
+      setNetworkToast('✨ Conexão restabelecida! Retomando reprodução...')
+      setTimeout(() => setNetworkToast(null), 4000)
+      const video = videoRef.current
+      if (video && video.paused && !error) {
+        video.play().catch(() => {})
+      }
+    }
+
+    const handleOffline = () => {
+      setIsOffline(true)
+      setNetworkToast('⚠️ Sem conexão à internet. Aguardando rede...')
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [error])
+
   // Observa a entrada/saída do Picture-in-Picture (eventos não tipados pelo React).
   useEffect(() => {
     const video = videoRef.current
@@ -1435,7 +1464,7 @@ const StreamPlayer = ({
   }
   refreshTextTracksRef.current = refreshTextTracks
 
-  const _handlePip = async () => {
+  const handlePip = async () => {
     const video = videoRef.current
     if (!video) return
     try {
@@ -2321,6 +2350,24 @@ const StreamPlayer = ({
           </div>
         )}
 
+        {/* Banner de Auto-recuperação de Rede */}
+        <AnimatePresence>
+          {networkToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className={`absolute top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full backdrop-blur-md shadow-2xl text-xs font-bold flex items-center gap-2 border ${
+                isOffline
+                  ? 'bg-amber-500/90 text-black border-amber-400'
+                  : 'bg-emerald-600/90 text-white border-emerald-400'
+              }`}
+            >
+              <span>{networkToast}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Pular Abertura (+85s) Estilo YuCine */}
         {showSkipIntro && directSrc && !isLocked && (
           <div className="absolute bottom-16 right-4 z-30 animate-in fade-in slide-in-from-bottom-2 duration-200">
@@ -2781,6 +2828,25 @@ const StreamPlayer = ({
                 >
                   <Layers className="w-4 h-4 text-yellow-400" />
                   <span>Episódios</span>
+                </button>
+              )}
+
+              {/* Picture-in-Picture (PiP) */}
+              {isPipSupported && !allowIframe && (
+                <button
+                  type="button"
+                  id="hud-btn-pip"
+                  data-hud-btn="true"
+                  onClick={handlePip}
+                  className={`flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border shadow-md focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:scale-105 ${
+                    pipActive
+                      ? 'bg-yellow-400 text-black border-yellow-400 shadow-yellow-400/30'
+                      : 'bg-[#171824]/90 hover:bg-[#232538] text-white border-white/10'
+                  }`}
+                  title="Assistir em janela flutuante PiP"
+                >
+                  <PictureInPicture className="w-4 h-4 text-yellow-400 group-hover:text-yellow-300" />
+                  <span>PiP</span>
                 </button>
               )}
 

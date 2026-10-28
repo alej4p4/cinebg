@@ -90,6 +90,8 @@ const LivePlayer = ({
   const osdTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Bloqueio de tela (Lock HUD) exclusivo para celular contra toques acidentais
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false)
+  const [networkToast, setNetworkToast] = useState<string | null>(null)
   const [isLocked, setIsLocked] = useState(false)
   const [showLockPrompt, setShowLockPrompt] = useState(false)
   const lockPromptTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -123,6 +125,28 @@ const LivePlayer = ({
       setShowOsd(false)
     }, 3500)
   }
+
+  // Monitor de conectividade e auto-recuperação de rede na Live TV
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false)
+      setNetworkToast('✨ Conexão restabelecida! Reconectando canal...')
+      setTimeout(() => setNetworkToast(null), 4000)
+      setMountKey((k) => k + 1)
+    }
+
+    const handleOffline = () => {
+      setIsOffline(true)
+      setNetworkToast('⚠️ Sem conexão à internet. Aguardando rede...')
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   // Ao abrir o canal, entra em tela cheia imediata e gira a tela para paisagem no celular (estilo YuCine)
   useEffect(() => {
@@ -868,6 +892,24 @@ const LivePlayer = ({
           else v.pause()
         }}
       />
+
+      {/* Banner de Auto-recuperação de Rede */}
+      <AnimatePresence>
+        {networkToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`absolute top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full backdrop-blur-md shadow-2xl text-xs font-bold flex items-center gap-2 border ${
+              isOffline
+                ? 'bg-amber-500/90 text-black border-amber-400'
+                : 'bg-emerald-600/90 text-white border-emerald-400'
+            }`}
+          >
+            <span>{networkToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* OSD Top Bar (auto-hiding) */}
       <AnimatePresence>
