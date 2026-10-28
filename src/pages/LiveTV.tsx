@@ -21,6 +21,8 @@ import {
 import {
   loadLastLiveChannelId,
   loadLiveFavorites,
+  loadRecentLiveChannels,
+  saveRecentLiveChannel,
   saveLastLiveChannelId,
   toggleLiveFavorite,
 } from '@/services/liveFavorites'
@@ -41,6 +43,7 @@ const LiveTV = () => {
   const [selected, setSelected] = useState<LiveChannel | null>(null)
   const [favorites, setFavorites] = useState<Set<string>>(() => loadLiveFavorites())
   const [lastChannelId, setLastChannelId] = useState<string | null>(() => loadLastLiveChannelId())
+  const [recentChannelIds, setRecentChannelIds] = useState<string[]>(() => loadRecentLiveChannels())
   const { isLicensed, isTrial } = useLicense()
   const { setVipModalOpen } = useAppStore()
   const [searchParams] = useSearchParams()
@@ -116,11 +119,18 @@ const LiveTV = () => {
       lastSelectedChannelIdRef.current = selected.id
       saveLastLiveChannelId(selected.id)
       setLastChannelId(selected.id)
+      saveRecentLiveChannel(selected.id)
+      setRecentChannelIds(loadRecentLiveChannels())
     }
   }, [selected])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
+    if (category === 'recentes') {
+      return recentChannelIds
+        .map((id) => channels.find((c) => c.id === id))
+        .filter((c): c is LiveChannel => !!c && (q === '' || c.name.toLowerCase().includes(q)))
+    }
     return channels.filter((c) => {
       if (category === 'favorites' && !favorites.has(c.id)) return false
       if (
@@ -132,7 +142,7 @@ const LiveTV = () => {
       if (q !== '' && !c.name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [channels, category, query, favorites])
+  }, [channels, category, query, favorites, recentChannelIds])
 
   const currentIndex = selected ? filtered.findIndex((c) => c.id === selected.id) : -1
   const handleNextChannel = () => {
