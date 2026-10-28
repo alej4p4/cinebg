@@ -21,7 +21,7 @@ import { categoryLabel } from '@/services/liveChannels'
 import { getLiveChannelEPG } from '@/services/epg'
 import Focusable from '@/components/tv/Focusable'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
-import { markBackHandled, setNativePlayerLandscape, isTVDevice } from '@/utils/tv'
+import { markBackHandled, setNativePlayerLandscape, isTVDevice, isMobileDevice } from '@/utils/tv'
 import { logLiveChannelError } from '@/services/observability'
 
 interface LivePlayerProps {
@@ -215,7 +215,7 @@ const LivePlayer = ({
   const [mountKey, setMountKey] = useState(0)
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
-  const [muted, setMuted] = useState(false)
+  const [muted, setMuted] = useState(() => isMobileDevice())
   const [statusMessage, setStatusMessage] = useState<string>('Sintonizando sinal...')
 
   // EPG program (passed from parent via cache or computed)
@@ -727,7 +727,8 @@ const LivePlayer = ({
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20 gap-3 p-4"
+            onClick={tryPlay}
+            className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20 gap-3 p-4 cursor-pointer"
           >
           <div className="w-14 h-14 border-4 border-white/10 border-t-amber-400 rounded-full animate-spin" />
           {channel.logo && (
@@ -743,6 +744,7 @@ const LivePlayer = ({
           {channel.name && (
             <p className="text-white/80 font-medium text-sm tracking-wide">{channel.name}</p>
           )}
+          <p className="text-white/40 text-xs mt-0.5">Toque na tela para iniciar a reprodução</p>
             {onNextChannel && (
               <button
                 type="button"
@@ -836,6 +838,7 @@ const LivePlayer = ({
         title={channel.name}
         autoPlay
         playsInline
+        muted={muted}
         className="w-full h-full object-contain bg-black cursor-pointer"
         onLoadedMetadata={() => {
           tryPlay()
@@ -899,6 +902,18 @@ const LivePlayer = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Banner flutuante para desmutar no mobile */}
+      {loaded && muted && (
+        <button
+          type="button"
+          onClick={toggleMute}
+          className="absolute top-20 left-4 z-40 flex items-center gap-2 bg-black/85 hover:bg-black text-amber-400 border border-amber-400/40 px-3.5 py-2 rounded-full text-xs font-bold shadow-2xl backdrop-blur-md animate-pulse transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
+        >
+          <VolumeX className="h-4 w-4" />
+          <span>Toque para ativar o áudio</span>
+        </button>
+      )}
 
       {/* OSD Top Bar (auto-hiding) */}
       <AnimatePresence>
