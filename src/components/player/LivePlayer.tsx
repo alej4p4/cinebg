@@ -53,13 +53,8 @@ const LivePlayer = ({
   // Pausa a navegação espacial do fundo enquanto o player de TV ao vivo estiver ativo
   useEffect(() => {
     try {
-      SpatialNavigation.pause()
+      SpatialNavigation.resume()
     } catch {}
-    return () => {
-      try {
-        SpatialNavigation.resume()
-      } catch {}
-    }
   }, [])
 
   const handleClose = useCallback(() => {
@@ -208,6 +203,13 @@ const LivePlayer = ({
 
   // EPG program (passed from parent via cache or computed)
   const epg = epgProgram || getLiveChannelEPG(channel.id, channel.category, channel.name)
+
+  const tryUnmute = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.muted = false
+    setMuted(false)
+  }, [])
 
   const reload = useCallback(() => {
     setSourceIndex(0)
@@ -437,6 +439,9 @@ const LivePlayer = ({
       video.play().then(() => {
         playPendingRef.current = false
         markPlaying()
+        if (isTVDevice()) {
+          setTimeout(tryUnmute, 500)
+        }
       }).catch(() => {
         playPendingRef.current = false
       })
