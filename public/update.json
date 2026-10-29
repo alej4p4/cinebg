@@ -1,12 +1,12 @@
 {
-  "version": "1.3.20",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.20/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.20/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.20/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.20/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.20/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.20/CineBG-Tv-release.apk",
+  "version": "1.3.21",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Tv-release.apk",
   "mandatory": false,
-  "releaseNotes": "Nova tática de streaming ao vivo: inicialização instantânea no primeiro fragmento (liveSyncDurationCount: 1), watchdog inteligente estendido para 25s sem cortes precoces de download e 5 sinais redundantes para Retro Cartoon.",
-  "versionCode": 110
+  "releaseNotes": "Correção de travamentos, tela preta e falta de áudio nos canais ao vivo (LiveTV) tanto na Smart TV quanto no Mobile.",
+  "versionCode": 111
 }

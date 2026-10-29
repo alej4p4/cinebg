@@ -10,6 +10,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    entries: ['index.html', 'src/**/*.{ts,tsx}'],
+  },
   build: {
     outDir: 'dist',
     sourcemap: false,
@@ -30,6 +33,9 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    watch: {
+      ignored: ['**/android/**', '**/dist/**'],
+    },
     proxy: {
       '/api/mgeb': {
         target: 'https://mgeb.site',

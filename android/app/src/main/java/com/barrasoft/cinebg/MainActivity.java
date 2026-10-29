@@ -298,6 +298,8 @@ public class MainActivity extends BridgeActivity {
                     webView.getSettings().setDatabaseEnabled(true);
                     webView.getSettings().setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH);
                     webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
+                    webView.getSettings().setAllowFileAccess(true);
+                    webView.getSettings().setAllowContentAccess(true);
                     String currentUa = webView.getSettings().getUserAgentString();
                     if (!currentUa.contains("CineBG-")) {
                         boolean isTv = isRealTelevisionDevice(MainActivity.this);
