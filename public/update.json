@@ -1,12 +1,12 @@
 {
-  "version": "1.3.21",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.21/CineBG-Tv-release.apk",
+  "version": "1.3.22",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.22/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.22/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.22/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.22/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.22/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.22/CineBG-Tv-release.apk",
   "mandatory": false,
-  "releaseNotes": "Correção de travamentos, tela preta e falta de áudio nos canais ao vivo (LiveTV) tanto na Smart TV quanto no Mobile.",
-  "versionCode": 111
+  "releaseNotes": "Novo provedor MovieBox HD integrado, sincronização dinâmica com IPTV-Org Brasil e suporte a listas IPTV/M3U.",
+  "versionCode": 112
 }
