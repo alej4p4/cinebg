@@ -1,5 +1,6 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core'
 import type { Language, AudioOption } from '@/store/useAppStore'
+import { resolveMovieBoxStream, type MovieBoxStreamRelease } from '@/services/moviebox'
 
 // =========================================================================
 // MOTOR DE STREAMING NATIVO CINEBG (ESTILO YUCINE - ZERO PROPAGANDAS / ZERO ADS)
@@ -25,6 +26,17 @@ const normalizeAudio = (audio: AudioOption | Language): AudioOption => {
 
 export const MIRRORS: StreamMirror[] = [
   {
+    id: 'moviebox',
+    name: 'CineBG MovieBox (FHD/4K Direct)',
+    flagEmoji: '🎬',
+    quality: 'FHD / 4K UHD',
+    type: 'multi_sub',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://mgeb.lat/embed/${tmdbId}?autoplay=1&ads=0&adblock=1&server=moviebox`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://mgeb.lat/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1&server=moviebox`,
+  },
+  {
     id: 'megaembed',
     name: 'CineBG Direto (MegaEmbed)',
     flagEmoji: '🇧🇷',
@@ -49,7 +61,7 @@ export const MIRRORS: StreamMirror[] = [
 ]
 
 export const getNextSilentMirrorId = (currentId: string, _audio: AudioOption = 'dub'): string => {
-  const sequence = ['megaembed', 'superflix']
+  const sequence = ['megaembed', 'superflix', 'moviebox']
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
     return sequence[0]
@@ -539,4 +551,14 @@ export const resolveMegaEmbedDubbedSource = async (
 // Limpa o cache de fontes resolvidas (útil para forçar nova busca após falha de iframe externo)
 export const clearResolvedSourcesCache = (): void => {
   resolvedSourcesCache.clear()
+}
+
+// Helper exportado para resolucao de alta qualidade via MovieBox
+export const resolveMovieBoxDirectStream = async (
+  title: string,
+  year?: number,
+  season?: number,
+  episode?: number
+): Promise<MovieBoxStreamRelease | null> => {
+  return await resolveMovieBoxStream(title, year, season, episode)
 }
