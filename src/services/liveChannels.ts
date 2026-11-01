@@ -1,3 +1,4 @@
+import { Capacitor, CapacitorHttp } from '@capacitor/core'
 // =========================================================================
 // TV CINEBG — CATÁLOGO OFICIAL DE CANAIS AO VIVO
 // -------------------------------------------------------------------------
@@ -921,33 +922,19 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
   },
 ]
 
-// Carrega os canais do catálogo oficial CineBG
-export const loadLiveChannels = async (): Promise<LiveChannel[]> => {
-  return YUCINE_CHANNELS
-}
-
-export const resetLiveChannelsCache = () => {
-  // no-op para o catálogo estático
-}
-
-// Helpers
-export const categoryLabel = (id: string): string => {
-  const cat = LIVE_CATEGORIES.find((c) => c.id === id)
-  return cat ? cat.label : id
-}
-
-export const categoryEmoji = (id: string): string => {
-  const cat = LIVE_CATEGORIES.find((c) => c.id === id)
-  return cat ? cat.emoji : '📺'
-}
-
-export const countryFlag = (_country: string | null): string => {
-  return '🇧🇷'
-}
 
 // =========================================================================
-// PARSER M3U/IPTV NATIVO (PORTADO DE MOVIEBOX-TUI)
+// SINCRONIZAÇÃO DINÂMICA COM IPTV-ORG & PARSER M3U
 // =========================================================================
+
+export const IPTV_ORG_BR_PLAYLIST_URL = 'https://iptv-org.github.io/iptv/countries/br.m3u'
+const SYNC_STORAGE_KEY = 'cinebg_synced_channels_v1'
+const SYNC_EXPIRY_KEY = 'cinebg_synced_channels_exp'
+const SYNC_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas
+
+let memorySyncedChannels: LiveChannel[] | null = null
+let isSyncInProgress = false
+
 export const parseM3UPlaylist = (content: string): LiveChannel[] => {
   const lines = content.split(/\r?\n/)
   const channels: LiveChannel[] = []
@@ -963,34 +950,83 @@ export const parseM3UPlaylist = (content: string): LiveChannel[] => {
       const groupMatch = line.match(/group-title="([^"]+)"/i)
       const idMatch = line.match(/tvg-id="([^"]+)"/i)
 
-      const name = nameMatch ? nameMatch[1].trim() : 'Canal Sem Nome'
+      let rawName = nameMatch ? nameMatch[1].trim() : 'Canal Sem Nome'
+      let quality = '1080p'
+      const qualityMatch = rawName.match(/\((\d+p)\)/i)
+      if (qualityMatch) {
+        quality = qualityMatch[1].toLowerCase()
+        rawName = rawName.replace(/\(\d+p\)/i, '').trim()
+      }
+
       const logo = logoMatch ? logoMatch[1].trim() : null
       const group = groupMatch ? groupMatch[1].trim().toLowerCase() : ''
-      const rawId = idMatch ? idMatch[1].trim() : name.toLowerCase().replace(/[^a-z0-9]/g, '-')
+      const nameLower = rawName.toLowerCase()
+      const rawId = idMatch ? idMatch[1].trim() : nameLower.replace(/[^a-z0-9]/g, '-')
 
       let category: LiveChannel['category'] = 'variedades'
-      if (group.includes('esporte') || group.includes('sport') || group.includes('futebol')) {
+      if (
+        group.includes('sport') ||
+        group.includes('esporte') ||
+        group.includes('futebol') ||
+        nameLower.includes('sport') ||
+        nameLower.includes('futebol') ||
+        nameLower.includes('combate')
+      ) {
         category = 'esportes'
-      } else if (group.includes('filme') || group.includes('serie') || group.includes('cinema') || group.includes('telecine') || group.includes('hbo')) {
+      } else if (
+        group.includes('movie') ||
+        group.includes('filme') ||
+        group.includes('cinema') ||
+        group.includes('serie') ||
+        group.includes('telecine') ||
+        group.includes('hbo') ||
+        nameLower.includes('telecine') ||
+        nameLower.includes('hbo')
+      ) {
         category = 'filmes'
-      } else if (group.includes('aberto') || group.includes('globo') || group.includes('sbt') || group.includes('record') || group.includes('band')) {
+      } else if (
+        group.includes('aberto') ||
+        group.includes('general') ||
+        nameLower.includes('globo') ||
+        nameLower.includes('sbt') ||
+        nameLower.includes('record') ||
+        nameLower.includes('band') ||
+        nameLower.includes('cultura') ||
+        nameLower.includes('redetv')
+      ) {
         category = 'abertos'
-      } else if (group.includes('infantil') || group.includes('kids') || group.includes('desenho')) {
+      } else if (
+        group.includes('infantil') ||
+        group.includes('kid') ||
+        group.includes('desenho') ||
+        group.includes('animation') ||
+        nameLower.includes('cartoon') ||
+        nameLower.includes('kids')
+      ) {
         category = 'infantil'
-      } else if (group.includes('notic') || group.includes('news')) {
+      } else if (
+        group.includes('notic') ||
+        group.includes('news') ||
+        nameLower.includes('news') ||
+        nameLower.includes('notícia')
+      ) {
         category = 'noticias'
-      } else if (group.includes('24h') || group.includes('24 horas')) {
+      } else if (
+        group.includes('24h') ||
+        group.includes('24 horas') ||
+        nameLower.includes('24h')
+      ) {
         category = 'canais24h'
       }
 
       currentInfo = {
         id: rawId || `m3u-channel-${channels.length + 1}`,
-        name,
+        name: rawName,
         logo,
         category,
         country: 'BR',
         sources: [],
-        quality: '1080p',
+        quality,
         geoBlocked: false,
         genres: [group || 'Ao Vivo'],
       }
@@ -1002,4 +1038,144 @@ export const parseM3UPlaylist = (content: string): LiveChannel[] => {
   }
 
   return channels
+}
+
+export const syncIPTVOrgChannels = async (forceRefresh = false): Promise<LiveChannel[]> => {
+  if (isSyncInProgress && memorySyncedChannels) {
+    return memorySyncedChannels
+  }
+
+  const now = Date.now()
+  if (!forceRefresh) {
+    if (memorySyncedChannels && memorySyncedChannels.length > 0) {
+      return memorySyncedChannels
+    }
+
+    try {
+      const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(SYNC_STORAGE_KEY) : null
+      const exp = typeof localStorage !== 'undefined' ? Number(localStorage.getItem(SYNC_EXPIRY_KEY) || 0) : 0
+      if (stored && now < exp) {
+        const parsed = JSON.parse(stored) as LiveChannel[]
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          memorySyncedChannels = parsed
+          return parsed
+        }
+      }
+    } catch {
+      // Falha de leitura de storage ignorada
+    }
+  }
+
+  isSyncInProgress = true
+  try {
+    let m3uText = ''
+    if (Capacitor.isNativePlatform()) {
+      const resp = await CapacitorHttp.get({
+        url: IPTV_ORG_BR_PLAYLIST_URL,
+        connectTimeout: 8000,
+        readTimeout: 8000,
+      })
+      if (resp && resp.status >= 200 && resp.status < 300 && typeof resp.data === 'string') {
+        m3uText = resp.data
+      }
+    } else {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 8000)
+      const fetchResp = await fetch(IPTV_ORG_BR_PLAYLIST_URL, {
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+      if (fetchResp.ok) {
+        m3uText = await fetchResp.text()
+      }
+    }
+
+    if (m3uText && m3uText.includes('#EXTINF:')) {
+      const parsedChannels = parseM3UPlaylist(m3uText)
+      const existingNames = new Set(
+        YUCINE_CHANNELS.map((c) => c.name.toLowerCase().replace(/[^a-z0-9]/g, ''))
+      )
+
+      const uniqueIptvChannels = parsedChannels.filter((c) => {
+        const canonical = c.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+        if (existingNames.has(canonical)) return false
+        existingNames.add(canonical)
+        return true
+      })
+
+      const combined = [...YUCINE_CHANNELS, ...uniqueIptvChannels]
+      memorySyncedChannels = combined
+
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify(combined))
+          localStorage.setItem(SYNC_EXPIRY_KEY, (now + SYNC_TTL_MS).toString())
+        } catch {
+          // LocalStorage quota cheia ignorada com segurança
+        }
+      }
+
+      return combined
+    }
+  } catch (error) {
+    console.warn('[LiveChannels] Falha ao sincronizar com iptv-org, mantendo catálogo oficial:', error)
+  } finally {
+    isSyncInProgress = false
+  }
+
+  memorySyncedChannels = YUCINE_CHANNELS
+  return YUCINE_CHANNELS
+}
+
+// Carrega os canais do catálogo CineBG (com enriquecimento instantâneo via cache)
+export const loadLiveChannels = async (): Promise<LiveChannel[]> => {
+  if (memorySyncedChannels && memorySyncedChannels.length > 0) {
+    return memorySyncedChannels
+  }
+
+  // Tenta carregar cache pré-existente imediatamente para carregar em 0ms
+  try {
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(SYNC_STORAGE_KEY) : null
+    if (stored) {
+      const parsed = JSON.parse(stored) as LiveChannel[]
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        memorySyncedChannels = parsed
+        // Dispara sync em background se o TTL venceu
+        const exp = Number(localStorage.getItem(SYNC_EXPIRY_KEY) || 0)
+        if (Date.now() >= exp) {
+          setTimeout(() => syncIPTVOrgChannels(true).catch(() => {}), 1000)
+        }
+        return parsed
+      }
+    }
+  } catch {}
+
+  // Dispara sincronização em segundo plano
+  setTimeout(() => syncIPTVOrgChannels().catch(() => {}), 500)
+  return YUCINE_CHANNELS
+}
+
+export const resetLiveChannelsCache = () => {
+  memorySyncedChannels = null
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.removeItem(SYNC_STORAGE_KEY)
+      localStorage.removeItem(SYNC_EXPIRY_KEY)
+    } catch {}
+  }
+}
+
+// Helpers
+export const categoryLabel = (id: string): string => {
+  const cat = LIVE_CATEGORIES.find((c) => c.id === id)
+  return cat ? cat.label : id
+}
+
+export const categoryEmoji = (id: string): string => {
+  const cat = LIVE_CATEGORIES.find((c) => c.id === id)
+  return cat ? cat.emoji : '📺'
+}
+
+export const countryFlag = (_country: string | null): string => {
+  return '🇧🇷'
 }
