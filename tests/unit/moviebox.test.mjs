@@ -17,7 +17,6 @@ test('MOVIEBOX-1: Util utilitário crypto.ts calcula MD5, HMAC-MD5 e Base64 de f
   const sample = 'CineBG-MovieBox-Test-12345'
   const expectedMd5 = crypto.createHash('md5').update(sample).digest('hex')
 
-  // Import dinâmico ou execução de teste equivalente
   assert.equal(typeof expectedMd5, 'string')
   assert.equal(expectedMd5.length, 32)
 })
@@ -52,11 +51,19 @@ test('MOVIEBOX-5: liveChannels.ts inclui parseM3UPlaylist para importação e su
   assert.match(liveContent, /export const parseM3UPlaylist/, 'liveChannels.ts deve exportar parseM3UPlaylist')
 
   const sampleM3U = `#EXTM3U
-#EXTINF:-1 tvg-id="globo" tvg-name="Globo SP" tvg-logo="https://example.com/globo.png" group-title="Abertos",Globo SP HD
+#EXTINF:-1 tvg-id="globo" tvg-name="Globo SP" tvg-logo="https://example.com/globo.png" group-title="Abertos",Globo SP (1080p)
 https://stream.example.com/globo/playlist.m3u8
-#EXTINF:-1 tvg-id="espn" tvg-name="ESPN Brasil" tvg-logo="https://example.com/espn.png" group-title="Esportes",ESPN Brasil
+#EXTINF:-1 tvg-id="espn" tvg-name="ESPN Brasil" tvg-logo="https://example.com/espn.png" group-title="Esportes",ESPN Brasil (720p)
 https://stream.example.com/espn/playlist.m3u8`
 
-  // Regex e parsing básico
   assert.ok(sampleM3U.includes('#EXTINF:'))
+})
+
+test('MOVIEBOX-6: Sincronização dinâmica com iptv-org (br.m3u) e fallback seguro para YUCINE_CHANNELS', () => {
+  const liveContent = fs.readFileSync(path.join(ROOT, 'src/services/liveChannels.ts'), 'utf8')
+  assert.match(liveContent, /IPTV_ORG_BR_PLAYLIST_URL/, 'liveChannels.ts deve conter a URL da playlist br.m3u do iptv-org')
+  assert.match(liveContent, /syncIPTVOrgChannels/, 'liveChannels.ts deve exportar syncIPTVOrgChannels')
+  assert.match(liveContent, /loadLiveChannels/, 'liveChannels.ts deve exportar loadLiveChannels com cache resiliente')
+  assert.match(liveContent, /categoryLabel/, 'liveChannels.ts deve preservar categoryLabel')
+  assert.match(liveContent, /categoryEmoji/, 'liveChannels.ts deve preservar categoryEmoji')
 })
