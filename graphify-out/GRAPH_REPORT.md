@@ -1,7 +1,7 @@
 # Graph Report - cinebg  (2026-11-01)
 
 ## Corpus Check
-- 120 files · ~440,598 words
+- 120 files · ~440,727 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 23 file(s) not represented in the graph (top: .xml 10, (none) 3, .properties 3)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b5a1377f`
+- Built from commit: `8711f49f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

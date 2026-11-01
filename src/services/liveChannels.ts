@@ -928,7 +928,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
 // =========================================================================
 
 export const IPTV_ORG_BR_PLAYLIST_URL = 'https://iptv-org.github.io/iptv/countries/br.m3u'
-const SYNC_STORAGE_KEY = 'cinebg_synced_channels_v1'
+const SYNC_STORAGE_KEY = 'cinebg_synced_channels_v2'
 const SYNC_EXPIRY_KEY = 'cinebg_synced_channels_exp'
 const SYNC_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas
 
@@ -962,6 +962,20 @@ export const parseM3UPlaylist = (content: string): LiveChannel[] => {
       const group = groupMatch ? groupMatch[1].trim().toLowerCase() : ''
       const nameLower = rawName.toLowerCase()
       const rawId = idMatch ? idMatch[1].trim() : nameLower.replace(/[^a-z0-9]/g, '-')
+
+      // Filtra links sabidamente mortos, rádios e compras
+      const isBannedCategory =
+        group.includes('shop') ||
+        group.includes('radio') ||
+        nameLower.includes('shop') ||
+        nameLower.includes('1001 noites') ||
+        nameLower.includes('rádio') ||
+        nameLower.includes('radio')
+      if (isBannedCategory) {
+        currentInfo = null
+        continue
+      }
+
 
       let category: LiveChannel['category'] = 'variedades'
       if (
@@ -1031,8 +1045,19 @@ export const parseM3UPlaylist = (content: string): LiveChannel[] => {
         genres: [group || 'Ao Vivo'],
       }
     } else if (currentInfo && (line.startsWith('http://') || line.startsWith('https://'))) {
-      currentInfo.sources = [line]
-      channels.push(currentInfo as LiveChannel)
+      const lowerLine = line.toLowerCase()
+      // Filtra portas mortas e protocolos bloqueados
+      const isDeadHost =
+        lowerLine.includes(':2000/') ||
+        lowerLine.includes(':3230/') ||
+        lowerLine.includes('appflux.com.br') ||
+        lowerLine.includes('tvalpha/playlist') ||
+        lowerLine.includes('adessotv') ||
+        !lowerLine.includes('.m3u8')
+      if (!isDeadHost) {
+        currentInfo.sources = [line]
+        channels.push(currentInfo as LiveChannel)
+      }
       currentInfo = null
     }
   }
@@ -1103,7 +1128,7 @@ export const syncIPTVOrgChannels = async (forceRefresh = false): Promise<LiveCha
         return true
       })
 
-      const combined = [...YUCINE_CHANNELS, ...uniqueIptvChannels]
+      const combined = [...YUCINE_CHANNELS, ...uniqueIptvChannels.slice(0, 60)]
       memorySyncedChannels = combined
 
       if (typeof localStorage !== 'undefined') {
@@ -1129,6 +1154,14 @@ export const syncIPTVOrgChannels = async (forceRefresh = false): Promise<LiveCha
 
 // Carrega os canais do catálogo CineBG (com enriquecimento instantâneo via cache)
 export const loadLiveChannels = async (): Promise<LiveChannel[]> => {
+
+  // Limpa cache legado v1 com canais instáveis
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.removeItem('cinebg_synced_channels_v1')
+    } catch {}
+  }
+
   if (memorySyncedChannels && memorySyncedChannels.length > 0) {
     return memorySyncedChannels
   }

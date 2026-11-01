@@ -48,6 +48,7 @@ const LivePlayer = ({
   const loadedRef = useRef(false)
   const playingRef = useRef(false)
   const watchdogRef = useRef<NodeJS.Timeout | null>(null)
+  const autoRetryCountRef = useRef<number>(0)
   const hlsInstanceRef = useRef<Hls | null>(null)
 
   // Pausa a navegação espacial do fundo enquanto o player de TV ao vivo estiver ativo
@@ -212,6 +213,7 @@ const LivePlayer = ({
   }, [])
 
   const reload = useCallback(() => {
+    autoRetryCountRef.current = 0
     setSourceIndex(0)
     setLoaded(false)
     setError(false)
@@ -252,6 +254,21 @@ const LivePlayer = ({
         setMountKey((k) => k + 1)
         return next
       } else {
+        // Se ainda não esgotou as retentativas automáticas (2 tentativas), reconecta
+        if (autoRetryCountRef.current < 2) {
+          autoRetryCountRef.current++
+          console.info(
+            `[LivePlayer] Reconectando canal ${channel.name} (tentativa ${autoRetryCountRef.current}/2)...`
+          )
+          setStatusMessage(`Tentando reconectar (${autoRetryCountRef.current}/2)...`)
+          setLoaded(false)
+          setError(false)
+          setTimeout(() => {
+            setMountKey((k) => k + 1)
+          }, 1200)
+          return 0
+        }
+
         console.warn(`[LivePlayer] Todos os sinais de ${channel.name} falharam.`)
         logLiveChannelError({
           channelId: channel.id,
@@ -369,6 +386,7 @@ const LivePlayer = ({
 
   // Reinicia o player quando o canal muda.
   useEffect(() => {
+    autoRetryCountRef.current = 0
     loadedRef.current = false
     playingRef.current = false
     if (watchdogRef.current) {
