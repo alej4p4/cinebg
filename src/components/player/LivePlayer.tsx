@@ -430,6 +430,8 @@ const LivePlayer = ({
     const video = videoRef.current
     if (!video) return
     playPendingRef.current = true
+    video.muted = false
+    setMuted(false)
     video.play().then(() => {
       playPendingRef.current = false
       markPlaying()
@@ -762,6 +764,7 @@ const LivePlayer = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             onClick={handleTapToPlay}
+            onTouchEnd={handleTapToPlay}
             className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20 gap-3 p-4 cursor-pointer"
           >
           <div className="w-14 h-14 border-4 border-white/10 border-t-amber-400 rounded-full animate-spin" />

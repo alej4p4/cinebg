@@ -578,15 +578,6 @@ const UpdateModal = ({
                   </span>
                 </div>
 
-                <div className="w-full flex items-center justify-between text-xs text-white/60 px-1 font-mono">
-                  <span>{progress.percent}% concluído</span>
-                  <span>
-                    {progress.totalBytes > 0
-                      ? `${formatBytes(progress.bytesDownloaded)} / ${formatBytes(progress.totalBytes)}`
-                      : formatBytes(progress.bytesDownloaded)}
-                  </span>
-                </div>
-
                 {/* Botões de controle de download: Pausar/Retomar/Cancelar */}
                 <div className="mt-4 flex items-center justify-center gap-2">
                   {isPaused ? (
