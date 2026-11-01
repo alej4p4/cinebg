@@ -944,3 +944,62 @@ export const categoryEmoji = (id: string): string => {
 export const countryFlag = (_country: string | null): string => {
   return '🇧🇷'
 }
+
+// =========================================================================
+// PARSER M3U/IPTV NATIVO (PORTADO DE MOVIEBOX-TUI)
+// =========================================================================
+export const parseM3UPlaylist = (content: string): LiveChannel[] => {
+  const lines = content.split(/\r?\n/)
+  const channels: LiveChannel[] = []
+  let currentInfo: Partial<LiveChannel> | null = null
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+
+    if (line.startsWith('#EXTINF:')) {
+      const nameMatch = line.match(/,(.+)$/)
+      const logoMatch = line.match(/tvg-logo="([^"]+)"/i)
+      const groupMatch = line.match(/group-title="([^"]+)"/i)
+      const idMatch = line.match(/tvg-id="([^"]+)"/i)
+
+      const name = nameMatch ? nameMatch[1].trim() : 'Canal Sem Nome'
+      const logo = logoMatch ? logoMatch[1].trim() : null
+      const group = groupMatch ? groupMatch[1].trim().toLowerCase() : ''
+      const rawId = idMatch ? idMatch[1].trim() : name.toLowerCase().replace(/[^a-z0-9]/g, '-')
+
+      let category: LiveChannel['category'] = 'variedades'
+      if (group.includes('esporte') || group.includes('sport') || group.includes('futebol')) {
+        category = 'esportes'
+      } else if (group.includes('filme') || group.includes('serie') || group.includes('cinema') || group.includes('telecine') || group.includes('hbo')) {
+        category = 'filmes'
+      } else if (group.includes('aberto') || group.includes('globo') || group.includes('sbt') || group.includes('record') || group.includes('band')) {
+        category = 'abertos'
+      } else if (group.includes('infantil') || group.includes('kids') || group.includes('desenho')) {
+        category = 'infantil'
+      } else if (group.includes('notic') || group.includes('news')) {
+        category = 'noticias'
+      } else if (group.includes('24h') || group.includes('24 horas')) {
+        category = 'canais24h'
+      }
+
+      currentInfo = {
+        id: rawId || `m3u-channel-${channels.length + 1}`,
+        name,
+        logo,
+        category,
+        country: 'BR',
+        sources: [],
+        quality: '1080p',
+        geoBlocked: false,
+        genres: [group || 'Ao Vivo'],
+      }
+    } else if (currentInfo && (line.startsWith('http://') || line.startsWith('https://'))) {
+      currentInfo.sources = [line]
+      channels.push(currentInfo as LiveChannel)
+      currentInfo = null
+    }
+  }
+
+  return channels
+}
