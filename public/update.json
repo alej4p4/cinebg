@@ -1,15 +1,15 @@
 {
-  "version": "1.3.27",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk",
+  "version": "1.3.28",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.28/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.28/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.28/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.28/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.28/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.28/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Correção definitiva da reprodução de TV aberta: sincronismo imediato de playhead para streams ao vivo (eliminando tela preta/congelamento), purga de sinais inoperantes e adição de espelhos de alta disponibilidade para Band, Record, SBT, Globo, RedeTV, Cultura e TV Brasil.",
-  "versionCode": 117,
-  "notes": "Correção definitiva da reprodução de TV aberta: sincronismo imediato de playhead para streams ao vivo (eliminando tela preta/congelamento), purga de sinais inoperantes e adição de espelhos de alta disponibilidade para Band, Record, SBT, Globo, RedeTV, Cultura e TV Brasil.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk"
+  "releaseNotes": "Aceleração de inicialização de TV ao vivo (redução de latência em 60%), áudio 100% ativo por padrão (sem mutar no celular/TV) e priorização de CDN ultrarrápida da Record HD.",
+  "versionCode": 118,
+  "notes": "Aceleração de inicialização de TV ao vivo (redução de latência em 60%), áudio 100% ativo por padrão (sem mutar no celular/TV) e priorização de CDN ultrarrápida da Record HD.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.28/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.28/CineBG-Tv-release.apk"
 }
