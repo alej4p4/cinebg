@@ -1,8 +1,8 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1793537712.5460937,
-    "seen": 1793539687.7017179,
-    "ast_hash": "d547b1e5fcabcf61dfc90feb44a88df8",
+    "mtime": 1793625840.8756888,
+    "seen": 1793625913.2646096,
+    "ast_hash": "1fdd2331190f4b53b6f91cc97d16f2b0",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793537712.5466192,
-    "seen": 1793539687.701775,
-    "ast_hash": "1a37875240de0d36170d013d16235498",
+    "mtime": 1793625818.114097,
+    "seen": 1793625913.26466,
+    "ast_hash": "9c593c71d0c1a4307183f99b627c3fe5",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1793537712.547618,
-    "seen": 1793539687.7017844,
-    "ast_hash": "671d0c4d16e8168b288587a9c65f2793",
+    "mtime": 1793625844.711652,
+    "seen": 1793625913.2646692,
+    "ast_hash": "8a613fee443365a8115e596df4ceccc1",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -342,8 +342,8 @@
     "semantic_hash": "88596bd4dfe5fd1a858b122a6e632c98"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1793625151.5532734,
-    "seen": 1793625252.6960118,
+    "mtime": 1793625285.873203,
+    "seen": 1793625913.2647984,
     "ast_hash": "ca6d5edd05f0111fef2af4b67695e587",
     "semantic_hash": ""
   },
@@ -396,9 +396,9 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1793537712.5486176,
-    "seen": 1793539687.7019408,
-    "ast_hash": "98525b594327a100ef199d4470f49e84",
+    "mtime": 1793625820.9717026,
+    "seen": 1793625913.2648332,
+    "ast_hash": "20a818001eecde20f587d491a80405e7",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
