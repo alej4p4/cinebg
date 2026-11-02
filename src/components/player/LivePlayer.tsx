@@ -597,6 +597,11 @@ const LivePlayer = ({
         nudgeMaxRetry: 8,
         maxFragLookUpTolerance: 0.4,
         autoStartLoad: true,
+        xhrSetup: (xhr) => {
+          try {
+            xhr.withCredentials = false
+          } catch {}
+        },
       })
 
       hlsInstanceRef.current = hls
@@ -732,13 +737,14 @@ const LivePlayer = ({
         }
 
         if (payload.type === Hls.ErrorTypes.NETWORK_ERROR) {
-          if (networkRetryCount < 1) {
+          if (networkRetryCount < 2) {
             networkRetryCount++
+            console.info(`[LivePlayer] Reconectando stream de rede (${networkRetryCount}/2)...`)
             setTimeout(() => {
               if (!cancelled && hlsInstanceRef.current) {
                 hls.startLoad()
               }
-            }, 1000)
+            }, 1200 * networkRetryCount)
             return
           }
         }

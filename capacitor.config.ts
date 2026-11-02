@@ -5,10 +5,7 @@ const config: CapacitorConfig = {
   appName: 'CineBG',
   webDir: 'dist',
   server: {
-    // NÃO definir server.url: o WebView Android deve carregar os assets
-    // locais de dist/ empacotados em android/app/src/main/assets/public/.
-    // O scheme padrão 'https' do Capacitor com cleartext: true garante
-    // carregamento dos arquivos locais via https://localhost e streams HTTP.
+    androidScheme: 'http',
     cleartext: true,
     allowNavigation: ['*'],
   },
