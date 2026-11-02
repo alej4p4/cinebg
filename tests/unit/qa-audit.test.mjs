@@ -876,3 +876,20 @@ test('LIVE-PLAYER-RESILIENCE-1: LivePlayer.tsx possui watchdog adaptativo de 15s
   assert.ok(playerSrc.includes('liveSyncDurationCount: 3'), 'HLS deve sincronizar com 3 fragmentos para evitar bufferStalledError')
   assert.ok(playerSrc.includes('hls.swapAudioCodec()'), 'Deve tentar recuperação com troca de codec de áudio para streams mono/broadcast')
 })
+test('LIVE-PLAYER-PLAYHEAD-SYNC-1: LivePlayer.tsx sincroniza playhead com o liveStart/liveEnd do buffer para eliminar tela preta em streams longos', () => {
+  const playerSrc = fs.readFileSync('src/components/player/LivePlayer.tsx', 'utf8')
+  assert.ok(playerSrc.includes('liveDurationInfinity: false'), 'liveDurationInfinity deve ser false para permitir sincronização de linha do tempo no Chromium')
+  assert.ok(playerSrc.includes('video.currentTime < liveStart || video.currentTime > liveEnd'), 'Anti-freeze deve verificar se currentTime está fora do intervalo')
+  assert.ok(playerSrc.includes('v.currentTime < liveStart || v.currentTime > liveEnd'), 'FRAG_BUFFERED deve sincronizar playhead com a janela de buffer')
+  assert.ok(playerSrc.includes('Math.max(liveStart, liveEnd - 2)'), 'Deve posicionar currentTime dentro do buffer ativo')
+})
+
+test('LIVE-CHANNELS-ABERTOS-RESILIENCE-1: liveChannels.ts possui fontes verificadas e remove servidores inoperantes de TV aberta', () => {
+  const channelsSrc = fs.readFileSync('src/services/liveChannels.ts', 'utf8')
+  assert.ok(!channelsSrc.includes('79.127.238.228:14173'), 'Servidor inoperante 79.127.238.228:14173 com timeout de 20s deve ser expurgado')
+  assert.ok(!channelsSrc.includes('sbtmutum/sbtmutum'), 'Sinal com timeout sbtmutum deve ser expurgado')
+  assert.ok(channelsSrc.includes('televisaocidadeverde.brasilstream.com.br'), 'Band HD deve contar com espelho TV Cidade Verde')
+  assert.ok(channelsSrc.includes('operacaotbomt.com'), 'Band HD deve contar com espelho TV Brasil Oeste')
+  assert.ok(channelsSrc.includes('LVW-10841'), 'Record HD deve contar com espelho TV Vila Real')
+  assert.ok(channelsSrc.includes('LVW-10801'), 'SBT HD deve contar com espelho JMV')
+})
