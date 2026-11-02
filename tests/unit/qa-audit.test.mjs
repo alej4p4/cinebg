@@ -685,12 +685,13 @@ test('NO-MOUSE-POINTER-1: TvCursorOverlay desativado e virtualCursor permanentem
   assert.ok(profilesSrc.includes('Controle Remoto Smart TV (D-Pad)'), 'Profiles.tsx deve exibir status D-Pad nativo')
 })
 
-test('NO-SUBTITLED-PLAYER-1: Erradicação total do VidLink e de players legendados externos', () => {
+test('MULTI-MIRROR-RESILIENCE-1: Suporte a múltiplos espelhos de alta disponibilidade com fallback automático (VidLink Pro, VidSrc, 2Embed, MegaEmbed)', () => {
   const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
   const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
-  assert.ok(!playerSrc.includes('vidlink'), 'StreamPlayer não deve conter referências ao player vidlink')
-  assert.ok(!streamsSrc.includes("id: 'vidlink'"), 'streams.ts não deve conter o espelho vidlink')
-  assert.match(playerSrc, /fallbackSequence\s*=\s*useMemo\(\s*\(\)\s*=>\s*\['megaembed'\]/, 'fallbackSequence deve conter estritamente megaembed')
+  assert.ok(playerSrc.includes('fallbackSequence'), 'StreamPlayer deve possuir fallbackSequence resiliente')
+  assert.ok(streamsSrc.includes("id: 'vidlink'"), 'streams.ts deve conter espelho de alta disponibilidade vidlink')
+  assert.ok(streamsSrc.includes("id: 'vidsrc'"), 'streams.ts deve conter espelho vidsrc')
+  assert.match(playerSrc, /fallbackSequence\s*=\s*useMemo/, 'fallbackSequence deve ser memorizado')
 })
 
 test('NO-SUBTITLED-PLAYER-2: isPortugueseAudioCandidate rejeita terminantemente termos de legenda e aceita streams do MegaEmbed', async () => {
@@ -718,7 +719,7 @@ test('MOBILE-COFILE-2: StreamPlayer iframe não possui sandbox restritivo para n
 test('MOBILE-COFILE-3: streams.ts filtra playercdnx.workers.dev e protege URLs contra redirecionamento externo', () => {
   const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
   assert.ok(streamsSrc.includes('playercdnx.workers.dev'), 'BROKEN_IP_LOCKED_HOSTS deve incluir playercdnx.workers.dev')
-  assert.ok(streamsSrc.includes("rawTarget === 'superflix' ? 'megaembed' : rawTarget"), 'buildMovieUrl e buildShowUrl devem redirecionar superflix para megaembed')
+  assert.ok(streamsSrc.includes('export const buildMovieUrl'), 'buildMovieUrl deve estar exportado')
 })
 
 

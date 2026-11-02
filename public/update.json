@@ -1,12 +1,12 @@
 {
-  "version": "1.3.24",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.24/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.24/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.24/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.24/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.24/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.24/CineBG-Tv-release.apk",
+  "version": "1.3.25",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.25/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.25/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.25/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.25/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.25/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.25/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Correção definitiva de reprodução de canais ao vivo (Live TV): desbloqueio de conexões Cleartext HTTP no Android, eliminação de Mixed Content no WebView, purga de links offline e prioridade total para sinais verificados.",
-  "versionCode": 114
+  "releaseNotes": "Restauração de espelhos de alta disponibilidade para filmes e séries (VidLink Pro, VidSrc e 2Embed), failover instantâneo de streaming e liberação total de reprodução de TV.",
+  "versionCode": 115
 }

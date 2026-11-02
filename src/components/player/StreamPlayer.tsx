@@ -525,7 +525,7 @@ const StreamPlayer = ({
 
   // ===== Auto-fallback state =====
   const fallbackSequence = useMemo(
-    () => ['megaembed'],
+    () => ['vidlink', 'vidsrc', 'embed2', 'superflix', 'moviebox', 'megaembed'],
     []
   )
 
@@ -566,7 +566,7 @@ const StreamPlayer = ({
     const list = candidatesRef.current
     setSubLang('off')
     setSubtitleOption('off')
-    setActiveMirror('megaembed')
+    setActiveMirror('vidlink')
     setAllowIframe(false)
     const dubIdx = list.findIndex((c) => c.isDubbedHint)
     const targetIdx = dubIdx !== -1 ? dubIdx : 0
@@ -625,8 +625,8 @@ const StreamPlayer = ({
     nativeActiveRef.current = false
     setDirectSrc(null)
     setDirectKind(null)
-    setActiveMirror('megaembed')
-    setAllowIframe(true)
+    setActiveMirror('vidlink')
+            setAllowIframe(true)
     setLoaded(false)
     setError(false)
   }, [])
@@ -712,7 +712,7 @@ const StreamPlayer = ({
     setCandidates([])
     setCandidateIndex(0)
     setFallbackAttempt(0)
-    setActiveMirror('megaembed')
+    setActiveMirror('vidlink')
     setKey((k) => k + 1)
   }
 
@@ -865,7 +865,7 @@ const StreamPlayer = ({
             nativeActiveRef.current = false
             setDirectSrc(null)
             setDirectKind(null)
-            setActiveMirror('megaembed')
+            setActiveMirror('vidlink')
             setAllowIframe(true)
             setError(false)
           }
@@ -878,8 +878,8 @@ const StreamPlayer = ({
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
-          setActiveMirror('megaembed')
-          setAllowIframe(true)
+          setActiveMirror('vidlink')
+            setAllowIframe(true)
           setError(false)
         }
       })
@@ -892,8 +892,8 @@ const StreamPlayer = ({
         setCandidateIndex(0)
         candidateIndexRef.current = 0
         nativeActiveRef.current = false
-        setActiveMirror('megaembed')
-        setAllowIframe(true)
+        setActiveMirror('vidlink')
+            setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
         setError(false)
