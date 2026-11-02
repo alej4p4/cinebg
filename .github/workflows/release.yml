@@ -78,3 +78,7 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Purge jsDelivr cache for update.json
+        run: |
+          curl -s "https://purge.jsdelivr.net/gh/alej4p4/cinebg@main/public/update.json" || true
