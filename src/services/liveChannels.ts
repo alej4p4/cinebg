@@ -49,9 +49,10 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'https://dai.google.com/linear/hls/event/1XSOdtQ0SH2G8OEmEfGgjQ/master.m3u8',
+      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
       'https://6836041ea1117.streamlock.net/cverde/cverde/playlist.m3u8',
-      'https://video09.logicahost.com.br/sbtmutum/sbtmutum/playlist.m3u8',
       'https://video09.logicahost.com.br/sbtroo/sbtroo/playlist.m3u8',
+      'https://video09.logicahost.com.br/sbtcuiaba/sbtcuiaba/playlist.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -66,8 +67,6 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'https://live.mediapro.com.br/hls/bh-globo/index.m3u8',
-      'http://79.127.238.228:14173/',
-      'http://hls1.sua.tv/live/globorjfhdbr2/s.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -82,8 +81,6 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'https://live.mediapro.com.br/hls/bh-globo/index.m3u8',
-      'http://79.127.238.228:14173/',
-      'http://hls1.sua.tv/live/globorjfhdbr2/s.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -97,9 +94,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
-      'http://hls1.sua.tv/live/globotvbahiafhdbr2/s.m3u8',
       'https://live.mediapro.com.br/hls/bh-globo/index.m3u8',
-      'http://hls1.sua.tv/live/globorjfhdbr2/s.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -114,8 +109,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'http://45.162.64.114/RECORD_NEWS/index.m3u8',
-      'https://rnw-rn.otteravision.com/rnw/rn/rnw_rn.m3u8',
-      'http://45.162.64.114/REDE_TV/index.m3u8',
+      'https://cdn.jmvstream.com/w/LVW-10841/LVW10841_mT77z9o2cP/playlist.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -129,8 +123,9 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      'https://televisaocidadeverde.brasilstream.com.br/hls/televisaocidadeverde/index.m3u8',
+      'https://5ad482a77183d.streamlock.net/operacaotbomt.com/operacaotbomt.com/playlist.m3u8',
       'http://45.162.64.114/BAND_NEWS/index.m3u8',
-      'http://170.83.16.50/REDE_TV/index.m3u8',
       'http://45.162.64.114/BAND_SPORTS/index.m3u8',
     ],
     quality: '1080p',
@@ -145,6 +140,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      'https://cdn.live.br1.jmvstream.com/webtv/AVJ-15235/playlist/playlist.m3u8',
       'http://45.162.64.114/REDE_TV/index.m3u8',
       'http://170.83.16.50/REDE_TV/index.m3u8',
     ],
@@ -162,7 +158,6 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     sources: [
       'https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8',
       'http://45.162.64.114/TV_CULTURA/index.m3u8',
-      'https://fpa-gateway.tvcultura.com.br:8181/memfs/606caef0-a290-413d-9f1f-8fcdb3a73831.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,

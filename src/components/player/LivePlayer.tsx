@@ -415,8 +415,11 @@ const LivePlayer = ({
           freezeCountRef.current = 0
           try {
             if (video.buffered.length > 0) {
+              const liveStart = video.buffered.start(0)
               const liveEnd = video.buffered.end(video.buffered.length - 1)
-              if (video.currentTime < liveEnd - 0.5) {
+              if (video.currentTime < liveStart || video.currentTime > liveEnd) {
+                video.currentTime = Math.max(liveStart, liveEnd - 2)
+              } else if (video.currentTime < liveEnd - 0.5) {
                 video.currentTime = Math.min(liveEnd - 0.5, video.currentTime + 0.4)
               }
             }
@@ -578,7 +581,7 @@ const LivePlayer = ({
     if (Hls.isSupported()) {
       const hls = new Hls({
         enableWorker: false, // Desativa worker para evitar engasgos em Android TV / WebViews
-        liveDurationInfinity: true,
+        liveDurationInfinity: false,
         lowLatencyMode: false,
         backBufferLength: 20,
         maxBufferLength: 20,
@@ -654,11 +657,16 @@ const LivePlayer = ({
 
       hls.on(Hls.Events.FRAG_BUFFERED, () => {
         resetWatchdog(25000)
-        tryPlay()
         const v = videoRef.current
-        if (v && v.buffered.length > 0 && v.buffered.end(0) > 0.1) {
+        if (v && v.buffered.length > 0) {
+          const liveStart = v.buffered.start(0)
+          const liveEnd = v.buffered.end(v.buffered.length - 1)
+          if (v.currentTime < liveStart || v.currentTime > liveEnd) {
+            v.currentTime = Math.max(liveStart, liveEnd - 2)
+          }
           markPlaying()
         }
+        tryPlay()
       })
 
       hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
@@ -699,8 +707,11 @@ const LivePlayer = ({
             try {
               hls.startLoad()
               if (video && !video.paused && video.buffered.length > 0) {
+                const liveStart = video.buffered.start(0)
                 const liveEnd = video.buffered.end(video.buffered.length - 1)
-                if (video.currentTime < liveEnd - 0.5) {
+                if (video.currentTime < liveStart || video.currentTime > liveEnd) {
+                  video.currentTime = Math.max(liveStart, liveEnd - 2)
+                } else if (video.currentTime < liveEnd - 0.5) {
                   video.currentTime = Math.min(liveEnd - 0.5, video.currentTime + 0.3)
                 }
                 video.play().catch(() => {})
@@ -903,11 +914,26 @@ const LivePlayer = ({
         className="w-full h-full object-contain bg-black cursor-pointer"
         onProgress={() => {
           const v = videoRef.current
-          if (v && v.buffered.length > 0 && v.buffered.end(0) > 0.3 && !loadedRef.current) {
-            tryPlay()
+          if (v && v.buffered.length > 0) {
+            const liveStart = v.buffered.start(0)
+            const liveEnd = v.buffered.end(v.buffered.length - 1)
+            if (v.currentTime < liveStart || v.currentTime > liveEnd) {
+              v.currentTime = Math.max(liveStart, liveEnd - 2)
+            }
+            if (!loadedRef.current && liveEnd > 0.3) {
+              tryPlay()
+            }
           }
         }}
         onLoadedMetadata={() => {
+          const v = videoRef.current
+          if (v && v.buffered.length > 0) {
+            const liveStart = v.buffered.start(0)
+            const liveEnd = v.buffered.end(v.buffered.length - 1)
+            if (v.currentTime < liveStart || v.currentTime > liveEnd) {
+              v.currentTime = Math.max(liveStart, liveEnd - 2)
+            }
+          }
           tryPlay()
         }}
         onCanPlay={() => {

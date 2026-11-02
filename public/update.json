@@ -1,15 +1,15 @@
 {
-  "version": "1.3.26",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.26/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.26/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.26/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.26/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.26/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.26/CineBG-Tv-release.apk",
+  "version": "1.3.27",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Otimização de resiliência e estabilidade para canais ao vivo (HLS) com tolerância a flutuações 5xx e purga de canais instáveis.",
-  "versionCode": 116,
-  "notes": "Otimização de resiliência e estabilidade para canais ao vivo (HLS) com tolerância a flutuações 5xx e purga de canais instáveis.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.26/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.26/CineBG-Tv-release.apk"
+  "releaseNotes": "Correção definitiva da reprodução de TV aberta: sincronismo imediato de playhead para streams ao vivo (eliminando tela preta/congelamento), purga de sinais inoperantes e adição de espelhos de alta disponibilidade para Band, Record, SBT, Globo, RedeTV, Cultura e TV Brasil.",
+  "versionCode": 117,
+  "notes": "Correção definitiva da reprodução de TV aberta: sincronismo imediato de playhead para streams ao vivo (eliminando tela preta/congelamento), purga de sinais inoperantes e adição de espelhos de alta disponibilidade para Band, Record, SBT, Globo, RedeTV, Cultura e TV Brasil.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.27/CineBG-Tv-release.apk"
 }
