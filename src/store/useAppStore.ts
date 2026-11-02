@@ -185,8 +185,8 @@ export const useAppStore = create<AppState>()(
         try {
           const currentVersion = getNativeAppVersion(CURRENT_APP_VERSION)
           const candidateUrls = [
-            `https://cdn.jsdelivr.net/gh/alej4p4/cinebg@main/public/update.json?t=${Date.now()}`,
             `https://raw.githubusercontent.com/alej4p4/cinebg/main/public/update.json?t=${Date.now()}`,
+            `https://cdn.jsdelivr.net/gh/alej4p4/cinebg@main/public/update.json?t=${Date.now()}`,
             `/update.json?t=${Date.now()}`,
           ]
 
