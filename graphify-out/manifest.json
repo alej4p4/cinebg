@@ -1,7 +1,7 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1793625840.8756888,
-    "seen": 1793625913.2646096,
+    "mtime": 1793625958.8147638,
+    "seen": 1793634225.9500604,
     "ast_hash": "1fdd2331190f4b53b6f91cc97d16f2b0",
     "semantic_hash": ""
   },
@@ -60,9 +60,9 @@
     "semantic_hash": "0b4a03daa618138b294af83c637217a6"
   },
   "capacitor.config.ts": {
-    "mtime": 1792932389.0791206,
-    "seen": 1792933406.3499377,
-    "ast_hash": "cc1db2b04b6b3616a8727de9f08ff653",
+    "mtime": 1793634041.0650418,
+    "seen": 1793634225.9500997,
+    "ast_hash": "a266f04ec84056b90976f9c46cfc2753",
     "semantic_hash": ""
   },
   "eslint.config.js": {
@@ -72,8 +72,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793625818.114097,
-    "seen": 1793625913.26466,
+    "mtime": 1793625958.8167672,
+    "seen": 1793634225.950109,
     "ast_hash": "9c593c71d0c1a4307183f99b627c3fe5",
     "semantic_hash": ""
   },
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1793625844.711652,
-    "seen": 1793625913.2646692,
-    "ast_hash": "8a613fee443365a8115e596df4ceccc1",
+    "mtime": 1793625958.817767,
+    "seen": 1793634225.9501176,
+    "ast_hash": "b1bc32122edb0c1ccc1b85143c903ec2",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -138,9 +138,9 @@
     "semantic_hash": "582012cd608852a3d274367c6f820cf3"
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1793539714.7362537,
-    "seen": 1793625252.6959136,
-    "ast_hash": "799a675fdc0cb1eadabb5cc96964502c",
+    "mtime": 1793634081.278787,
+    "seen": 1793634225.9501412,
+    "ast_hash": "01d2f5d5118d63469c46ef72e22f3b26",
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
@@ -342,9 +342,9 @@
     "semantic_hash": "88596bd4dfe5fd1a858b122a6e632c98"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1793625285.873203,
-    "seen": 1793625913.2647984,
-    "ast_hash": "ca6d5edd05f0111fef2af4b67695e587",
+    "mtime": 1793634118.0128236,
+    "seen": 1793634225.9502373,
+    "ast_hash": "a3124c6a6bef2da8dfa136421adad512",
     "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
@@ -396,8 +396,8 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1793625820.9717026,
-    "seen": 1793625913.2648332,
+    "mtime": 1793625958.8187678,
+    "seen": 1793634225.9502707,
     "ast_hash": "20a818001eecde20f587d491a80405e7",
     "semantic_hash": ""
   },
