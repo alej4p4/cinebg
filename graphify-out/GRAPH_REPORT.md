@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-11-02)
 
 ## Corpus Check
-- 120 files · ~440,813 words
+- 120 files · ~440,811 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 23 file(s) not represented in the graph (top: .xml 10, (none) 3, .properties 3)
 
 ## Summary
-- 1213 nodes · 2658 edges · 80 communities (59 shown, 21 thin omitted)
+- 1213 nodes · 2657 edges · 80 communities (59 shown, 21 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 72 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8d1bd0ce`
+- Built from commit: `1b34dbf3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -90,8 +90,8 @@
 2. `Focusable()` - 41 edges
 3. `react` - 39 edges
 4. `framer-motion` - 32 edges
-5. `isMobileDevice()` - 30 edges
-6. `lucide-react` - 29 edges
+5. `lucide-react` - 29 edges
+6. `isMobileDevice()` - 29 edges
 7. `StreamPlayer()` - 25 edges
 8. `Home()` - 25 edges
 9. `@noriginmedia/norigin-spatial-navigation` - 24 edges

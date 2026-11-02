@@ -871,9 +871,10 @@ test('CLASSIC-CHANNELS-1: liveChannels.ts configura fontes resilientes para cana
 
 test('LIVE-PLAYER-RESILIENCE-1: LivePlayer.tsx possui watchdog adaptativo de 15s, extensao de buffer e recuperacao de codec de audio', () => {
   const playerSrc = fs.readFileSync('src/components/player/LivePlayer.tsx', 'utf8')
-  assert.ok(playerSrc.includes('CONNECT_TIMEOUT_MS = 15000'), 'Watchdog deve possuir tolerância de 15s para chunks longos de Smart TV')
+  assert.ok(playerSrc.includes('CONNECT_TIMEOUT_MS = 8000'), 'Watchdog deve possuir tolerância otimizada de 8s para alternância rápida')
   assert.ok(playerSrc.includes('resetWatchdog'), 'Deve implementar função de reset de watchdog adaptativo')
-  assert.ok(playerSrc.includes('liveSyncDurationCount: 3'), 'HLS deve sincronizar com 3 fragmentos para evitar bufferStalledError')
+  assert.ok(playerSrc.includes('liveSyncDurationCount: 2'), 'HLS deve sincronizar com 2 fragmentos para aceleração de inicialização')
+  assert.ok(playerSrc.includes('const [muted, setMuted] = useState(false)'), 'LivePlayer deve manter áudio ativo por padrão sem mutar no celular/TV')
   assert.ok(playerSrc.includes('hls.swapAudioCodec()'), 'Deve tentar recuperação com troca de codec de áudio para streams mono/broadcast')
 })
 test('LIVE-PLAYER-PLAYHEAD-SYNC-1: LivePlayer.tsx sincroniza playhead com o liveStart/liveEnd do buffer para eliminar tela preta em streams longos', () => {

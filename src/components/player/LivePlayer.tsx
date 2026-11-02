@@ -199,7 +199,7 @@ const LivePlayer = ({
   const [mountKey, setMountKey] = useState(0)
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
-  const [muted, setMuted] = useState(() => isMobileDevice())
+  const [muted, setMuted] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string>('Sintonizando sinal...')
 
   // EPG program (passed from parent via cache or computed)
@@ -337,6 +337,10 @@ const LivePlayer = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
       resetOsdTimer()
+      if (videoRef.current && videoRef.current.muted) {
+        videoRef.current.muted = false
+        setMuted(false)
+      }
 
       if (e.key === 'ArrowUp' || e.key === 'PageUp') {
         e.preventDefault()
@@ -479,6 +483,8 @@ const LivePlayer = ({
       const unlockTimer = setTimeout(() => {
         playPendingRef.current = false
       }, 2500)
+      video.muted = false
+      setMuted(false)
       const p = video.play()
       if (p !== undefined) {
         p.then(() => {
@@ -513,8 +519,9 @@ const LivePlayer = ({
   useEffect(() => {
     const video = videoRef.current
     const src = channel.sources[sourceIndex]
-    if (video && isMobileDevice()) {
-      video.defaultMuted = true
+    if (video) {
+      video.defaultMuted = false
+      video.muted = false
     }
     if (!video || !src) {
       setError(true)
@@ -538,7 +545,7 @@ const LivePlayer = ({
 
     let cancelled = false
 
-    const CONNECT_TIMEOUT_MS = 15000 // 15s de tolerância para download de chunks longos (10s) e conexões lentas em TV Box
+    const CONNECT_TIMEOUT_MS = 8000 // 8s de tolerância otimizada para alternância rápida sem espera excessiva
 
     const resetWatchdog = (timeoutMs = CONNECT_TIMEOUT_MS) => {
       if (watchdogRef.current) clearTimeout(watchdogRef.current)
@@ -583,12 +590,13 @@ const LivePlayer = ({
         enableWorker: false, // Desativa worker para evitar engasgos em Android TV / WebViews
         liveDurationInfinity: false,
         lowLatencyMode: false,
-        backBufferLength: 20,
-        maxBufferLength: 20,
-        maxMaxBufferLength: 40,
+        backBufferLength: 15,
+        maxBufferLength: 10,
+        maxMaxBufferLength: 20,
         maxBufferSize: 30 * 1000 * 1000,
-        liveSyncDurationCount: 3, // 3 fragmentos garante sincronismo seguro sem bufferStalledError
-        liveMaxLatencyDurationCount: 10,
+        initialLiveManifestSize: 1,
+        liveSyncDurationCount: 2,
+        liveMaxLatencyDurationCount: 6,
         startFragPrefetch: true, // Pré-carrega próximo fragmento para aceleração
         manifestLoadingTimeOut: 12000,
         manifestLoadingMaxRetry: 3,
@@ -908,6 +916,7 @@ const LivePlayer = ({
         ref={videoRef}
         poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         title={channel.name}
+        preload="auto"
         autoPlay
         playsInline
         muted={muted}
