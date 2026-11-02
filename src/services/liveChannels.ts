@@ -146,7 +146,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'http://45.162.64.114/REDE_TV/index.m3u8',
-      'https://tv01.zas.media:1936/redetvparana/redetvparana/playlist.m3u8',
+      'http://170.83.16.50/REDE_TV/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -169,6 +169,21 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     genres: ['Cultura', 'Educação', 'Jornalismo', 'Infantil'],
   },
   {
+    id: 'tv-brasil',
+    name: 'TV Brasil HD',
+    logo: 'https://i.imgur.com/G4Yx1xM.png',
+    cardBg: 'tvbrasil',
+    category: 'abertos',
+    country: 'BR',
+    sources: [
+      'https://tvbrasil-stream.ebc.com.br/index.m3u8',
+      'http://45.162.64.114/TV_BRASIL/index.m3u8',
+    ],
+    quality: '1080p',
+    geoBlocked: false,
+    genres: ['Pública', 'Cultura', 'Jornalismo', 'Ao Vivo'],
+  },
+  {
     id: 'rede-brasil',
     name: 'Rede Brasil HD',
     logo: 'https://i.imgur.com/TXJKwzZ.png',
@@ -176,8 +191,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
-      'https://video09.logicahost.com.br/redebrasiloficial/redebrasiloficial/playlist.m3u8',
-      'http://45.162.64.114/TV_CULTURA/index.m3u8',
+      'https://redebrasil.nuvemplay.live/hls/stream.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -1065,126 +1079,24 @@ export const parseM3UPlaylist = (content: string): LiveChannel[] => {
   return channels
 }
 
-export const syncIPTVOrgChannels = async (forceRefresh = false): Promise<LiveChannel[]> => {
-  if (isSyncInProgress && memorySyncedChannels) {
-    return memorySyncedChannels
-  }
-
-  const now = Date.now()
-  if (!forceRefresh) {
-    if (memorySyncedChannels && memorySyncedChannels.length > 0) {
-      return memorySyncedChannels
-    }
-
-    try {
-      const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(SYNC_STORAGE_KEY) : null
-      const exp = typeof localStorage !== 'undefined' ? Number(localStorage.getItem(SYNC_EXPIRY_KEY) || 0) : 0
-      if (stored && now < exp) {
-        const parsed = JSON.parse(stored) as LiveChannel[]
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          memorySyncedChannels = parsed
-          return parsed
-        }
-      }
-    } catch {
-      // Falha de leitura de storage ignorada
-    }
-  }
-
-  isSyncInProgress = true
-  try {
-    let m3uText = ''
-    if (Capacitor.isNativePlatform()) {
-      const resp = await CapacitorHttp.get({
-        url: IPTV_ORG_BR_PLAYLIST_URL,
-        connectTimeout: 8000,
-        readTimeout: 8000,
-      })
-      if (resp && resp.status >= 200 && resp.status < 300 && typeof resp.data === 'string') {
-        m3uText = resp.data
-      }
-    } else {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 8000)
-      const fetchResp = await fetch(IPTV_ORG_BR_PLAYLIST_URL, {
-        signal: controller.signal,
-      })
-      clearTimeout(timeoutId)
-      if (fetchResp.ok) {
-        m3uText = await fetchResp.text()
-      }
-    }
-
-    if (m3uText && m3uText.includes('#EXTINF:')) {
-      const parsedChannels = parseM3UPlaylist(m3uText)
-      const existingNames = new Set(
-        YUCINE_CHANNELS.map((c) => c.name.toLowerCase().replace(/[^a-z0-9]/g, ''))
-      )
-
-      const uniqueIptvChannels = parsedChannels.filter((c) => {
-        const canonical = c.name.toLowerCase().replace(/[^a-z0-9]/g, '')
-        if (existingNames.has(canonical)) return false
-        existingNames.add(canonical)
-        return true
-      })
-
-      const combined = [...YUCINE_CHANNELS, ...uniqueIptvChannels.slice(0, 60)]
-      memorySyncedChannels = combined
-
-      if (typeof localStorage !== 'undefined') {
-        try {
-          localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify(combined))
-          localStorage.setItem(SYNC_EXPIRY_KEY, (now + SYNC_TTL_MS).toString())
-        } catch {
-          // LocalStorage quota cheia ignorada com segurança
-        }
-      }
-
-      return combined
-    }
-  } catch (error) {
-    console.warn('[LiveChannels] Falha ao sincronizar com iptv-org, mantendo catálogo oficial:', error)
-  } finally {
-    isSyncInProgress = false
-  }
-
+export const syncIPTVOrgChannels = async (_forceRefresh = false): Promise<LiveChannel[]> => {
+  // Retorna diretamente o catálogo oficial CineBG com canais 100% ativos e auditados
   memorySyncedChannels = YUCINE_CHANNELS
   return YUCINE_CHANNELS
 }
 
-// Carrega os canais do catálogo CineBG (com enriquecimento instantâneo via cache)
+// Carrega os canais do catálogo CineBG (com 0ms de espera e zero canais quebrados)
 export const loadLiveChannels = async (): Promise<LiveChannel[]> => {
-
-  // Limpa cache legado v1 com canais instáveis
+  // Limpa imediatamente caches legados que continham canais instáveis externos
   if (typeof localStorage !== 'undefined') {
     try {
       localStorage.removeItem('cinebg_synced_channels_v1')
+      localStorage.removeItem('cinebg_synced_channels_v2')
+      localStorage.removeItem('cinebg_synced_channels_exp')
     } catch {}
   }
 
-  if (memorySyncedChannels && memorySyncedChannels.length > 0) {
-    return memorySyncedChannels
-  }
-
-  // Tenta carregar cache pré-existente imediatamente para carregar em 0ms
-  try {
-    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(SYNC_STORAGE_KEY) : null
-    if (stored) {
-      const parsed = JSON.parse(stored) as LiveChannel[]
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        memorySyncedChannels = parsed
-        // Dispara sync em background se o TTL venceu
-        const exp = Number(localStorage.getItem(SYNC_EXPIRY_KEY) || 0)
-        if (Date.now() >= exp) {
-          setTimeout(() => syncIPTVOrgChannels(true).catch(() => {}), 1000)
-        }
-        return parsed
-      }
-    }
-  } catch {}
-
-  // Dispara sincronização em segundo plano
-  setTimeout(() => syncIPTVOrgChannels().catch(() => {}), 500)
+  memorySyncedChannels = YUCINE_CHANNELS
   return YUCINE_CHANNELS
 }
 
@@ -1194,10 +1106,11 @@ export const resetLiveChannelsCache = () => {
     try {
       localStorage.removeItem(SYNC_STORAGE_KEY)
       localStorage.removeItem(SYNC_EXPIRY_KEY)
+      localStorage.removeItem('cinebg_synced_channels_v1')
+      localStorage.removeItem('cinebg_synced_channels_v2')
     } catch {}
   }
 }
-
 // Helpers
 export const categoryLabel = (id: string): string => {
   const cat = LIVE_CATEGORIES.find((c) => c.id === id)

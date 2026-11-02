@@ -1,22 +1,21 @@
-# Graph Report - cinebg  (2026-11-01)
+# Graph Report - cinebg  (2026-11-02)
 
 ## Corpus Check
-- 120 files · ~440,727 words
+- 120 files · ~440,419 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 23 file(s) not represented in the graph (top: .xml 10, (none) 3, .properties 3)
 
 ## Summary
-- 1213 nodes · 2660 edges · 81 communities (60 shown, 21 thin omitted)
+- 1213 nodes · 2658 edges · 80 communities (59 shown, 21 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 72 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8711f49f`
+- Built from commit: `c173487e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- �� CORREÇÕES DEFINITIVAS
 - observability.ts
 - App.tsx
 - useLicense.ts
@@ -113,11 +112,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (81 total, 21 thin omitted)
-
-### Community 0 - "�� CORREÇÕES DEFINITIVAS"
-Cohesion: 0.10
-Nodes (19): 1.1 Estrutura de Módulos, 1.2 Dependências Externas Críticas, 1.3 Fluxos de Entrada/Saída de Dados, 2.1 CRÍTICO - Segurança, 2.4 CRÍTICO - Qualidade / Código Morto, 2.5 CRÍTICO - Escalabilidade / Banco de Dados, 2.6 CRÍTICO - CI/CD / Deploy, �� AUDITORIA COMPLETA - CineBG (+11 more)
+## Communities (80 total, 21 thin omitted)
 
 ### Community 1 - "observability.ts"
 Cohesion: 0.08
@@ -192,8 +187,8 @@ Cohesion: 0.10
 Nodes (22): CONTENT_LABEL, PremiumContentGateProps, PremiumContentType, HeroBannerProps, HeroSkeleton(), SkeletonHero(), SkeletonLiveTV(), SkeletonLiveTVGrid() (+14 more)
 
 ### Community 22 - "Profiles.tsx"
-Cohesion: 0.13
-Nodes (25): 2.2 CRÍTICO - Funcionalidade / Estabilidade, @capacitor/local-notifications, useEpisodeNotifications(), COLORS, EMOJIS, ProfileCard(), Profiles(), checkForNewEpisodes() (+17 more)
+Cohesion: 0.06
+Nodes (44): 1.1 Estrutura de Módulos, 1.2 Dependências Externas Críticas, 1.3 Fluxos de Entrada/Saída de Dados, 2.1 CRÍTICO - Segurança, 2.2 CRÍTICO - Funcionalidade / Estabilidade, 2.4 CRÍTICO - Qualidade / Código Morto, 2.5 CRÍTICO - Escalabilidade / Banco de Dados, 2.6 CRÍTICO - CI/CD / Deploy (+36 more)
 
 ### Community 23 - "MovieCard.tsx"
 Cohesion: 0.23
@@ -216,8 +211,8 @@ Cohesion: 0.17
 Nodes (28): ChannelScheduleSlot, DailyScheduleItem, EPGProgram, formatSlotTitle(), formatTime(), getBrasiliaMinutes(), getChannelDailySchedule(), getLiveChannelEPG() (+20 more)
 
 ### Community 29 - "liveChannels.ts"
-Cohesion: 0.14
-Nodes (15): LivePlayerProps, FEATURED_CHANNEL_IDS, LiveTvCarousel(), LiveTvCarouselProps, YuCineChannelCard(), YuCineChannelCardProps, IPTV_ORG_BR_PLAYLIST_URL, LIVE_CATEGORIES (+7 more)
+Cohesion: 0.13
+Nodes (13): LivePlayerProps, FEATURED_CHANNEL_IDS, LiveTvCarousel(), LiveTvCarouselProps, YuCineChannelCard(), YuCineChannelCardProps, IPTV_ORG_BR_PLAYLIST_URL, LIVE_CATEGORIES (+5 more)
 
 ### Community 30 - "compilerOptions"
 Cohesion: 0.22
@@ -357,7 +352,7 @@ Nodes (4): ADR-014: Player Sem Botão de Retry (Estilo YuCine), Consequências, 
 
 ## Knowledge Gaps
 - **16 isolated node(s):** `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard`, `@stryker-mutator/core`, `@stryker-mutator/html-reporter` (+11 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 541 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 543 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
@@ -367,13 +362,13 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.128) - this node is a cross-community bridge._
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _16 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `�� CORREÇÕES DEFINITIVAS` be split into smaller, more focused modules?**
-  _Cohesion score 0.1 - nodes in this community are weakly interconnected._
-- **Why does `ProgressBar()` connect `tmdb.ts` to `App.tsx`, `LiveTV.tsx`?**
-  _High betweenness centrality (0.098) - this node is a cross-community bridge._
 - **Should `observability.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.07755102040816327 - nodes in this community are weakly interconnected._
-- **Why does `CineBG - Architectural Decisions Log` connect `CineBG - Architectural Decisions Log` to `ADR-010: StreamPlayer.tsx Encoding Fix (v1.2.67)`, `.shouldOverrideUrlLoading`, `ADR-005: OTA Updates - Dual APK (Mobile + TV)`, `ADR-012: Capacitor server.url Removido (Fix connection refused)`, `ADR-001: Motion Design Principles (Kyle Zantos)`, `ADR-002: Observabilidade Full-Stack (4 Provedores)`, `ADR-003: Player Architecture - HLS.js + Native MP4 + Iframe Fallback`, `ADR-004: State Management - Zustand (Single Store)`, `ADR-007: Arch Contract - Boundary Validation`, `ADR-008: Quality Gates - CI Pipeline`, `ADR-009: Android - Capacitor + Native Fragments`, `ADR-013: SplashScreen Watchdog + Error Handler Global (Fix tela preta)`, `ADR-014: Player Sem Botão de Retry (Estilo YuCine)`, `ADR-011: Documentation as Code`?**
-  _High betweenness centrality (0.067) - this node is a cross-community bridge._
+- **Why does `ProgressBar()` connect `tmdb.ts` to `App.tsx`, `LiveTV.tsx`?**
+  _High betweenness centrality (0.098) - this node is a cross-community bridge._
 - **Should `App.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.0616729088639201 - nodes in this community are weakly interconnected._
+- **Why does `CineBG - Architectural Decisions Log` connect `CineBG - Architectural Decisions Log` to `ADR-010: StreamPlayer.tsx Encoding Fix (v1.2.67)`, `.shouldOverrideUrlLoading`, `ADR-005: OTA Updates - Dual APK (Mobile + TV)`, `ADR-012: Capacitor server.url Removido (Fix connection refused)`, `ADR-001: Motion Design Principles (Kyle Zantos)`, `ADR-002: Observabilidade Full-Stack (4 Provedores)`, `ADR-003: Player Architecture - HLS.js + Native MP4 + Iframe Fallback`, `ADR-004: State Management - Zustand (Single Store)`, `ADR-007: Arch Contract - Boundary Validation`, `ADR-008: Quality Gates - CI Pipeline`, `ADR-009: Android - Capacitor + Native Fragments`, `ADR-013: SplashScreen Watchdog + Error Handler Global (Fix tela preta)`, `ADR-014: Player Sem Botão de Retry (Estilo YuCine)`, `ADR-011: Documentation as Code`?**
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
+- **Should `useLicense.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.09065679925994449 - nodes in this community are weakly interconnected._
