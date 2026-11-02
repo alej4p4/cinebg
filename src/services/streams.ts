@@ -26,26 +26,38 @@ const normalizeAudio = (audio: AudioOption | Language): AudioOption => {
 
 export const MIRRORS: StreamMirror[] = [
   {
-    id: 'moviebox',
-    name: 'CineBG MovieBox (FHD/4K Direct)',
-    flagEmoji: '🎬',
-    quality: 'FHD / 4K UHD',
+    id: 'vidlink',
+    name: 'CineBG Ultra (VidLink Pro)',
+    flagEmoji: '🚀',
+    quality: 'FHD 1080p',
     type: 'multi_sub',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://mgeb.lat/embed/${tmdbId}?autoplay=1&ads=0&adblock=1&server=moviebox`,
+    getMovieUrl: (tmdbId) =>
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&muted=false&fallback=true&ads=0`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://mgeb.lat/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1&server=moviebox`,
+      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&muted=false&fallback=true&ads=0`,
   },
   {
-    id: 'megaembed',
-    name: 'CineBG Direto (MegaEmbed)',
-    flagEmoji: '🇧🇷',
+    id: 'vidsrc',
+    name: 'CineBG Plus (VidSrc Fast)',
+    flagEmoji: '⚡',
     quality: 'FHD 1080p',
-    type: 'dubbed_br',
+    type: 'multi_sub',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://mgeb.lat/embed/${tmdbId}?autoplay=1&ads=0&adblock=1`,
+    getMovieUrl: (tmdbId) => `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://mgeb.lat/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1`,
+      `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`,
+  },
+  {
+    id: 'embed2',
+    name: 'CineBG Turbo (2Embed)',
+    flagEmoji: '🌐',
+    quality: 'HD 720p/1080p',
+    type: 'multi_sub',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://2embed.cc/embed/${tmdbId}`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`,
   },
   {
     id: 'superflix',
@@ -58,10 +70,33 @@ export const MIRRORS: StreamMirror[] = [
     getShowUrl: (tmdbId, season, episode) =>
       `https://superflixapi.fun/serie/${tmdbId}/${season}/${episode}`,
   },
+  {
+    id: 'moviebox',
+    name: 'CineBG MovieBox (FHD/4K Direct)',
+    flagEmoji: '🎬',
+    quality: 'FHD / 4K UHD',
+    type: 'multi_sub',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) =>
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true`,
+  },
+  {
+    id: 'megaembed',
+    name: 'CineBG Direto (MegaEmbed)',
+    flagEmoji: '🇧🇷',
+    quality: 'FHD 1080p',
+    type: 'dubbed_br',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://mgeb.lat/embed/${tmdbId}?autoplay=1&ads=0&adblock=1`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://mgeb.lat/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1`,
+  },
 ]
 
 export const getNextSilentMirrorId = (currentId: string, _audio: AudioOption = 'dub'): string => {
-  const sequence = ['megaembed', 'superflix', 'moviebox']
+  const sequence = ['vidlink', 'vidsrc', 'embed2', 'superflix', 'moviebox', 'megaembed']
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
     return sequence[0]
@@ -70,7 +105,7 @@ export const getNextSilentMirrorId = (currentId: string, _audio: AudioOption = '
 }
 
 export const getInitialMirrorForAudio = (_audio: AudioOption = 'dub'): string => {
-  return 'megaembed'
+  return 'vidlink'
 }
 
 export const isMirrorSandboxed = (mirrorId: string): boolean => {
@@ -84,8 +119,7 @@ export const buildMovieUrl = (
   mirrorId?: string
 ): string => {
   const normAudio = normalizeAudio(audio)
-  const rawTarget = mirrorId || getInitialMirrorForAudio(normAudio)
-  const targetId = rawTarget === 'superflix' ? 'megaembed' : rawTarget
+  const targetId = mirrorId || getInitialMirrorForAudio(normAudio)
   const mirror = MIRRORS.find((m) => m.id === targetId) || MIRRORS[0]
   return mirror.getMovieUrl(tmdbId, normAudio)
 }
@@ -98,8 +132,7 @@ export const buildShowUrl = (
   mirrorId?: string
 ): string => {
   const normAudio = normalizeAudio(audio)
-  const rawTarget = mirrorId || getInitialMirrorForAudio(normAudio)
-  const targetId = rawTarget === 'superflix' ? 'megaembed' : rawTarget
+  const targetId = mirrorId || getInitialMirrorForAudio(normAudio)
   const mirror = MIRRORS.find((m) => m.id === targetId) || MIRRORS[0]
   return mirror.getShowUrl(tmdbId, season, episode, normAudio)
 }
@@ -336,7 +369,7 @@ const fetchMegaEmbedSources = async (
           readTimeout: 8000,
         })
         const timeoutPromise = new Promise<null>((resolve) =>
-          setTimeout(() => resolve(null), 8500)
+          setTimeout(() => resolve(null), 3000)
         )
         const resp = await Promise.race([httpPromise, timeoutPromise])
 
@@ -534,7 +567,7 @@ export const resolveMegaEmbed = async (
   }
 
   const timeoutPromise = new Promise<MegaEmbedResolved>((resolve) =>
-    setTimeout(() => resolve(fallbackEmpty), 10000)
+    setTimeout(() => resolve(fallbackEmpty), 3500)
   )
 
   return Promise.race([resolveLogic(), timeoutPromise])
