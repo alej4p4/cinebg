@@ -183,20 +183,6 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     geoBlocked: false,
     genres: ['Pública', 'Cultura', 'Jornalismo', 'Ao Vivo'],
   },
-  {
-    id: 'rede-brasil',
-    name: 'Rede Brasil HD',
-    logo: 'https://i.imgur.com/TXJKwzZ.png',
-    cardBg: 'redebrasil',
-    category: 'abertos',
-    country: 'BR',
-    sources: [
-      'https://redebrasil.nuvemplay.live/hls/stream.m3u8',
-    ],
-    quality: '1080p',
-    geoBlocked: false,
-    genres: ['Filmes Clássicos', 'Séries', 'Desenhos', 'Variedades'],
-  },
 
   // ===== FILMES & SÉRIES / HBO, TNT, MAX, SPACE, TELECINE, WARNER, PARAMOUNT =====
   {

@@ -673,7 +673,7 @@ const LivePlayer = ({
         // Se a resposta HTTP for erro definitivo (401/403 Proibido, 404 Não Encontrado, 410, 5xx),
         // alternar imediatamente para o próximo sinal sem atraso ou retentativas inúteis.
         const httpStatus = payload.response?.code
-        if (httpStatus && [401, 403, 404, 410, 500, 502, 503].includes(httpStatus)) {
+        if (payload.fatal && httpStatus && [401, 403, 404, 410].includes(httpStatus)) {
           console.warn(`[LivePlayer] Erro HTTP ${httpStatus} no Sinal ${sourceIndex + 1}. Alternando imediatamente...`)
           logLiveChannelError({
             channelId: channel.id,
