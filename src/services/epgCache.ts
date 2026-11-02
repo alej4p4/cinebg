@@ -205,7 +205,7 @@ async function setCacheMeta(meta: Partial<EPGCacheMeta>): Promise<void> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_META, 'readwrite')
     const store = tx.objectStore(STORE_META)
-    const updated = { ...current, ...meta, version: DB_VERSION }
+    const updated = { key: 'meta', ...current, ...meta, version: DB_VERSION }
     const request = store.put(updated)
     request.onsuccess = () => resolve()
     request.onerror = () => reject(request.error)

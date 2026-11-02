@@ -598,12 +598,12 @@ const LivePlayer = ({
         liveSyncDurationCount: 2,
         liveMaxLatencyDurationCount: 6,
         startFragPrefetch: true, // Pré-carrega próximo fragmento para aceleração
-        manifestLoadingTimeOut: 12000,
-        manifestLoadingMaxRetry: 3,
-        levelLoadingTimeOut: 12000,
-        levelLoadingMaxRetry: 3,
-        fragLoadingTimeOut: 15000,
-        fragLoadingMaxRetry: 4,
+        manifestLoadingTimeOut: 6000,
+        manifestLoadingMaxRetry: 2,
+        levelLoadingTimeOut: 6000,
+        levelLoadingMaxRetry: 2,
+        fragLoadingTimeOut: 6000,
+        fragLoadingMaxRetry: 2,
         nudgeOffset: 0.5,
         nudgeMaxRetry: 8,
         maxFragLookUpTolerance: 0.4,
@@ -646,11 +646,11 @@ const LivePlayer = ({
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         selectPortugueseAudio()
         tryPlay()
-        resetWatchdog(CONNECT_TIMEOUT_MS)
+        resetWatchdog(12000)
       })
 
       hls.on(Hls.Events.FRAG_LOADING, () => {
-        resetWatchdog(25000)
+        if (loadedRef.current) resetWatchdog(25000)
       })
 
       hls.on(Hls.Events.FRAG_LOADED, () => {
@@ -669,7 +669,7 @@ const LivePlayer = ({
         if (v && v.buffered.length > 0) {
           const liveStart = v.buffered.start(0)
           const liveEnd = v.buffered.end(v.buffered.length - 1)
-          if (v.currentTime < liveStart || v.currentTime > liveEnd) {
+          if (!v.seeking && (v.currentTime < liveStart || v.currentTime > liveEnd)) {
             v.currentTime = Math.max(liveStart, liveEnd - 2)
           }
           markPlaying()
@@ -689,7 +689,7 @@ const LivePlayer = ({
         // Se a resposta HTTP for erro definitivo (401/403 Proibido, 404 Não Encontrado, 410, 5xx),
         // alternar imediatamente para o próximo sinal sem atraso ou retentativas inúteis.
         const httpStatus = payload.response?.code
-        if (payload.fatal && httpStatus && [401, 403, 404, 410].includes(httpStatus)) {
+        if (httpStatus && [401, 403, 404, 410, 500, 502, 503].includes(httpStatus)) {
           console.warn(`[LivePlayer] Erro HTTP ${httpStatus} no Sinal ${sourceIndex + 1}. Alternando imediatamente...`)
           logLiveChannelError({
             channelId: channel.id,
@@ -926,7 +926,7 @@ const LivePlayer = ({
           if (v && v.buffered.length > 0) {
             const liveStart = v.buffered.start(0)
             const liveEnd = v.buffered.end(v.buffered.length - 1)
-            if (v.currentTime < liveStart || v.currentTime > liveEnd) {
+            if (!v.seeking && (v.currentTime < liveStart || v.currentTime > liveEnd)) {
               v.currentTime = Math.max(liveStart, liveEnd - 2)
             }
             if (!loadedRef.current && liveEnd > 0.3) {
@@ -939,7 +939,7 @@ const LivePlayer = ({
           if (v && v.buffered.length > 0) {
             const liveStart = v.buffered.start(0)
             const liveEnd = v.buffered.end(v.buffered.length - 1)
-            if (v.currentTime < liveStart || v.currentTime > liveEnd) {
+            if (!v.seeking && (v.currentTime < liveStart || v.currentTime > liveEnd)) {
               v.currentTime = Math.max(liveStart, liveEnd - 2)
             }
           }

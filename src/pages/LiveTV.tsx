@@ -78,7 +78,7 @@ const LiveTV = () => {
     return () => {
       alive = false
     }
-  }, [lastChannelId, selected])
+  }, [])
 
   const lastSelectedChannelIdRef = useRef<string | null>(null)
 
