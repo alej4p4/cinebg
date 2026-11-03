@@ -949,3 +949,20 @@ test('LIVE-ANDROID-PLAYBACK-1: capacitor.config desativa interceptador global Ca
   assert.ok(playerSrc.includes('manifestLoadingTimeOut: 12000'), 'LivePlayer deve manter manifestLoadingTimeOut de 12s para redes móveis e TV')
   assert.ok(playerSrc.includes('CapacitorWebXMLHttpRequest'), 'LivePlayer deve restaurar XMLHttpRequest nativo do WebView se houver wrapper')
 })
+
+test('LIVE-MOBILE-FIT-AND-PAYMENT-RESPONSIVE-1: LivePlayer sem blur no cadeado e ajuste total no celular, trial de 3 dias e tela de pagamento adaptavel', () => {
+  const playerSrc = fs.readFileSync('src/components/player/LivePlayer.tsx', 'utf8')
+  assert.ok(playerSrc.includes('backdrop-blur-none'), 'LivePlayer deve desativar blur ao bloquear a tela para não embaçar o vídeo')
+  assert.ok(playerSrc.includes('bg-transparent'), 'LivePlayer overlay de bloqueio deve ser transparente')
+  assert.ok(playerSrc.includes('live-btn-fit'), 'LivePlayer deve incluir botão live-btn-fit para alternar ajuste de tela')
+  assert.ok(playerSrc.includes("object-cover"), 'LivePlayer deve suportar object-cover para preenchimento de tela total no celular')
+
+  const licenseHookSrc = fs.readFileSync('src/hooks/useLicense.ts', 'utf8')
+  assert.ok(licenseHookSrc.includes('getEffectiveTrialStart'), 'useLicense deve prover getEffectiveTrialStart para 3 dias de uso')
+  assert.ok(licenseHookSrc.includes('TRIAL_DAYS = 3'), 'useLicense deve manter período de 3 dias de teste')
+
+  const gateSrc = fs.readFileSync('src/components/LicenseGate.tsx', 'utf8')
+  assert.ok(gateSrc.includes('overscroll-contain'), 'LicenseGate deve usar overscroll-contain para prevenir corte em flex centering')
+  assert.ok(gateSrc.includes('vip-open-mp-link'), 'LicenseGate deve possuir botão de checkout direto para mobile')
+  assert.ok(gateSrc.includes('vip-qr-mode-url'), 'LicenseGate deve suportar navegação D-Pad em modos de QR code')
+})

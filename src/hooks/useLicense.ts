@@ -11,6 +11,7 @@ import {
 export const TRIAL_DAYS = 3
 const LICENSE_KEY = 'cinebg_license'
 const FIRST_USE_KEY = 'cinebg_first_use'
+export const TRIAL_V31_EPOCH_KEY = 'cinebg_trial_v31_epoch'
 const DEVICE_ID_KEY = 'cinebg_device_id'
 const MIN_VALID_TIMESTAMP = 1577836800000 // 2020-01-01
 const LICENSE_EVENT_NAME = 'cinebg-license-updated'
@@ -147,6 +148,40 @@ export const getFirstUse = (): number => {
   return earliest
 }
 
+/**
+ * Retorna o início efetivo do período de teste de 3 dias.
+ * Se o usuário instalou o app anteriormente e o teste antigo expirou durante o desenvolvimento,
+ * concede os 3 dias de uso inicial a partir do primeiro acesso desta versão (v1.3.31),
+ * garantindo que séries e filmes fiquem 100% liberados durante 3 dias de uso antes do bloqueio.
+ */
+export const getEffectiveTrialStart = (): number => {
+  const baseFirstUse = getFirstUse()
+  const trustedNow = getTrustedNow()
+  const baseTrial = computeTrialWindow(baseFirstUse, TRIAL_DAYS, trustedNow)
+
+  // Se o teste padrão calculado a partir de getFirstUse() ainda estiver ativo, respeita-o
+  if (baseTrial.active) {
+    return baseFirstUse
+  }
+
+  // Caso o teste antigo estivesse vencido por instalações prévias de teste:
+  // Inicializa a época de 3 dias de teste para a versão v1.3.31
+  try {
+    const epochRaw = localStorage.getItem(TRIAL_V31_EPOCH_KEY)
+    if (epochRaw) {
+      const parsed = Number(epochRaw)
+      if (Number.isFinite(parsed) && parsed > MIN_VALID_TIMESTAMP) {
+        return parsed
+      }
+    }
+    const now = Date.now()
+    localStorage.setItem(TRIAL_V31_EPOCH_KEY, String(now))
+    return now
+  } catch {
+    return baseFirstUse
+  }
+}
+
 export const getStoredLicense = (): License | null => {
   let raw: string | null = null
   try {
@@ -228,9 +263,10 @@ export const useLicense = () => {
       return
     }
 
-    // Fonte única do início do teste: timestamp nativo de instalação + localStorage.
+    // Fonte única do início do teste: timestamp nativo de instalação + localStorage (com trial window da v1.3.31).
     // getTrustedNow impede estender o teste voltando o relógio do aparelho (sem rede).
-    const trial = computeTrialWindow(getFirstUse(), TRIAL_DAYS, getTrustedNow())
+    const trialStart = getEffectiveTrialStart()
+    const trial = computeTrialWindow(trialStart, TRIAL_DAYS, getTrustedNow())
 
     if (trial.active) {
       logTrialStartedOnce(trial)
@@ -349,6 +385,10 @@ export const useLicense = () => {
   const resetTrialForTesting = () => {
     try {
       localStorage.removeItem(LICENSE_KEY)
+      localStorage.removeItem(TRIAL_V31_EPOCH_KEY)
+      localStorage.removeItem(FIRST_USE_KEY)
+      localStorage.removeItem('cinebg_trial_started_logged')
+      localStorage.removeItem('cinebg_trial_ended_logged')
       getCineBGNativeBridge()?.saveLicense?.('')
     } catch {}
     checkStatus()
