@@ -1039,9 +1039,9 @@ test('DUBBED-AUDIO-AND-TURKISH-SHOWS-1: Priorização estrita de áudio dublado 
   assert.ok(seriesSrc.includes("name: 'Séries Turcas'"), 'Series.tsx deve incluir plataforma Séries Turcas')
   assert.ok(seriesSrc.includes('title="Séries Turcas"'), 'Series.tsx deve renderizar carrossel Séries Turcas')
 
-  // 3. streams.ts deve priorizar vidlink limpo (sem captcha) para reprodução
+  // 3. streams.ts deve priorizar vidlink limpo (sem captcha) para reprodução internacional e vidsrc para nacional
   assert.ok(streamsSrc.includes("return 'vidlink'"), 'getInitialMirrorForAudio deve apontar para vidlink')
-  assert.ok(streamsSrc.includes("const sequence = ['vidlink', 'vidsrc', 'embed2', 'moviebox']"), 'getNextSilentMirrorId deve priorizar vidlink limpo sem captcha')
+  assert.ok(streamsSrc.includes("['vidlink', 'vidsrc', 'embed2']"), 'getNextSilentMirrorId deve priorizar vidlink limpo sem captcha')
 
   // 4. StreamPlayer.tsx deve selecionar candidato dublado e faixas PT no HLS
   assert.ok(playerSrc.includes('const dubIdx = list.findIndex((c) => c.isDubbedHint)'), 'StreamPlayer deve selecionar candidato dublado prioritário')
@@ -1148,4 +1148,25 @@ test('CLASSIC-MOVIES-DUBBED-AND-HINTS-1: Resiliência de filmes clássicos dubla
   assert.ok(playerSrc.includes("activeMirror === 'vidlink'"), 'StreamPlayer deve verificar se o player é VidLink')
   assert.ok(playerSrc.includes('Legendas em Português'), 'StreamPlayer deve indicar legendas para espelhos sem áudio dublado nativo')
 })
+
+test('NATIONAL-SERIES-NOVELAS-FALLBACK-1: Priorização de VidSrc para novelas/séries nacionais e botão de troca de servidor', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+
+  // 1. Descarte de hosts 502/520 (s13-st1001604.lat e cdn--xn)
+  assert.ok(streamsSrc.includes("'s13-st1001604.lat'"), 'BROKEN_IP_LOCKED_HOSTS deve conter s13-st1001604.lat')
+  assert.ok(streamsSrc.includes("'cdn--xn'"), 'BROKEN_IP_LOCKED_HOSTS deve conter cdn--xn')
+
+  // 2. getInitialMirrorForAudio e getNextSilentMirrorId com suporte a produções nacionais PT-BR
+  assert.ok(streamsSrc.includes("originalLanguage || '').toLowerCase() === 'pt'"), 'streams.ts deve identificar produções originais em português')
+  assert.ok(streamsSrc.includes("return 'vidsrc'"), 'getInitialMirrorForAudio deve retornar vidsrc para conteúdo nacional')
+
+  // 3. StreamPlayer deve ter botão de troca de servidor no modo iframe
+  assert.ok(playerSrc.includes('Trocar Servidor'), 'StreamPlayer deve conter botão Trocar Servidor no modo iframe')
+  assert.ok(playerSrc.includes('handleCycleServerOption'), 'Botão Trocar Servidor deve acionar handleCycleServerOption')
+
+  // 4. StreamPlayer deve usar vidsrc como espelho de contingência para produções nacionais
+  assert.ok(playerSrc.includes("isPtOriginal ? 'vidsrc' : 'vidlink'"), 'StreamPlayer deve priorizar vidsrc para séries/novelas brasileiras')
+})
+
 

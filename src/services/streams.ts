@@ -112,13 +112,28 @@ export const isCaptchaOrBotBlockUrl = (url: string | null | undefined): boolean 
   )
 }
 
-export const getInitialMirrorForAudio = (_audio: AudioOption = 'dub'): string => {
+export const getInitialMirrorForAudio = (
+  _audio: AudioOption = 'dub',
+  originalLanguage?: string
+): string => {
+  // Para produções brasileiras (séries e novelas nacionais), o VidLink não possui acervo e retorna erro.
+  // VidSrc indexa novelas e produções nacionais PT-BR.
+  if ((originalLanguage || '').toLowerCase() === 'pt') {
+    return 'vidsrc'
+  }
   return 'vidlink'
 }
 
-export const getNextSilentMirrorId = (currentId: string, _audio: AudioOption = 'dub'): string => {
+export const getNextSilentMirrorId = (
+  currentId: string,
+  _audio: AudioOption = 'dub',
+  originalLanguage?: string
+): string => {
   // Quarentena: superflix e megaembed (mgeb.lat) são excluídos da sequência de iframes por exigir desafio Cloudflare Captcha ('Validação segura')
-  const sequence = ['vidlink', 'vidsrc', 'embed2', 'moviebox']
+  const isPt = (originalLanguage || '').toLowerCase() === 'pt'
+  const sequence = isPt
+    ? ['vidsrc', 'embed2', 'vidlink']
+    : ['vidlink', 'vidsrc', 'embed2']
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
     return sequence[0]
@@ -134,10 +149,11 @@ export const isMirrorSandboxed = (mirrorId: string): boolean => {
 export const buildMovieUrl = (
   tmdbId: number,
   audio: AudioOption | Language = 'dub',
-  mirrorId?: string
+  mirrorId?: string,
+  originalLanguage?: string
 ): string => {
   const normAudio = normalizeAudio(audio)
-  const targetId = mirrorId || getInitialMirrorForAudio(normAudio)
+  const targetId = mirrorId || getInitialMirrorForAudio(normAudio, originalLanguage)
   const mirror = MIRRORS.find((m) => m.id === targetId) || MIRRORS[0]
   return mirror.getMovieUrl(tmdbId, normAudio)
 }
@@ -147,10 +163,11 @@ export const buildShowUrl = (
   season: number,
   episode: number,
   audio: AudioOption | Language = 'dub',
-  mirrorId?: string
+  mirrorId?: string,
+  originalLanguage?: string
 ): string => {
   const normAudio = normalizeAudio(audio)
-  const targetId = mirrorId || getInitialMirrorForAudio(normAudio)
+  const targetId = mirrorId || getInitialMirrorForAudio(normAudio, originalLanguage)
   const mirror = MIRRORS.find((m) => m.id === targetId) || MIRRORS[0]
   return mirror.getShowUrl(tmdbId, season, episode, normAudio)
 }
@@ -232,7 +249,7 @@ export const isPortugueseAudioCandidate = (
   return false
 }
 
-// Hosts com token travado por IP do servidor backend (retornam text/html ou 404 no cliente)
+// Hosts com token travado por IP do servidor backend (retornam text/html, 502 ou 404 no cliente)
 const BROKEN_IP_LOCKED_HOSTS = [
   'streamtape.com',
   'tapecontent.net',
@@ -240,6 +257,8 @@ const BROKEN_IP_LOCKED_HOSTS = [
   'playercdnx.workers.dev',
   'playercdnxx.workers.dev',
   'playercdn',
+  's13-st1001604.lat',
+  'cdn--xn',
 ]
 
 // Palavras-chave proibidas de propagandas de apostas (1xBet / 1xbt) e gravações de cinema (HDCAM / CAMRIP / TS)

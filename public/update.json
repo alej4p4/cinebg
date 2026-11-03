@@ -1,15 +1,15 @@
 {
-  "version": "1.3.39",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.39/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.39/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.39/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.39/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.39/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.39/CineBG-Tv-release.apk",
+  "version": "1.3.40",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Priorização e resiliência de fontes dubladas PT-BR para filmes clássicos e correção de orientações de legenda e áudio no player.",
-  "versionCode": 129,
-  "notes": "Priorização e resiliência de fontes dubladas PT-BR para filmes clássicos e correção de orientações de legenda e áudio no player.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.39/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.39/CineBG-Tv-release.apk"
+  "releaseNotes": "Suporte e compatibilidade aprimorada para séries e novelas nacionais, inclusão de alternância dinâmica de servidores e descarte de hosts inativos.",
+  "versionCode": 130,
+  "notes": "Suporte e compatibilidade aprimorada para séries e novelas nacionais, inclusão de alternância dinâmica de servidores e descarte de hosts inativos.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk"
 }

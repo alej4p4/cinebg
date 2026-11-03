@@ -184,8 +184,8 @@ const StreamPlayer = ({
     candidateIndexRef.current = candidateIndex
   }, [candidateIndex])
 
-  // O espelho inicial se ajusta automaticamente ao áudio preferido
-  const [activeMirror, setActiveMirror] = useState(() => getInitialMirrorForAudio(activeAudio))
+  // O espelho inicial se ajusta automaticamente ao áudio preferido e à origem nacional (PT-BR)
+  const [activeMirror, setActiveMirror] = useState(() => getInitialMirrorForAudio(activeAudio, originalLanguage))
   const [key, setKey] = useState(0)
   // Só mostra o iframe se o usuário pedir explicitamente em caso extremo. O padrão é 100% nativo.
   const [allowIframe, setAllowIframe] = useState(false)
@@ -529,22 +529,23 @@ const StreamPlayer = ({
 
   // ===== Auto-fallback state =====
   const fallbackSequence = useMemo(
-    () => ['vidlink', 'vidsrc', 'embed2', 'moviebox'],
-    []
+    () => (isPtOriginal ? ['vidsrc', 'embed2', 'vidlink'] : ['vidlink', 'vidsrc', 'embed2']),
+    [isPtOriginal]
   )
 
+  const defaultSafeMirror = isPtOriginal ? 'vidsrc' : 'vidlink'
   const safeMirror =
     activeMirror === 'superflix' || activeMirror === 'megaembed' || isCaptchaOrBotBlockUrl(activeMirror)
-      ? 'vidlink'
+      ? defaultSafeMirror
       : activeMirror
 
   const rawEmbedUrl =
     type === 'movie'
-      ? buildMovieUrl(tmdbId, activeAudio, safeMirror)
-      : buildShowUrl(tmdbId, season, episode, activeAudio, safeMirror)
+      ? buildMovieUrl(tmdbId, activeAudio, safeMirror, originalLanguage)
+      : buildShowUrl(tmdbId, season, episode, activeAudio, safeMirror, originalLanguage)
 
   const embedUrl = isCaptchaOrBotBlockUrl(rawEmbedUrl)
-    ? (type === 'movie' ? buildMovieUrl(tmdbId, activeAudio, 'vidlink') : buildShowUrl(tmdbId, season, episode, activeAudio, 'vidlink'))
+    ? (type === 'movie' ? buildMovieUrl(tmdbId, activeAudio, defaultSafeMirror, originalLanguage) : buildShowUrl(tmdbId, season, episode, activeAudio, defaultSafeMirror, originalLanguage))
     : rawEmbedUrl
 
   const showFeedback = useCallback((text: string) => {
@@ -627,7 +628,7 @@ const StreamPlayer = ({
     // 2. Se for seleção entre candidatos de mídia direta (MP4/HLS):
     const list = candidatesRef.current
     applySubtitleLangRef.current?.('off')
-    setActiveMirror('vidlink')
+    setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
     setAllowIframe(false)
     const dubIdx = list.findIndex((c) => c.isDubbedHint)
     const targetIdx = dubIdx !== -1 ? dubIdx : 0
@@ -681,12 +682,13 @@ const StreamPlayer = ({
       setError(false)
       return
     }
-    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho de contingência limpo (VidLink)
-    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência limpo (VidLink)...')
+    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho de contingência limpo
+    const contingencyMirror = isPtOriginal ? 'vidsrc' : 'vidlink'
+    console.info(`[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência limpo (${contingencyMirror})...`)
     nativeActiveRef.current = false
     setDirectSrc(null)
     setDirectKind(null)
-    setActiveMirror('vidlink')
+    setActiveMirror(contingencyMirror)
     setAllowIframe(true)
     setLoaded(false)
     setError(false)
@@ -731,7 +733,8 @@ const StreamPlayer = ({
     setLoaded(false)
     setError(false)
     setKey((k) => k + 1)
-    showFeedback(`Servidor: ${nextAttempt + 1}/${fallbackSequence.length}`)
+    const mirrorName = nextMirror === 'vidsrc' ? 'VidSrc' : nextMirror === 'embed2' ? '2Embed' : 'VidLink'
+    showFeedback(`Servidor: ${mirrorName} (${nextAttempt + 1}/${fallbackSequence.length})`)
   }, [allowIframe, fallbackAttempt, fallbackSequence, showFeedback])
 
   const handleStreamFailure = () => {
@@ -775,7 +778,7 @@ const StreamPlayer = ({
     setCandidates([])
     setCandidateIndex(0)
     setFallbackAttempt(0)
-    setActiveMirror('vidlink')
+    setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
     setKey((k) => k + 1)
   }
 
@@ -930,7 +933,7 @@ const StreamPlayer = ({
             nativeActiveRef.current = false
             setDirectSrc(null)
             setDirectKind(null)
-            setActiveMirror('vidlink')
+            setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
             setAllowIframe(true)
             setError(false)
           }
@@ -943,7 +946,7 @@ const StreamPlayer = ({
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
-          setActiveMirror('vidlink')
+          setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
           setAllowIframe(true)
           setError(false)
         }
@@ -957,7 +960,7 @@ const StreamPlayer = ({
         setCandidateIndex(0)
         candidateIndexRef.current = 0
         nativeActiveRef.current = false
-        setActiveMirror('vidlink')
+        setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
@@ -2590,8 +2593,17 @@ const StreamPlayer = ({
           <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
             <button
               type="button"
+              onClick={handleCycleServerOption}
+              className="flex items-center gap-1.5 bg-black/80 hover:bg-black text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-2xl backdrop-blur-md border border-white/20 transition-all hover:scale-105 active:scale-95 focus:ring-2 focus:ring-yellow-400 cursor-pointer"
+              title="Trocar para outro servidor/espelho"
+            >
+              <Server className="w-3.5 h-3.5 text-yellow-400" />
+              <span>Trocar Servidor ({activeMirror === 'vidsrc' ? 'VidSrc' : activeMirror === 'embed2' ? '2Embed' : 'VidLink'})</span>
+            </button>
+            <button
+              type="button"
               onClick={handleManualRefresh}
-              className="flex items-center gap-1.5 bg-yellow-500/90 hover:bg-yellow-400 text-black px-3.5 py-2 rounded-xl text-xs font-bold shadow-2xl backdrop-blur-md transition-all hover:scale-105 active:scale-95 focus:ring-2 focus:ring-white"
+              className="flex items-center gap-1.5 bg-yellow-500/90 hover:bg-yellow-400 text-black px-3.5 py-2 rounded-xl text-xs font-bold shadow-2xl backdrop-blur-md transition-all hover:scale-105 active:scale-95 focus:ring-2 focus:ring-white cursor-pointer"
               title="Buscar fonte direta nativa dublada"
             >
               <RefreshCw className="w-3.5 h-3.5" />
