@@ -545,6 +545,16 @@ const LivePlayer = ({
 
     let cancelled = false
 
+    // Garante que o XMLHttpRequest seja a implementação nativa do Chromium no Android WebView,
+    // sem o wrapper do CapacitorHttp que quebra a resolução de URLs relativas em playlists HLS (.m3u8/.ts)
+    if (typeof window !== 'undefined') {
+      const capXhr = (window as unknown as { CapacitorWebXMLHttpRequest?: { fullObject?: typeof XMLHttpRequest } })
+        .CapacitorWebXMLHttpRequest
+      if (capXhr?.fullObject && window.XMLHttpRequest !== capXhr.fullObject) {
+        window.XMLHttpRequest = capXhr.fullObject
+      }
+    }
+
     const CONNECT_TIMEOUT_MS = 8000 // 8s de tolerância otimizada para alternância rápida sem espera excessiva
 
     const resetWatchdog = (timeoutMs = CONNECT_TIMEOUT_MS) => {
@@ -598,10 +608,10 @@ const LivePlayer = ({
         liveSyncDurationCount: 2,
         liveMaxLatencyDurationCount: 6,
         startFragPrefetch: true, // Pré-carrega próximo fragmento para aceleração
-        manifestLoadingTimeOut: 6000,
-        manifestLoadingMaxRetry: 2,
-        levelLoadingTimeOut: 6000,
-        levelLoadingMaxRetry: 2,
+        manifestLoadingTimeOut: 12000,
+        manifestLoadingMaxRetry: 3,
+        levelLoadingTimeOut: 12000,
+        levelLoadingMaxRetry: 3,
         fragLoadingTimeOut: 15000,
         fragLoadingMaxRetry: 3,
         nudgeOffset: 0.5,

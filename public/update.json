@@ -1,15 +1,15 @@
 {
-  "version": "1.3.29",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.29/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.29/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.29/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.29/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.29/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.29/CineBG-Tv-release.apk",
+  "version": "1.3.30",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.30/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.30/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.30/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.30/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.30/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.30/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Correção de inicialização imediata dos canais SporTV 2 HD e Premiere Clubes, ampliação de resiliência a fragmentos HLS de alta taxa de bits e remoção de restreamers instáveis.",
-  "versionCode": 119,
-  "notes": "Correção de inicialização imediata dos canais SporTV 2 HD e Premiere Clubes, ampliação de resiliência a fragmentos HLS de alta taxa de bits e remoção de restreamers instáveis.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.29/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.29/CineBG-Tv-release.apk"
+  "releaseNotes": "Desbloqueio de reprodução de canais de TV ao vivo no Android Mobile e Smart TVs (desativação do interceptador CapacitorHttp, preservação de XHR nativo e resiliência de streaming HLS).",
+  "versionCode": 120,
+  "notes": "Desbloqueio de reprodução de canais de TV ao vivo no Android Mobile e Smart TVs (desativação do interceptador CapacitorHttp, preservação de XHR nativo e resiliência de streaming HLS).",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.30/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.30/CineBG-Tv-release.apk"
 }

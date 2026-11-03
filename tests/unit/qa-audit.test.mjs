@@ -940,3 +940,12 @@ test('LIVE-SPORTS-RESILIENCE-1: sportv-2 e premiere possuem fontes operantes e e
 
   assert.ok(playerSrc.includes('fragLoadingTimeOut: 15000'), 'LivePlayer deve manter fragLoadingTimeOut de 15s para suportar fragmentos longos sem abortar')
 })
+
+test('LIVE-ANDROID-PLAYBACK-1: capacitor.config desativa interceptador global CapacitorHttp e LivePlayer preserva XHR nativo com timeout resiliente', () => {
+  const capConfig = fs.readFileSync('capacitor.config.ts', 'utf8')
+  assert.match(capConfig, /CapacitorHttp:\s*\{\s*enabled:\s*false/s, 'capacitor.config.ts deve desativar monkey-patch do CapacitorHttp para não quebrar HLS no Android')
+
+  const playerSrc = fs.readFileSync('src/components/player/LivePlayer.tsx', 'utf8')
+  assert.ok(playerSrc.includes('manifestLoadingTimeOut: 12000'), 'LivePlayer deve manter manifestLoadingTimeOut de 12s para redes móveis e TV')
+  assert.ok(playerSrc.includes('CapacitorWebXMLHttpRequest'), 'LivePlayer deve restaurar XMLHttpRequest nativo do WebView se houver wrapper')
+})
