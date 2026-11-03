@@ -16,6 +16,7 @@ import {
   getClassicShows,
   getClassicCartoons,
   getTurkishShows,
+  getBrazilianShows,
   discoverShows,
   getCachedCatalogItems,
 } from '@/services/tmdb'
@@ -42,12 +43,14 @@ interface StreamingPlatform {
   networkId: number
   emoji: string
   isTurkish?: boolean
+  isNational?: boolean
   isCartoons?: boolean
 }
 
 const STREAMING_PLATFORMS: StreamingPlatform[] = [
   { id: 'cartoons', name: 'Desenhos Antigos', providerId: 0, networkId: 0, emoji: '📺', isCartoons: true },
-  { id: 'national', name: 'Séries Nacionais', providerId: 0, networkId: 0, emoji: '🇧🇷', isTurkish: true },
+  { id: 'turkish', name: 'Séries Turcas', providerId: 0, networkId: 0, emoji: '🇹🇷', isTurkish: true },
+  { id: 'national', name: 'Séries Nacionais', providerId: 0, networkId: 0, emoji: '🇧🇷', isNational: true },
   { id: 'netflix', name: 'Netflix', providerId: 8, networkId: 213, emoji: '🔴' },
   { id: 'hbo', name: 'Max (HBO)', providerId: 384, networkId: 49, emoji: '🟣' },
   { id: 'disney', name: 'Disney+', providerId: 337, networkId: 2739, emoji: '🔵' },
@@ -62,6 +65,7 @@ const Series = () => {
   const [classics, setClassics] = useState<MediaItem[]>([])
   const [classicCartoons, setClassicCartoons] = useState<MediaItem[]>([])
   const [turkish, setTurkish] = useState<MediaItem[]>([])
+  const [national, setNational] = useState<MediaItem[]>([])
   const [filteredList, setFilteredList] = useState<MediaItem[]>([])
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [filterTitle, setFilterTitle] = useState<string>('')
@@ -77,12 +81,13 @@ const Series = () => {
     let isMounted = true
     const load = async () => {
       try {
-        const [popularResult, topResult, airingResult, classicsResult, turkishResult, cartoonsResult] = await Promise.all([
+        const [popularResult, topResult, airingResult, classicsResult, turkishResult, nationalResult, cartoonsResult] = await Promise.all([
           getPopularShows(),
           getTopRatedShows(),
           getAiringToday(),
           getClassicShows(),
           getTurkishShows(),
+          getBrazilianShows(),
           getClassicCartoons(),
         ])
         if (!isMounted) return
@@ -91,6 +96,7 @@ const Series = () => {
         setAiringToday(airingResult.items)
         setClassics(classicsResult.items)
         setTurkish(turkishResult.items)
+        setNational(nationalResult.items)
         setClassicCartoons(cartoonsResult.items)
       } catch {
         if (isMounted) {
@@ -121,7 +127,13 @@ const Series = () => {
       return
     }
     setActiveFilter(filterKey)
-    setFilterTitle(platform.id === 'national' || platform.id === 'turkish' ? 'Séries & Novelas Nacionais (PT-BR)' : `Séries ${platform.name}`)
+    setFilterTitle(
+      platform.id === 'turkish'
+        ? 'Séries Turcas'
+        : platform.id === 'national'
+        ? 'Séries & Novelas Nacionais (PT-BR)'
+        : `Séries ${platform.name}`
+    )
     setShowGenreBar(false)
     setSelectedGenreId(null)
     setFilterLoading(true)
@@ -131,6 +143,9 @@ const Series = () => {
         setFilteredList(res.items)
       } else if (platform.isTurkish) {
         const res = await getTurkishShows()
+        setFilteredList(res.items)
+      } else if (platform.isNational) {
+        const res = await getBrazilianShows()
         setFilteredList(res.items)
       } else {
         const res = await discoverShows({ withNetworks: platform.networkId, withWatchProviders: platform.providerId })
@@ -443,7 +458,10 @@ const Series = () => {
                 <>
                   <Carousel title="Séries Populares" emoji="📺" items={popular} />
                   {turkish.length > 0 && (
-                    <Carousel title="Séries & Novelas Nacionais (PT-BR)" emoji="🇧🇷" items={turkish} />
+                    <Carousel title="Séries Turcas" emoji="🇹🇷" items={turkish} />
+                  )}
+                  {national.length > 0 && (
+                    <Carousel title="Séries & Novelas Nacionais (PT-BR)" emoji="🇧🇷" items={national} />
                   )}
                   <Carousel title="🏛️ Séries Clássicas & Nostalgia" emoji="👑" items={classics} />
                   {classicCartoons.length > 0 && (

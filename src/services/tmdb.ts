@@ -640,8 +640,32 @@ export const getBrazilianShows = async (page = 1): Promise<{ items: MediaItem[];
   return { items: forKids(data.results.map((s) => showToMediaItem(s, 'tv'))), totalPages: data.total_pages }
 }
 
-// Retrocompatibilidade: Novelas & Séries Nacionais (100% áudio em português)
-export const getTurkishShows = getBrazilianShows
+// Séries e Novelas Turcas populares com localização e sinopse em Português
+export const getTurkishShows = async (page = 1): Promise<{ items: MediaItem[]; totalPages: number }> => {
+  const [p1, p2] = await Promise.all([
+    cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
+      page: (page - 1) * 2 + 1,
+      sort_by: 'popularity.desc',
+      with_original_language: 'tr',
+      watch_region: 'BR',
+    }),
+    cachedGet<TMDBPaginatedResponse<TMDBShow>>('/discover/tv', {
+      page: (page - 1) * 2 + 2,
+      sort_by: 'popularity.desc',
+      with_original_language: 'tr',
+      watch_region: 'BR',
+    }),
+  ])
+  const combined = [...(p1.results || []), ...(p2.results || [])]
+  const items = combined
+    .map((s) => showToMediaItem(s, 'tv'))
+    .filter((item) => {
+      if (!isCleanDigitalCatalogItem(item)) return false
+      const ov = (item.overview || '').trim()
+      return ov.length >= 15
+    })
+  return { items, totalPages: p1.total_pages }
+}
 
 export const getMovieDetails = async (id: number): Promise<TMDBMovieDetails> => {
   const data = await cachedGet<TMDBMovieDetails>(`/movie/${id}`, {

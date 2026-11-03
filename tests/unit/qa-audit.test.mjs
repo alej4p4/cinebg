@@ -823,11 +823,11 @@ test('SWEEP-LEGENDADOS-1: isPortugueseAvailableItem bloqueia linguas predominant
   assert.ok(tmdbSrc.includes('apenas legendad'), 'Deve bloquear titulos com marcacao de apenas legendado')
 })
 
-test('SWEEP-LEGENDADOS-2: tmdb.ts utiliza STORAGE_PREFIX v6 com purga de caches antigos e mapeia series nacionais', () => {
+test('SWEEP-LEGENDADOS-2: tmdb.ts utiliza STORAGE_PREFIX v6 com purga de caches antigos e mapeia series nacionais e turcas', () => {
   const tmdbSrc = fs.readFileSync('src/services/tmdb.ts', 'utf8')
   assert.ok(tmdbSrc.includes("STORAGE_PREFIX = 'cinebg_tmdb_v6_'"), 'tmdb.ts deve usar prefixo v6 para limpar catalogo legendado antigo')
   assert.ok(tmdbSrc.includes('getBrazilianShows'), 'tmdb.ts deve exportar getBrazilianShows')
-  assert.ok(tmdbSrc.includes('getTurkishShows = getBrazilianShows'), 'getTurkishShows deve apontar para producoes nacionais dubladas')
+  assert.ok(tmdbSrc.includes('getTurkishShows'), 'tmdb.ts deve exportar getTurkishShows')
 })
 
 
@@ -1021,4 +1021,31 @@ test('MOBILE-SCROLL-STABILITY-1: Prevenção de salto/retorno indesejado ao iní
 
   // 4. Focusable não deve disparar scroll programático em telas mobile
   assert.ok(focusableSrc.includes('!isMobileDevice()'), 'Focusable deve ignorar autoScroll espacial no mobile')
+})
+
+test('DUBBED-AUDIO-AND-TURKISH-SHOWS-1: Priorização estrita de áudio dublado PT-BR e exibição de Séries Turcas na Home e Séries', () => {
+  const homeSrc = fs.readFileSync('src/pages/Home.tsx', 'utf8')
+  const seriesSrc = fs.readFileSync('src/pages/Series.tsx', 'utf8')
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+
+  // 1. Home.tsx deve exibir carrossel de Séries Turcas e Séries Nacionais
+  assert.ok(homeSrc.includes('title="Séries Turcas"'), 'Home.tsx deve renderizar carrossel de Séries Turcas')
+  assert.ok(homeSrc.includes('emoji="🇹🇷"'), 'Home.tsx deve conter emoji da bandeira da Turquia')
+  assert.ok(homeSrc.includes('getTurkishShows'), 'Home.tsx deve chamar getTurkishShows')
+  assert.ok(homeSrc.includes('getBrazilianShows'), 'Home.tsx deve chamar getBrazilianShows')
+
+  // 2. Series.tsx deve conter filtro e carrossel de Séries Turcas
+  assert.ok(seriesSrc.includes("name: 'Séries Turcas'"), 'Series.tsx deve incluir plataforma Séries Turcas')
+  assert.ok(seriesSrc.includes('title="Séries Turcas"'), 'Series.tsx deve renderizar carrossel Séries Turcas')
+
+  // 3. streams.ts deve priorizar superflix para audio === dub
+  assert.ok(streamsSrc.includes("audio === 'dub' ? 'superflix' : 'vidlink'"), 'getInitialMirrorForAudio deve apontar para superflix quando dub')
+  assert.ok(streamsSrc.includes("const dubbedSequence = ['superflix', 'megaembed'"), 'getNextSilentMirrorId deve priorizar superflix e megaembed quando dub')
+
+  // 4. StreamPlayer.tsx deve selecionar candidato dublado e faixas PT no HLS
+  assert.ok(playerSrc.includes('const dubIdx = list.findIndex((c) => c.isDubbedHint)'), 'StreamPlayer deve selecionar candidato dublado prioritário')
+  assert.ok(playerSrc.includes("l === 'pob'"), 'selectPreferredAudioTrack deve incluir pob (Portuguese Brazil)')
+  assert.ok(playerSrc.includes("n.includes('brasil')"), 'selectPreferredAudioTrack deve incluir brasil')
+  assert.ok(playerSrc.includes('Hls.Events.AUDIO_TRACK_LOADED'), 'StreamPlayer deve escutar AUDIO_TRACK_LOADED no HLS')
 })

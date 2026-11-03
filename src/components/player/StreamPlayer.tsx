@@ -526,8 +526,11 @@ const StreamPlayer = ({
 
   // ===== Auto-fallback state =====
   const fallbackSequence = useMemo(
-    () => ['vidlink', 'vidsrc', 'embed2', 'superflix', 'moviebox', 'megaembed'],
-    []
+    () =>
+      activeAudio === 'dub'
+        ? ['superflix', 'megaembed', 'vidlink', 'vidsrc', 'embed2', 'moviebox']
+        : ['vidlink', 'vidsrc', 'embed2', 'superflix', 'moviebox', 'megaembed'],
+    [activeAudio]
   )
 
   const embedUrl =
@@ -615,7 +618,7 @@ const StreamPlayer = ({
     // 2. Se for seleção entre candidatos de mídia direta (MP4/HLS):
     const list = candidatesRef.current
     applySubtitleLangRef.current?.('off')
-    setActiveMirror('vidlink')
+    setActiveMirror('superflix')
     setAllowIframe(false)
     const dubIdx = list.findIndex((c) => c.isDubbedHint)
     const targetIdx = dubIdx !== -1 ? dubIdx : 0
@@ -669,13 +672,13 @@ const StreamPlayer = ({
       setError(false)
       return
     }
-    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho nativo megaembed
-    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho limpo MegaEmbed...')
+    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho dublado/nacional
+    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência...')
     nativeActiveRef.current = false
     setDirectSrc(null)
     setDirectKind(null)
-    setActiveMirror('vidlink')
-            setAllowIframe(true)
+    setActiveMirror(activeAudio === 'dub' ? 'superflix' : 'vidlink')
+    setAllowIframe(true)
     setLoaded(false)
     setError(false)
   }, [])
@@ -761,7 +764,7 @@ const StreamPlayer = ({
     setCandidates([])
     setCandidateIndex(0)
     setFallbackAttempt(0)
-    setActiveMirror('vidlink')
+    setActiveMirror(activeAudio === 'dub' ? 'superflix' : 'vidlink')
     setKey((k) => k + 1)
   }
 
@@ -900,21 +903,23 @@ const StreamPlayer = ({
           setSubLang('off')
           setSubtitleOption('off')
           if (list.length > 0) {
-            const firstCandidate = list[0]
-            candidateIndexRef.current = 0
-            setCandidateIndex(0)
+            const dubIdx = list.findIndex((c) => c.isDubbedHint)
+            const targetIdx = dubIdx !== -1 ? dubIdx : 0
+            const firstCandidate = list[targetIdx]
+            candidateIndexRef.current = targetIdx
+            setCandidateIndex(targetIdx)
             nativeActiveRef.current = true
             setAllowIframe(false)
             setDirectSrc(firstCandidate.url)
             setDirectKind(firstCandidate.kind)
           } else {
-            console.info('[StreamPlayer] Fontes diretas não encontradas. Tentando embed MegaEmbed PT-BR...')
+            console.info('[StreamPlayer] Fontes diretas não encontradas. Tentando espelho SuperFlix PT-BR...')
             setCandidateIndex(0)
             candidateIndexRef.current = 0
             nativeActiveRef.current = false
             setDirectSrc(null)
             setDirectKind(null)
-            setActiveMirror('vidlink')
+            setActiveMirror('superflix')
             setAllowIframe(true)
             setError(false)
           }
@@ -927,8 +932,8 @@ const StreamPlayer = ({
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
-          setActiveMirror('vidlink')
-            setAllowIframe(true)
+          setActiveMirror('superflix')
+          setAllowIframe(true)
           setError(false)
         }
       })
@@ -941,8 +946,8 @@ const StreamPlayer = ({
         setCandidateIndex(0)
         candidateIndexRef.current = 0
         nativeActiveRef.current = false
-        setActiveMirror('vidlink')
-            setAllowIframe(true)
+        setActiveMirror('superflix')
+        setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
         setError(false)
@@ -1058,16 +1063,38 @@ const StreamPlayer = ({
           const ptIdx = hls.audioTracks.findIndex((t) => {
             const l = (t.lang || '').toLowerCase()
             const n = (t.name || '').toLowerCase()
-            return l.startsWith('por') || l.startsWith('pt') || n.includes('por') || n.includes('dub') || n.includes('bra')
+            return (
+              l.startsWith('por') ||
+              l.startsWith('pt') ||
+              l === 'pob' ||
+              l.includes('bra') ||
+              l.includes('pt-br') ||
+              l.includes('pt_br') ||
+              n.includes('por') ||
+              n.includes('pt') ||
+              n.includes('dub') ||
+              n.includes('bra') ||
+              n.includes('brasil') ||
+              n.includes('nacional')
+            )
           })
           if (ptIdx !== -1 && hls.audioTrack !== ptIdx) {
+            console.info(`[StreamPlayer] Faixa de áudio em Português selecionada no HLS (${ptIdx})`)
             hls.audioTrack = ptIdx
           }
         } else {
           const origIdx = hls.audioTracks.findIndex((t) => {
             const l = (t.lang || '').toLowerCase()
             const n = (t.name || '').toLowerCase()
-            return !l.startsWith('por') && !l.startsWith('pt') && !n.includes('por') && !n.includes('dub')
+            return (
+              !l.startsWith('por') &&
+              !l.startsWith('pt') &&
+              l !== 'pob' &&
+              !n.includes('por') &&
+              !n.includes('dub') &&
+              !n.includes('bra') &&
+              !n.includes('brasil')
+            )
           })
           if (origIdx !== -1 && hls.audioTrack !== origIdx) {
             hls.audioTrack = origIdx
@@ -1092,6 +1119,8 @@ const StreamPlayer = ({
       }
 
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, selectPreferredAudioTrack)
+      hls.on(Hls.Events.AUDIO_TRACK_LOADED, selectPreferredAudioTrack)
+      hls.on(Hls.Events.LEVEL_LOADED, selectPreferredAudioTrack)
       hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => {
         syncHlsSubtitles()
         refreshTextTracksRef.current?.()

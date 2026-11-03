@@ -95,17 +95,19 @@ export const MIRRORS: StreamMirror[] = [
   },
 ]
 
-export const getNextSilentMirrorId = (currentId: string, _audio: AudioOption = 'dub'): string => {
-  const sequence = ['vidlink', 'vidsrc', 'embed2', 'superflix', 'moviebox', 'megaembed']
+export const getInitialMirrorForAudio = (audio: AudioOption = 'dub'): string => {
+  return audio === 'dub' ? 'superflix' : 'vidlink'
+}
+
+export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'dub'): string => {
+  const dubbedSequence = ['superflix', 'megaembed', 'vidlink', 'vidsrc', 'embed2', 'moviebox']
+  const origSequence = ['vidlink', 'vidsrc', 'embed2', 'superflix', 'moviebox', 'megaembed']
+  const sequence = audio === 'dub' ? dubbedSequence : origSequence
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
     return sequence[0]
   }
   return sequence[currentIndex + 1]
-}
-
-export const getInitialMirrorForAudio = (_audio: AudioOption = 'dub'): string => {
-  return 'vidlink'
 }
 
 export const isMirrorSandboxed = (mirrorId: string): boolean => {
@@ -210,6 +212,7 @@ export const isPortugueseAudioCandidate = (
 // Hosts com token travado por IP do servidor backend (retornam text/html ou 404 no cliente)
 const BROKEN_IP_LOCKED_HOSTS = [
   'streamtape.com',
+  'tapecontent.net',
   '97bf1.com',
   'playercdnx.workers.dev',
 ]
@@ -466,6 +469,9 @@ export const resolveMegaEmbed = async (
       if (!file || typeof file !== 'string') continue
       if (s.type === 'iframe') continue
       if (file.includes('/embed')) continue
+      if ((s as { ipLocked?: boolean; serverBound?: boolean }).ipLocked || (s as { ipLocked?: boolean; serverBound?: boolean }).serverBound) {
+        continue
+      }
 
       const cleanUrl = formatDirectStreamUrl(file)
       if (!cleanUrl) continue
@@ -567,7 +573,7 @@ export const resolveMegaEmbed = async (
   }
 
   const timeoutPromise = new Promise<MegaEmbedResolved>((resolve) =>
-    setTimeout(() => resolve(fallbackEmpty), 3500)
+    setTimeout(() => resolve(fallbackEmpty), 8000)
   )
 
   return Promise.race([resolveLogic(), timeoutPromise])

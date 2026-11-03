@@ -26,6 +26,7 @@ import {
   discoverMovies,
   discoverShows,
   getTurkishShows,
+  getBrazilianShows,
   getCachedCatalogItems,
   getMovieDetails,
   getShowDetails,
@@ -54,6 +55,7 @@ const Home = () => {
   const [actionShows, setActionShows] = useState<MediaItem[]>([])
   const [comedyShows, setComedyShows] = useState<MediaItem[]>([])
   const [turkishShows, setTurkishShows] = useState<MediaItem[]>([])
+  const [brazilianShows, setBrazilianShows] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(() => trending.length === 0)
   const userNavigatedRef = useRef(false)
 
@@ -118,11 +120,12 @@ const Home = () => {
         secondaryTimer = setTimeout(async () => {
           if (!active) return
           try {
-            const [tom, up, ts, turkish, actionM, comedyM] = await Promise.all([
+            const [tom, up, ts, turkish, brazilian, actionM, comedyM] = await Promise.all([
               getTopRatedMovies(),
               getUpcomingMovies(),
               getTopRatedShows(),
               getTurkishShows(),
+              getBrazilianShows(),
               discoverMovies({ genre: 28, sort: 'popularity.desc' }),
               discoverMovies({ genre: 35, sort: 'popularity.desc' }),
             ])
@@ -131,6 +134,7 @@ const Home = () => {
             setUpcoming(up.items)
             setTopShows(ts.items)
             setTurkishShows(turkish.items)
+            setBrazilianShows(brazilian.items)
             setActionMovies(actionM.items)
             setComedyMovies(comedyM.items)
 
@@ -341,7 +345,10 @@ const Home = () => {
                       <Carousel rowIndex={rowIdx++} title="Séries Populares" emoji="📺" items={popularShows} />
                     )}
                     {turkishShows.length > 0 && (
-                      <Carousel rowIndex={rowIdx++} title="Séries & Novelas Nacionais" emoji="🇧🇷" items={turkishShows} />
+                      <Carousel rowIndex={rowIdx++} title="Séries Turcas" emoji="🇹🇷" items={turkishShows} />
+                    )}
+                    {brazilianShows.length > 0 && (
+                      <Carousel rowIndex={rowIdx++} title="Séries & Novelas Nacionais" emoji="🇧🇷" items={brazilianShows} />
                     )}
                     {airingNow.length > 0 && (
                       <Carousel rowIndex={rowIdx++} title="Em Exibição Hoje" emoji="🔴" items={airingNow} />
