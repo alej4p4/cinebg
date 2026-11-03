@@ -529,11 +529,11 @@ const StreamPlayer = ({
 
   // ===== Auto-fallback state =====
   const fallbackSequence = useMemo(
-    () => (isPtOriginal ? ['vidsrc', 'embed2', 'vidlink'] : ['vidlink', 'vidsrc', 'embed2']),
+    () => (isPtOriginal ? ['embed2', 'vidsrc', 'vidlink'] : ['vidlink', 'vidsrc', 'embed2']),
     [isPtOriginal]
   )
 
-  const defaultSafeMirror = isPtOriginal ? 'vidsrc' : 'vidlink'
+  const defaultSafeMirror = isPtOriginal ? 'embed2' : 'vidlink'
   const safeMirror =
     activeMirror === 'superflix' || activeMirror === 'megaembed' || isCaptchaOrBotBlockUrl(activeMirror)
       ? defaultSafeMirror
@@ -628,7 +628,7 @@ const StreamPlayer = ({
     // 2. Se for seleção entre candidatos de mídia direta (MP4/HLS):
     const list = candidatesRef.current
     applySubtitleLangRef.current?.('off')
-    setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
+    setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
     setAllowIframe(false)
     const dubIdx = list.findIndex((c) => c.isDubbedHint)
     const targetIdx = dubIdx !== -1 ? dubIdx : 0
@@ -683,7 +683,7 @@ const StreamPlayer = ({
       return
     }
     // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho de contingência limpo
-    const contingencyMirror = isPtOriginal ? 'vidsrc' : 'vidlink'
+    const contingencyMirror = isPtOriginal ? 'embed2' : 'vidlink'
     console.info(`[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência limpo (${contingencyMirror})...`)
     nativeActiveRef.current = false
     setDirectSrc(null)
@@ -733,7 +733,7 @@ const StreamPlayer = ({
     setLoaded(false)
     setError(false)
     setKey((k) => k + 1)
-    const mirrorName = nextMirror === 'vidsrc' ? 'VidSrc' : nextMirror === 'embed2' ? '2Embed' : 'VidLink'
+    const mirrorName = nextMirror === 'embed2' ? '2Embed' : nextMirror === 'vidsrc' ? 'VidSrc' : 'VidLink'
     showFeedback(`Servidor: ${mirrorName} (${nextAttempt + 1}/${fallbackSequence.length})`)
   }, [allowIframe, fallbackAttempt, fallbackSequence, showFeedback])
 
@@ -778,7 +778,7 @@ const StreamPlayer = ({
     setCandidates([])
     setCandidateIndex(0)
     setFallbackAttempt(0)
-    setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
+    setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
     setKey((k) => k + 1)
   }
 
@@ -933,7 +933,7 @@ const StreamPlayer = ({
             nativeActiveRef.current = false
             setDirectSrc(null)
             setDirectKind(null)
-            setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
+            setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
             setAllowIframe(true)
             setError(false)
           }
@@ -946,7 +946,7 @@ const StreamPlayer = ({
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
-          setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
+          setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
           setAllowIframe(true)
           setError(false)
         }
@@ -960,7 +960,7 @@ const StreamPlayer = ({
         setCandidateIndex(0)
         candidateIndexRef.current = 0
         nativeActiveRef.current = false
-        setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
+        setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
@@ -2598,7 +2598,7 @@ const StreamPlayer = ({
               title="Trocar para outro servidor/espelho"
             >
               <Server className="w-3.5 h-3.5 text-yellow-400" />
-              <span>Trocar Servidor ({activeMirror === 'vidsrc' ? 'VidSrc' : activeMirror === 'embed2' ? '2Embed' : 'VidLink'})</span>
+              <span>Trocar Servidor ({activeMirror === 'embed2' ? '2Embed' : activeMirror === 'vidsrc' ? 'VidSrc' : 'VidLink'})</span>
             </button>
             <button
               type="button"
@@ -2614,7 +2614,14 @@ const StreamPlayer = ({
         {showIframe && (
           <div className="absolute top-16 inset-x-4 z-40 pointer-events-none flex justify-center animate-fade-in">
             <div className="flex items-center gap-2 bg-black/90 border border-yellow-400/50 px-4 py-2 rounded-full text-xs font-medium text-white shadow-2xl backdrop-blur-md max-w-lg text-center">
-              {activeMirror === 'vidlink' || activeMirror === 'vidsrc' || activeMirror === 'embed2' ? (
+              {isPtOriginal ? (
+                <>
+                  <Volume2 className="w-4 h-4 text-yellow-400 shrink-0" />
+                  <span>
+                    <b>Produção Nacional 🇧🇷:</b> Áudio original em Português. Use <b>Trocar Servidor</b> acima caso deseje outro reprodutor.
+                  </span>
+                </>
+              ) : activeMirror === 'vidlink' || activeMirror === 'vidsrc' || activeMirror === 'embed2' ? (
                 <>
                   <SubtitlesIcon className="w-4 h-4 text-yellow-400 shrink-0" />
                   <span>

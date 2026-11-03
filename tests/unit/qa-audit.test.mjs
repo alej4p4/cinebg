@@ -1149,7 +1149,7 @@ test('CLASSIC-MOVIES-DUBBED-AND-HINTS-1: Resiliência de filmes clássicos dubla
   assert.ok(playerSrc.includes('Legendas em Português'), 'StreamPlayer deve indicar legendas para espelhos sem áudio dublado nativo')
 })
 
-test('NATIONAL-SERIES-NOVELAS-FALLBACK-1: Priorização de VidSrc para novelas/séries nacionais e botão de troca de servidor', () => {
+test('NATIONAL-SERIES-NOVELAS-FALLBACK-1: Priorização de 2Embed para novelas/séries nacionais e botão de troca de servidor', () => {
   const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
   const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
 
@@ -1159,14 +1159,31 @@ test('NATIONAL-SERIES-NOVELAS-FALLBACK-1: Priorização de VidSrc para novelas/s
 
   // 2. getInitialMirrorForAudio e getNextSilentMirrorId com suporte a produções nacionais PT-BR
   assert.ok(streamsSrc.includes("originalLanguage || '').toLowerCase() === 'pt'"), 'streams.ts deve identificar produções originais em português')
-  assert.ok(streamsSrc.includes("return 'vidsrc'"), 'getInitialMirrorForAudio deve retornar vidsrc para conteúdo nacional')
+  assert.ok(streamsSrc.includes("return 'embed2'"), 'getInitialMirrorForAudio deve retornar embed2 para conteúdo nacional para evitar Media Not Found')
 
   // 3. StreamPlayer deve ter botão de troca de servidor no modo iframe
   assert.ok(playerSrc.includes('Trocar Servidor'), 'StreamPlayer deve conter botão Trocar Servidor no modo iframe')
   assert.ok(playerSrc.includes('handleCycleServerOption'), 'Botão Trocar Servidor deve acionar handleCycleServerOption')
 
-  // 4. StreamPlayer deve usar vidsrc como espelho de contingência para produções nacionais
-  assert.ok(playerSrc.includes("isPtOriginal ? 'vidsrc' : 'vidlink'"), 'StreamPlayer deve priorizar vidsrc para séries/novelas brasileiras')
+  // 4. StreamPlayer deve usar embed2 como espelho de contingência para produções nacionais
+  assert.ok(playerSrc.includes("isPtOriginal ? 'embed2' : 'vidlink'"), 'StreamPlayer deve priorizar embed2 para séries/novelas brasileiras')
 })
 
+test('ANTI-BETTING-ADS-FILTER-1: Bloqueio estrito de streams com propaganda de apostas (1xBet / embedplayer2 / playercdnxx)', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const mainActivitySrc = fs.readFileSync('android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java', 'utf8')
 
+  // 1. BANNED_AD_STREAM_HINTS deve bloquear redes de injeção de anúncios de apostas
+  assert.ok(streamsSrc.includes("'embedplayer2'"), 'BANNED_AD_STREAM_HINTS deve conter embedplayer2')
+  assert.ok(streamsSrc.includes("'playercdnxx'"), 'BANNED_AD_STREAM_HINTS deve conter playercdnxx')
+  assert.ok(streamsSrc.includes("'workers.dev'"), 'BANNED_AD_STREAM_HINTS deve conter workers.dev')
+  assert.ok(streamsSrc.includes("'individualbranding'"), 'BANNED_AD_STREAM_HINTS deve conter individualbranding')
+
+  // 2. BROKEN_IP_LOCKED_HOSTS deve conter domínios de re-encode de apostas
+  assert.ok(streamsSrc.includes("'embedplayer2.xyz'"), 'BROKEN_IP_LOCKED_HOSTS deve conter embedplayer2.xyz')
+  assert.ok(streamsSrc.includes("'solitary-field'"), 'BROKEN_IP_LOCKED_HOSTS deve conter solitary-field')
+
+  // 3. MainActivity.java deve bloquear os hosts no WebView
+  assert.ok(mainActivitySrc.includes('"embedplayer"'), 'MainActivity.java deve conter embedplayer')
+  assert.ok(mainActivitySrc.includes('"playercdn"'), 'MainActivity.java deve conter playercdn')
+})
