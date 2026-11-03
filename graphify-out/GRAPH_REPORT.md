@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-11-03)
 
 ## Corpus Check
-- 120 files · ~444,173 words
+- 120 files · ~448,683 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 23 file(s) not represented in the graph (top: .xml 10, (none) 3, .properties 3)
 
 ## Summary
-- 1217 nodes · 2681 edges · 75 communities (54 shown, 21 thin omitted)
+- 1217 nodes · 2683 edges · 76 communities (55 shown, 21 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 72 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fc6a3f59`
+- Built from commit: `8ab1c387`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -23,10 +23,12 @@
 - 🤖 Instruções para Agentes de IA — CineBG
 - qa-audit.test.mjs
 - biome.json
+- index.ts
 - .shouldOverrideUrlLoading
 - AppInstallerPlugin.java
 - ✅ PROBLEMAS CORRIGIDOS
 - tmdb.ts
+- StreamPlayer.tsx
 - package.json
 - compilerOptions
 - moviebox.ts
@@ -57,7 +59,6 @@
 - buildMovieUrl
 - antiRedirect.ts
 - resolveMegaEmbed
-- Filtros & Utilitários
 - CineBG - Architecture Documentation
 - ADR-011: Documentation as Code
 - CineBG - Task Backlog & Roadmap
@@ -88,7 +89,7 @@
 5. `framer-motion` - 32 edges
 6. `lucide-react` - 29 edges
 7. `Home()` - 27 edges
-8. `StreamPlayer()` - 25 edges
+8. `StreamPlayer()` - 26 edges
 9. `@noriginmedia/norigin-spatial-navigation` - 24 edges
 10. `AnimatedRoutes()` - 24 edges
 
@@ -107,7 +108,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (75 total, 21 thin omitted)
+## Communities (76 total, 21 thin omitted)
 
 ### Community 0 - "�� CORREÇÕES DEFINITIVAS"
 Cohesion: 0.10
@@ -137,6 +138,10 @@ Nodes (15): esbuild, files, requiredFiles, ROOT, SRC_DIR, violations, walkFiles(
 Cohesion: 0.05
 Nodes (38): noSvgWithoutTitle, useButtonType, useKeyWithClickEvents, useMediaCaption, source, assist, actions, noUnusedVariables (+30 more)
 
+### Community 7 - "index.ts"
+Cohesion: 0.13
+Nodes (30): PremiumContentGate(), SkeletonDetailPage(), Details(), Watch(), buildFileName(), deleteVideo(), downloadsSupported(), downloadVideo() (+22 more)
+
 ### Community 8 - ".shouldOverrideUrlLoading"
 Cohesion: 0.22
 Nodes (5): BridgeWebViewClient, ADR-016: Eliminação do Bloqueio de Inicialização e Correção de Renderização no Android WebView, Consequências, Contexto, Decisão
@@ -146,8 +151,12 @@ Cohesion: 0.09
 Nodes (22): 1. **Character Encoding / UTF-8 Corruption** (CRÍTICO - CORRIGIDO), 2. **TypeScript Errors - Focusable.tsx** (CRÍTICO - CORRIGIDO), 3. **Focusable.tsx - TypeError "not callable"** (CRÍTICO - CORRIGIDO), 3. **TypeScript Errors - StreamPlayer.tsx** (CRÍTICO - CORRIGIDO), 4. **Android SDK Setup no CI/CD** (ALTO - CORRIGIDO), 5. **Versão Inconsistente no update.json** (ALTO - CORRIGIDO), 6. **Duplicate Setup Node.js Step** (MÉDIO - CORRIGIDO), 7. **Android SDK Setup no CI/CD** (ALTO - CORRIGIDO) (+14 more)
 
 ### Community 11 - "tmdb.ts"
-Cohesion: 0.07
-Nodes (77): 2.3 CRÍTICO - Performance, PremiumContentGate(), LiveTvCarousel(), SkeletonDetailPage(), Details(), Home(), Series(), Watch() (+69 more)
+Cohesion: 0.10
+Nodes (51): 2.3 CRÍTICO - Performance, LiveTvCarousel(), Home(), Series(), BANNED_CATALOG_KEYWORDS, buildCacheKey(), cachedGet(), discoverMovies() (+43 more)
+
+### Community 12 - "StreamPlayer.tsx"
+Cohesion: 0.33
+Nodes (8): PlaybackSettingsModal(), ScreenOrientationWithLock, StreamPlayer(), setActivePlaybackContext(), getCachedMegaEmbed(), isCaptchaOrBotBlockUrl(), clearActiveSubtitleBlobs(), markPlayerExited()
 
 ### Community 13 - "package.json"
 Cohesion: 0.08
@@ -178,8 +187,8 @@ Cohesion: 0.05
 Nodes (91): ✨ 2. DESIGN & MOTION PRINCIPLES (KYLE ZANTOS), Decisão, framer-motion, lucide-react, @noriginmedia/norigin-spatial-navigation, react, react-router-dom, BOTTOM_NAV_ITEMS (+83 more)
 
 ### Community 22 - "subtitles.ts"
-Cohesion: 0.20
-Nodes (13): PlaybackSettingsModal(), ScreenOrientationWithLock, StreamPlayer(), setActivePlaybackContext(), activeBlobUrls, clearActiveSubtitleBlobs(), fetchPortugueseSubtitles(), getImdbId() (+5 more)
+Cohesion: 0.28
+Nodes (8): activeBlobUrls, fetchPortugueseSubtitles(), getImdbId(), imdbIdCache, srtToVtt(), StremioSubtitle, SubtitleTrackOption, tmdb
 
 ### Community 24 - "stryker.config.json"
 Cohesion: 0.14
@@ -198,8 +207,8 @@ Cohesion: 0.08
 Nodes (49): hls.js, isClassic43Channel(), LivePlayer(), LivePlayerProps, YuCineChannelCardProps, SkeletonLiveTVGrid(), LiveTV(), ChannelScheduleSlot (+41 more)
 
 ### Community 29 - "App.tsx"
-Cohesion: 0.05
-Nodes (72): 🔗 Arquivos Relacionados, @capacitor/core, @capacitor/status-bar, zustand, AnimatedRoutes(), Anime, App(), Details (+64 more)
+Cohesion: 0.06
+Nodes (67): 🔗 Arquivos Relacionados, @capacitor/core, @capacitor/status-bar, zustand, AnimatedRoutes(), Anime, App(), Details (+59 more)
 
 ### Community 30 - "compilerOptions"
 Cohesion: 0.22
@@ -222,7 +231,7 @@ Cohesion: 0.33
 Nodes (5): entry, ignore, ignoreDependencies, project, $schema
 
 ### Community 35 - "streams.ts"
-Cohesion: 0.14
+Cohesion: 0.15
 Nodes (11): BANNED_AD_STREAM_HINTS, BROKEN_IP_LOCKED_HOSTS, DirectCandidate, DUBBED_HOST_HINTS, MegaEmbedResolved, MegaEmbedSource, MIRRORS, resolvedSourcesCache (+3 more)
 
 ### Community 36 - "feature_request.md"
@@ -242,12 +251,8 @@ Cohesion: 0.52
 Nodes (6): 🔒 SEGURANÇA, reportAdInterception(), destroyAntiRedirectShield(), handleBeforeUnload(), initAntiRedirectShield(), setAntiRedirectShieldActive()
 
 ### Community 53 - "resolveMegaEmbed"
-Cohesion: 0.27
-Nodes (11): `getCachedMegaEmbed()`, Resolução de Streams, `resolveMegaEmbed()`, `resolveMegaEmbedDubbedSource()`, fetchMegaEmbedSources(), getCachedMegaEmbed(), getValidCachedEntry(), isPortugueseAudioCandidate() (+3 more)
-
-### Community 55 - "Filtros & Utilitários"
-Cohesion: 0.29
-Nodes (7): Filtros & Utilitários, `formatDirectStreamUrl()`, `getCanonicalMediaKey()`, `isAdOrCamripStream()`, formatDirectStreamUrl(), getCanonicalMediaKey(), isAdOrCamripStream()
+Cohesion: 0.16
+Nodes (17): Filtros & Utilitários, `formatDirectStreamUrl()`, `getCachedMegaEmbed()`, `getCanonicalMediaKey()`, `isAdOrCamripStream()`, Resolução de Streams, `resolveMegaEmbed()`, `resolveMegaEmbedDubbedSource()` (+9 more)
 
 ### Community 57 - "CineBG - Architecture Documentation"
 Cohesion: 0.06
@@ -327,19 +332,19 @@ Nodes (4): ADR-014: Player Sem Botão de Retry (Estilo YuCine), Consequências, 
 
 ## Knowledge Gaps
 - **16 isolated node(s):** `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard`, `@stryker-mutator/core`, `@stryker-mutator/html-reporter` (+11 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 545 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 544 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Decisão` connect `useAppStore` to `.shouldOverrideUrlLoading`, `CineBG - Architectural Decisions Log`, `App.tsx`?**
-  _High betweenness centrality (0.124) - this node is a cross-community bridge._
+  _High betweenness centrality (0.123) - this node is a cross-community bridge._
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _16 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `�� CORREÇÕES DEFINITIVAS` be split into smaller, more focused modules?**
   _Cohesion score 0.1 - nodes in this community are weakly interconnected._
-- **Why does `ProgressBar()` connect `useAppStore` to `tmdb.ts`, `LiveTV.tsx`, `App.tsx`?**
+- **Why does `ProgressBar()` connect `useAppStore` to `tmdb.ts`, `LiveTV.tsx`, `App.tsx`, `index.ts`?**
   _High betweenness centrality (0.097) - this node is a cross-community bridge._
 - **Should `observability.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.0567287784679089 - nodes in this community are weakly interconnected._

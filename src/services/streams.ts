@@ -26,22 +26,11 @@ const normalizeAudio = (audio: AudioOption | Language): AudioOption => {
 
 export const MIRRORS: StreamMirror[] = [
   {
-    id: 'megaembed',
-    name: 'CineBG Direto (MegaEmbed PT-BR)',
-    flagEmoji: '🇧🇷',
-    quality: 'FHD 1080p',
-    type: 'dubbed_br',
-    sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://mgeb.lat/embed/${tmdbId}?autoplay=1&ads=0&adblock=1`,
-    getShowUrl: (tmdbId, season, episode) =>
-      `https://mgeb.lat/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1`,
-  },
-  {
     id: 'vidlink',
     name: 'CineBG Ultra (VidLink Pro)',
     flagEmoji: '🚀',
     quality: 'FHD 1080p',
-    type: 'multi_sub',
+    type: 'dubbed_br',
     sandboxed: false,
     getMovieUrl: (tmdbId) =>
       `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&muted=false&fallback=true&ads=0`,
@@ -82,8 +71,19 @@ export const MIRRORS: StreamMirror[] = [
     getShowUrl: (tmdbId, season, episode) =>
       `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true`,
   },
-  // Quarentena permanente: superflix / superflixapi.fun bloqueado por impor Cloudflare Turnstile Captcha ("Validação segura").
-  // Mantido estritamente para compatibilidade de tipagem e integridade arquitetural sem ser acionado em runtime.
+  // Quarentena permanente: superflix e megaembed (mgeb.lat) bloqueados por impor Cloudflare Turnstile Captcha ("Validação segura") e bloqueio WebView.
+  // Mantidos estritamente para compatibilidade de tipagem e integridade arquitetural sem serem acionados em iframes no runtime.
+  {
+    id: 'megaembed',
+    name: 'CineBG Direto (MegaEmbed PT-BR - Quarentena Captcha)',
+    flagEmoji: '🇧🇷',
+    quality: 'FHD 1080p',
+    type: 'dubbed_br',
+    sandboxed: false,
+    getMovieUrl: (tmdbId) => `https://mgeb.lat/embed/${tmdbId}?autoplay=1&ads=0&adblock=1`,
+    getShowUrl: (tmdbId, season, episode) =>
+      `https://mgeb.lat/embed/${tmdbId}/${season}/${episode}?autoplay=1&ads=0&adblock=1`,
+  },
   {
     id: 'superflix',
     name: 'CineBG YouCine (SuperFlix PT-BR - Quarentena Captcha)',
@@ -104,20 +104,21 @@ export const isCaptchaOrBotBlockUrl = (url: string | null | undefined): boolean 
     lower.includes('challenges.cloudflare.com') ||
     lower.includes('turnstile') ||
     lower.includes('superflixapi.fun') ||
+    lower.includes('mgeb.lat') ||
+    lower.includes('mgeb.space') ||
+    lower.includes('sandbox.php') ||
     lower.includes('/cf-turnstile') ||
     lower.includes('cf-chl')
   )
 }
 
-export const getInitialMirrorForAudio = (audio: AudioOption = 'dub'): string => {
-  return audio === 'dub' ? 'megaembed' : 'vidlink'
+export const getInitialMirrorForAudio = (_audio: AudioOption = 'dub'): string => {
+  return 'vidlink'
 }
 
-export const getNextSilentMirrorId = (currentId: string, audio: AudioOption = 'dub'): string => {
-  // Quarentena: superflix / superflixapi.fun é excluído da sequência por exigir desafio Cloudflare Captcha ('Validação segura')
-  const dubbedSequence = ['megaembed', 'vidlink', 'vidsrc', 'embed2', 'moviebox']
-  const origSequence = ['vidlink', 'vidsrc', 'embed2', 'megaembed', 'moviebox']
-  const sequence = audio === 'dub' ? dubbedSequence : origSequence
+export const getNextSilentMirrorId = (currentId: string, _audio: AudioOption = 'dub'): string => {
+  // Quarentena: superflix e megaembed (mgeb.lat) são excluídos da sequência de iframes por exigir desafio Cloudflare Captcha ('Validação segura')
+  const sequence = ['vidlink', 'vidsrc', 'embed2', 'moviebox']
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
     return sequence[0]

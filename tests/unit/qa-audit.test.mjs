@@ -1039,9 +1039,9 @@ test('DUBBED-AUDIO-AND-TURKISH-SHOWS-1: Priorização estrita de áudio dublado 
   assert.ok(seriesSrc.includes("name: 'Séries Turcas'"), 'Series.tsx deve incluir plataforma Séries Turcas')
   assert.ok(seriesSrc.includes('title="Séries Turcas"'), 'Series.tsx deve renderizar carrossel Séries Turcas')
 
-  // 3. streams.ts deve priorizar megaembed limpo (sem captcha) para audio === dub
-  assert.ok(streamsSrc.includes("audio === 'dub' ? 'megaembed' : 'vidlink'"), 'getInitialMirrorForAudio deve apontar para megaembed quando dub')
-  assert.ok(streamsSrc.includes("const dubbedSequence = ['megaembed'"), 'getNextSilentMirrorId deve priorizar megaembed quando dub sem superflix')
+  // 3. streams.ts deve priorizar vidlink limpo (sem captcha) para reprodução
+  assert.ok(streamsSrc.includes("return 'vidlink'"), 'getInitialMirrorForAudio deve apontar para vidlink')
+  assert.ok(streamsSrc.includes("const sequence = ['vidlink', 'vidsrc', 'embed2', 'moviebox']"), 'getNextSilentMirrorId deve priorizar vidlink limpo sem captcha')
 
   // 4. StreamPlayer.tsx deve selecionar candidato dublado e faixas PT no HLS
   assert.ok(playerSrc.includes('const dubIdx = list.findIndex((c) => c.isDubbedHint)'), 'StreamPlayer deve selecionar candidato dublado prioritário')
@@ -1054,18 +1054,22 @@ test('NO-CLOUDFLARE-CAPTCHA-MIRRORS-1: Banimento de telas de validação humana 
   const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
   const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
 
-  // 1. superflixapi.fun deve ser colocado em quarentena permanente e excluído da sequência ativa
-  assert.ok(streamsSrc.includes('Quarentena permanente: superflix / superflixapi.fun bloqueado'), 'superflix deve estar isolado em quarentena por impor captcha')
-  assert.ok(!streamsSrc.includes("dubbedSequence = ['superflix'"), 'superflix não pode estar no início da sequência dublada')
+  // 1. superflix e megaembed (mgeb.lat) devem ser colocados em quarentena permanente e excluídos da sequência ativa
+  assert.ok(streamsSrc.includes('Quarentena permanente: superflix e megaembed'), 'superflix e megaembed devem estar isolados em quarentena por impor captcha')
+  assert.ok(!streamsSrc.includes("sequence = ['superflix'"), 'superflix não pode estar no início da sequência')
+  assert.ok(!streamsSrc.includes("sequence = ['megaembed'"), 'megaembed não pode estar no início da sequência')
 
   // 2. isCaptchaOrBotBlockUrl deve identificar domínios e padrões de captcha
   assert.ok(streamsSrc.includes('isCaptchaOrBotBlockUrl'), 'streams.ts deve exportar validador de urls com captcha')
   assert.ok(streamsSrc.includes('challenges.cloudflare.com'), 'validador deve cobrir challenges.cloudflare.com')
   assert.ok(streamsSrc.includes('turnstile'), 'validador deve cobrir turnstile')
+  assert.ok(streamsSrc.includes('mgeb.lat'), 'validador deve cobrir mgeb.lat')
+  assert.ok(streamsSrc.includes('sandbox.php'), 'validador deve cobrir sandbox.php')
 
-  // 3. StreamPlayer.tsx não deve acionar superflix em nenhum fallback nem no renderizador de embed
-  assert.ok(playerSrc.includes("safeMirror = activeMirror === 'superflix' ?"), 'StreamPlayer deve converter superflix para espelho limpo megaembed')
+  // 3. StreamPlayer.tsx não deve acionar superflix nem megaembed em nenhum fallback nem no renderizador de embed
+  assert.ok(playerSrc.includes("activeMirror === 'superflix' || activeMirror === 'megaembed'"), 'StreamPlayer deve converter superflix e megaembed para espelho limpo vidlink')
   assert.ok(!playerSrc.includes("setActiveMirror('superflix')"), 'StreamPlayer não deve atribuir superflix em nenhum fallback')
+  assert.ok(!playerSrc.includes("setActiveMirror('megaembed')"), 'StreamPlayer não deve atribuir megaembed em nenhum fallback')
   assert.ok(playerSrc.includes('12000'), 'Buffer timeout deve ser de pelo menos 12s para evitar fallbacks precipitados')
 })
 
@@ -1077,6 +1081,6 @@ test('OTA-PRECHECK-1: useAppStore valida disponibilidade de APK (HEAD request) p
   assert.ok(storeSrc.includes('headRes.status === 404'), 'checkForUpdates deve checar status 404 da release')
   assert.ok(storeSrc.includes('hasUpdate = false'), 'checkForUpdates deve manter hasUpdate como false se APK ainda não estiver publicado')
 
-  assert.ok(tvSrc.includes('v1.3.35/CineBG-Tv-release.apk'), 'DEFAULT_TV_APK_URL deve apontar para release estável')
-  assert.ok(tvSrc.includes('v1.3.35/CineBG-Mobile-release.apk'), 'DEFAULT_MOBILE_APK_URL deve apontar para release estável')
+  assert.ok(tvSrc.includes('CineBG-Tv-release.apk'), 'DEFAULT_TV_APK_URL deve apontar para release estável')
+  assert.ok(tvSrc.includes('CineBG-Mobile-release.apk'), 'DEFAULT_MOBILE_APK_URL deve apontar para release estável')
 })

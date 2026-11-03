@@ -31,6 +31,7 @@ import {
   resolveMegaEmbed,
   getCachedMegaEmbed,
   MIRRORS,
+  isCaptchaOrBotBlockUrl,
   type DirectCandidate,
 } from '@/services/streams'
 import {
@@ -526,19 +527,23 @@ const StreamPlayer = ({
 
   // ===== Auto-fallback state =====
   const fallbackSequence = useMemo(
-    () =>
-      activeAudio === 'dub'
-        ? ['megaembed', 'vidlink', 'vidsrc', 'embed2', 'moviebox']
-        : ['vidlink', 'vidsrc', 'embed2', 'megaembed', 'moviebox'],
-    [activeAudio]
+    () => ['vidlink', 'vidsrc', 'embed2', 'moviebox'],
+    []
   )
 
-  const safeMirror = activeMirror === 'superflix' ? (activeAudio === 'dub' ? 'megaembed' : 'vidlink') : activeMirror
+  const safeMirror =
+    activeMirror === 'superflix' || activeMirror === 'megaembed' || isCaptchaOrBotBlockUrl(activeMirror)
+      ? 'vidlink'
+      : activeMirror
 
-  const embedUrl =
+  const rawEmbedUrl =
     type === 'movie'
       ? buildMovieUrl(tmdbId, activeAudio, safeMirror)
       : buildShowUrl(tmdbId, season, episode, activeAudio, safeMirror)
+
+  const embedUrl = isCaptchaOrBotBlockUrl(rawEmbedUrl)
+    ? (type === 'movie' ? buildMovieUrl(tmdbId, activeAudio, 'vidlink') : buildShowUrl(tmdbId, season, episode, activeAudio, 'vidlink'))
+    : rawEmbedUrl
 
   const showFeedback = useCallback((text: string) => {
     setFeedback(text)
@@ -620,7 +625,7 @@ const StreamPlayer = ({
     // 2. Se for seleção entre candidatos de mídia direta (MP4/HLS):
     const list = candidatesRef.current
     applySubtitleLangRef.current?.('off')
-    setActiveMirror('megaembed')
+    setActiveMirror('vidlink')
     setAllowIframe(false)
     const dubIdx = list.findIndex((c) => c.isDubbedHint)
     const targetIdx = dubIdx !== -1 ? dubIdx : 0
@@ -674,12 +679,12 @@ const StreamPlayer = ({
       setError(false)
       return
     }
-    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho dublado/nacional limpo (MegaEmbed)
-    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência MegaEmbed...')
+    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho de contingência limpo (VidLink)
+    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência limpo (VidLink)...')
     nativeActiveRef.current = false
     setDirectSrc(null)
     setDirectKind(null)
-    setActiveMirror(activeAudio === 'dub' ? 'megaembed' : 'vidlink')
+    setActiveMirror('vidlink')
     setAllowIframe(true)
     setLoaded(false)
     setError(false)
@@ -766,7 +771,7 @@ const StreamPlayer = ({
     setCandidates([])
     setCandidateIndex(0)
     setFallbackAttempt(0)
-    setActiveMirror(activeAudio === 'dub' ? 'megaembed' : 'vidlink')
+    setActiveMirror('vidlink')
     setKey((k) => k + 1)
   }
 
@@ -915,13 +920,13 @@ const StreamPlayer = ({
             setDirectSrc(firstCandidate.url)
             setDirectKind(firstCandidate.kind)
           } else {
-            console.info('[StreamPlayer] Fontes diretas não encontradas. Tentando espelho limpo MegaEmbed PT-BR...')
+            console.info('[StreamPlayer] Fontes diretas não encontradas. Alternando para espelho limpo VidLink...')
             setCandidateIndex(0)
             candidateIndexRef.current = 0
             nativeActiveRef.current = false
             setDirectSrc(null)
             setDirectKind(null)
-            setActiveMirror('megaembed')
+            setActiveMirror('vidlink')
             setAllowIframe(true)
             setError(false)
           }
@@ -934,7 +939,7 @@ const StreamPlayer = ({
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
-          setActiveMirror(activeAudio === 'dub' ? 'megaembed' : 'vidlink')
+          setActiveMirror('vidlink')
           setAllowIframe(true)
           setError(false)
         }
@@ -948,7 +953,7 @@ const StreamPlayer = ({
         setCandidateIndex(0)
         candidateIndexRef.current = 0
         nativeActiveRef.current = false
-        setActiveMirror(activeAudio === 'dub' ? 'megaembed' : 'vidlink')
+        setActiveMirror('vidlink')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
