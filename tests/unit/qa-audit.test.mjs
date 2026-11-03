@@ -1102,3 +1102,21 @@ test('DUBBED-AUDIO-DIRECT-RESILIENCE-1: Resiliência de timeout na extração de
   // 3. vite.config.ts deve apontar para mgeb.lat ativo
   assert.ok(viteConfigSrc.includes("target: 'https://mgeb.lat'"), 'Vite proxy deve apontar para mgeb.lat')
 })
+
+test('STREAM-PLAYER-LOCK-BLUR-AND-HUD-DURATION-1: Filmes e séries sem embaçado no cadeado e tempo expandido dos controles', () => {
+  const streamPlayerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+  const livePlayerSrc = fs.readFileSync('src/components/player/LivePlayer.tsx', 'utf8')
+
+  // 1. StreamPlayer (filmes e séries): sem blur ou escurecimento no overlay de bloqueio
+  assert.ok(streamPlayerSrc.includes('backdrop-blur-none'), 'StreamPlayer deve conter backdrop-blur-none ao travar a tela')
+  assert.ok(!streamPlayerSrc.includes('backdrop-blur-[2px]'), 'StreamPlayer não pode ter backdrop-blur-[2px] no overlay de bloqueio')
+  assert.ok(streamPlayerSrc.includes('bg-transparent backdrop-blur-none'), 'StreamPlayer overlay deve ser transparente e sem desfoque')
+
+  // 2. Tempo de auto-ocultação do HUD expandido para evitar desaparecimento rápido dos botões
+  assert.ok(streamPlayerSrc.includes('}, 5500)'), 'StreamPlayer deve manter HUD visível por 5.5s')
+  assert.ok(streamPlayerSrc.includes('setTimeout(() => setShowLockPrompt(false), 5000)'), 'StreamPlayer deve manter prompt de cadeado visível por 5s')
+
+  // 3. LivePlayer consistente com 5s e 5.5s
+  assert.ok(livePlayerSrc.includes('}, 5500)'), 'LivePlayer deve manter OSD visível por 5.5s')
+  assert.ok(livePlayerSrc.includes('setTimeout(() => setShowLockPrompt(false), 5000)'), 'LivePlayer deve manter prompt de cadeado visível por 5s')
+})

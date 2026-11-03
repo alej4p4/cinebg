@@ -114,7 +114,7 @@ const LivePlayer = ({
     if (!isLocked) return
     setShowLockPrompt(true)
     if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
-    lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
+    lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 5000)
   }, [isLocked])
 
   const toggleLock = useCallback(() => {
@@ -125,7 +125,7 @@ const LivePlayer = ({
         setShowOsd(false)
         setShowLockPrompt(true)
         if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
-        lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
+        lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 5000)
       }
       return next
     })
@@ -137,7 +137,7 @@ const LivePlayer = ({
     if (osdTimerRef.current) clearTimeout(osdTimerRef.current)
     osdTimerRef.current = setTimeout(() => {
       setShowOsd(false)
-    }, 3500)
+    }, 5500)
   }
 
   // Proporção de tela e preenchimento total adaptativo no celular
