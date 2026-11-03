@@ -217,6 +217,7 @@ const StreamPlayer = ({
   const resumedRef = useRef(false)
   const lastProgressRef = useRef(0)
   const refreshTextTracksRef = useRef<(() => void) | null>(null)
+  const applySubtitleLangRef = useRef<((lang: 'off' | 'pt' | 'en') => void) | null>(null)
 
   // Customização de aparência das legendas
   const [subSize, setSubSize] = useState<'sm' | 'md' | 'lg' | 'xl'>(() => {
@@ -540,11 +541,61 @@ const StreamPlayer = ({
     feedbackTimerRef.current = setTimeout(() => setFeedback(null), 700)
   }, [])
 
-  // Seleção e confirmação de áudio em Português
+  // Seleção e alternância de áudio (Dublado 🇧🇷 / Original 🇺🇸)
   const switchAudio = useCallback((opt: AudioOption) => {
-    userManualAudioRef.current = 'dub'
-    setActiveAudio('dub')
+    const normalized: 'dub' | 'orig' = opt === 'orig' || opt === 'sub' ? 'orig' : 'dub'
+    userManualAudioRef.current = normalized
+    setActiveAudio(normalized)
+    setAudioOption(opt)
 
+    if (normalized === 'orig') {
+      // 1. Áudio Original: se stream HLS possui múltiplas faixas, ativa a faixa original/inglês
+      const hls = hlsRef.current
+      if (hls && hls.audioTracks && hls.audioTracks.length > 1) {
+        const origIdx = hls.audioTracks.findIndex((t) => {
+          const l = (t.lang || '').toLowerCase()
+          const n = (t.name || '').toLowerCase()
+          return (
+            l.startsWith('en') ||
+            l.startsWith('orig') ||
+            n.includes('orig') ||
+            n.includes('eng') ||
+            n.includes('english')
+          )
+        })
+        if (origIdx !== -1) {
+          hls.audioTrack = origIdx
+        }
+        applySubtitleLangRef.current?.('pt')
+        showFeedback('Áudio: Original 🇺🇸 (Legendas Ativadas 🇧🇷)')
+        return
+      }
+
+      // 2. Se for seleção entre candidatos de mídia direta:
+      const list = candidatesRef.current
+      applySubtitleLangRef.current?.('pt')
+      const origIdx = list.findIndex((c) => !c.isDubbedHint)
+      const targetIdx = origIdx !== -1 ? origIdx : 0
+      const directOrig = list[targetIdx]
+      if (directOrig) {
+        nativeActiveRef.current = true
+        candidateIndexRef.current = targetIdx
+        setCandidateIndex(targetIdx)
+        setDirectSrc(directOrig.url)
+        setDirectKind(directOrig.kind)
+        setLoaded(false)
+        setError(false)
+        showFeedback(`Áudio: Original 🇺🇸 (${directOrig.label})`)
+        return
+      }
+      setLoaded(false)
+      setError(false)
+      setFallbackAttempt(0)
+      setKey((k) => k + 1)
+      return
+    }
+
+    // Caso Dublado (opt === 'dub'):
     // 1. Se estiver rodando HLS nativo com múltiplas faixas de áudio no mesmo stream:
     const hls = hlsRef.current
     if (hls && hls.audioTracks && hls.audioTracks.length > 1) {
@@ -556,16 +607,14 @@ const StreamPlayer = ({
       if (ptIdx !== -1) {
         hls.audioTrack = ptIdx
       }
-      setSubLang('off')
-      setSubtitleOption('off')
+      applySubtitleLangRef.current?.('off')
       showFeedback('Áudio: Português 🇧🇷')
       return
     }
 
     // 2. Se for seleção entre candidatos de mídia direta (MP4/HLS):
     const list = candidatesRef.current
-    setSubLang('off')
-    setSubtitleOption('off')
+    applySubtitleLangRef.current?.('off')
     setActiveMirror('vidlink')
     setAllowIframe(false)
     const dubIdx = list.findIndex((c) => c.isDubbedHint)
@@ -586,7 +635,7 @@ const StreamPlayer = ({
     setError(false)
     setFallbackAttempt(0)
     setKey((k) => k + 1)
-  }, [setSubtitleOption, showFeedback])
+  }, [setAudioOption, showFeedback])
 
   // Falha na reprodução direta da fonte atual: testa a próxima opção limpa da lista sem closure obsoleta
   const handleDirectMediaError = useCallback(() => {
@@ -923,6 +972,10 @@ const StreamPlayer = ({
   const attemptPlay = useCallback(() => {
     const video = videoRef.current
     if (video) {
+      video.muted = false
+      if (typeof video.volume === 'number' && video.volume === 0) {
+        video.volume = 1.0
+      }
       if (video.paused) {
         const p = video.play()
         if (p !== undefined) {
@@ -932,13 +985,15 @@ const StreamPlayer = ({
             setIsPlaying(true)
             setError(false)
           }).catch(() => {
-            // Fallback imediato de autoplay para WebViews que exigem início mudo antes de liberar áudio
+            // Fallback de autoplay com início mudo caso o navegador/WebView bloqueie áudio não assistido
             try {
               video.muted = true
               video
                 .play()
                 .then(() => {
-                  video.muted = false
+                  try {
+                    video.muted = false
+                  } catch {}
                   loadedRef.current = true
                   setLoaded(true)
                   setIsPlaying(true)
@@ -1138,14 +1193,19 @@ const StreamPlayer = ({
     fetchPortugueseSubtitles(type, tmdbId, season, episode).then((subs) => {
       if (alive) {
         setExternalSubs(subs)
-        setTimeout(() => refreshTextTracksRef.current?.(), 400)
+        setTimeout(() => {
+          refreshTextTracksRef.current?.()
+          if (userManualAudioRef.current === 'orig' || subtitleOption === 'pt') {
+            applySubtitleLangRef.current?.('pt')
+          }
+        }, 400)
       }
     })
     return () => {
       alive = false
       clearActiveSubtitleBlobs()
     }
-  }, [type, tmdbId, season, episode])
+  }, [type, tmdbId, season, episode, subtitleOption])
 
   // Monitor de conectividade e auto-recuperação de rede
   useEffect(() => {
@@ -1463,6 +1523,7 @@ const StreamPlayer = ({
     }
   }
   refreshTextTracksRef.current = refreshTextTracks
+  applySubtitleLangRef.current = applySubtitleLang
 
   const handlePip = async () => {
     const video = videoRef.current
@@ -2760,13 +2821,24 @@ const StreamPlayer = ({
                 id="hud-btn-audio"
                 data-hud-btn="true"
                 onClick={() => {
-                  showFeedback('Áudio: Português 🇧🇷 (Dublado)')
+                  const nextOpt: AudioOption = activeAudio === 'dub' ? 'orig' : 'dub'
+                  switchAudio(nextOpt)
                 }}
                 className="flex items-center justify-center gap-1.5 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
-                title="Áudio em Português"
+                title={
+                  activeAudio === 'orig'
+                    ? 'Áudio Original (Clique para alternar para Dublado)'
+                    : 'Áudio Dublado (Clique para alternar para Original)'
+                }
               >
                 <Volume2 className="w-4 h-4 text-yellow-400 group-focus:text-black" />
-                <span>{originalLanguage === 'pt' ? '🇧🇷 Nacional' : '🇧🇷 Dublado'}</span>
+                <span>
+                  {activeAudio === 'orig'
+                    ? '🇺🇸 Original'
+                    : originalLanguage === 'pt'
+                    ? '🇧🇷 Nacional'
+                    : '🇧🇷 Dublado'}
+                </span>
               </button>
 
               {/* 3. Legendas 1-Click (Ativar / Desativar / Alternar no controle remoto) */}

@@ -1,24 +1,24 @@
 # Graph Report - cinebg  (2026-11-03)
 
 ## Corpus Check
-- 120 files · ~442,108 words
+- 120 files · ~442,826 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 23 file(s) not represented in the graph (top: .xml 10, (none) 3, .properties 3)
 
 ## Summary
-- 1215 nodes · 2665 edges · 80 communities (59 shown, 21 thin omitted)
+- 1216 nodes · 2667 edges · 83 communities (62 shown, 21 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 72 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ebf4cd90`
+- Built from commit: `fba3d550`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- index.ts
+- Details.tsx
 - observability.ts
-- App.tsx
+- UpdateModal.tsx
 - useLicense.ts
 - 🤖 Instruções para Agentes de IA — CineBG
 - qa-audit.test.mjs
@@ -38,13 +38,13 @@
 - scripts
 - framer-motion
 - �� CORREÇÕES DEFINITIVAS
-- MovieCard.tsx
+- useAppStore.ts
 - stryker.config.json
 - MainActivity
-- Focusable
+- Profiles.tsx
 - useSpeechRecognition.ts
 - LiveTV.tsx
-- SkeletonCard.tsx
+- tv.ts
 - compilerOptions
 - eslint.config.js
 - bug_fix.md
@@ -61,10 +61,13 @@
 - buildMovieUrl
 - CineBG Streams API Documentation
 - resolveMegaEmbed
-- EpisodeSelector.tsx
+- App.tsx
 - Filtros & Utilitários
-- antiRedirect.ts
+- App
 - CineBG - Architecture Documentation
+- YuCineChannelCard.tsx
+- 🛡️ Filtros de Segurança
+- ADR-011: Documentation as Code
 - CineBG - Task Backlog & Roadmap
 - CineBG - Project Status
 - Object
@@ -77,9 +80,9 @@
 - ADR-002: Observabilidade Full-Stack (4 Provedores)
 - ADR-003: Player Architecture - HLS.js + Native MP4 + Iframe Fallback
 - ADR-004: State Management - Zustand (Single Store)
-- ADR-006: License System - Signed Codes + Device Binding
-- ADR-007: Arch Contract - Boundary Validation
 - CineBG - Architectural Decisions Log
+- ADR-007: Arch Contract - Boundary Validation
+- ADR-008: Quality Gates - CI Pipeline
 - ADR-009: Android - Capacitor + Native Fragments
 - ADR-013: SplashScreen Watchdog + Error Handler Global (Fix tela preta)
 - ADR-014: Player Sem Botão de Retry (Estilo YuCine)
@@ -112,23 +115,23 @@
 ## Import Cycles
 - None detected.
 
-## Communities (80 total, 21 thin omitted)
+## Communities (83 total, 21 thin omitted)
 
-### Community 0 - "index.ts"
-Cohesion: 0.17
-Nodes (24): ✨ 2. DESIGN & MOTION PRINCIPLES (KYLE ZANTOS), PremiumContentGate(), ProgressBar(), SkeletonDetailPage(), Details(), Watch(), buildFileName(), deleteVideo() (+16 more)
+### Community 0 - "Details.tsx"
+Cohesion: 0.41
+Nodes (10): PremiumContentGate(), SkeletonDetailPage(), Details(), Watch(), buildFileName(), deleteVideo(), downloadsSupported(), downloadVideo() (+2 more)
 
 ### Community 1 - "observability.ts"
-Cohesion: 0.06
-Nodes (54): 2.2 CRÍTICO - Funcionalidade / Estabilidade, @capacitor/local-notifications, react-dom, ErrorBoundary, Props, State, useEpisodeNotifications(), bootLoader (+46 more)
+Cohesion: 0.08
+Nodes (35): 🔒 SEGURANÇA, react-dom, ErrorBoundary, Props, State, bootLoader, Window, ActivePlaybackContext (+27 more)
 
-### Community 2 - "App.tsx"
-Cohesion: 0.05
-Nodes (74): 🔗 Arquivos Relacionados, @capacitor/core, @capacitor/status-bar, zustand, AnimatedRoutes(), Anime, App(), Details (+66 more)
+### Community 2 - "UpdateModal.tsx"
+Cohesion: 0.13
+Nodes (27): 🔗 Arquivos Relacionados, @capacitor/core, UpdateModal(), UpdateModalProps, UpdateStage, AppInstaller, AppInstallerPluginInterface, cancelDownload() (+19 more)
 
 ### Community 3 - "useLicense.ts"
 Cohesion: 0.09
-Nodes (44): LicenseGate(), LicenseGateProps, ActivationValidation, computeActivationChecksum(), fnv1a(), getDeviceId(), getEffectiveTrialStart(), getFirstUse() (+36 more)
+Nodes (45): qrcode, LicenseGate(), LicenseGateProps, ActivationValidation, computeActivationChecksum(), fnv1a(), getDeviceId(), getEffectiveTrialStart() (+37 more)
 
 ### Community 4 - "🤖 Instruções para Agentes de IA — CineBG"
 Cohesion: 0.06
@@ -143,24 +146,24 @@ Cohesion: 0.05
 Nodes (38): noSvgWithoutTitle, useButtonType, useKeyWithClickEvents, useMediaCaption, source, assist, actions, noUnusedVariables (+30 more)
 
 ### Community 7 - "StreamPlayer.tsx"
-Cohesion: 0.19
-Nodes (14): PlaybackSettingsModal(), ScreenOrientationWithLock, StreamPlayer(), setActivePlaybackContext(), activeBlobUrls, clearActiveSubtitleBlobs(), fetchPortugueseSubtitles(), getImdbId() (+6 more)
+Cohesion: 0.29
+Nodes (8): PlaybackSettingsModal(), PlaybackSettingsProps, ScreenOrientationWithLock, StreamPlayer(), setActivePlaybackContext(), getCachedMegaEmbed(), clearActiveSubtitleBlobs(), markPlayerExited()
 
 ### Community 8 - ".shouldOverrideUrlLoading"
-Cohesion: 0.16
-Nodes (9): BridgeWebViewClient, ADR-015: Correção Definitiva da Inicialização do APK e Eliminação do Loop de Tela Preta, ADR-016: Eliminação do Bloqueio de Inicialização e Correção de Renderização no Android WebView, Consequências, Consequências, Contexto, Contexto, Decisão (+1 more)
+Cohesion: 0.22
+Nodes (5): BridgeWebViewClient, ADR-016: Eliminação do Bloqueio de Inicialização e Correção de Renderização no Android WebView, Consequências, Contexto, Decisão
 
 ### Community 10 - "✅ PROBLEMAS CORRIGIDOS"
 Cohesion: 0.09
 Nodes (22): 1. **Character Encoding / UTF-8 Corruption** (CRÍTICO - CORRIGIDO), 2. **TypeScript Errors - Focusable.tsx** (CRÍTICO - CORRIGIDO), 3. **Focusable.tsx - TypeError "not callable"** (CRÍTICO - CORRIGIDO), 3. **TypeScript Errors - StreamPlayer.tsx** (CRÍTICO - CORRIGIDO), 4. **Android SDK Setup no CI/CD** (ALTO - CORRIGIDO), 5. **Versão Inconsistente no update.json** (ALTO - CORRIGIDO), 6. **Duplicate Setup Node.js Step** (MÉDIO - CORRIGIDO), 7. **Android SDK Setup no CI/CD** (ALTO - CORRIGIDO) (+14 more)
 
 ### Community 11 - "tmdb.ts"
-Cohesion: 0.09
-Nodes (55): 2.3 CRÍTICO - Performance, LiveTvCarousel(), Carousel, Home(), Movies(), Series(), BANNED_CATALOG_KEYWORDS, buildCacheKey() (+47 more)
+Cohesion: 0.05
+Nodes (102): ✨ 2. DESIGN & MOTION PRINCIPLES (KYLE ZANTOS), 2.3 CRÍTICO - Performance, Decisão, PageFallback(), EpisodeSelector(), EpisodeSelectorProps, StreamPlayerProps, Focusable() (+94 more)
 
 ### Community 12 - "EmptyState.tsx"
-Cohesion: 0.26
-Nodes (10): EmptyDownloads(), EmptyFavorites(), EmptyHistory(), EmptyLiveTV(), EmptyMyList(), EmptySearch(), EmptyState(), EmptyStateProps (+2 more)
+Cohesion: 0.27
+Nodes (9): EmptyDownloads(), EmptyHistory(), EmptyLiveTV(), EmptyMyList(), EmptySearch(), EmptyState(), EmptyStateProps, illustrations (+1 more)
 
 ### Community 13 - "package.json"
 Cohesion: 0.08
@@ -188,35 +191,35 @@ Nodes (14): scripts, build, build:apk, cap:open, cap:sync, check:knip, dev, lint
 
 ### Community 21 - "framer-motion"
 Cohesion: 0.13
-Nodes (15): CONTENT_LABEL, PremiumContentGateProps, PremiumContentType, ProgressBarProps, BUTTON_INTERACTIONS, CARD_HOVER_INTERACTION, EXIT_EASE, FLUID_EASE (+7 more)
+Nodes (19): EmptyFavorites(), ProgressBarProps, Favorites(), ALL_GENRES, KEYBOARD_LAYOUT, POPULAR_SEARCH_TAGS, BUTTON_INTERACTIONS, CARD_HOVER_INTERACTION (+11 more)
 
 ### Community 22 - "�� CORREÇÕES DEFINITIVAS"
 Cohesion: 0.10
 Nodes (19): 1.1 Estrutura de Módulos, 1.2 Dependências Externas Críticas, 1.3 Fluxos de Entrada/Saída de Dados, 2.1 CRÍTICO - Segurança, 2.4 CRÍTICO - Qualidade / Código Morto, 2.5 CRÍTICO - Escalabilidade / Banco de Dados, 2.6 CRÍTICO - CI/CD / Deploy, �� AUDITORIA COMPLETA - CineBG (+11 more)
 
-### Community 23 - "MovieCard.tsx"
-Cohesion: 0.24
-Nodes (15): lucide-react, react-router-dom, LazyImage, LazyImageProps, MovieCard, Downloads(), Favorites(), History() (+7 more)
+### Community 23 - "useAppStore.ts"
+Cohesion: 0.17
+Nodes (17): zustand, useAppUpdate(), AppState, AppUpdateInfo, dataFor(), DEFAULT_PROFILE, emptyData(), PersistedState (+9 more)
 
 ### Community 24 - "stryker.config.json"
 Cohesion: 0.14
 Nodes (13): commandRunner, command, coverageAnalysis, mutate, packageManager, reporters, $schema, symlinkNodeModules (+5 more)
 
-### Community 26 - "Focusable"
-Cohesion: 0.20
-Nodes (16): Focusable(), ErrorState(), ErrorStateProps, SkeletonGrid(), useSpeechRecognition(), Anime(), ALL_GENRES, KEYBOARD_LAYOUT (+8 more)
+### Community 26 - "Profiles.tsx"
+Cohesion: 0.15
+Nodes (24): 2.2 CRÍTICO - Funcionalidade / Estabilidade, useEpisodeNotifications(), COLORS, EMOJIS, ProfileCard(), Profiles(), checkForNewEpisodes(), daysAgoISO() (+16 more)
 
 ### Community 27 - "useSpeechRecognition.ts"
-Cohesion: 0.20
-Nodes (9): ISpeechRecognitionInstance, IWindowWithSpeech, SpeechRecognitionConstructor, SpeechRecognitionErrorEventLike, SpeechRecognitionEventLike, SpeechRecognitionHook, SpeechRecognitionResultAlternative, SpeechRecognitionResultItem (+1 more)
+Cohesion: 0.18
+Nodes (10): ISpeechRecognitionInstance, IWindowWithSpeech, SpeechRecognitionConstructor, SpeechRecognitionErrorEventLike, SpeechRecognitionEventLike, SpeechRecognitionHook, SpeechRecognitionResultAlternative, SpeechRecognitionResultItem (+2 more)
 
 ### Community 28 - "LiveTV.tsx"
-Cohesion: 0.08
-Nodes (48): LivePlayer(), LivePlayerProps, YuCineChannelCard(), YuCineChannelCardProps, LiveTV(), ChannelScheduleSlot, DailyScheduleItem, EPGProgram (+40 more)
+Cohesion: 0.09
+Nodes (41): LiveTV(), ChannelScheduleSlot, DailyScheduleItem, EPGProgram, formatSlotTitle(), formatTime(), getBrasiliaMinutes(), getChannelDailySchedule() (+33 more)
 
-### Community 29 - "SkeletonCard.tsx"
-Cohesion: 0.42
-Nodes (8): HeroSkeleton(), SkeletonCard(), SkeletonCarousel(), SkeletonLiveTV(), SkeletonLiveTVGrid(), SkeletonMoviesPage(), SkeletonMyList(), SkeletonSeriesPage()
+### Community 29 - "tv.ts"
+Cohesion: 0.18
+Nodes (20): @capacitor/status-bar, MainLayout(), BOTTOM_NAV_ITEMS, BottomNav(), Navbar(), isClassic43Channel(), LivePlayer(), useOrientationFullscreen() (+12 more)
 
 ### Community 30 - "compilerOptions"
 Cohesion: 0.22
@@ -251,36 +254,48 @@ Cohesion: 0.40
 Nodes (4): 📊 Benefícios Esperados, ✅ Critérios de Aceite, 💡 Oportunidade de Melhoria, 🚀 Proposta de Solução
 
 ### Community 50 - "react"
-Cohesion: 0.13
-Nodes (20): framer-motion, @noriginmedia/norigin-spatial-navigation, react, CATEGORIES_GRID, NAV_LINKS, PlaybackSettingsProps, FocusableProps, FEATURED_CHANNEL_IDS (+12 more)
+Cohesion: 0.12
+Nodes (27): framer-motion, lucide-react, @noriginmedia/norigin-spatial-navigation, react, react-router-dom, CATEGORIES_GRID, NAV_LINKS, CONTENT_LABEL (+19 more)
 
 ### Community 51 - "buildMovieUrl"
 Cohesion: 0.25
 Nodes (11): Builders de URL (Embeds), `buildMovieUrl()` / `buildShowUrl()`, ⚡ Funções Exportadas, `getInitialMirrorForAudio()`, `getNextSilentMirrorId()`, Utilitários de Espelhos, buildMovieUrl(), buildShowUrl() (+3 more)
 
 ### Community 52 - "CineBG Streams API Documentation"
-Cohesion: 0.09
-Nodes (21): Android Nativo (Capacitor), 🧠 Cache LRU, CineBG Streams API Documentation, ⚙️ Configurações & Constantes, 📦 Espelhos Configurados (MIRRORS), 📝 Exemplo de Uso Completo, 🌐 fetchMegaEmbedSources() — Detalhado, 🛡️ Filtros de Segurança (+13 more)
+Cohesion: 0.11
+Nodes (17): Android Nativo (Capacitor), 🧠 Cache LRU, CineBG Streams API Documentation, ⚙️ Configurações & Constantes, 📦 Espelhos Configurados (MIRRORS), 📝 Exemplo de Uso Completo, 🌐 fetchMegaEmbedSources() — Detalhado, Fluxo no StreamPlayer.tsx (+9 more)
 
 ### Community 53 - "resolveMegaEmbed"
-Cohesion: 0.27
-Nodes (11): `getCachedMegaEmbed()`, Resolução de Streams, `resolveMegaEmbed()`, `resolveMegaEmbedDubbedSource()`, fetchMegaEmbedSources(), getCachedMegaEmbed(), getValidCachedEntry(), isPortugueseAudioCandidate() (+3 more)
+Cohesion: 0.29
+Nodes (10): `getCachedMegaEmbed()`, Resolução de Streams, `resolveMegaEmbed()`, `resolveMegaEmbedDubbedSource()`, fetchMegaEmbedSources(), getValidCachedEntry(), isPortugueseAudioCandidate(), resolveMegaEmbed() (+2 more)
 
-### Community 54 - "EpisodeSelector.tsx"
-Cohesion: 0.36
-Nodes (7): EpisodeSelector(), EpisodeSelectorProps, StreamPlayerProps, SkeletonEpisodeList(), getSeasonDetails(), TMDBEpisode, TMDBSeason
+### Community 54 - "App.tsx"
+Cohesion: 0.18
+Nodes (17): AnimatedRoutes(), Anime, Details, Downloads, Favorites, History, Home, LiveTV (+9 more)
 
 ### Community 55 - "Filtros & Utilitários"
 Cohesion: 0.29
 Nodes (7): Filtros & Utilitários, `formatDirectStreamUrl()`, `getCanonicalMediaKey()`, `isAdOrCamripStream()`, formatDirectStreamUrl(), getCanonicalMediaKey(), isAdOrCamripStream()
 
-### Community 56 - "antiRedirect.ts"
-Cohesion: 0.52
-Nodes (6): 🔒 SEGURANÇA, reportAdInterception(), destroyAntiRedirectShield(), handleBeforeUnload(), initAntiRedirectShield(), setAntiRedirectShieldActive()
+### Community 56 - "App"
+Cohesion: 0.32
+Nodes (5): App(), CineBGLogo(), CineBGLogoProps, SplashScreen(), SplashScreenProps
 
 ### Community 57 - "CineBG - Architecture Documentation"
 Cohesion: 0.06
 Nodes (32): 1. Separação de Camadas (Arch Contract), 2. Motion Design (Kyle Zantos), 3. Observabilidade Full-Stack (4 provedores), Android (ExoPlayer), 📱 Android Specifics, Build Variants, Capacitor + Native, 🚀 CI/CD Pipeline (+24 more)
+
+### Community 58 - "YuCineChannelCard.tsx"
+Cohesion: 0.38
+Nodes (6): LivePlayerProps, LiveTvCarousel(), YuCineChannelCard(), YuCineChannelCardProps, LiveChannel, scrollTvElementIntoView()
+
+### Community 59 - "🛡️ Filtros de Segurança"
+Cohesion: 0.50
+Nodes (4): 🛡️ Filtros de Segurança, Hosts Dublados Confirmados (PT-BR), Hosts IP-Locked (Bloqueados), Palavras-chave Bloqueadas (1xBet / CAMRIP)
+
+### Community 60 - "ADR-011: Documentation as Code"
+Cohesion: 0.67
+Nodes (3): ADR-011: Documentation as Code, Contexto, Decisão
 
 ### Community 76 - "CineBG - Task Backlog & Roadmap"
 Cohesion: 0.10
@@ -326,17 +341,17 @@ Nodes (4): ADR-003: Player Architecture - HLS.js + Native MP4 + Iframe Fallback,
 Cohesion: 0.50
 Nodes (4): ADR-004: State Management - Zustand (Single Store), Consequências, Contexto, Decisão
 
-### Community 113 - "ADR-006: License System - Signed Codes + Device Binding"
-Cohesion: 0.50
-Nodes (4): ADR-006: License System - Signed Codes + Device Binding, Consequências, Contexto, Decisão
+### Community 113 - "CineBG - Architectural Decisions Log"
+Cohesion: 0.22
+Nodes (8): ADR-006: License System - Signed Codes + Device Binding, ADR-015: Correção Definitiva da Inicialização do APK e Eliminação do Loop de Tela Preta, CineBG - Architectural Decisions Log, Consequências, Consequências, Contexto, Contexto, Decisão
 
 ### Community 114 - "ADR-007: Arch Contract - Boundary Validation"
 Cohesion: 0.50
 Nodes (4): ADR-007: Arch Contract - Boundary Validation, Consequências, Contexto, Decisão
 
-### Community 115 - "CineBG - Architectural Decisions Log"
-Cohesion: 0.22
-Nodes (8): ADR-008: Quality Gates - CI Pipeline, ADR-011: Documentation as Code, CineBG - Architectural Decisions Log, Consequências, Contexto, Contexto, Decisão, Decisão
+### Community 115 - "ADR-008: Quality Gates - CI Pipeline"
+Cohesion: 0.50
+Nodes (4): ADR-008: Quality Gates - CI Pipeline, Consequências, Contexto, Decisão
 
 ### Community 116 - "ADR-009: Android - Capacitor + Native Fragments"
 Cohesion: 0.50
@@ -358,17 +373,17 @@ Nodes (4): ADR-014: Player Sem Botão de Retry (Estilo YuCine), Consequências, 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Decisão` connect `.shouldOverrideUrlLoading` to `index.ts`, `App.tsx`, `SkeletonCard.tsx`?**
+- **Why does `Decisão` connect `tmdb.ts` to `.shouldOverrideUrlLoading`, `CineBG - Architectural Decisions Log`?**
   _High betweenness centrality (0.128) - this node is a cross-community bridge._
 - **What connects `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard` to the rest of the system?**
   _16 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `observability.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.057971014492753624 - nodes in this community are weakly interconnected._
-- **Why does `ProgressBar()` connect `index.ts` to `App.tsx`, `.shouldOverrideUrlLoading`, `tmdb.ts`, `react`, `framer-motion`, `Focusable`, `LiveTV.tsx`?**
-  _High betweenness centrality (0.099) - this node is a cross-community bridge._
-- **Should `App.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.05183861082737487 - nodes in this community are weakly interconnected._
-- **Why does `CineBG - Architectural Decisions Log` connect `CineBG - Architectural Decisions Log` to `ADR-010: StreamPlayer.tsx Encoding Fix (v1.2.67)`, `.shouldOverrideUrlLoading`, `ADR-005: OTA Updates - Dual APK (Mobile + TV)`, `ADR-012: Capacitor server.url Removido (Fix connection refused)`, `ADR-001: Motion Design Principles (Kyle Zantos)`, `ADR-002: Observabilidade Full-Stack (4 Provedores)`, `ADR-003: Player Architecture - HLS.js + Native MP4 + Iframe Fallback`, `ADR-004: State Management - Zustand (Single Store)`, `ADR-006: License System - Signed Codes + Device Binding`, `ADR-007: Arch Contract - Boundary Validation`, `ADR-009: Android - Capacitor + Native Fragments`, `ADR-013: SplashScreen Watchdog + Error Handler Global (Fix tela preta)`, `ADR-014: Player Sem Botão de Retry (Estilo YuCine)`?**
+  _Cohesion score 0.0797872340425532 - nodes in this community are weakly interconnected._
+- **Why does `ProgressBar()` connect `tmdb.ts` to `Details.tsx`, `LiveTV.tsx`, `framer-motion`, `App.tsx`?**
+  _High betweenness centrality (0.100) - this node is a cross-community bridge._
+- **Should `UpdateModal.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.12873563218390804 - nodes in this community are weakly interconnected._
+- **Why does `CineBG - Architectural Decisions Log` connect `CineBG - Architectural Decisions Log` to `ADR-010: StreamPlayer.tsx Encoding Fix (v1.2.67)`, `.shouldOverrideUrlLoading`, `ADR-005: OTA Updates - Dual APK (Mobile + TV)`, `ADR-012: Capacitor server.url Removido (Fix connection refused)`, `ADR-001: Motion Design Principles (Kyle Zantos)`, `ADR-002: Observabilidade Full-Stack (4 Provedores)`, `ADR-003: Player Architecture - HLS.js + Native MP4 + Iframe Fallback`, `ADR-004: State Management - Zustand (Single Store)`, `ADR-007: Arch Contract - Boundary Validation`, `ADR-008: Quality Gates - CI Pipeline`, `ADR-009: Android - Capacitor + Native Fragments`, `ADR-013: SplashScreen Watchdog + Error Handler Global (Fix tela preta)`, `ADR-014: Player Sem Botão de Retry (Estilo YuCine)`, `ADR-011: Documentation as Code`?**
   _High betweenness centrality (0.067) - this node is a cross-community bridge._
 - **Should `useLicense.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.09042553191489362 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08758503401360544 - nodes in this community are weakly interconnected._
