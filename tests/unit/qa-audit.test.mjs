@@ -999,3 +999,26 @@ test('PLAYBACK-RATIO-AUDIO-SUBS-1: Proporção 4:3 para desenhos clássicos, áu
   assert.ok(streamPlayerSrc.includes("'🇺🇸 Original'"), 'StreamPlayer hud-btn-audio deve exibir bandeira e status dinâmico')
   assert.ok(streamPlayerSrc.includes("video.muted = false"), 'StreamPlayer deve iniciar desmutado por padrão com fallback seguro')
 })
+
+test('MOBILE-SCROLL-STABILITY-1: Prevenção de salto/retorno indesejado ao início ao rolar no mobile', () => {
+  const heroBannerSrc = fs.readFileSync('src/components/ui/HeroBanner.tsx', 'utf8')
+  const homeSrc = fs.readFileSync('src/pages/Home.tsx', 'utf8')
+  const bottomNavSrc = fs.readFileSync('src/components/layout/BottomNav.tsx', 'utf8')
+  const focusableSrc = fs.readFileSync('src/components/tv/Focusable.tsx', 'utf8')
+
+  // 1. HeroBanner não deve forçar window.scrollTo({ top: 0 }) em onFocus
+  assert.ok(!heroBannerSrc.includes("window.scrollTo({ top: 0"), 'HeroBanner não deve forçar scroll para o topo ao focar')
+
+  // 2. Home.tsx não deve roubar foco ou redefinir scroll em dispositivos móveis
+  assert.ok(homeSrc.includes('if (isMobileDevice()) return'), 'Home.tsx deve ignorar foco automático em dispositivos móveis')
+  assert.ok(homeSrc.includes("window.addEventListener('touchstart', onUserInteraction"), 'Home.tsx deve detectar toque para marcar navegação do usuário')
+  assert.ok(homeSrc.includes('window.scrollY > 50'), 'Home.tsx não deve focar se o usuário já rolou a tela')
+
+  // 3. BottomNav deve auto-ocultar suavemente ao rolar e prevenir cliques acidentais em swipe/drag
+  assert.ok(bottomNavSrc.includes('isDraggingRef'), 'BottomNav deve conter proteção contra cliques acidentais durante arraste touch')
+  assert.ok(bottomNavSrc.includes('currentY - lastScrollYRef.current'), 'BottomNav deve detectar direção de rolagem')
+  assert.ok(bottomNavSrc.includes('translate-y-['), 'BottomNav deve auto-ocultar ao rolar para baixo')
+
+  // 4. Focusable não deve disparar scroll programático em telas mobile
+  assert.ok(focusableSrc.includes('!isMobileDevice()'), 'Focusable deve ignorar autoScroll espacial no mobile')
+})

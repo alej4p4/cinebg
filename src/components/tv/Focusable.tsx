@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation'
-import { scrollTvElementIntoView } from '@/utils/tv'
+import { scrollTvElementIntoView, isMobileDevice } from '@/utils/tv'
 
 interface FocusableProps {
   onEnterPress?: () => void
@@ -40,7 +40,8 @@ export const Focusable = ({
   })
 
   useEffect(() => {
-    if (focused && autoScroll) {
+    // Auto-scroll espacial exclusivo para Smart TV / Desktop; em telas de celular touch não interfere na rolagem
+    if (focused && autoScroll && !isMobileDevice()) {
       const el = (spatialRef && typeof spatialRef === 'object' && 'current' in spatialRef && spatialRef.current instanceof HTMLElement ? spatialRef.current : null) || innerRef.current
       scrollTvElementIntoView(el)
     }

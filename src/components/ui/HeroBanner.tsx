@@ -156,9 +156,6 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
                 <div className="flex gap-3 pt-1">
                   <Focusable
                     focusKey="hero-watch-btn"
-                    onFocus={() => {
-                      window.scrollTo({ top: 0, behavior: 'auto' })
-                    }}
                     onEnterPress={() => navigate(`/details/${item.type}/${item.id}`)}
                     onArrowPress={(dir) => {
                       if (dir === 'up') {
@@ -196,9 +193,6 @@ const HeroBanner = ({ items, loading }: HeroBannerProps) => {
 
                   <Focusable
                     focusKey="hero-details-btn"
-                    onFocus={() => {
-                      window.scrollTo({ top: 0, behavior: 'auto' })
-                    }}
                     onEnterPress={() => navigate(`/details/${item.type}/${item.id}`)}
                     onArrowPress={(dir) => {
                       if (dir === 'up') {
