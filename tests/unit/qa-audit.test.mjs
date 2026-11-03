@@ -923,3 +923,20 @@ test('LIVE-CHANNELS-DEDUPLICATION-AND-STABILITY-1: liveChannels e LivePlayer des
   // LivePlayer deve conter proteção de travamentos múltiplos consecutivos (buffer_stalled_excessive)
   assert.ok(playerSrc.includes('buffer_stalled_excessive'), 'LivePlayer deve detectar e alternar em stalls excessivos')
 })
+
+
+test('LIVE-SPORTS-RESILIENCE-1: sportv-2 e premiere possuem fontes operantes e eliminam restreamers instaveis', () => {
+  const channelsSrc = fs.readFileSync('src/services/liveChannels.ts', 'utf8')
+  const playerSrc = fs.readFileSync('src/components/player/LivePlayer.tsx', 'utf8')
+
+  const sportv2Idx = channelsSrc.indexOf("id: 'sportv-2'")
+  const sportv2Block = channelsSrc.slice(sportv2Idx, sportv2Idx + 400)
+  assert.ok(!sportv2Block.includes('181.78.197.59:8000'), 'SporTV 2 não deve conter servidor inoperante 181.78.197.59:8000')
+
+  const premiereClubesIdx = channelsSrc.indexOf("id: 'premiere-clubes'")
+  const premiereClubesBlock = channelsSrc.slice(premiereClubesIdx, premiereClubesIdx + 400)
+  assert.ok(!premiereClubesBlock.includes('181.78.197.59:8000'), 'Premiere Clubes não deve conter servidor inoperante 181.78.197.59:8000')
+  assert.ok(!premiereClubesBlock.includes('138.204.86.4:8080'), 'Premiere Clubes não deve conter servidor de alta latência 138.204.86.4:8080')
+
+  assert.ok(playerSrc.includes('fragLoadingTimeOut: 15000'), 'LivePlayer deve manter fragLoadingTimeOut de 15s para suportar fragmentos longos sem abortar')
+})
