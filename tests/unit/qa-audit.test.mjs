@@ -1039,13 +1039,32 @@ test('DUBBED-AUDIO-AND-TURKISH-SHOWS-1: Priorização estrita de áudio dublado 
   assert.ok(seriesSrc.includes("name: 'Séries Turcas'"), 'Series.tsx deve incluir plataforma Séries Turcas')
   assert.ok(seriesSrc.includes('title="Séries Turcas"'), 'Series.tsx deve renderizar carrossel Séries Turcas')
 
-  // 3. streams.ts deve priorizar superflix para audio === dub
-  assert.ok(streamsSrc.includes("audio === 'dub' ? 'superflix' : 'vidlink'"), 'getInitialMirrorForAudio deve apontar para superflix quando dub')
-  assert.ok(streamsSrc.includes("const dubbedSequence = ['superflix', 'megaembed'"), 'getNextSilentMirrorId deve priorizar superflix e megaembed quando dub')
+  // 3. streams.ts deve priorizar megaembed limpo (sem captcha) para audio === dub
+  assert.ok(streamsSrc.includes("audio === 'dub' ? 'megaembed' : 'vidlink'"), 'getInitialMirrorForAudio deve apontar para megaembed quando dub')
+  assert.ok(streamsSrc.includes("const dubbedSequence = ['megaembed'"), 'getNextSilentMirrorId deve priorizar megaembed quando dub sem superflix')
 
   // 4. StreamPlayer.tsx deve selecionar candidato dublado e faixas PT no HLS
   assert.ok(playerSrc.includes('const dubIdx = list.findIndex((c) => c.isDubbedHint)'), 'StreamPlayer deve selecionar candidato dublado prioritário')
   assert.ok(playerSrc.includes("l === 'pob'"), 'selectPreferredAudioTrack deve incluir pob (Portuguese Brazil)')
   assert.ok(playerSrc.includes("n.includes('brasil')"), 'selectPreferredAudioTrack deve incluir brasil')
   assert.ok(playerSrc.includes('Hls.Events.AUDIO_TRACK_LOADED'), 'StreamPlayer deve escutar AUDIO_TRACK_LOADED no HLS')
+})
+
+test('NO-CLOUDFLARE-CAPTCHA-MIRRORS-1: Banimento de telas de validação humana (Cloudflare Turnstile) e proteção do StreamPlayer', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+
+  // 1. superflixapi.fun deve ser colocado em quarentena permanente e excluído da sequência ativa
+  assert.ok(streamsSrc.includes('Quarentena permanente: superflix / superflixapi.fun bloqueado'), 'superflix deve estar isolado em quarentena por impor captcha')
+  assert.ok(!streamsSrc.includes("dubbedSequence = ['superflix'"), 'superflix não pode estar no início da sequência dublada')
+
+  // 2. isCaptchaOrBotBlockUrl deve identificar domínios e padrões de captcha
+  assert.ok(streamsSrc.includes('isCaptchaOrBotBlockUrl'), 'streams.ts deve exportar validador de urls com captcha')
+  assert.ok(streamsSrc.includes('challenges.cloudflare.com'), 'validador deve cobrir challenges.cloudflare.com')
+  assert.ok(streamsSrc.includes('turnstile'), 'validador deve cobrir turnstile')
+
+  // 3. StreamPlayer.tsx não deve acionar superflix em nenhum fallback nem no renderizador de embed
+  assert.ok(playerSrc.includes("safeMirror = activeMirror === 'superflix' ?"), 'StreamPlayer deve converter superflix para espelho limpo megaembed')
+  assert.ok(!playerSrc.includes("setActiveMirror('superflix')"), 'StreamPlayer não deve atribuir superflix em nenhum fallback')
+  assert.ok(playerSrc.includes('12000'), 'Buffer timeout deve ser de pelo menos 12s para evitar fallbacks precipitados')
 })
