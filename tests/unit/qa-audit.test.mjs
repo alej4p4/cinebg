@@ -1068,3 +1068,15 @@ test('NO-CLOUDFLARE-CAPTCHA-MIRRORS-1: Banimento de telas de validação humana 
   assert.ok(!playerSrc.includes("setActiveMirror('superflix')"), 'StreamPlayer não deve atribuir superflix em nenhum fallback')
   assert.ok(playerSrc.includes('12000'), 'Buffer timeout deve ser de pelo menos 12s para evitar fallbacks precipitados')
 })
+
+test('OTA-PRECHECK-1: useAppStore valida disponibilidade de APK (HEAD request) para prevenir erro 404 durante compilação', () => {
+  const storeSrc = fs.readFileSync('src/store/useAppStore.ts', 'utf8')
+  const tvSrc = fs.readFileSync('src/utils/tv.ts', 'utf8')
+
+  assert.ok(storeSrc.includes("method: 'HEAD'"), 'checkForUpdates deve disparar verificação HEAD antes de aceitar hasUpdate')
+  assert.ok(storeSrc.includes('headRes.status === 404'), 'checkForUpdates deve checar status 404 da release')
+  assert.ok(storeSrc.includes('hasUpdate = false'), 'checkForUpdates deve manter hasUpdate como false se APK ainda não estiver publicado')
+
+  assert.ok(tvSrc.includes('v1.3.35/CineBG-Tv-release.apk'), 'DEFAULT_TV_APK_URL deve apontar para release estável')
+  assert.ok(tvSrc.includes('v1.3.35/CineBG-Mobile-release.apk'), 'DEFAULT_MOBILE_APK_URL deve apontar para release estável')
+})

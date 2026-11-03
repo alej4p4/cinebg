@@ -211,8 +211,22 @@ export const useAppStore = create<AppState>()(
           if (data) {
             const remoteVersion = data.version || currentVersion
             const downloadUrl = getDeviceUpdateUrl(data)
-            const hasUpdate = isVersionNewer(remoteVersion, currentVersion)
+            let hasUpdate = isVersionNewer(remoteVersion, currentVersion)
             const isMandatory = !!data.mandatory
+
+            // Validação prévia de disponibilidade: confirma se o binário APK já foi compilado e publicado no GitHub
+            if (hasUpdate && downloadUrl && typeof fetch !== 'undefined') {
+              try {
+                const headCtrl = new AbortController()
+                const headTimer = setTimeout(() => headCtrl.abort(), 2500)
+                const headRes = await fetch(downloadUrl, { method: 'HEAD', signal: headCtrl.signal })
+                clearTimeout(headTimer)
+                if (headRes.status === 404) {
+                  console.info('[checkForUpdates] APK da nova versão ainda está sendo compilado no GitHub Actions. Aguardando publicação.')
+                  hasUpdate = false
+                }
+              } catch {}
+            }
 
             let isDismissed = false
             if (hasUpdate && !isMandatory) {
