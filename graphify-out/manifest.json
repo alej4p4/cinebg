@@ -1,8 +1,8 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1793660354.5642662,
-    "seen": 1793662906.0085738,
-    "ast_hash": "6a60f1fa97c30a592efe1207994f8eff",
+    "mtime": 1793667747.1720085,
+    "seen": 1793667844.5203748,
+    "ast_hash": "3c82ca2a2170629b9427f11caac2732d",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793660354.5818594,
-    "seen": 1793662906.0086234,
-    "ast_hash": "0e99c347223ef2e54d7ac4ef2272decb",
+    "mtime": 1793667727.189519,
+    "seen": 1793667844.5204937,
+    "ast_hash": "120655d7967a2238f2ddafc363f4893a",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1793660354.582863,
-    "seen": 1793662906.0086327,
-    "ast_hash": "88b9a64ccc84f26ce9aa4cc3eedc97f5",
+    "mtime": 1793667757.5338497,
+    "seen": 1793667844.5205178,
+    "ast_hash": "e93222a33292186c6caa932b451ab5c8",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -138,8 +138,8 @@
     "semantic_hash": "582012cd608852a3d274367c6f820cf3"
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1793666826.369117,
-    "seen": 1793667170.5327969,
+    "mtime": 1793667208.5686715,
+    "seen": 1793667844.5205839,
     "ast_hash": "df57400d4ff16708265a791c4111b971",
     "semantic_hash": ""
   },
@@ -342,9 +342,9 @@
     "semantic_hash": "88596bd4dfe5fd1a858b122a6e632c98"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1793666876.1062808,
-    "seen": 1793667170.5329032,
-    "ast_hash": "bc40508df54baaeb94875f34138173f8",
+    "mtime": 1793667208.5696707,
+    "seen": 1793667844.5208607,
+    "ast_hash": "a9716e94007341c4f19ec51b144af973",
     "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
@@ -396,9 +396,9 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1793660354.58486,
-    "seen": 1793662906.0087996,
-    "ast_hash": "14706e96646319f924d17ba3d6fc166d",
+    "mtime": 1793667734.3672638,
+    "seen": 1793667844.5209572,
+    "ast_hash": "4a9ef47cb8ca69fa6ad661710526a720",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793667009.0832138,
-    "seen": 1793667170.5329564,
-    "ast_hash": "f84625ca84cb473c46886f317e7eef5c",
+    "mtime": 1793667208.5706694,
+    "seen": 1793667844.5209992,
+    "ast_hash": "eab0ee2d3faf3423b3360e305805110c",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {
