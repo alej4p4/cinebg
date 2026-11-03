@@ -1,15 +1,15 @@
 {
-  "version": "1.3.40",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk",
+  "version": "1.3.41",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.41/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.41/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.41/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.41/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.41/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.41/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Suporte e compatibilidade aprimorada para séries e novelas nacionais, inclusão de alternância dinâmica de servidores e descarte de hosts inativos.",
-  "versionCode": 130,
-  "notes": "Suporte e compatibilidade aprimorada para séries e novelas nacionais, inclusão de alternância dinâmica de servidores e descarte de hosts inativos.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.40/CineBG-Tv-release.apk"
+  "releaseNotes": "Erradicação de erros do VidLink, priorização universal de 2Embed para filmes, novelas e séries com áudio em português, e bloqueio de streams com propaganda de apostas (1xBet).",
+  "versionCode": 131,
+  "notes": "Erradicação de erros do VidLink, priorização universal de 2Embed para filmes, novelas e séries com áudio em português, e bloqueio de streams com propaganda de apostas (1xBet).",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.41/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.41/CineBG-Tv-release.apk"
 }
