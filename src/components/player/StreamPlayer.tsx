@@ -23,6 +23,7 @@ import {
   ArrowLeft,
   Sliders,
   PictureInPicture,
+  Subtitles as SubtitlesIcon,
 } from 'lucide-react'
 import {
   buildMovieUrl,
@@ -30,6 +31,7 @@ import {
   getInitialMirrorForAudio,
   resolveMegaEmbed,
   getCachedMegaEmbed,
+  clearResolvedSourcesCache,
   MIRRORS,
   isCaptchaOrBotBlockUrl,
   type DirectCandidate,
@@ -754,6 +756,8 @@ const StreamPlayer = ({
 
   const handleManualRefresh = () => {
     loadedRef.current = false
+    clearResolvedSourcesCache()
+    showFeedback('🔄 Buscando fontes dubladas...')
     trackStreamPlayback({
       action: 'stream_start',
       tmdbId,
@@ -829,10 +833,10 @@ const StreamPlayer = ({
     if (stallTimerRef.current) clearTimeout(stallTimerRef.current)
     stallTimerRef.current = setTimeout(() => {
       if (!loadedRef.current) {
-        console.warn('[StreamPlayer] Vídeo estagnado na rede (7s). Avançando para próxima opção...')
+        console.warn('[StreamPlayer] Vídeo estagnado na rede (15s). Avançando para próxima opção...')
         handleDirectMediaError()
       }
-    }, 5000)
+    }, 15000)
   }
 
   useEffect(() => {
@@ -855,12 +859,12 @@ const StreamPlayer = ({
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout resiliente para conexões residenciais e TV Boxes: 12s para buffer inicial antes de pular para a próxima opção
+    // Timeout resiliente para conexões móveis, residenciais e TV Boxes: expandido de 12000ms para 25000ms (25s) para buffer inicial
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
-      console.warn(`[StreamPlayer] Timeout de carregamento (12s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
+      console.warn(`[StreamPlayer] Timeout de carregamento (25s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
       handleDirectMediaError()
-    }, 12000)
+    }, 25000)
 
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
@@ -2598,10 +2602,21 @@ const StreamPlayer = ({
         {showIframe && (
           <div className="absolute top-16 inset-x-4 z-40 pointer-events-none flex justify-center animate-fade-in">
             <div className="flex items-center gap-2 bg-black/90 border border-yellow-400/50 px-4 py-2 rounded-full text-xs font-medium text-white shadow-2xl backdrop-blur-md max-w-lg text-center">
-              <Volume2 className="w-4 h-4 text-yellow-400 shrink-0" />
-              <span>
-                <b>Áudio em Português 🇧🇷:</b> No player abaixo, toque no ícone de <b>balão (💬)</b> para ativar o áudio Dublado.
-              </span>
+              {activeMirror === 'vidlink' || activeMirror === 'vidsrc' || activeMirror === 'embed2' ? (
+                <>
+                  <SubtitlesIcon className="w-4 h-4 text-yellow-400 shrink-0" />
+                  <span>
+                    <b>Legendas em Português 🇧🇷:</b> No player abaixo, toque no ícone <b>[CC]</b> para ativar legendas em PT-BR. Use <b>Buscar Fonte Dublada</b> acima para tentar versão com áudio dublado.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-4 h-4 text-yellow-400 shrink-0" />
+                  <span>
+                    <b>Áudio em Português 🇧🇷:</b> No player abaixo, toque no ícone de <b>balão (💬)</b> para ativar o áudio Dublado.
+                  </span>
+                </>
+              )}
             </div>
           </div>
         )}

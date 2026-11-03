@@ -159,13 +159,20 @@ export const buildShowUrl = (
 // SELEÇÃO INTELIGENTE DE FONTES DIRETAS (MegaEmbed) & FILTRO ANTI-1XBET/CAMRIP
 // =========================================================================
 const MEGAEMBED_EMBED_BASE = 'https://mgeb.lat/embed'
+const MEGAEMBED_BASES = [
+  'https://mgeb.lat/embed',
+  'https://mgeb.space/embed',
+  'https://mgeb.site/embed',
+]
 
 // Hosts confirmados com acervo em Português / Dublado
 const DUBBED_HOST_HINTS = [
   'fontedecanais',
+  '76iqsc65sxxn71.com',
   'gviudclrb.com',
   'mgeb.space',
   'mgeb.lat',
+  'mgeb.site',
   '123flmsfree.com',
   '321moviesfree.com',
   '123pelicula.com',
@@ -231,6 +238,8 @@ const BROKEN_IP_LOCKED_HOSTS = [
   'tapecontent.net',
   '97bf1.com',
   'playercdnx.workers.dev',
+  'playercdnxx.workers.dev',
+  'playercdn',
 ]
 
 // Palavras-chave proibidas de propagandas de apostas (1xBet / 1xbt) e gravações de cinema (HDCAM / CAMRIP / TS)
@@ -360,7 +369,7 @@ const getCanonicalMediaKey = (url: string): string => {
   }
 }
 
-// Devolve as fontes diretas do MegaEmbed com suporte a CapacitorHttp nativo e retry
+// Devolve as fontes diretas do MegaEmbed com suporte a múltiplos espelhos (mgeb.lat, mgeb.space, mgeb.site), CapacitorHttp nativo e retry
 const fetchMegaEmbedSources = async (
   tmdbId: number,
   mediaType: 'movie' | 'tv',
@@ -369,89 +378,94 @@ const fetchMegaEmbedSources = async (
 ): Promise<MegaEmbedSource[]> => {
   const targetPath =
     mediaType === 'movie' ? `${tmdbId}` : `${tmdbId}/${season}/${episode}`
-  const targetUrl = `https://mgeb.lat/embed/${targetPath}`
 
-  // 1. No app nativo Android (Capacitor), segue redirecionamentos 301/302 (comuns em séries para subdomínios)
-  if (Capacitor.isNativePlatform()) {
-    try {
-      let currentUrl = targetUrl
-      for (let redirectHop = 0; redirectHop < 3; redirectHop++) {
-        const httpPromise = CapacitorHttp.get({
-          url: currentUrl,
-          headers: {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          },
-          connectTimeout: 15000,
-          readTimeout: 15000,
-        })
-        const timeoutPromise = new Promise<null>((resolve) =>
-          setTimeout(() => resolve(null), 15000)
-        )
-        const resp = await Promise.race([httpPromise, timeoutPromise])
+  for (const base of MEGAEMBED_BASES) {
+    const targetUrl = `${base}/${targetPath}`
 
-        // Trata redirecionamento 301, 302, 307, 308 (subdomínios de CDN em séries)
-        if (resp && resp.status >= 300 && resp.status < 400) {
-          const loc = resp.headers?.location || resp.headers?.Location
-          if (loc) {
-            currentUrl = loc.startsWith('http') ? loc : new URL(loc, currentUrl).href
-            continue
+    // 1. No app nativo Android (Capacitor), segue redirecionamentos 301/302 (comuns em séries para subdomínios)
+    if (Capacitor.isNativePlatform()) {
+      try {
+        let currentUrl = targetUrl
+        for (let redirectHop = 0; redirectHop < 3; redirectHop++) {
+          const httpPromise = CapacitorHttp.get({
+            url: currentUrl,
+            headers: {
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+              'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            },
+            connectTimeout: 15000,
+            readTimeout: 15000,
+          })
+          const timeoutPromise = new Promise<null>((resolve) =>
+            setTimeout(() => resolve(null), 15000)
+          )
+          const resp = await Promise.race([httpPromise, timeoutPromise])
+
+          // Trata redirecionamento 301, 302, 307, 308 (subdomínios de CDN em séries)
+          if (resp && resp.status >= 300 && resp.status < 400) {
+            const loc = resp.headers?.location || resp.headers?.Location
+            if (loc) {
+              currentUrl = loc.startsWith('http') ? loc : new URL(loc, currentUrl).href
+              continue
+            }
           }
-        }
 
-        const dataStr =
-          typeof resp?.data === 'string'
-            ? resp.data
-            : resp?.data
-            ? JSON.stringify(resp.data)
-            : ''
+          const dataStr =
+            typeof resp?.data === 'string'
+              ? resp.data
+              : resp?.data
+              ? JSON.stringify(resp.data)
+              : ''
 
-        if (resp && resp.status >= 200 && resp.status < 300 && dataStr) {
-          const match = dataStr.match(/var sources\s*=\s*(\[[\s\S]*?\]);/)
-          if (match) {
-            const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed
+          if (resp && resp.status >= 200 && resp.status < 300 && dataStr) {
+            const match = dataStr.match(/var sources\s*=\s*(\[[\s\S]*?\]);/)
+            if (match) {
+              try {
+                const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed
+              } catch {}
+            }
           }
+          break
         }
-        break
+      } catch (e) {
+        console.warn(`[fetchMegaEmbedSources] CapacitorHttp erro no espelho ${base}:`, e)
       }
-    } catch (e) {
-      console.warn('[fetchMegaEmbedSources] CapacitorHttp erro, tentando fallback:', e)
     }
-  }
 
-  // 2. Ambiente Web (Vite dev proxy ou fetch direto com timeout rápido)
-  const endpoints = [
-    typeof window !== 'undefined' && window.location.port === '5173'
-      ? `/api/mgeb/embed/${targetPath}`
-      : null,
-    targetUrl,
-  ].filter(Boolean) as string[]
+    // 2. Ambiente Web (Vite dev proxy ou fetch direto com timeout rápido)
+    const endpoints = [
+      typeof window !== 'undefined' && window.location.port === '5173'
+        ? `/api/mgeb/embed/${targetPath}`
+        : null,
+      targetUrl,
+    ].filter(Boolean) as string[]
 
-  for (const url of endpoints) {
-    try {
-      const controller = new AbortController()
-      const tId = setTimeout(() => controller.abort(), 9000)
-      const res = await fetch(url, {
-        credentials: 'omit',
-        referrerPolicy: 'no-referrer',
-        redirect: 'follow',
-        signal: controller.signal,
-      })
-      clearTimeout(tId)
-      if (!res.ok) continue
+    for (const url of endpoints) {
+      try {
+        const controller = new AbortController()
+        const tId = setTimeout(() => controller.abort(), 9000)
+        const res = await fetch(url, {
+          credentials: 'omit',
+          referrerPolicy: 'no-referrer',
+          redirect: 'follow',
+          signal: controller.signal,
+        })
+        clearTimeout(tId)
+        if (!res.ok) continue
 
-      const html = await res.text()
-      const match = html.match(/var sources\s*=\s*(\[[\s\S]*?\]);/)
-      if (!match) continue
+        const html = await res.text()
+        const match = html.match(/var sources\s*=\s*(\[[\s\S]*?\]);/)
+        if (!match) continue
 
-      const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed
-      }
-    } catch {}
+        const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed
+        }
+      } catch {}
+    }
   }
 
   return []
