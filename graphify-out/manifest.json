@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1793712093.6621227,
-    "seen": 1793714017.0132022,
-    "ast_hash": "f5a714ee19d2da77ac73076da43f17b4",
+    "mtime": 1793714212.1907802,
+    "seen": 1793714363.7899213,
+    "ast_hash": "e16bc9c56530b04dec7ef9ee5344c607",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1793713987.3843093,
-    "seen": 1793714017.0132189,
+    "mtime": 1793714339.685958,
+    "seen": 1793714363.7899299,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": "4d2bbe5da73933ac326a41f41302842f"
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1793713987.3833077,
-    "seen": 1793714017.0132744,
+    "mtime": 1793714339.684951,
+    "seen": 1793714363.7899516,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": "aa014fc13e426f53986cc2fec0130a09"
   },
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793712093.6626558,
-    "seen": 1793714017.0133433,
-    "ast_hash": "cbf3e8280a876a8d145374493a963870",
+    "mtime": 1793714188.1936548,
+    "seen": 1793714363.789973,
+    "ast_hash": "47845755c900cf068b7fd4919f68d7de",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1793712093.6636484,
-    "seen": 1793714017.013359,
-    "ast_hash": "fa421998d2b2cbb582af8cc84439d7e7",
+    "mtime": 1793714202.4499831,
+    "seen": 1793714363.7899823,
+    "ast_hash": "f38c84f1f90a725ca09c47503ed7300a",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
-    "mtime": 1793713764.14439,
-    "seen": 1793714017.013415,
-    "ast_hash": "f5af4cf3530fb8d4439bc62d81e50fde",
+    "mtime": 1793714125.3690507,
+    "seen": 1793714363.7900143,
+    "ast_hash": "3b3aa8307de6431b2e1dd41e68812e55",
     "semantic_hash": ""
   },
   "src/components/ui/Carousel.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": "7b49bb9d167a046a558eef893e1baed8"
   },
   "src/components/ui/HeroBanner.tsx": {
-    "mtime": 1793713678.8261342,
-    "seen": 1793714017.0134513,
-    "ast_hash": "d025125b2fbcb409361301cdfb883207",
+    "mtime": 1793714125.371045,
+    "seen": 1793714363.7900352,
+    "ast_hash": "0e2480948ce386cd87fbbbfd1aa4bbdb",
     "semantic_hash": ""
   },
   "src/components/ui/LazyImage.tsx": {
@@ -288,9 +288,9 @@
     "semantic_hash": "c426fb08d4a3f1b5f4112de832353661"
   },
   "src/pages/Home.tsx": {
-    "mtime": 1793713740.226508,
-    "seen": 1793714017.0135324,
-    "ast_hash": "bf2f6adcddd8d3adf01d76afe31a2400",
+    "mtime": 1793714125.372049,
+    "seen": 1793714363.79008,
+    "ast_hash": "f0f2b07477aae3cb54b9461498be7944",
     "semantic_hash": ""
   },
   "src/pages/LiveTV.tsx": {
@@ -396,9 +396,9 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1793712093.6646502,
-    "seen": 1793714017.0136461,
-    "ast_hash": "7a9ca82262beb9bd1affc5d9850925d8",
+    "mtime": 1793714222.305634,
+    "seen": 1793714363.7901442,
+    "ast_hash": "d41044595f2036fbdd0f9e2bf2db6e56",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
@@ -804,9 +804,9 @@
     "semantic_hash": "ef0e34075b30fe3fa052441bb3689362"
   },
   "src/components/layout/BottomNav.tsx": {
-    "mtime": 1793713809.2425728,
-    "seen": 1793714017.0133917,
-    "ast_hash": "394560903d24ddc486d76850dfa32451",
+    "mtime": 1793714125.3680458,
+    "seen": 1793714363.7900007,
+    "ast_hash": "16c1ca4873e882191f7f3dbc952d7160",
     "semantic_hash": ""
   },
   "biome.json": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793713891.3126018,
-    "seen": 1793714017.0136733,
-    "ast_hash": "cde2f129b14db0ad81114d0af9f784de",
+    "mtime": 1793714125.3730462,
+    "seen": 1793714363.790159,
+    "ast_hash": "da938b59fa02ddd203248203f1209a0a",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {
