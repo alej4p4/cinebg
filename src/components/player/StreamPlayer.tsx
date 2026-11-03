@@ -2583,6 +2583,29 @@ const StreamPlayer = ({
           </button>
         )}
         {showIframe && (
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleManualRefresh}
+              className="flex items-center gap-1.5 bg-yellow-500/90 hover:bg-yellow-400 text-black px-3.5 py-2 rounded-xl text-xs font-bold shadow-2xl backdrop-blur-md transition-all hover:scale-105 active:scale-95 focus:ring-2 focus:ring-white"
+              title="Buscar fonte direta nativa dublada"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Buscar Fonte Dublada</span>
+            </button>
+          </div>
+        )}
+        {showIframe && (
+          <div className="absolute top-16 inset-x-4 z-40 pointer-events-none flex justify-center animate-fade-in">
+            <div className="flex items-center gap-2 bg-black/90 border border-yellow-400/50 px-4 py-2 rounded-full text-xs font-medium text-white shadow-2xl backdrop-blur-md max-w-lg text-center">
+              <Volume2 className="w-4 h-4 text-yellow-400 shrink-0" />
+              <span>
+                <b>Áudio em Português 🇧🇷:</b> No player abaixo, toque no ícone de <b>balão (💬)</b> para ativar o áudio Dublado.
+              </span>
+            </div>
+          </div>
+        )}
+        {showIframe && (
           <iframe
             key={`stream-${key}-${tmdbId}-${season}-${episode}-${audioOption}-${activeMirror}`}
             ref={iframeRef}

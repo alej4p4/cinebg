@@ -33,9 +33,9 @@ export const MIRRORS: StreamMirror[] = [
     type: 'dubbed_br',
     sandboxed: false,
     getMovieUrl: (tmdbId) =>
-      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&muted=false&fallback=true&ads=0`,
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&lang=pt-BR&audio_lang=pt-BR&audio=pt&autoplay=true&muted=false&fallback=true&ads=0`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true&muted=false&fallback=true&ads=0`,
+      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&lang=pt-BR&audio_lang=pt-BR&audio=pt&autoplay=true&muted=false&fallback=true&ads=0`,
   },
   {
     id: 'vidsrc',
@@ -384,11 +384,11 @@ const fetchMegaEmbedSources = async (
             'User-Agent':
               'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
           },
-          connectTimeout: 8000,
-          readTimeout: 8000,
+          connectTimeout: 15000,
+          readTimeout: 15000,
         })
         const timeoutPromise = new Promise<null>((resolve) =>
-          setTimeout(() => resolve(null), 3000)
+          setTimeout(() => resolve(null), 15000)
         )
         const resp = await Promise.race([httpPromise, timeoutPromise])
 
@@ -401,8 +401,15 @@ const fetchMegaEmbedSources = async (
           }
         }
 
-        if (resp && resp.status >= 200 && resp.status < 300 && typeof resp.data === 'string') {
-          const match = resp.data.match(/var sources\s*=\s*(\[[\s\S]*?\]);/)
+        const dataStr =
+          typeof resp?.data === 'string'
+            ? resp.data
+            : resp?.data
+            ? JSON.stringify(resp.data)
+            : ''
+
+        if (resp && resp.status >= 200 && resp.status < 300 && dataStr) {
+          const match = dataStr.match(/var sources\s*=\s*(\[[\s\S]*?\]);/)
           if (match) {
             const parsed = JSON.parse(match[1]) as MegaEmbedSource[]
             if (Array.isArray(parsed) && parsed.length > 0) return parsed
@@ -589,7 +596,7 @@ export const resolveMegaEmbed = async (
   }
 
   const timeoutPromise = new Promise<MegaEmbedResolved>((resolve) =>
-    setTimeout(() => resolve(fallbackEmpty), 8000)
+    setTimeout(() => resolve(fallbackEmpty), 18000)
   )
 
   return Promise.race([resolveLogic(), timeoutPromise])
