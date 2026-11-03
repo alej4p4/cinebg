@@ -1,15 +1,15 @@
 {
-  "version": "1.3.33",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.33/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.33/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.33/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.33/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.33/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.33/CineBG-Tv-release.apk",
+  "version": "1.3.34",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Correção de rolagem no mobile: previne saltos e retornos involuntários para o início ao descer/navegar pelos catálogos de filmes e séries, auto-hide da barra inferior e proteção contra toques acidentais.",
-  "versionCode": 123,
-  "notes": "Correção de rolagem no mobile: previne saltos e retornos involuntários para o início ao descer/navegar pelos catálogos de filmes e séries, auto-hide da barra inferior e proteção contra toques acidentais.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.33/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.33/CineBG-Tv-release.apk"
+  "releaseNotes": "Priorização estrita de áudio dublado em português (PT-BR) por padrão em filmes e séries (incluindo SuperFlix, MegaEmbed e HLS multi-áudio), e adição do carrossel de Séries Turcas na tela inicial.",
+  "versionCode": 124,
+  "notes": "Priorização estrita de áudio dublado em português (PT-BR) por padrão em filmes e séries (incluindo SuperFlix, MegaEmbed e HLS multi-áudio), e adição do carrossel de Séries Turcas na tela inicial.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk"
 }
