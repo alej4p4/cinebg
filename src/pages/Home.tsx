@@ -32,6 +32,7 @@ import {
   getCachedMediaDetails,
 } from '@/services/tmdb'
 import { useAppStore } from '@/store/useAppStore'
+import { isMobileDevice } from '@/utils/tv'
 import type { MediaItem, TMDBMovieDetails, TMDBShowDetails } from '@/types'
 
 const Home = () => {
@@ -166,15 +167,20 @@ const Home = () => {
     }
   }, [])
 
-  // Posiciona o foco inicial APENAS se o usuário ainda não tiver navegado pelo controle remoto (Zero Focus Stealing)
+  // Posiciona o foco inicial APENAS em Smart TVs/TV Box e se o usuário ainda não tiver navegado (Zero Focus Stealing)
   useEffect(() => {
-    const onUserKey = () => {
+    // Dispositivos móveis usam interação touch e NUNCA devem ter foco roubado programaticamente
+    if (isMobileDevice()) return
+
+    const onUserInteraction = () => {
       userNavigatedRef.current = true
     }
-    window.addEventListener('keydown', onUserKey, { once: true, passive: true })
+    window.addEventListener('keydown', onUserInteraction, { once: true, passive: true })
+    window.addEventListener('touchstart', onUserInteraction, { once: true, passive: true })
+    window.addEventListener('wheel', onUserInteraction, { once: true, passive: true })
 
     const focusHomeTarget = () => {
-      if (userNavigatedRef.current) return
+      if (userNavigatedRef.current || (typeof window !== 'undefined' && window.scrollY > 50)) return
       try {
         const currentKey = getCurrentFocusKey()
         if (currentKey && currentKey !== ROOT_FOCUS_KEY && doesFocusableExist(currentKey)) {
@@ -193,7 +199,9 @@ const Home = () => {
     const t1 = setTimeout(focusHomeTarget, 120)
     const t2 = setTimeout(focusHomeTarget, 450)
     return () => {
-      window.removeEventListener('keydown', onUserKey)
+      window.removeEventListener('keydown', onUserInteraction)
+      window.removeEventListener('touchstart', onUserInteraction)
+      window.removeEventListener('wheel', onUserInteraction)
       clearTimeout(t1)
       clearTimeout(t2)
     }
