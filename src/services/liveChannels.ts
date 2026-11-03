@@ -23,6 +23,7 @@ export interface LiveChannel {
   quality: string | null
   geoBlocked: boolean
   genres: string[]
+  aspectRatio?: '4:3' | '16:9'
 }
 
 export const LIVE_CATEGORIES: LiveCategory[] = [
@@ -837,6 +838,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     quality: '720p',
     geoBlocked: false,
     genres: ['Pica-Pau', 'Hanna-Barbera', 'Tom & Jerry', 'Nostalgia'],
+    aspectRatio: '4:3',
   },
   {
     id: 'desenhos-classicos-24h',
@@ -853,6 +855,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     quality: '720p',
     geoBlocked: false,
     genres: ['Nostalgia', 'Popeye', 'Casper', 'Infantil', '24h'],
+    aspectRatio: '4:3',
   },
   {
     id: 'nickelodeon-classico-24h',
@@ -869,6 +872,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     quality: '720p',
     geoBlocked: false,
     genres: ['Rugrats', 'Hey Arnold', 'CatDog', 'Anos 90', '24h'],
+    aspectRatio: '4:3',
   },
   {
     id: 'bob-esponja-24h',

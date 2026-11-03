@@ -10,8 +10,11 @@ export interface SubtitleTrackOption {
 }
 
 export function srtToVtt(srt: string): string {
-  const normalized = srt
-    .replace(/^\uFEFF/, '')
+  const clean = srt.replace(/^\uFEFF/, '').trim()
+  if (clean.startsWith('WEBVTT')) {
+    return `${clean}\n`
+  }
+  const normalized = clean
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     // Remove tags obsoletas de formatação

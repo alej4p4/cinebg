@@ -25,6 +25,23 @@ import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 import { markBackHandled, setNativePlayerLandscape, isTVDevice, isMobileDevice } from '@/utils/tv'
 import { logLiveChannelError } from '@/services/observability'
 
+export function isClassic43Channel(ch?: LiveChannel | null): boolean {
+  if (!ch) return false
+  if (ch.aspectRatio === '4:3') return true
+  const id = (ch.id || '').toLowerCase()
+  if (
+    id.includes('retro-cartoon') ||
+    id.includes('desenhos-classicos') ||
+    id.includes('nickelodeon-classico') ||
+    id.includes('tooncast') ||
+    id.includes('boomerang')
+  ) {
+    return true
+  }
+  const genres = ch.genres || []
+  return genres.some((g) => ['Hanna-Barbera', 'Tom & Jerry', 'Popeye', 'Pica-Pau', 'Nostalgia'].includes(g))
+}
+
 interface LivePlayerProps {
   channel: LiveChannel
   onClose?: () => void
@@ -124,27 +141,44 @@ const LivePlayer = ({
   }
 
   // Proporção de tela e preenchimento total adaptativo no celular
-  const [fitMode, setFitMode] = useState<'cover' | 'contain' | 'fill'>(() => {
+  const [fitMode, setFitMode] = useState<'cover' | 'contain' | 'fill' | 'classic'>(() => {
+    if (isClassic43Channel(channel)) return 'classic'
     return isMobileDevice() ? 'cover' : 'contain'
   })
   const [fitToast, setFitToast] = useState<string | null>(null)
   const fitToastTimerRef = useRef<NodeJS.Timeout | null>(null)
 
+  useEffect(() => {
+    if (isClassic43Channel(channel)) {
+      setFitMode('classic')
+    } else {
+      setFitMode(isMobileDevice() ? 'cover' : 'contain')
+    }
+  }, [channel.id])
+
   const toggleFitMode = useCallback(() => {
     setFitMode((prev) => {
-      const next = prev === 'cover' ? 'contain' : prev === 'contain' ? 'fill' : 'cover'
-      const label =
-        next === 'cover'
-          ? 'Tela Cheia (Adaptada ao Celular)'
-          : next === 'fill'
-          ? 'Tela Esticada (100%)'
-          : 'Proporção Original'
+      let next: 'cover' | 'contain' | 'fill' | 'classic' = 'contain'
+      let label = 'Proporção Original'
+      if (prev === 'classic') {
+        next = 'contain'
+        label = 'Proporção Original'
+      } else if (prev === 'contain') {
+        next = 'cover'
+        label = 'Tela Cheia (Adaptada ao Celular)'
+      } else if (prev === 'cover') {
+        next = 'fill'
+        label = 'Tela Esticada (100%)'
+      } else {
+        next = isClassic43Channel(channel) ? 'classic' : 'contain'
+        label = isClassic43Channel(channel) ? 'Clássico 4:3 (Pillarbox)' : 'Proporção Original'
+      }
       setFitToast(label)
       if (fitToastTimerRef.current) clearTimeout(fitToastTimerRef.current)
       fitToastTimerRef.current = setTimeout(() => setFitToast(null), 2000)
       return next
     })
-  }, [])
+  }, [channel])
 
   const lastTapRef = useRef<number>(0)
   const handleVideoClick = useCallback(() => {
@@ -1006,12 +1040,14 @@ const LivePlayer = ({
         autoPlay
         playsInline
         muted={muted}
-        className={`w-full h-full bg-black cursor-pointer transition-all duration-200 ${
-          fitMode === 'cover'
-            ? 'object-cover'
+        className={`bg-black cursor-pointer transition-all duration-200 ${
+          fitMode === 'classic'
+            ? 'w-auto h-full max-w-full aspect-[4/3] object-contain mx-auto'
+            : fitMode === 'cover'
+            ? 'w-full h-full object-cover'
             : fitMode === 'fill'
-            ? '[object-fit:fill]'
-            : 'object-contain'
+            ? 'w-full h-full [object-fit:fill]'
+            : 'w-full h-full object-contain'
         }`}
         onProgress={() => {
           const v = videoRef.current
@@ -1028,11 +1064,19 @@ const LivePlayer = ({
         }}
         onLoadedMetadata={() => {
           const v = videoRef.current
-          if (v && v.buffered.length > 0) {
-            const liveStart = v.buffered.start(0)
-            const liveEnd = v.buffered.end(v.buffered.length - 1)
-            if (!v.seeking && (v.currentTime < liveStart || v.currentTime > liveEnd)) {
-              v.currentTime = Math.max(liveStart, liveEnd - 2)
+          if (v) {
+            if (v.videoWidth > 0 && v.videoHeight > 0) {
+              const ratio = v.videoWidth / v.videoHeight
+              if (ratio >= 1.25 && ratio <= 1.45 && !isClassic43Channel(channel)) {
+                setFitMode('classic')
+              }
+            }
+            if (v.buffered.length > 0) {
+              const liveStart = v.buffered.start(0)
+              const liveEnd = v.buffered.end(v.buffered.length - 1)
+              if (!v.seeking && (v.currentTime < liveStart || v.currentTime > liveEnd)) {
+                v.currentTime = Math.max(liveStart, liveEnd - 2)
+              }
             }
           }
           tryPlay()
@@ -1173,8 +1217,8 @@ const LivePlayer = ({
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Ajuste de Tela para Celular (Adaptar / Preencher / Original) */}
-              {!isTVDevice() && isMobileDevice() && (
+              {/* Ajuste de Proporção de Tela (4:3 Clássico / Adaptar / Preencher / Original) */}
+              {!isTVDevice() && (
                 <button
                   type="button"
                   id="live-btn-fit"
@@ -1183,16 +1227,36 @@ const LivePlayer = ({
                     toggleFitMode()
                   }}
                   className={`p-2 sm:px-3 sm:py-1.5 rounded-xl border border-white/10 transition-all active:scale-95 flex items-center gap-1.5 text-xs font-bold shadow-lg ${
-                    fitMode === 'cover'
+                    fitMode === 'classic'
                       ? 'bg-amber-400 text-black font-extrabold shadow-amber-500/20'
+                      : fitMode === 'cover'
+                      ? 'bg-yellow-400 text-black font-extrabold shadow-yellow-500/20'
                       : 'bg-black/60 hover:bg-black/80 text-white/80 hover:text-white'
                   }`}
-                  title={fitMode === 'cover' ? 'Ajustar para proporção original' : 'Preencher tela inteira'}
+                  title={
+                    fitMode === 'classic'
+                      ? 'Proporção 4:3 Clássica (Barras laterais pillarbox)'
+                      : fitMode === 'cover'
+                      ? 'Tela Cheia Adaptada'
+                      : fitMode === 'fill'
+                      ? 'Tela Esticada (100%)'
+                      : 'Proporção Original'
+                  }
                   aria-label="Ajustar proporção da tela"
                 >
-                  {fitMode === 'cover' ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  {fitMode === 'cover' || fitMode === 'classic' ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
                   <span className="hidden sm:inline">
-                    {fitMode === 'cover' ? 'Original' : 'Preencher'}
+                    {fitMode === 'classic'
+                      ? '4:3 Clássico'
+                      : fitMode === 'cover'
+                      ? 'Tela Cheia'
+                      : fitMode === 'fill'
+                      ? 'Esticado'
+                      : 'Original'}
                   </span>
                 </button>
               )}

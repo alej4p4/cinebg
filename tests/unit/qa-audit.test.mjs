@@ -966,3 +966,36 @@ test('LIVE-MOBILE-FIT-AND-PAYMENT-RESPONSIVE-1: LivePlayer sem blur no cadeado e
   assert.ok(gateSrc.includes('vip-open-mp-link'), 'LicenseGate deve possuir botão de checkout direto para mobile')
   assert.ok(gateSrc.includes('vip-qr-mode-url'), 'LicenseGate deve suportar navegação D-Pad em modos de QR code')
 })
+
+test('PLAYBACK-RATIO-AUDIO-SUBS-1: Proporção 4:3 para desenhos clássicos, áudio automático, legendas e controles mobile/TV', () => {
+  const channelsSrc = fs.readFileSync('src/services/liveChannels.ts', 'utf8')
+  const livePlayerSrc = fs.readFileSync('src/components/player/LivePlayer.tsx', 'utf8')
+  const streamPlayerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+  const subtitlesSrc = fs.readFileSync('src/services/subtitles.ts', 'utf8')
+
+  // 1. Canais de desenhos clássicos devem conter aspectRatio: '4:3'
+  assert.ok(channelsSrc.includes("aspectRatio?: '4:3' | '16:9'"), 'LiveChannel deve suportar campo opcional aspectRatio')
+  const retroIdx = channelsSrc.indexOf("id: 'retro-cartoon-24h'")
+  const retroEnd = channelsSrc.indexOf("id: 'desenhos-classicos-24h'")
+  const retroBlock = channelsSrc.slice(retroIdx, retroEnd)
+  assert.ok(retroBlock.includes("aspectRatio: '4:3'"), 'retro-cartoon-24h deve ter formato 4:3 clássico')
+
+  const classicIdx = channelsSrc.indexOf("id: 'desenhos-classicos-24h'")
+  const classicEnd = channelsSrc.indexOf("id: 'nickelodeon-classico-24h'")
+  const classicBlock = channelsSrc.slice(classicIdx, classicEnd)
+  assert.ok(classicBlock.includes("aspectRatio: '4:3'"), 'desenhos-classicos-24h deve ter formato 4:3 clássico')
+
+  // 2. LivePlayer deve implementar modo 'classic' com aspect-[4/3] e detecção de clássicos
+  assert.ok(livePlayerSrc.includes('isClassic43Channel'), 'LivePlayer deve exportar função de detecção isClassic43Channel')
+  assert.ok(livePlayerSrc.includes("aspect-[4/3]"), 'LivePlayer deve manter proporção aspect-[4/3] com barras laterais pillarbox')
+  assert.ok(livePlayerSrc.includes("4:3 Clássico"), 'LivePlayer deve possuir rótulo e toast para 4:3 Clássico')
+
+  // 3. srtToVtt em subtitles.ts deve ser idempotente para arquivos que já iniciam com WEBVTT
+  assert.ok(subtitlesSrc.includes("clean.startsWith('WEBVTT')"), 'srtToVtt não deve duplicar cabeçalho WEBVTT')
+
+  // 4. StreamPlayer deve alternar áudio para Dublado e Original dinamicamente no HUD
+  assert.ok(streamPlayerSrc.includes("switchAudio(nextOpt)"), 'StreamPlayer hud-btn-audio deve alternar entre dub e orig')
+  assert.ok(streamPlayerSrc.includes("activeAudio === 'orig'"), 'StreamPlayer deve verificar se o áudio ativo é original')
+  assert.ok(streamPlayerSrc.includes("'🇺🇸 Original'"), 'StreamPlayer hud-btn-audio deve exibir bandeira e status dinâmico')
+  assert.ok(streamPlayerSrc.includes("video.muted = false"), 'StreamPlayer deve iniciar desmutado por padrão com fallback seguro')
+})
