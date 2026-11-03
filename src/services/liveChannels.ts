@@ -49,7 +49,7 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     country: 'BR',
     sources: [
       'https://dai.google.com/linear/hls/event/1XSOdtQ0SH2G8OEmEfGgjQ/master.m3u8',
-      'https://cdn.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
+      'https://cdn.live.br1.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/playlist.m3u8',
       'https://6836041ea1117.streamlock.net/cverde/cverde/playlist.m3u8',
       'https://video09.logicahost.com.br/sbtroo/sbtroo/playlist.m3u8',
       'https://video09.logicahost.com.br/sbtcuiaba/sbtcuiaba/playlist.m3u8',
@@ -108,8 +108,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'abertos',
     country: 'BR',
     sources: [
+      'https://cdn.live.br1.jmvstream.com/w/LVW-10841/LVW10841_mT77z9o2cP/playlist.m3u8',
       'http://45.162.64.114/RECORD_NEWS/index.m3u8',
-      'https://cdn.jmvstream.com/w/LVW-10841/LVW10841_mT77z9o2cP/playlist.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
@@ -599,10 +599,10 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
     category: 'infantil',
     country: 'BR',
     sources: [
+      'http://45.162.64.114/DISCOVERYKIDS/index.m3u8',
+      'http://170.83.16.50/DISCOVERY_KIDS/index.m3u8',
       'http://170.83.49.66:8083/DISCOVERYKIDSHD/index.m3u8',
-      'http://170.83.49.66:8083/BOXKIDSHD/index.m3u8',
       'http://45.162.64.114/CARTOON_NETWORK/index.m3u8',
-      'http://45.162.64.114/BOOMERANG/index.m3u8',
     ],
     quality: '1080p',
     geoBlocked: false,
