@@ -25,7 +25,7 @@ import {
 } from '@/services/mercadoPago'
 import Focusable from '@/components/tv/Focusable'
 import { setFocus, doesFocusableExist } from '@noriginmedia/norigin-spatial-navigation'
-import { markBackHandled } from '@/utils/tv'
+import { markBackHandled, isMobileDevice } from '@/utils/tv'
 
 interface LicenseGateProps {
   isModal?: boolean
@@ -278,30 +278,28 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
 
   if (activated) {
     return (
-      <div
-        className={`${
-          isModal ? 'fixed inset-0 z-50 bg-black/85 backdrop-blur-md' : 'min-h-screen bg-bg-primary'
-        } flex items-center justify-center p-4`}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="glass border border-emerald-500/40 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl shadow-emerald-500/20"
-        >
-          <div className="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="h-10 w-10 text-emerald-400 animate-bounce" />
-          </div>
-          <h2 className="text-white font-black text-2xl mb-2">🎉 Pagamento Confirmado!</h2>
-          <p className="text-emerald-300 font-semibold mb-2">
-            Plano VIP Ativado com Sucesso!
-          </p>
-          <p className="text-white/60 text-sm mb-6">
-            Acesso ilimitado a todos os filmes, séries e canais de TV ao vivo liberados.
-          </p>
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 px-4 py-2 rounded-xl text-xs font-mono">
-            ID: {deviceId}
-          </div>
-        </motion.div>
+      <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md overflow-y-auto overscroll-contain">
+        <div className="min-h-full w-full flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass border border-emerald-500/40 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl shadow-emerald-500/20"
+          >
+            <div className="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="h-10 w-10 text-emerald-400 animate-bounce" />
+            </div>
+            <h2 className="text-white font-black text-2xl mb-2">🎉 Pagamento Confirmado!</h2>
+            <p className="text-emerald-300 font-semibold mb-2">
+              Plano VIP Ativado com Sucesso!
+            </p>
+            <p className="text-white/60 text-sm mb-6">
+              Acesso ilimitado a todos os filmes, séries e canais de TV ao vivo liberados.
+            </p>
+            <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 px-4 py-2 rounded-xl text-xs font-mono">
+              ID: {deviceId}
+            </div>
+          </motion.div>
+        </div>
       </div>
     )
   }
@@ -310,18 +308,20 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-2xl mx-auto my-auto relative"
+      className="w-full max-w-2xl mx-auto relative pt-2 pb-6 px-1 sm:px-2"
     >
       {/* Botão fechar (apenas se ainda estiver dentro dos 3 dias de teste ou já for VIP) */}
       {canDismiss && onClose && (
         <Focusable
           focusKey="vip-close-btn"
           onEnterPress={onClose}
-          className="absolute -top-3 -right-3 z-10 rounded-full"
+          className="absolute top-0 right-0 sm:-top-2 sm:-right-2 z-20 rounded-full"
         >
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white flex items-center justify-center transition-colors shadow-lg border border-white/10"
+            title="Fechar"
+            aria-label="Fechar tela de planos"
           >
             <X className="h-5 w-5" />
           </button>
@@ -502,33 +502,37 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
             {/* Alternador de Modo do QR Code (Link Web vs Pix Direto) */}
             {pixData.ticketUrl && (
               <div className="flex items-center justify-center gap-2 mb-2">
-                <button
-                  type="button"
-                  onClick={() => setQrMode('url')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    qrMode === 'url'
-                      ? 'bg-amber-400 text-black shadow-md'
-                      : 'bg-white/10 text-white/70 hover:bg-white/20'
-                  }`}
-                >
-                  📱 Abrir com Câmera do Celular
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQrMode('pix')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    qrMode === 'pix'
-                      ? 'bg-emerald-400 text-black shadow-md'
-                      : 'bg-white/10 text-white/70 hover:bg-white/20'
-                  }`}
-                >
-                  🏦 Escanear no App do Banco
-                </button>
+                <Focusable focusKey="vip-qr-mode-url" onEnterPress={() => setQrMode('url')}>
+                  <button
+                    type="button"
+                    onClick={() => setQrMode('url')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      qrMode === 'url'
+                        ? 'bg-amber-400 text-black shadow-md'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    }`}
+                  >
+                    📱 Câmera do Celular
+                  </button>
+                </Focusable>
+                <Focusable focusKey="vip-qr-mode-pix" onEnterPress={() => setQrMode('pix')}>
+                  <button
+                    type="button"
+                    onClick={() => setQrMode('pix')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      qrMode === 'pix'
+                        ? 'bg-emerald-400 text-black shadow-md'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    }`}
+                  >
+                    🏦 App do Banco
+                  </button>
+                </Focusable>
               </div>
             )}
 
-            {/* QR Code Container Centralizado em Alta Resolução (Perfeito para Smart TVs) */}
-            <div className="bg-white rounded-3xl p-5 sm:p-6 flex flex-col items-center justify-center w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 mx-auto shadow-2xl border-4 border-amber-400/30 my-2">
+            {/* QR Code Container Centralizado em Alta Resolução (Perfeito para Smart TVs e Mobile) */}
+            <div className="bg-white rounded-3xl p-4 sm:p-6 flex flex-col items-center justify-center w-52 h-52 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto shadow-2xl border-4 border-amber-400/30 my-2">
               {qrDataUrl ? (
                 <img
                   src={qrDataUrl}
@@ -563,13 +567,31 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
               <span>Aguardando pagamento... O app liberará na hora que for pago!</span>
             </div>
 
-            {/* Botão Copiar Pix */}
-            <div className="space-y-2">
+            {/* Ações de Pagamento (Direto no Celular ou Copia e Cola) */}
+            <div className="space-y-2.5">
+              {pixData.ticketUrl && isMobileDevice() && (
+                <Focusable
+                  focusKey="vip-open-mp-link"
+                  onEnterPress={() => window.open(pixData.ticketUrl, '_blank')}
+                  className="block rounded-xl"
+                >
+                  <a
+                    href={pixData.ticketUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-2 bg-[#009ee3] hover:bg-[#0086c3] active:scale-[0.98] text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-sky-500/25 text-xs sm:text-sm"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span>Pagar no App Mercado Pago / Cartão / Pix</span>
+                  </a>
+                </Focusable>
+              )}
+
               <Focusable focusKey="vip-copy-pix" onEnterPress={handleCopyPix} className="rounded-xl">
                 <button
                   type="button"
                   onClick={handleCopyPix}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-[0.98] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/20 text-xs sm:text-sm"
                 >
                   {copied ? (
                     <>
@@ -679,8 +701,8 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
         </AnimatePresence>
       </div>
 
-      {/* Botão de fechar apenas quando ainda no período de teste ou já licenciado */}
-      {canDismiss && onClose && (
+      {/* Botão de navegação: Voltar ao CineBG ou Assistir TV Gratuita */}
+      {canDismiss && onClose ? (
         <div className="mt-4 text-center">
           <Focusable
             focusKey="vip-continue-free-tv"
@@ -697,6 +719,24 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
             </button>
           </Focusable>
         </div>
+      ) : (
+        <div className="mt-4 text-center">
+          <Focusable
+            focusKey="vip-continue-free-tv"
+            onEnterPress={() => {
+              if (typeof window !== 'undefined') window.location.href = '/tv'
+            }}
+            className="block rounded-xl"
+          >
+            <a
+              href="/tv"
+              className="w-full py-2.5 px-4 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Tv className="w-4 h-4 text-amber-400" />
+              <span>Assistir TV Aberta (Gratuita)</span>
+            </a>
+          </Focusable>
+        </div>
       )}
 
       {/* Rodapé com ID do Dispositivo */}
@@ -711,15 +751,19 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md overflow-y-auto flex items-center justify-center p-4">
-        {content}
+      <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md overflow-y-auto overscroll-contain">
+        <div className="min-h-full w-full flex items-center justify-center p-3 sm:p-6 md:p-8">
+          {content}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      {content}
+    <div className="min-h-screen bg-bg-primary overflow-y-auto overscroll-contain">
+      <div className="min-h-full w-full flex items-center justify-center p-3 sm:p-6 md:p-8">
+        {content}
+      </div>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   AlertCircle,
   Maximize2,
+  Minimize2,
   RefreshCw,
   Volume2,
   VolumeX,
@@ -121,6 +122,52 @@ const LivePlayer = ({
       setShowOsd(false)
     }, 3500)
   }
+
+  // Proporção de tela e preenchimento total adaptativo no celular
+  const [fitMode, setFitMode] = useState<'cover' | 'contain' | 'fill'>(() => {
+    return isMobileDevice() ? 'cover' : 'contain'
+  })
+  const [fitToast, setFitToast] = useState<string | null>(null)
+  const fitToastTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const toggleFitMode = useCallback(() => {
+    setFitMode((prev) => {
+      const next = prev === 'cover' ? 'contain' : prev === 'contain' ? 'fill' : 'cover'
+      const label =
+        next === 'cover'
+          ? 'Tela Cheia (Adaptada ao Celular)'
+          : next === 'fill'
+          ? 'Tela Esticada (100%)'
+          : 'Proporção Original'
+      setFitToast(label)
+      if (fitToastTimerRef.current) clearTimeout(fitToastTimerRef.current)
+      fitToastTimerRef.current = setTimeout(() => setFitToast(null), 2000)
+      return next
+    })
+  }, [])
+
+  const lastTapRef = useRef<number>(0)
+  const handleVideoClick = useCallback(() => {
+    if (isLocked) {
+      handleLockTap()
+      return
+    }
+    resetOsdTimer()
+
+    const now = Date.now()
+    if (isMobileDevice() && now - lastTapRef.current < 350) {
+      // Duplo toque no celular: ajusta proporção da tela
+      toggleFitMode()
+      lastTapRef.current = 0
+      return
+    }
+    lastTapRef.current = now
+
+    const v = videoRef.current
+    if (!v) return
+    if (v.paused) v.play().catch(() => {})
+    else v.pause()
+  }, [isLocked, handleLockTap, toggleFitMode])
 
   // Monitor de conectividade e auto-recuperação de rede na Live TV
   useEffect(() => {
@@ -832,7 +879,7 @@ const LivePlayer = ({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] w-screen h-screen bg-black overflow-hidden flex items-center justify-center select-none live-player-container"
+      className="fixed inset-0 z-[9999] w-screen h-screen min-h-[100dvh] max-h-[100dvh] bg-black overflow-hidden flex items-center justify-center select-none live-player-container"
       data-live-player="true"
       onMouseMove={resetOsdTimer}
       onTouchStart={resetOsdTimer}
@@ -959,7 +1006,13 @@ const LivePlayer = ({
         autoPlay
         playsInline
         muted={muted}
-        className="w-full h-full object-contain bg-black cursor-pointer"
+        className={`w-full h-full bg-black cursor-pointer transition-all duration-200 ${
+          fitMode === 'cover'
+            ? 'object-cover'
+            : fitMode === 'fill'
+            ? '[object-fit:fill]'
+            : 'object-contain'
+        }`}
         onProgress={() => {
           const v = videoRef.current
           if (v && v.buffered.length > 0) {
@@ -1013,17 +1066,7 @@ const LivePlayer = ({
             markPlaying()
           }
         }}
-        onClick={() => {
-          if (isLocked) {
-            handleLockTap()
-            return
-          }
-          resetOsdTimer()
-          const v = videoRef.current
-          if (!v) return
-          if (v.paused) v.play().catch(() => {})
-          else v.pause()
-        }}
+        onClick={handleVideoClick}
       />
 
       {/* Banner de Auto-recuperação de Rede */}
@@ -1040,6 +1083,21 @@ const LivePlayer = ({
             }`}
           >
             <span>{networkToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast de Proporção de Tela no Celular */}
+      <AnimatePresence>
+        {fitToast && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-black/85 border border-amber-400/50 text-amber-300 text-xs font-bold shadow-2xl backdrop-blur-md pointer-events-none"
+          >
+            <span>{fitToast}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1115,6 +1173,29 @@ const LivePlayer = ({
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Ajuste de Tela para Celular (Adaptar / Preencher / Original) */}
+              {!isTVDevice() && isMobileDevice() && (
+                <button
+                  type="button"
+                  id="live-btn-fit"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleFitMode()
+                  }}
+                  className={`p-2 sm:px-3 sm:py-1.5 rounded-xl border border-white/10 transition-all active:scale-95 flex items-center gap-1.5 text-xs font-bold shadow-lg ${
+                    fitMode === 'cover'
+                      ? 'bg-amber-400 text-black font-extrabold shadow-amber-500/20'
+                      : 'bg-black/60 hover:bg-black/80 text-white/80 hover:text-white'
+                  }`}
+                  title={fitMode === 'cover' ? 'Ajustar para proporção original' : 'Preencher tela inteira'}
+                  aria-label="Ajustar proporção da tela"
+                >
+                  {fitMode === 'cover' ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  <span className="hidden sm:inline">
+                    {fitMode === 'cover' ? 'Original' : 'Preencher'}
+                  </span>
+                </button>
+              )}
               {!isTVDevice() && (
                 <button
                   type="button"
@@ -1293,7 +1374,7 @@ const LivePlayer = ({
             e.stopPropagation()
             handleLockTap()
           }}
-          className="absolute inset-0 z-50 cursor-pointer flex items-center justify-center bg-black/20 backdrop-blur-[2px] select-none"
+          className="absolute inset-0 z-50 cursor-pointer flex items-center justify-center bg-transparent backdrop-blur-none select-none pointer-events-auto"
         >
           <AnimatePresence>
             {showLockPrompt && (
@@ -1302,7 +1383,7 @@ const LivePlayer = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.2 }}
-                className="flex flex-col items-center gap-3 bg-black/90 backdrop-blur-xl border border-white/20 p-6 rounded-3xl shadow-2xl max-w-xs text-center"
+                className="flex flex-col items-center gap-3 bg-black/85 border border-white/20 p-6 rounded-3xl shadow-2xl max-w-xs text-center select-none"
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 onTouchEnd={(e: React.TouchEvent) => e.stopPropagation()}
               >
