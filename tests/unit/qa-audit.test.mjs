@@ -1070,7 +1070,7 @@ test('NO-CLOUDFLARE-CAPTCHA-MIRRORS-1: Banimento de telas de validação humana 
   assert.ok(playerSrc.includes("activeMirror === 'superflix' || activeMirror === 'megaembed'"), 'StreamPlayer deve converter superflix e megaembed para espelho limpo vidlink')
   assert.ok(!playerSrc.includes("setActiveMirror('superflix')"), 'StreamPlayer não deve atribuir superflix em nenhum fallback')
   assert.ok(!playerSrc.includes("setActiveMirror('megaembed')"), 'StreamPlayer não deve atribuir megaembed em nenhum fallback')
-  assert.ok(playerSrc.includes('12000'), 'Buffer timeout deve ser de pelo menos 12s para evitar fallbacks precipitados')
+  assert.ok(playerSrc.includes('12000') || playerSrc.includes('25000'), 'Buffer timeout deve ser de pelo menos 12s para evitar fallbacks precipitados')
 })
 
 test('OTA-PRECHECK-1: useAppStore valida disponibilidade de APK (HEAD request) para prevenir erro 404 durante compilação', () => {
@@ -1120,3 +1120,32 @@ test('STREAM-PLAYER-LOCK-BLUR-AND-HUD-DURATION-1: Filmes e séries sem embaçado
   assert.ok(livePlayerSrc.includes('}, 5500)'), 'LivePlayer deve manter OSD visível por 5.5s')
   assert.ok(livePlayerSrc.includes('setTimeout(() => setShowLockPrompt(false), 5000)'), 'LivePlayer deve manter prompt de cadeado visível por 5s')
 })
+
+test('CLASSIC-MOVIES-DUBBED-AND-HINTS-1: Resiliência de filmes clássicos dublados PT-BR e banners precisos', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+
+  // 1. Redundância de espelhos MegaEmbed (lat, space, site)
+  assert.ok(streamsSrc.includes("'https://mgeb.lat/embed'"), 'Deve conter espelho mgeb.lat')
+  assert.ok(streamsSrc.includes("'https://mgeb.space/embed'"), 'Deve conter espelho mgeb.space')
+  assert.ok(streamsSrc.includes("'https://mgeb.site/embed'"), 'Deve conter espelho mgeb.site')
+
+  // 2. Reconhecimento de hosts dublados de clássicos (fontedecanais / 76iqsc65sxxn71.com)
+  assert.ok(streamsSrc.includes("'76iqsc65sxxn71.com'"), 'Deve conter host CDN do acervo clássico dublado')
+  assert.ok(streamsSrc.includes("'mgeb.site'"), 'DUBBED_HOST_HINTS deve conter mgeb.site')
+
+  // 3. Exclusão de proxys HLS quebrados (playercdnxx.workers.dev)
+  assert.ok(streamsSrc.includes("'playercdnxx.workers.dev'"), 'Deve banir playercdnxx')
+
+  // 4. Timeouts estendidos no StreamPlayer para conexões móveis não abortarem MP4 dublado
+  assert.ok(playerSrc.includes('15000)'), 'StreamPlayer deve manter stall timeout de 15s')
+  assert.ok(playerSrc.includes('25000)'), 'StreamPlayer deve manter timeout de carregamento de 25s')
+
+  // 5. handleManualRefresh limpa cache
+  assert.ok(playerSrc.includes('clearResolvedSourcesCache()'), 'handleManualRefresh deve limpar cache de fontes')
+
+  // 6. Banner preciso para VidLink / VidSrc
+  assert.ok(playerSrc.includes("activeMirror === 'vidlink'"), 'StreamPlayer deve verificar se o player é VidLink')
+  assert.ok(playerSrc.includes('Legendas em Português'), 'StreamPlayer deve indicar legendas para espelhos sem áudio dublado nativo')
+})
+
