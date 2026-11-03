@@ -1,15 +1,15 @@
 {
-  "version": "1.3.31",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.31/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.31/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.31/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.31/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.31/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.31/CineBG-Tv-release.apk",
+  "version": "1.3.32",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.32/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.32/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.32/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.32/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.32/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.32/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Ajuste de tela total e sem blur no cadeado da TV ao vivo no celular, período de 3 dias de teste para séries e filmes e tela de pagamento adaptável para Mobile e Smart TV.",
-  "versionCode": 121,
-  "notes": "Ajuste de tela total e sem blur no cadeado da TV ao vivo no celular, período de 3 dias de teste para séries e filmes e tela de pagamento adaptável para Mobile e Smart TV.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.31/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.31/CineBG-Tv-release.apk"
+  "releaseNotes": "Proporção 4:3 com barras laterais automáticas para canais de desenhos clássicos sem esticar ou cortar, áudio e legendas com ativação automática em filmes/séries e validação de controles para mobile e Smart TVs.",
+  "versionCode": 122,
+  "notes": "Proporção 4:3 com barras laterais automáticas para canais de desenhos clássicos sem esticar ou cortar, áudio e legendas com ativação automática em filmes/séries e validação de controles para mobile e Smart TVs.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.32/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.32/CineBG-Tv-release.apk"
 }
