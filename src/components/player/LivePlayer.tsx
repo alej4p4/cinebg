@@ -621,6 +621,8 @@ const LivePlayer = ({
 
       let networkRetryCount = 0
       let mediaRecoveryCount = 0
+      let consecutiveStallCount = 0
+      let lastStallTs = 0
 
       // Seleção automática do áudio em Português / Dublado
       const selectPortugueseAudio = () => {
@@ -712,6 +714,33 @@ const LivePlayer = ({
             payload.details === 'bufferStalledError' ||
             payload.details === 'bufferNudgeOnStall'
           ) {
+            const now = Date.now()
+            if (now - lastStallTs < 8000) {
+              consecutiveStallCount++
+            } else {
+              consecutiveStallCount = 1
+            }
+            lastStallTs = now
+
+            if (consecutiveStallCount >= 3) {
+              console.warn(
+                `[LivePlayer] Stream instável com ${consecutiveStallCount} travamentos consecutivos no Sinal ${sourceIndex + 1}. Alternando para próximo sinal...`
+              )
+              logLiveChannelError({
+                channelId: channel.id,
+                channelName: channel.name,
+                sourceIndex,
+                sourceUrl: src,
+                errorType: 'buffer_stalled_excessive',
+                details: `Múltiplos travamentos (${consecutiveStallCount}) detectados no Sinal ${sourceIndex + 1}`,
+              })
+              try {
+                hls.destroy()
+              } catch {}
+              goNext()
+              return
+            }
+
             try {
               hls.startLoad()
               if (video && !video.paused && video.buffered.length > 0) {
