@@ -1084,3 +1084,21 @@ test('OTA-PRECHECK-1: useAppStore valida disponibilidade de APK (HEAD request) p
   assert.ok(tvSrc.includes('CineBG-Tv-release.apk'), 'DEFAULT_TV_APK_URL deve apontar para release estável')
   assert.ok(tvSrc.includes('CineBG-Mobile-release.apk'), 'DEFAULT_MOBILE_APK_URL deve apontar para release estável')
 })
+
+test('DUBBED-AUDIO-DIRECT-RESILIENCE-1: Resiliência de timeout na extração de fontes dubladas e orientação no iframe', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+  const viteConfigSrc = fs.readFileSync('vite.config.ts', 'utf8')
+
+  // 1. Timeouts estendidos em streams.ts para evitar aborto prematuro da fonte dublada
+  assert.ok(streamsSrc.includes('connectTimeout: 15000'), 'CapacitorHttp deve usar connectTimeout de pelo menos 15s')
+  assert.ok(streamsSrc.includes('readTimeout: 15000'), 'CapacitorHttp deve usar readTimeout de pelo menos 15s')
+  assert.ok(streamsSrc.includes('setTimeout(() => resolve(fallbackEmpty), 18000)'), 'resolveMegaEmbed deve usar timeout de pelo menos 18s')
+
+  // 2. StreamPlayer deve exibir auxílio de seleção de áudio dublado e botão de retry para fontes diretas
+  assert.ok(playerSrc.includes('Buscar Fonte Dublada'), 'StreamPlayer deve disponibilizar botão de busca de fonte dublada no iframe')
+  assert.ok(playerSrc.includes('balão (💬)'), 'StreamPlayer deve instruir o usuário sobre o ícone de áudio no player externo')
+
+  // 3. vite.config.ts deve apontar para mgeb.lat ativo
+  assert.ok(viteConfigSrc.includes("target: 'https://mgeb.lat'"), 'Vite proxy deve apontar para mgeb.lat')
+})
