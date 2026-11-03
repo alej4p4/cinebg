@@ -138,9 +138,9 @@
     "semantic_hash": "582012cd608852a3d274367c6f820cf3"
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1793662512.7463965,
-    "seen": 1793662906.0086577,
-    "ast_hash": "2e099a5c9b510f3ec633020348774e21",
+    "mtime": 1793665448.527831,
+    "seen": 1793665740.977098,
+    "ast_hash": "b563f10d60436fc1d659f7d9744d6a74",
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
@@ -294,8 +294,8 @@
     "semantic_hash": ""
   },
   "src/pages/LiveTV.tsx": {
-    "mtime": 1793662065.4214904,
-    "seen": 1793662906.008734,
+    "mtime": 1793662970.3444867,
+    "seen": 1793665740.9771748,
     "ast_hash": "3d25478af879d7a933f7f097c85058e5",
     "semantic_hash": ""
   },
@@ -342,9 +342,9 @@
     "semantic_hash": "88596bd4dfe5fd1a858b122a6e632c98"
   },
   "src/services/liveChannels.ts": {
-    "mtime": 1793662625.1481447,
-    "seen": 1793662906.0087602,
-    "ast_hash": "2380809b52149491e4d66c06919a19dd",
+    "mtime": 1793665538.536614,
+    "seen": 1793665740.977201,
+    "ast_hash": "008bca674a621ab637491392774469e3",
     "semantic_hash": ""
   },
   "src/services/liveFavorites.ts": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793660354.5868616,
-    "seen": 1793662906.0088148,
-    "ast_hash": "313b92438e1b89da21ed2fbe85015e78",
+    "mtime": 1793665648.7551758,
+    "seen": 1793665740.9772518,
+    "ast_hash": "80d6cfaea91875ea6a4424adfac43314",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {
@@ -912,8 +912,8 @@
     "semantic_hash": ""
   },
   "src/services/epgCache.ts": {
-    "mtime": 1793662081.306521,
-    "seen": 1793662906.0087583,
+    "mtime": 1793662970.3454857,
+    "seen": 1793665740.9771986,
     "ast_hash": "9f1ca173daf97634c29253c4c6d3c6fa",
     "semantic_hash": ""
   },

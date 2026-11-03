@@ -894,3 +894,32 @@ test('LIVE-CHANNELS-ABERTOS-RESILIENCE-1: liveChannels.ts possui fontes verifica
   assert.ok(channelsSrc.includes('LVW-10841'), 'Record HD deve contar com espelho TV Vila Real')
   assert.ok(channelsSrc.includes('LVW-10801'), 'SBT HD deve contar com espelho JMV')
 })
+
+
+test('LIVE-CHANNELS-DEDUPLICATION-AND-STABILITY-1: liveChannels e LivePlayer desduplicam canais e mitigam congelamento', () => {
+  const channelsSrc = fs.readFileSync('src/services/liveChannels.ts', 'utf8')
+  const playerSrc = fs.readFileSync('src/components/player/LivePlayer.tsx', 'utf8')
+
+  // Cinemax não aponta primariamente para SPACE
+  const cinemaxIdx = channelsSrc.indexOf("id: 'cinemax'")
+  const cinemaxBlock = channelsSrc.slice(cinemaxIdx, cinemaxIdx + 400)
+  assert.ok(!cinemaxBlock.includes('/SPACE/'), 'Cinemax não deve conter stream do Space')
+
+  // TC Premium não aponta para SPACE
+  const tcPremIdx = channelsSrc.indexOf("id: 'tc-premium'")
+  const tcPremBlock = channelsSrc.slice(tcPremIdx, tcPremIdx + 400)
+  assert.ok(!tcPremBlock.includes('/SPACE/'), 'TC Premium não deve conter stream do Space')
+
+  // TC Pipoca não aponta para SPACE
+  const tcPipocaIdx = channelsSrc.indexOf("id: 'tc-pipoca'")
+  const tcPipocaBlock = channelsSrc.slice(tcPipocaIdx, tcPipocaIdx + 400)
+  assert.ok(!tcPipocaBlock.includes('/SPACE/'), 'TC Pipoca não deve conter stream do Space')
+
+  // Turma da Mônica não compartilha feed do RetroTV
+  const monicaIdx = channelsSrc.indexOf("id: 'turma-monica-24h'")
+  const monicaBlock = channelsSrc.slice(monicaIdx, monicaIdx + 400)
+  assert.ok(!monicaBlock.includes('retrotv'), 'Turma da Mônica não deve compartilhar o feed do RetroTV')
+
+  // LivePlayer deve conter proteção de travamentos múltiplos consecutivos (buffer_stalled_excessive)
+  assert.ok(playerSrc.includes('buffer_stalled_excessive'), 'LivePlayer deve detectar e alternar em stalls excessivos')
+})
