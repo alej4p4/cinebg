@@ -114,14 +114,11 @@ export const isCaptchaOrBotBlockUrl = (url: string | null | undefined): boolean 
 
 export const getInitialMirrorForAudio = (
   _audio: AudioOption = 'dub',
-  originalLanguage?: string
+  _originalLanguage?: string
 ): string => {
-  // Para produções brasileiras (séries e novelas nacionais), o VidLink não possui acervo e retorna erro.
-  // VidSrc indexa novelas e produções nacionais PT-BR.
-  if ((originalLanguage || '').toLowerCase() === 'pt') {
-    return 'embed2'
-  }
-  return 'vidlink'
+  // Prioridade universal: 2Embed (embed2) para qualquer filme ou série.
+  // Evita que o VidLink exiba telas de indisponibilidade ("We Couldn't Find This Content") ou áudio em inglês.
+  return 'embed2'
 }
 
 export const getNextSilentMirrorId = (
@@ -133,7 +130,7 @@ export const getNextSilentMirrorId = (
   const isPt = (originalLanguage || '').toLowerCase() === 'pt'
   const sequence = isPt
     ? ['embed2', 'vidsrc', 'vidlink']
-    : ['vidlink', 'vidsrc', 'embed2']
+    : ['embed2', 'vidsrc', 'moviebox', 'vidlink']
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
     return sequence[0]

@@ -1040,8 +1040,8 @@ test('DUBBED-AUDIO-AND-TURKISH-SHOWS-1: Priorização estrita de áudio dublado 
   assert.ok(seriesSrc.includes('title="Séries Turcas"'), 'Series.tsx deve renderizar carrossel Séries Turcas')
 
   // 3. streams.ts deve priorizar vidlink limpo (sem captcha) para reprodução internacional e vidsrc para nacional
-  assert.ok(streamsSrc.includes("return 'vidlink'"), 'getInitialMirrorForAudio deve apontar para vidlink')
-  assert.ok(streamsSrc.includes("['vidlink', 'vidsrc', 'embed2']"), 'getNextSilentMirrorId deve priorizar vidlink limpo sem captcha')
+  assert.ok(streamsSrc.includes("return 'embed2'"), 'getInitialMirrorForAudio deve apontar para embed2')
+  assert.ok(streamsSrc.includes("['embed2', 'vidsrc', 'moviebox', 'vidlink']"), 'getNextSilentMirrorId deve priorizar embed2 e rebaixar vidlink')
 
   // 4. StreamPlayer.tsx deve selecionar candidato dublado e faixas PT no HLS
   assert.ok(playerSrc.includes('const dubIdx = list.findIndex((c) => c.isDubbedHint)'), 'StreamPlayer deve selecionar candidato dublado prioritário')
@@ -1166,7 +1166,7 @@ test('NATIONAL-SERIES-NOVELAS-FALLBACK-1: Priorização de 2Embed para novelas/s
   assert.ok(playerSrc.includes('handleCycleServerOption'), 'Botão Trocar Servidor deve acionar handleCycleServerOption')
 
   // 4. StreamPlayer deve usar embed2 como espelho de contingência para produções nacionais
-  assert.ok(playerSrc.includes("isPtOriginal ? 'embed2' : 'vidlink'"), 'StreamPlayer deve priorizar embed2 para séries/novelas brasileiras')
+  assert.ok(playerSrc.includes("const contingencyMirror = 'embed2'"), 'StreamPlayer deve priorizar embed2 como espelho de contingência universal')
 })
 
 test('ANTI-BETTING-ADS-FILTER-1: Bloqueio estrito de streams com propaganda de apostas (1xBet / embedplayer2 / playercdnxx)', () => {

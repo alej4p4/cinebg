@@ -529,11 +529,11 @@ const StreamPlayer = ({
 
   // ===== Auto-fallback state =====
   const fallbackSequence = useMemo(
-    () => (isPtOriginal ? ['embed2', 'vidsrc', 'vidlink'] : ['vidlink', 'vidsrc', 'embed2']),
+    () => (isPtOriginal ? ['embed2', 'vidsrc', 'vidlink'] : ['embed2', 'vidsrc', 'moviebox', 'vidlink']),
     [isPtOriginal]
   )
 
-  const defaultSafeMirror = isPtOriginal ? 'embed2' : 'vidlink'
+  const defaultSafeMirror = 'embed2'
   const safeMirror =
     activeMirror === 'superflix' || activeMirror === 'megaembed' || isCaptchaOrBotBlockUrl(activeMirror)
       ? defaultSafeMirror
@@ -628,7 +628,7 @@ const StreamPlayer = ({
     // 2. Se for seleção entre candidatos de mídia direta (MP4/HLS):
     const list = candidatesRef.current
     applySubtitleLangRef.current?.('off')
-    setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
+    setActiveMirror('embed2')
     setAllowIframe(false)
     const dubIdx = list.findIndex((c) => c.isDubbedHint)
     const targetIdx = dubIdx !== -1 ? dubIdx : 0
@@ -683,7 +683,7 @@ const StreamPlayer = ({
       return
     }
     // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho de contingência limpo
-    const contingencyMirror = isPtOriginal ? 'embed2' : 'vidlink'
+    const contingencyMirror = 'embed2'
     console.info(`[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência limpo (${contingencyMirror})...`)
     nativeActiveRef.current = false
     setDirectSrc(null)
@@ -778,7 +778,7 @@ const StreamPlayer = ({
     setCandidates([])
     setCandidateIndex(0)
     setFallbackAttempt(0)
-    setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
+    setActiveMirror('embed2')
     setKey((k) => k + 1)
   }
 
@@ -933,7 +933,7 @@ const StreamPlayer = ({
             nativeActiveRef.current = false
             setDirectSrc(null)
             setDirectKind(null)
-            setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
+            setActiveMirror('embed2')
             setAllowIframe(true)
             setError(false)
           }
@@ -946,7 +946,7 @@ const StreamPlayer = ({
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
-          setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
+          setActiveMirror('embed2')
           setAllowIframe(true)
           setError(false)
         }
@@ -960,7 +960,7 @@ const StreamPlayer = ({
         setCandidateIndex(0)
         candidateIndexRef.current = 0
         nativeActiveRef.current = false
-        setActiveMirror(isPtOriginal ? 'embed2' : 'vidlink')
+        setActiveMirror('embed2')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
