@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1793724826.9873745,
-    "seen": 1793724998.6898208,
-    "ast_hash": "30ae4e0927cc91782ee2611617b7ab6f",
+    "mtime": 1793727162.2347927,
+    "seen": 1793727311.7462656,
+    "ast_hash": "1db8a0c7386f8b6f49af9c073f64f7ca",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1793724968.2434583,
-    "seen": 1793724998.6898305,
+    "mtime": 1793727279.057736,
+    "seen": 1793727311.7462742,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": "4d2bbe5da73933ac326a41f41302842f"
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1793724968.2434583,
-    "seen": 1793724998.6898544,
+    "mtime": 1793727279.057736,
+    "seen": 1793727311.7462957,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": "aa014fc13e426f53986cc2fec0130a09"
   },
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793724812.7215629,
-    "seen": 1793724998.6898792,
-    "ast_hash": "9061f77e21420e343cfadb981db0f946",
+    "mtime": 1793727162.2337904,
+    "seen": 1793727311.7463174,
+    "ast_hash": "08929282c636948c1206d4ff5d69c433",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1793724860.9536548,
-    "seen": 1793724998.6898894,
-    "ast_hash": "60a7013a32deee2c02394dbc48e29313",
+    "mtime": 1793727162.237801,
+    "seen": 1793727311.7463267,
+    "ast_hash": "dd5551e591364682429e4eb566575e86",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -138,15 +138,15 @@
     "semantic_hash": "582012cd608852a3d274367c6f820cf3"
   },
   "src/components/player/LivePlayer.tsx": {
-    "mtime": 1793711744.9550061,
-    "seen": 1793712035.2147095,
-    "ast_hash": "2b8725444b748884030ac871b7593f6b",
+    "mtime": 1793726944.2014186,
+    "seen": 1793727311.746352,
+    "ast_hash": "aa5907307f83a8384d05a897f084dac5",
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1793724715.7889397,
-    "seen": 1793724998.6899462,
-    "ast_hash": "a7edfc99279d4fa2fad82d46fa37f12d",
+    "mtime": 1793726882.17367,
+    "seen": 1793727311.7463565,
+    "ast_hash": "d754874cf03250eb0b8de7891cb8ec59",
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
@@ -360,9 +360,9 @@
     "semantic_hash": "82666891da0f8c0fa988b5d4aaf499c5"
   },
   "src/services/streams.ts": {
-    "mtime": 1793724655.7336383,
-    "seen": 1793724998.6901348,
-    "ast_hash": "4acdfaab72ca2709a545f3d335adf0f6",
+    "mtime": 1793725146.7351205,
+    "seen": 1793727311.746465,
+    "ast_hash": "83db0eaa0b6f4906bd75739b9df263aa",
     "semantic_hash": ""
   },
   "src/services/tmdb.ts": {
@@ -396,9 +396,9 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1793724841.7117555,
-    "seen": 1793724998.690158,
-    "ast_hash": "e424dd9630587929fa6fd682fae0a660",
+    "mtime": 1793727162.2367954,
+    "seen": 1793727311.7464862,
+    "ast_hash": "fce9220e9524dfd9b72e654ab311f5cc",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
@@ -426,9 +426,9 @@
     "semantic_hash": "df562a73dce2f53f022bc93ee20099c2"
   },
   "vite.config.ts": {
-    "mtime": 1793724571.8454857,
-    "seen": 1793724998.6901839,
-    "ast_hash": "de031bd25679bcc9f75676c7b25ce7d6",
+    "mtime": 1793725146.7354598,
+    "seen": 1793727311.7465105,
+    "ast_hash": "6af49507920ac8238e7e2297ba17af7e",
     "semantic_hash": ""
   },
   ".github/ISSUE_TEMPLATE/bug_fix.md": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793724771.874457,
-    "seen": 1793724998.6901748,
-    "ast_hash": "67d8bbe87b1fa02acd08e0738d8c1a07",
+    "mtime": 1793726997.888334,
+    "seen": 1793727311.7465022,
+    "ast_hash": "b31bbd9d0e41370bf09b4f2238b757f1",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {

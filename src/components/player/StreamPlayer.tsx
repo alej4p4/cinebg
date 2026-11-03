@@ -484,7 +484,7 @@ const StreamPlayer = ({
       ) {
         setShowHud(false)
       }
-    }, 3000)
+    }, 5500)
   }, [isLocked, settingsModalOpen, episodesDrawerOpen, speedOpen, subsOpen, qualityOpen])
 
   useEffect(() => {
@@ -1296,7 +1296,7 @@ const StreamPlayer = ({
     if (!isLocked || isTv) return
     setShowLockPrompt(true)
     if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
-    lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
+    lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 5000)
   }, [isLocked, isTv])
 
   const toggleLock = () => {
@@ -1311,7 +1311,7 @@ const StreamPlayer = ({
         setShowHud(false)
         setShowLockPrompt(true)
         if (lockPromptTimerRef.current) clearTimeout(lockPromptTimerRef.current)
-        lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 2500)
+        lockPromptTimerRef.current = setTimeout(() => setShowLockPrompt(false), 5000)
       } else {
         showFeedback('🔓 Tela Desbloqueada')
         setShowLockPrompt(false)
@@ -2380,7 +2380,7 @@ const StreamPlayer = ({
               e.stopPropagation()
               handleLockTap()
             }}
-            className="absolute inset-0 z-50 cursor-pointer flex items-center justify-center bg-black/20 backdrop-blur-[2px] select-none"
+            className="absolute inset-0 z-50 cursor-pointer flex items-center justify-center bg-transparent backdrop-blur-none select-none pointer-events-auto"
           >
             <AnimatePresence>
               {showLockPrompt && (

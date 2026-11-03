@@ -1,15 +1,15 @@
 {
-  "version": "1.3.37",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.37/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.37/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.37/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.37/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.37/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.37/CineBG-Tv-release.apk",
+  "version": "1.3.38",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.38/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.38/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.38/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.38/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.38/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.38/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Aprimoramento crítico na resolução de áudio dublado: expansão dos timeouts nativos de extração de fontes diretas PT-BR e orientação visual para seleção de idioma em players externos.",
-  "versionCode": 127,
-  "notes": "Aprimoramento crítico na resolução de áudio dublado: expansão dos timeouts nativos de extração de fontes diretas PT-BR e orientação visual para seleção de idioma em players externos.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.37/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.37/CineBG-Tv-release.apk"
+  "releaseNotes": "Remoção de efeito embaçado ao bloquear tela em filmes e séries, e ampliação do tempo de exibição dos controles e cadeado no mobile.",
+  "versionCode": 128,
+  "notes": "Remoção de efeito embaçado ao bloquear tela em filmes e séries, e ampliação do tempo de exibição dos controles e cadeado no mobile.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.38/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.38/CineBG-Tv-release.apk"
 }
