@@ -1,15 +1,15 @@
 {
-  "version": "1.3.34",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk",
+  "version": "1.3.35",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.35/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.35/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.35/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.35/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.35/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.35/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Priorização estrita de áudio dublado em português (PT-BR) por padrão em filmes e séries (incluindo SuperFlix, MegaEmbed e HLS multi-áudio), e adição do carrossel de Séries Turcas na tela inicial.",
-  "versionCode": 124,
-  "notes": "Priorização estrita de áudio dublado em português (PT-BR) por padrão em filmes e séries (incluindo SuperFlix, MegaEmbed e HLS multi-áudio), e adição do carrossel de Séries Turcas na tela inicial.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.34/CineBG-Tv-release.apk"
+  "releaseNotes": "Eliminação total de telas de validação humana Cloudflare Turnstile Captcha nos players de filmes e séries, quarentena de provedores com bloqueio e ampliação do buffer de reprodução direta.",
+  "versionCode": 125,
+  "notes": "Eliminação total de telas de validação humana Cloudflare Turnstile Captcha nos players de filmes e séries, quarentena de provedores com bloqueio e ampliação do buffer de reprodução direta.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.35/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.35/CineBG-Tv-release.apk"
 }

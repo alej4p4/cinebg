@@ -528,15 +528,17 @@ const StreamPlayer = ({
   const fallbackSequence = useMemo(
     () =>
       activeAudio === 'dub'
-        ? ['superflix', 'megaembed', 'vidlink', 'vidsrc', 'embed2', 'moviebox']
-        : ['vidlink', 'vidsrc', 'embed2', 'superflix', 'moviebox', 'megaembed'],
+        ? ['megaembed', 'vidlink', 'vidsrc', 'embed2', 'moviebox']
+        : ['vidlink', 'vidsrc', 'embed2', 'megaembed', 'moviebox'],
     [activeAudio]
   )
 
+  const safeMirror = activeMirror === 'superflix' ? (activeAudio === 'dub' ? 'megaembed' : 'vidlink') : activeMirror
+
   const embedUrl =
     type === 'movie'
-      ? buildMovieUrl(tmdbId, activeAudio, activeMirror)
-      : buildShowUrl(tmdbId, season, episode, activeAudio, activeMirror)
+      ? buildMovieUrl(tmdbId, activeAudio, safeMirror)
+      : buildShowUrl(tmdbId, season, episode, activeAudio, safeMirror)
 
   const showFeedback = useCallback((text: string) => {
     setFeedback(text)
@@ -618,7 +620,7 @@ const StreamPlayer = ({
     // 2. Se for seleção entre candidatos de mídia direta (MP4/HLS):
     const list = candidatesRef.current
     applySubtitleLangRef.current?.('off')
-    setActiveMirror('superflix')
+    setActiveMirror('megaembed')
     setAllowIframe(false)
     const dubIdx = list.findIndex((c) => c.isDubbedHint)
     const targetIdx = dubIdx !== -1 ? dubIdx : 0
@@ -672,12 +674,12 @@ const StreamPlayer = ({
       setError(false)
       return
     }
-    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho dublado/nacional
-    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência...')
+    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho dublado/nacional limpo (MegaEmbed)
+    console.info('[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência MegaEmbed...')
     nativeActiveRef.current = false
     setDirectSrc(null)
     setDirectKind(null)
-    setActiveMirror(activeAudio === 'dub' ? 'superflix' : 'vidlink')
+    setActiveMirror(activeAudio === 'dub' ? 'megaembed' : 'vidlink')
     setAllowIframe(true)
     setLoaded(false)
     setError(false)
@@ -764,7 +766,7 @@ const StreamPlayer = ({
     setCandidates([])
     setCandidateIndex(0)
     setFallbackAttempt(0)
-    setActiveMirror(activeAudio === 'dub' ? 'superflix' : 'vidlink')
+    setActiveMirror(activeAudio === 'dub' ? 'megaembed' : 'vidlink')
     setKey((k) => k + 1)
   }
 
@@ -848,12 +850,12 @@ const StreamPlayer = ({
 
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
 
-    // Timeout ágil para conexões residenciais e TV Boxes: 5s para buffer inicial antes de pular para a próxima opção
+    // Timeout resiliente para conexões residenciais e TV Boxes: 12s para buffer inicial antes de pular para a próxima opção
     autoFallbackTimerRef.current = setTimeout(() => {
       if (loadedRef.current) return
-      console.warn(`[StreamPlayer] Timeout de carregamento (5s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
+      console.warn(`[StreamPlayer] Timeout de carregamento (12s) na opção ${candidateIndex + 1}. Tentando próxima opção...`)
       handleDirectMediaError()
-    }, 5000)
+    }, 12000)
 
     return () => {
       if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
@@ -913,13 +915,13 @@ const StreamPlayer = ({
             setDirectSrc(firstCandidate.url)
             setDirectKind(firstCandidate.kind)
           } else {
-            console.info('[StreamPlayer] Fontes diretas não encontradas. Tentando espelho SuperFlix PT-BR...')
+            console.info('[StreamPlayer] Fontes diretas não encontradas. Tentando espelho limpo MegaEmbed PT-BR...')
             setCandidateIndex(0)
             candidateIndexRef.current = 0
             nativeActiveRef.current = false
             setDirectSrc(null)
             setDirectKind(null)
-            setActiveMirror('superflix')
+            setActiveMirror('megaembed')
             setAllowIframe(true)
             setError(false)
           }
@@ -932,7 +934,7 @@ const StreamPlayer = ({
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
-          setActiveMirror('superflix')
+          setActiveMirror(activeAudio === 'dub' ? 'megaembed' : 'vidlink')
           setAllowIframe(true)
           setError(false)
         }
@@ -946,7 +948,7 @@ const StreamPlayer = ({
         setCandidateIndex(0)
         candidateIndexRef.current = 0
         nativeActiveRef.current = false
-        setActiveMirror('superflix')
+        setActiveMirror(activeAudio === 'dub' ? 'megaembed' : 'vidlink')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
