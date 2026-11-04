@@ -232,7 +232,7 @@ public class MainActivity extends BridgeActivity {
         "pangle", "yandex", "anonymizer", "coinhive", "coinimp", "crypto-loot",
         "adkeep", "pemsrv", "adtng", "ad-score", "adtarget", "adfactor", "adnuntius",
         "outstream", "vidoomy", "in-page-push", "pushnotification", "adserver",
-        "videoshare", "streamshield", "clck", "embedplayer", "solitary-field", "individualbranding"
+        "videoshare", "streamshield", "clck", "embedplayer", "solitary-field", "individualbranding", "uqload"
     };
 
     private static boolean isAdUrl(String url) {
@@ -251,7 +251,7 @@ public class MainActivity extends BridgeActivity {
             lower.contains("betwinner") || lower.contains("22bet") || lower.contains("megapari") ||
             lower.contains("888starz") || lower.contains("bet365") || lower.contains("betano") ||
             lower.contains("preroll") || lower.contains("midroll") || lower.contains("vast.xml") ||
-            lower.contains("vpaid")) {
+            lower.contains("vpaid") || lower.contains("uqload")) {
             return true;
         }
 

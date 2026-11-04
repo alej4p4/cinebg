@@ -211,6 +211,10 @@ export const isPortugueseAudioCandidate = (
   const l = (label || '').toLowerCase()
   const u = (url || '').toLowerCase()
 
+  if (u.includes('uqload') || l.includes('uqload')) {
+    return false
+  }
+
   // 1. Rejeita terminantemente fontes com indicação explícita de legenda ou áudio em inglês/estrangeiro
   if (
     /\b(legendad[oa]|leg|sub|subtitled|legendas|ingl[eê]s|english)\b/i.test(l) ||
@@ -258,6 +262,7 @@ const BROKEN_IP_LOCKED_HOSTS = [
   'embedplayer',
   'solitary-field',
   'individualbranding',
+  'uqload',
 ]
 
 // Palavras-chave proibidas de propagandas de apostas (1xBet / 1xbt) e gravações de cinema (HDCAM / CAMRIP / TS)
@@ -286,6 +291,7 @@ export const BANNED_AD_STREAM_HINTS = [
   'embedplayer',
   'solitary-field',
   'individualbranding',
+  'uqload',
 ]
 
 const CAMRIP_LABEL_REGEX = /\b(1xbt|1xbet|xbet|cam|hdcam|camrip|telesync|hdts|tsrip|telecine)\b/i
