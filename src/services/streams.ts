@@ -30,7 +30,7 @@ export const MIRRORS: StreamMirror[] = [
     name: 'CineBG Ultra (VidLink Pro)',
     flagEmoji: '🚀',
     quality: 'FHD 1080p',
-    type: 'dubbed_br',
+    type: 'multi_sub',
     sandboxed: false,
     getMovieUrl: (tmdbId) =>
       `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&lang=pt-BR&audio_lang=pt-BR&audio=pt&autoplay=true&muted=false&fallback=true&ads=0`,
@@ -478,7 +478,7 @@ const fetchMegaEmbedSources = async (
     for (const url of endpoints) {
       try {
         const controller = new AbortController()
-        const tId = setTimeout(() => controller.abort(), 9000)
+        const tId = setTimeout(() => controller.abort(), 25000)
         const res = await fetch(url, {
           credentials: 'omit',
           referrerPolicy: 'no-referrer',

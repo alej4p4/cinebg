@@ -1213,3 +1213,28 @@ test('AUTO-DUBBED-DETECTION-AND-MP4-PRIORITY-1: Prioridade absoluta para MP4 dub
   // 3. Details.tsx deve alternar automaticamente para dublado ao detectar nova fonte
   assert.ok(detailsSrc.includes("setAudioOption('dub')"), 'Details.tsx deve definir áudio como dub quando fonte dublada estiver presente')
 })
+
+
+test('ANTI-SILENT-ENGLISH-FALLBACK-AND-YOUCINE-MODES-1: Erradicacao de fallback para ingles em dublado e separacao YouCine', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const streamPlayerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+
+  // 1. MIRRORS nao deve classificar vidlink como dubbed_br
+  assert.ok(
+    !streamsSrc.includes("id: 'vidlink',\n    name: 'CineBG Ultra (VidLink Pro)',\n    flagEmoji: '🚀',\n    quality: 'FHD 1080p',\n    type: 'dubbed_br'") &&
+    !streamsSrc.includes("id: 'vidlink',\r\n    name: 'CineBG Ultra (VidLink Pro)',\r\n    flagEmoji: '🚀',\r\n    quality: 'FHD 1080p',\r\n    type: 'dubbed_br'"),
+    'vidlink deve ser classificado como multi_sub, nunca como dubbed_br'
+  )
+
+  // 2. StreamPlayer.tsx nao deve abrir vidlink automaticamente se o audio ativo for dub
+  assert.ok(
+    streamPlayerSrc.includes("activeAudioRef.current === 'dub' && !isPtOriginal"),
+    'StreamPlayer deve barrar fallback silencioso para espelho em ingles quando usuario escolheu dub'
+  )
+
+  // 3. StreamPlayer.tsx deve oferecer botao para alternar para legendado
+  assert.ok(
+    streamPlayerSrc.includes('handleSwitchToSubtitled'),
+    'StreamPlayer deve conter manipulador e botao para alternar para legendado'
+  )
+})
