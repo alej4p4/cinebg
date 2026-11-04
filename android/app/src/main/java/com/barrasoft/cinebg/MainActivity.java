@@ -232,7 +232,7 @@ public class MainActivity extends BridgeActivity {
         "pangle", "yandex", "anonymizer", "coinhive", "coinimp", "crypto-loot",
         "adkeep", "pemsrv", "adtng", "ad-score", "adtarget", "adfactor", "adnuntius",
         "outstream", "vidoomy", "in-page-push", "pushnotification", "adserver",
-        "videoshare", "streamshield", "clck"
+        "videoshare", "streamshield", "clck", "embedplayer", "playercdn", "solitary-field", "individualbranding"
     };
 
     private static boolean isAdUrl(String url) {

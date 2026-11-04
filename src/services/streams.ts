@@ -55,9 +55,9 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'HD 720p/1080p',
     type: 'multi_sub',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://2embed.cc/embed/${tmdbId}`,
+    getMovieUrl: (tmdbId) => `https://www.2embed.cc/embed/${tmdbId}`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`,
+      `https://www.2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`,
   },
   {
     id: 'moviebox',
@@ -114,14 +114,11 @@ export const isCaptchaOrBotBlockUrl = (url: string | null | undefined): boolean 
 
 export const getInitialMirrorForAudio = (
   _audio: AudioOption = 'dub',
-  originalLanguage?: string
+  _originalLanguage?: string
 ): string => {
-  // Para produções brasileiras (séries e novelas nacionais), o VidLink não possui acervo e retorna erro.
-  // VidSrc indexa novelas e produções nacionais PT-BR.
-  if ((originalLanguage || '').toLowerCase() === 'pt') {
-    return 'vidsrc'
-  }
-  return 'vidlink'
+  // Prioridade universal: 2Embed (embed2) para qualquer filme ou série.
+  // Evita que o VidLink exiba telas de indisponibilidade ("We Couldn't Find This Content") ou áudio em inglês.
+  return 'embed2'
 }
 
 export const getNextSilentMirrorId = (
@@ -132,8 +129,8 @@ export const getNextSilentMirrorId = (
   // Quarentena: superflix e megaembed (mgeb.lat) são excluídos da sequência de iframes por exigir desafio Cloudflare Captcha ('Validação segura')
   const isPt = (originalLanguage || '').toLowerCase() === 'pt'
   const sequence = isPt
-    ? ['vidsrc', 'embed2', 'vidlink']
-    : ['vidlink', 'vidsrc', 'embed2']
+    ? ['embed2', 'vidsrc', 'vidlink']
+    : ['embed2', 'vidsrc', 'moviebox', 'vidlink']
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
     return sequence[0]
@@ -259,6 +256,10 @@ const BROKEN_IP_LOCKED_HOSTS = [
   'playercdn',
   's13-st1001604.lat',
   'cdn--xn',
+  'embedplayer2.xyz',
+  'embedplayer',
+  'solitary-field',
+  'individualbranding',
 ]
 
 // Palavras-chave proibidas de propagandas de apostas (1xBet / 1xbt) e gravações de cinema (HDCAM / CAMRIP / TS)
@@ -283,6 +284,14 @@ export const BANNED_AD_STREAM_HINTS = [
   'telecine',
   'clean.cam',
   'cleancam',
+  'embedplayer2',
+  'embedplayer',
+  'playercdn',
+  'playercdnx',
+  'playercdnxx',
+  'workers.dev',
+  'individualbranding',
+  'solitary-field',
 ]
 
 const CAMRIP_LABEL_REGEX = /\b(1xbt|1xbet|xbet|cam|hdcam|camrip|telesync|hdts|tsrip|telecine)\b/i

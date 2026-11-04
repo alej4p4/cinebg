@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1793743840.4755948,
-    "seen": 1793744181.659166,
-    "ast_hash": "590e00dc8c97db321f7adbbcd0c9c11f",
+    "mtime": 1793749305.0912864,
+    "seen": 1793749467.5479195,
+    "ast_hash": "c17cdfb80eb92687b72c39fc317aff21",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1793744150.0237608,
-    "seen": 1793744181.6591742,
+    "mtime": 1793749441.2524571,
+    "seen": 1793749467.5479276,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": "4d2bbe5da73933ac326a41f41302842f"
   },
@@ -18,9 +18,9 @@
     "semantic_hash": "c777a4127ae7213f7da22c4105bdfeab"
   },
   "android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java": {
-    "mtime": 1793301030.0089006,
-    "seen": 1793536381.4890893,
-    "ast_hash": "cb1934bbb0853bd6794d94445770b49b",
+    "mtime": 1793746530.8703701,
+    "seen": 1793747075.7904181,
+    "ast_hash": "465a208229cff7d964b2a69f0b9cb887",
     "semantic_hash": ""
   },
   "android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java": {
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1793744150.0237608,
-    "seen": 1793744181.6591933,
+    "mtime": 1793749441.2524571,
+    "seen": 1793749467.5479474,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": "aa014fc13e426f53986cc2fec0130a09"
   },
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793743840.4601874,
-    "seen": 1793744181.6592138,
-    "ast_hash": "517481249f9e54bba77da4d550c27c73",
+    "mtime": 1793749305.0862794,
+    "seen": 1793749467.5479693,
+    "ast_hash": "3c23a8637ff32ed719a8a7f0a3864c78",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1793743840.5118911,
-    "seen": 1793744181.6592228,
-    "ast_hash": "b9e42f0cc54aa1833010abbe49a80cd7",
+    "mtime": 1793749305.092284,
+    "seen": 1793749467.5479784,
+    "ast_hash": "7d195aa459a88df010e09e98b75a0f7f",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1793743744.551185,
-    "seen": 1793744181.6592517,
-    "ast_hash": "aee3f3afd22762c72ab3504d54d8ba46",
+    "mtime": 1793747962.009128,
+    "seen": 1793748541.9861581,
+    "ast_hash": "37bdc72729d327f00a8e8828f90cf869",
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
@@ -360,9 +360,9 @@
     "semantic_hash": "82666891da0f8c0fa988b5d4aaf499c5"
   },
   "src/services/streams.ts": {
-    "mtime": 1793743499.934005,
-    "seen": 1793744181.659356,
-    "ast_hash": "b0e5d5e13b37e4b54d9d6b1b17ca58f5",
+    "mtime": 1793748186.2954378,
+    "seen": 1793748541.9862707,
+    "ast_hash": "df6ffbb76e88c4bc7378b36d9a8b3afb",
     "semantic_hash": ""
   },
   "src/services/tmdb.ts": {
@@ -396,9 +396,9 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1793743840.5007007,
-    "seen": 1793744181.6593778,
-    "ast_hash": "ad538d42e5ed6e2e235d816a8af08444",
+    "mtime": 1793749305.092284,
+    "seen": 1793749467.5481374,
+    "ast_hash": "11daf042017994545def8c10b6d6fae7",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793744011.7435374,
-    "seen": 1793744181.6593928,
-    "ast_hash": "e744d20e7a146bf550dfcc2e2d3efdf3",
+    "mtime": 1793748411.2478824,
+    "seen": 1793748541.986311,
+    "ast_hash": "3ff89686884a61aebd8155586684164b",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {
