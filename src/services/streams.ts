@@ -114,11 +114,12 @@ export const isCaptchaOrBotBlockUrl = (url: string | null | undefined): boolean 
 
 export const getInitialMirrorForAudio = (
   _audio: AudioOption = 'dub',
-  _originalLanguage?: string
+  originalLanguage?: string
 ): string => {
-  // Prioridade universal: 2Embed (embed2) para qualquer filme ou série.
-  // Evita que o VidLink exiba telas de indisponibilidade ("We Couldn't Find This Content") ou áudio em inglês.
-  return 'embed2'
+  if ((originalLanguage || '').toLowerCase() === 'pt') {
+    return 'vidsrc'
+  }
+  return 'vidlink'
 }
 
 export const getNextSilentMirrorId = (
@@ -126,11 +127,10 @@ export const getNextSilentMirrorId = (
   _audio: AudioOption = 'dub',
   originalLanguage?: string
 ): string => {
-  // Quarentena: superflix e megaembed (mgeb.lat) são excluídos da sequência de iframes por exigir desafio Cloudflare Captcha ('Validação segura')
   const isPt = (originalLanguage || '').toLowerCase() === 'pt'
   const sequence = isPt
-    ? ['embed2', 'vidsrc', 'vidlink']
-    : ['embed2', 'vidsrc', 'moviebox', 'vidlink']
+    ? ['vidsrc', 'embed2', 'vidlink']
+    : ['vidlink', 'vidsrc', 'embed2']
   const currentIndex = sequence.indexOf(currentId)
   if (currentIndex === -1 || currentIndex >= sequence.length - 1) {
     return sequence[0]
@@ -251,9 +251,7 @@ const BROKEN_IP_LOCKED_HOSTS = [
   'streamtape.com',
   'tapecontent.net',
   '97bf1.com',
-  'playercdnx.workers.dev',
   'playercdnxx.workers.dev',
-  'playercdn',
   's13-st1001604.lat',
   'cdn--xn',
   'embedplayer2.xyz',
@@ -286,12 +284,8 @@ export const BANNED_AD_STREAM_HINTS = [
   'cleancam',
   'embedplayer2',
   'embedplayer',
-  'playercdn',
-  'playercdnx',
-  'playercdnxx',
-  'workers.dev',
-  'individualbranding',
   'solitary-field',
+  'individualbranding',
 ]
 
 const CAMRIP_LABEL_REGEX = /\b(1xbt|1xbet|xbet|cam|hdcam|camrip|telesync|hdts|tsrip|telecine)\b/i

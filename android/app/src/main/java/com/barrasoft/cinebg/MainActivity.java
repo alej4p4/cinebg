@@ -232,7 +232,7 @@ public class MainActivity extends BridgeActivity {
         "pangle", "yandex", "anonymizer", "coinhive", "coinimp", "crypto-loot",
         "adkeep", "pemsrv", "adtng", "ad-score", "adtarget", "adfactor", "adnuntius",
         "outstream", "vidoomy", "in-page-push", "pushnotification", "adserver",
-        "videoshare", "streamshield", "clck", "embedplayer", "playercdn", "solitary-field", "individualbranding"
+        "videoshare", "streamshield", "clck", "embedplayer", "solitary-field", "individualbranding"
     };
 
     private static boolean isAdUrl(String url) {
@@ -263,7 +263,7 @@ public class MainActivity extends BridgeActivity {
             lower.contains("fontedecanais") || lower.contains("dramasfree") ||
             lower.contains("vidlink") || lower.contains("vidsrc") ||
             lower.contains("vsembed") || lower.contains("multiembed") ||
-            lower.contains("megatube")) {
+            lower.contains("megatube") || lower.contains("playercdn") || lower.contains("workers.dev")) {
             return false;
         }
 
