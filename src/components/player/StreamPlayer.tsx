@@ -152,6 +152,10 @@ const StreamPlayer = ({
 
   // Áudio ativo específico da mídia em reprodução (padrão: Dublado / Português se disponível)
   const [activeAudio, setActiveAudio] = useState<'dub' | 'orig'>(() => initialAudio || 'dub')
+  const activeAudioRef = useRef<'dub' | 'orig'>(initialAudio || 'dub')
+  useEffect(() => {
+    activeAudioRef.current = activeAudio
+  }, [activeAudio])
 
   const isPtOriginal = (originalLanguage || '').toLowerCase() === 'pt'
   const initialMediaType: 'movie' | 'tv' = type === 'movie' ? 'movie' : 'tv'
@@ -682,9 +686,22 @@ const StreamPlayer = ({
       setError(false)
       return
     }
-    // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho de contingência limpo
+    // Se todos os candidatos diretos falharem:
+    // Em modo Dublado (não nacional), NUNCA abre espelho em inglês automaticamente (evita frustração de rodar em inglês).
+    if (activeAudioRef.current === 'dub' && !isPtOriginal) {
+      console.warn('[StreamPlayer] Todas as opções dubladas falharam. Exibindo tela de aviso em vez de forçar áudio em inglês silenciosamente.')
+      nativeActiveRef.current = false
+      setDirectSrc(null)
+      setDirectKind(null)
+      setAllowIframe(false)
+      setError(true)
+      setLoaded(false)
+      return
+    }
+
+    // Se o usuário estiver no modo legendado (activeAudio === 'orig') ou se for produção nacional, usa o espelho
     const contingencyMirror = isPtOriginal ? 'vidsrc' : 'vidlink'
-    console.info(`[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência limpo (${contingencyMirror})...`)
+    console.info(`[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho legendado (${contingencyMirror})...`)
     nativeActiveRef.current = false
     setDirectSrc(null)
     setDirectKind(null)
@@ -756,6 +773,20 @@ const StreamPlayer = ({
       setError(true)
     }
   }
+
+  const handleSwitchToSubtitled = useCallback(() => {
+    setActiveAudio('orig')
+    setSubLang('pt')
+    setSubtitleOption('pt')
+    setError(false)
+    setLoaded(false)
+    nativeActiveRef.current = false
+    setDirectSrc(null)
+    setDirectKind(null)
+    setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
+    setAllowIframe(true)
+    showFeedback('Modo Legendado: Áudio Original com Legenda PT-BR')
+  }, [isPtOriginal, showFeedback, setSubtitleOption])
 
   const handleManualRefresh = () => {
     loadedRef.current = false
@@ -913,10 +944,10 @@ const StreamPlayer = ({
 
         // SE HOUVER ÁUDIO EM PORTUGUÊS DISPONÍVEL, SELECIONA AUTOMATICAMENTE
         if (hasDubbedSource) {
-          setActiveAudio('dub')
-          setSubLang('off')
-          setSubtitleOption('off')
           if (list.length > 0) {
+            setActiveAudio('dub')
+            setSubLang('off')
+            setSubtitleOption('off')
             const dubIdx = list.findIndex((c) => c.isDubbedHint)
             const targetIdx = dubIdx !== -1 ? dubIdx : 0
             const firstCandidate = list[targetIdx]
@@ -926,13 +957,17 @@ const StreamPlayer = ({
             setAllowIframe(false)
             setDirectSrc(firstCandidate.url)
             setDirectKind(firstCandidate.kind)
-          } else {
-            console.info('[StreamPlayer] Fontes diretas não encontradas. Alternando para espelho limpo VidLink...')
+          } else if (activeAudioRef.current === 'dub' && !isPtOriginal) {
+            console.info('[StreamPlayer] Título sem fontes dubladas disponíveis no momento.')
             setCandidateIndex(0)
             candidateIndexRef.current = 0
             nativeActiveRef.current = false
             setDirectSrc(null)
             setDirectKind(null)
+            setAllowIframe(false)
+            setError(true)
+          } else {
+            setActiveAudio('dub')
             setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
             setAllowIframe(true)
             setError(false)
@@ -2556,6 +2591,14 @@ const StreamPlayer = ({
               >
                 <RefreshCw className="h-4 w-4" />
                 <span>Tentar Novamente</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleSwitchToSubtitled}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:bg-yellow-400 focus:text-black shadow-lg cursor-pointer"
+              >
+                <SubtitlesIcon className="h-4 w-4" />
+                <span>Assistir Legendado (Áudio Original + Legenda PT-BR)</span>
               </button>
               {candidates.length > 1 && (
                 <button
