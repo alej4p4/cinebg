@@ -93,8 +93,10 @@ const Details = () => {
       .then((resolved) => {
         const isPt = (originalLanguage || '').toLowerCase() === 'pt'
         const hasDub = isPt || (resolved.candidates && resolved.candidates.length > 0)
-        // Separação inteligente YouCine: se não houver tradução em português disponível, ajusta automaticamente para Legendado
-        if (!hasDub) {
+        // Separação inteligente YouCine: quando sair a tradução, ajusta automaticamente para Dublado; se ainda não houver, ajusta para Legendado
+        if (hasDub) {
+          setAudioOption('dub')
+        } else {
           setAudioOption('orig')
         }
       })
