@@ -1,15 +1,15 @@
 {
-  "version": "1.3.46",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.46/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.46/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.46/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.46/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.46/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.46/CineBG-Tv-release.apk",
+  "version": "1.3.47",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.47/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.47/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.47/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.47/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.47/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.47/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Erradicado o fallback silencioso para player inglês: títulos dublados nunca mais rodam em inglês sem aviso e contam com opção 1-click para assistir legendado ou retentar.",
-  "versionCode": 136,
-  "notes": "Erradicado o fallback silencioso para player inglês: títulos dublados nunca mais rodam em inglês sem aviso e contam com opção 1-click para assistir legendado ou retentar.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.46/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.46/CineBG-Tv-release.apk"
+  "releaseNotes": "Suporte completo a servidores dedicados Xtream Codes / IPTV / VOD: conexao direta 24/7 com audio nativo em portugues e sincronizacao de canais ao vivo e VOD.",
+  "versionCode": 137,
+  "notes": "Suporte completo a servidores dedicados Xtream Codes / IPTV / VOD: conexao direta 24/7 com audio nativo em portugues e sincronizacao de canais ao vivo e VOD.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.47/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.47/CineBG-Tv-release.apk"
 }

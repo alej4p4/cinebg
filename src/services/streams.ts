@@ -1,3 +1,4 @@
+import { resolveXtreamMedia, isXtreamActive } from '@/services/xtream'
 import { Capacitor, CapacitorHttp } from '@capacitor/core'
 import type { Language, AudioOption } from '@/store/useAppStore'
 import { resolveMovieBoxStream, type MovieBoxStreamRelease } from '@/services/moviebox'
@@ -519,7 +520,8 @@ export const resolveMegaEmbed = async (
   mediaType: 'movie' | 'tv',
   season = 1,
   episode = 1,
-  originalLanguage?: string
+  originalLanguage?: string,
+  title?: string
 ): Promise<MegaEmbedResolved> => {
   const cacheKey = `${mediaType}-${tmdbId}-${season}-${episode}${originalLanguage ? `-${originalLanguage}` : ''}`
   const cached = getValidCachedEntry(cacheKey)
@@ -528,6 +530,13 @@ export const resolveMegaEmbed = async (
   }
 
   const resolveLogic = async (): Promise<MegaEmbedResolved> => {
+    // 0. Provedor dedicado Xtream Codes (se ativo, busca com prioridade máxima de áudio em português)
+    let xtreamStream: { url: string; kind: 'mp4' | 'hls'; label: string; isDubbedHint: boolean } | null = null
+    if (isXtreamActive() && title) {
+      try {
+        xtreamStream = await resolveXtreamMedia(title, mediaType, season, episode)
+      } catch {}
+    }
     const rawSources = await fetchMegaEmbedSources(tmdbId, mediaType, season, episode)
     const candidates: DirectCandidate[] = []
     const seenCanonicalKeys = new Set<string>()
@@ -593,6 +602,15 @@ export const resolveMegaEmbed = async (
     // 1. Fontes com áudio dublado confirmado primeiro
     // 2. Dentro das dubladas: MP4 direto ('fontedecanais' / 'gviudclrb') antes de HLS ('mgeb.space' / '123flmsfree')
     // 3. Fontes HLS multi-áudio/legendadas ('playercdnx.workers.dev') com legenda PT-BR nativa
+    if (xtreamStream) {
+      candidates.unshift({
+        url: xtreamStream.url,
+        kind: xtreamStream.kind,
+        label: xtreamStream.label,
+        isDubbedHint: true,
+      })
+    }
+
     candidates.sort((a, b) => {
       // 1. Fontes com áudio MP4 dublado nativo comprovado ('fontedecanais' / '76iqsc65sxxn71.com' / 'dramasfree' / 'gviudclrb') têm prioridade máxima #1
       const aIsNativeDubbed =
@@ -684,3 +702,5 @@ export const resolveMovieBoxDirectStream = async (
 ): Promise<MovieBoxStreamRelease | null> => {
   return await resolveMovieBoxStream(title, year, season, episode)
 }
+
+export { resolveXtreamMedia, isXtreamActive } from '@/services/xtream'

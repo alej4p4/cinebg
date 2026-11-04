@@ -1,3 +1,4 @@
+import { isXtreamActive, fetchXtreamLiveChannels } from '@/services/xtream'
 import { Capacitor, CapacitorHttp } from '@capacitor/core'
 // =========================================================================
 // TV CINEBG — CATÁLOGO OFICIAL DE CANAIS AO VIVO
