@@ -1188,3 +1188,14 @@ test('ANTI-BETTING-ADS-FILTER-1: Bloqueio estrito de streams com propaganda de a
   assert.ok(mainActivitySrc.includes('lower.contains("playercdn")'), 'MainActivity.java deve liberar playercdn para streaming')
   assert.ok(mainActivitySrc.includes('lower.contains("workers.dev")'), 'MainActivity.java deve liberar workers.dev para streaming')
 })
+
+test('UQLOAD-PAYWALL-STREAM-FILTER-1: Bloqueio estrito de streams do uqload com telas de paywall', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const mainActivitySrc = fs.readFileSync('android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java', 'utf8')
+
+  // 1. BROKEN_IP_LOCKED_HOSTS e BANNED_AD_STREAM_HINTS devem conter uqload
+  assert.ok(streamsSrc.includes("'uqload'"), 'BROKEN_IP_LOCKED_HOSTS e BANNED_AD_STREAM_HINTS devem conter uqload')
+
+  // 2. MainActivity.java deve bloquear uqload antes de liberar .m3u8/.mp4
+  assert.ok(mainActivitySrc.includes('lower.contains("uqload")'), 'MainActivity.java deve interceptar e bloquear uqload')
+})
