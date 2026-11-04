@@ -529,11 +529,11 @@ const StreamPlayer = ({
 
   // ===== Auto-fallback state =====
   const fallbackSequence = useMemo(
-    () => (isPtOriginal ? ['embed2', 'vidsrc', 'vidlink'] : ['embed2', 'vidsrc', 'moviebox', 'vidlink']),
+    () => (isPtOriginal ? ['vidsrc', 'embed2', 'vidlink'] : ['vidlink', 'vidsrc', 'embed2']),
     [isPtOriginal]
   )
 
-  const defaultSafeMirror = 'embed2'
+  const defaultSafeMirror = isPtOriginal ? 'vidsrc' : 'vidlink'
   const safeMirror =
     activeMirror === 'superflix' || activeMirror === 'megaembed' || isCaptchaOrBotBlockUrl(activeMirror)
       ? defaultSafeMirror
@@ -628,7 +628,7 @@ const StreamPlayer = ({
     // 2. Se for seleção entre candidatos de mídia direta (MP4/HLS):
     const list = candidatesRef.current
     applySubtitleLangRef.current?.('off')
-    setActiveMirror('embed2')
+    setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
     setAllowIframe(false)
     const dubIdx = list.findIndex((c) => c.isDubbedHint)
     const targetIdx = dubIdx !== -1 ? dubIdx : 0
@@ -683,7 +683,7 @@ const StreamPlayer = ({
       return
     }
     // Se todos os candidatos diretos falharem, alternamos automaticamente para o espelho de contingência limpo
-    const contingencyMirror = 'embed2'
+    const contingencyMirror = isPtOriginal ? 'vidsrc' : 'vidlink'
     console.info(`[StreamPlayer] Fontes diretas esgotadas. Alternando para espelho de contingência limpo (${contingencyMirror})...`)
     nativeActiveRef.current = false
     setDirectSrc(null)
@@ -733,7 +733,7 @@ const StreamPlayer = ({
     setLoaded(false)
     setError(false)
     setKey((k) => k + 1)
-    const mirrorName = nextMirror === 'embed2' ? '2Embed' : nextMirror === 'vidsrc' ? 'VidSrc' : 'VidLink'
+    const mirrorName = nextMirror === 'vidsrc' ? 'VidSrc' : nextMirror === 'embed2' ? '2Embed' : 'VidLink'
     showFeedback(`Servidor: ${mirrorName} (${nextAttempt + 1}/${fallbackSequence.length})`)
   }, [allowIframe, fallbackAttempt, fallbackSequence, showFeedback])
 
@@ -778,7 +778,7 @@ const StreamPlayer = ({
     setCandidates([])
     setCandidateIndex(0)
     setFallbackAttempt(0)
-    setActiveMirror('embed2')
+    setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
     setKey((k) => k + 1)
   }
 
@@ -933,7 +933,7 @@ const StreamPlayer = ({
             nativeActiveRef.current = false
             setDirectSrc(null)
             setDirectKind(null)
-            setActiveMirror('embed2')
+            setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
             setAllowIframe(true)
             setError(false)
           }
@@ -946,7 +946,7 @@ const StreamPlayer = ({
           nativeActiveRef.current = false
           setDirectSrc(null)
           setDirectKind(null)
-          setActiveMirror('embed2')
+          setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
           setAllowIframe(true)
           setError(false)
         }
@@ -960,7 +960,7 @@ const StreamPlayer = ({
         setCandidateIndex(0)
         candidateIndexRef.current = 0
         nativeActiveRef.current = false
-        setActiveMirror('embed2')
+        setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
         setAllowIframe(true)
         setDirectSrc(null)
         setDirectKind(null)
@@ -2598,7 +2598,7 @@ const StreamPlayer = ({
               title="Trocar para outro servidor/espelho"
             >
               <Server className="w-3.5 h-3.5 text-yellow-400" />
-              <span>Trocar Servidor ({activeMirror === 'embed2' ? '2Embed' : activeMirror === 'vidsrc' ? 'VidSrc' : 'VidLink'})</span>
+              <span>Trocar Servidor ({activeMirror === 'vidsrc' ? 'VidSrc' : activeMirror === 'embed2' ? '2Embed' : 'VidLink'})</span>
             </button>
             <button
               type="button"
