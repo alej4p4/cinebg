@@ -1238,3 +1238,44 @@ test('ANTI-SILENT-ENGLISH-FALLBACK-AND-YOUCINE-MODES-1: Erradicacao de fallback 
     'StreamPlayer deve conter manipulador e botao para alternar para legendado'
   )
 })
+
+
+test('XTREAM-CODES-DEDICATED-VOD-1: Suporte a servidores dedicados Xtream Codes para VOD e LiveTV 24/7', async () => {
+  const xtreamSrc = fs.readFileSync('src/services/xtream.ts', 'utf8')
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const liveSrc = fs.readFileSync('src/services/liveChannels.ts', 'utf8')
+  const profSrc = fs.readFileSync('src/pages/Profiles.tsx', 'utf8')
+
+  // 1. xtream.ts exporta métodos centrais da API Xtream Codes
+  assert.ok(xtreamSrc.includes('export const getXtreamConfig'), 'xtream.ts deve exportar getXtreamConfig')
+  assert.ok(xtreamSrc.includes('export const saveXtreamConfig'), 'xtream.ts deve exportar saveXtreamConfig')
+  assert.ok(xtreamSrc.includes('export const testXtreamConnection'), 'xtream.ts deve exportar testXtreamConnection')
+  assert.ok(xtreamSrc.includes('export const buildXtreamStreamUrl'), 'xtream.ts deve exportar buildXtreamStreamUrl')
+  assert.ok(xtreamSrc.includes('export const resolveXtreamMedia'), 'xtream.ts deve exportar resolveXtreamMedia')
+  assert.ok(xtreamSrc.includes('export const fetchXtreamLiveChannels'), 'xtream.ts deve exportar fetchXtreamLiveChannels')
+
+  // 2. Formatação canônica de URLs Xtream Codes
+  const { buildXtreamStreamUrl, sanitizeTitleForSearch } = await import('../../src/services/xtream.ts')
+  const mockConfig = {
+    serverUrl: 'http://stream.provedor.tv:8080',
+    username: 'user_teste',
+    password: 'pass_teste',
+    enabled: true,
+  }
+  const movieUrl = buildXtreamStreamUrl(mockConfig, 'movie', 12345, 'mp4')
+  assert.equal(movieUrl, 'http://stream.provedor.tv:8080/movie/user_teste/pass_teste/12345.mp4')
+
+  const seriesUrl = buildXtreamStreamUrl(mockConfig, 'series', 67890, 'mkv')
+  assert.equal(seriesUrl, 'http://stream.provedor.tv:8080/series/user_teste/pass_teste/67890.mkv')
+
+  const liveUrl = buildXtreamStreamUrl(mockConfig, 'live', 111, 'm3u8')
+  assert.equal(liveUrl, 'http://stream.provedor.tv:8080/live/user_teste/pass_teste/111.m3u8')
+
+  // 3. Normalização de títulos
+  assert.equal(sanitizeTitleForSearch('O Poderoso Chefão (1972)!'), 'o poderoso chefao 1972')
+
+  // 4. Integração no fluxo de streams e canais ao vivo
+  assert.ok(streamsSrc.includes('resolveXtreamMedia'), 'streams.ts deve integrar resolveXtreamMedia')
+  assert.ok(liveSrc.includes('fetchXtreamLiveChannels'), 'liveChannels.ts deve integrar fetchXtreamLiveChannels')
+  assert.ok(profSrc.includes('Servidor Dedicado (Xtream Codes / VOD)'), 'Profiles.tsx deve disponibilizar interface de conexão')
+})

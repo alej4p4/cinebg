@@ -6,6 +6,8 @@ import { useAppStore, type UserProfile } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
 import { isMobileDevice } from '@/utils/tv'
+import { getXtreamConfig, saveXtreamConfig, testXtreamConnection, type XtreamConfig } from '@/services/xtream'
+import { Server, Globe, Key, User, Radio, Link as LinkIcon, Power, AlertCircle as AlertCircleIcon } from 'lucide-react'
 import {
   checkForNewEpisodes,
   requestNotificationPermissionExplicit,
@@ -91,6 +93,44 @@ const Profiles = () => {
     }, 800)
   }
 
+  const [xtreamConfig, setXtreamConfigState] = useState<XtreamConfig | null>(() => getXtreamConfig())
+  const [xtreamServer, setXtreamServer] = useState(() => xtreamConfig?.serverUrl || '')
+  const [xtreamUser, setXtreamUser] = useState(() => xtreamConfig?.username || '')
+  const [xtreamPass, setXtreamPass] = useState(() => xtreamConfig?.password || '')
+  const [testingXtream, setTestingXtream] = useState(false)
+  const [xtreamMsg, setXtreamMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const handleSaveXtream = async () => {
+    setTestingXtream(true)
+    setXtreamMsg(null)
+    const res = await testXtreamConnection(xtreamServer, xtreamUser, xtreamPass)
+    setTestingXtream(false)
+    if (res.success && res.account) {
+      const newConfig: XtreamConfig = {
+        serverUrl: xtreamServer,
+        username: xtreamUser,
+        password: xtreamPass,
+        enabled: true,
+        syncLiveChannels: true,
+        accountInfo: res.account,
+        lastChecked: Date.now(),
+      }
+      saveXtreamConfig(newConfig)
+      setXtreamConfigState(newConfig)
+      setXtreamMsg({ type: 'success', text: 'Conectado com sucesso ao servidor Xtream Codes!' })
+    } else {
+      setXtreamMsg({ type: 'error', text: res.error || 'Falha ao conectar ao servidor.' })
+    }
+  }
+
+  const handleDisconnectXtream = () => {
+    saveXtreamConfig(null)
+    setXtreamConfigState(null)
+    setXtreamServer('')
+    setXtreamUser('')
+    setXtreamPass('')
+    setXtreamMsg({ type: 'success', text: 'Servidor desconectado.' })
+  }
   const handleAdd = () => {
     const trimmed = name.trim()
     if (!trimmed) return
@@ -439,6 +479,141 @@ const Profiles = () => {
                 <span>{optimizing ? 'Otimizando...' : 'Limpar Cache'}</span>
               </button>
             </Focusable>
+          </div>
+        </div>
+
+        {/* Servidor Dedicado Xtream Codes (IPTV & VOD Comercial) */}
+        <div className="glass rounded-xl p-5 mt-8 border border-white/10 bg-gradient-to-r from-blue-900/10 via-purple-900/10 to-transparent">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 flex-shrink-0 shadow-lg shadow-blue-900/30">
+                <Server className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-black text-white text-lg">Servidor Dedicado (Xtream Codes / VOD)</h2>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    xtreamConfig?.enabled && xtreamConfig?.accountInfo?.status === 'Active'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                      : 'bg-white/10 text-white/60 border-white/10'
+                  }`}>
+                    {xtreamConfig?.enabled && xtreamConfig?.accountInfo?.status === 'Active'
+                      ? '● Conectado 24/7'
+                      : 'Desconectado'}
+                  </span>
+                </div>
+                <p className="text-text-secondary text-xs mt-0.5">
+                  Conecte seu painel IPTV / VOD privado para reprodução 100% nativa em alta definição, sem depender de scrapers gratuitos.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div>
+              <label className="text-white/60 text-xs font-semibold mb-1 block">URL do Servidor</label>
+              <div className="relative">
+                <Globe className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                <input
+                  type="text"
+                  value={xtreamServer}
+                  onChange={(e) => setXtreamServer(e.target.value)}
+                  placeholder="http://servidor-iptv.com:8080"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder:text-white/30 outline-none focus:border-blue-500/60"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-white/60 text-xs font-semibold mb-1 block">Usuário</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                <input
+                  type="text"
+                  value={xtreamUser}
+                  onChange={(e) => setXtreamUser(e.target.value)}
+                  placeholder="Seu usuário"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder:text-white/30 outline-none focus:border-blue-500/60"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-white/60 text-xs font-semibold mb-1 block">Senha</label>
+              <div className="relative">
+                <Key className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                <input
+                  type="password"
+                  value={xtreamPass}
+                  onChange={(e) => setXtreamPass(e.target.value)}
+                  placeholder="Sua senha"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder:text-white/30 outline-none focus:border-blue-500/60"
+                />
+              </div>
+            </div>
+          </div>
+
+          {xtreamConfig?.accountInfo && (
+            <div className="p-3 bg-white/5 rounded-lg border border-white/10 mb-4 flex flex-wrap gap-4 text-xs text-white/80">
+              <div>
+                <span className="text-white/50">Servidor: </span>
+                <span className="font-semibold text-white">{xtreamConfig.accountInfo.serverName || 'Xtream Server'}</span>
+              </div>
+              {xtreamConfig.accountInfo.expDate && (
+                <div>
+                  <span className="text-white/50">Vencimento: </span>
+                  <span className="font-semibold text-emerald-400">{String(xtreamConfig.accountInfo.expDate)}</span>
+                </div>
+              )}
+              <div>
+                <span className="text-white/50">Conexões: </span>
+                <span className="font-semibold text-white">
+                  {xtreamConfig.accountInfo.activeCons || 0} / {xtreamConfig.accountInfo.maxConnections || 1}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {xtreamMsg && (
+            <p className={`text-xs font-semibold mb-3 flex items-center gap-1.5 ${
+              xtreamMsg.type === 'success' ? 'text-emerald-400' : 'text-red-400'
+            }`}>
+              {xtreamMsg.type === 'success' ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircleIcon className="h-4 w-4" />}
+              {xtreamMsg.text}
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Focusable
+              focusKey="btn-xtream-connect"
+              onEnterPress={handleSaveXtream}
+            >
+              <button
+                type="button"
+                onClick={handleSaveXtream}
+                disabled={testingXtream}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-blue-900/30"
+              >
+                <Server className={`h-4 w-4 ${testingXtream ? 'animate-spin' : ''}`} />
+                <span>{testingXtream ? 'Testando Conexão...' : 'Testar & Salvar Conexão'}</span>
+              </button>
+            </Focusable>
+
+            {xtreamConfig && (
+              <Focusable
+                focusKey="btn-xtream-disconnect"
+                onEnterPress={handleDisconnectXtream}
+              >
+                <button
+                  type="button"
+                  onClick={handleDisconnectXtream}
+                  className="flex items-center gap-2 bg-white/10 hover:bg-red-500/20 text-white/80 hover:text-red-400 font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all border border-white/10 hover:border-red-500/30"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Desconectar Servidor</span>
+                </button>
+              </Focusable>
+            )}
           </div>
         </div>
 
