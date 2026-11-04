@@ -938,9 +938,11 @@ const StreamPlayer = ({
             setError(false)
           }
         } else {
-          setActiveAudio('dub')
-          setSubLang('off')
-          setSubtitleOption('off')
+          // CONTEÚDO NÃO TRADUZIDO / LEGENDADO (ESTILO YOUCINE):
+          // Inicia em modo legendado com legendas em português automáticas e áudio original
+          setActiveAudio('orig')
+          setSubLang('pt')
+          setSubtitleOption('pt')
           setCandidateIndex(0)
           candidateIndexRef.current = 0
           nativeActiveRef.current = false
@@ -2590,7 +2592,7 @@ const StreamPlayer = ({
           </button>
         )}
         {showIframe && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+          <div className={`absolute top-4 right-4 z-50 flex items-center gap-2 transition-opacity duration-300 ${showHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
             <button
               type="button"
               onClick={handleCycleServerOption}
@@ -2612,7 +2614,7 @@ const StreamPlayer = ({
           </div>
         )}
         {showIframe && (
-          <div className="absolute top-16 inset-x-4 z-40 pointer-events-none flex justify-center animate-fade-in">
+          <div className={`absolute top-16 inset-x-4 z-40 flex justify-center transition-opacity duration-300 pointer-events-none ${showHud ? 'opacity-100' : 'opacity-0'}`}>
             <div className="flex items-center gap-2 bg-black/90 border border-yellow-400/50 px-4 py-2 rounded-full text-xs font-medium text-white shadow-2xl backdrop-blur-md max-w-lg text-center">
               {isPtOriginal ? (
                 <>
