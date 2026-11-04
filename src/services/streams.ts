@@ -183,6 +183,8 @@ const MEGAEMBED_BASES = [
 const DUBBED_HOST_HINTS = [
   'fontedecanais',
   '76iqsc65sxxn71.com',
+  'dramasfree',
+  'playercdnnss',
   'gviudclrb.com',
   'mgeb.space',
   'mgeb.lat',
@@ -346,7 +348,9 @@ const resolvedSourcesCache = new Map<string, { data: MegaEmbedResolved; timestam
 const getValidCachedEntry = (key: string): MegaEmbedResolved | null => {
   const entry = resolvedSourcesCache.get(key)
   if (!entry) return null
-  if (Date.now() - entry.timestamp > RESOLVED_CACHE_TTL_MS) {
+  // Se o título não possuía fontes dubladas, expira em 60s para detectar imediatamente quando a tradução/dublagem for lançada nos servidores
+  const ttl = entry.data.candidates.length === 0 ? 60 * 1000 : RESOLVED_CACHE_TTL_MS
+  if (Date.now() - entry.timestamp > ttl) {
     resolvedSourcesCache.delete(key)
     return null
   }
@@ -590,6 +594,20 @@ export const resolveMegaEmbed = async (
     // 2. Dentro das dubladas: MP4 direto ('fontedecanais' / 'gviudclrb') antes de HLS ('mgeb.space' / '123flmsfree')
     // 3. Fontes HLS multi-áudio/legendadas ('playercdnx.workers.dev') com legenda PT-BR nativa
     candidates.sort((a, b) => {
+      // 1. Fontes com áudio MP4 dublado nativo comprovado ('fontedecanais' / '76iqsc65sxxn71.com' / 'dramasfree' / 'gviudclrb') têm prioridade máxima #1
+      const aIsNativeDubbed =
+        a.url.includes('fontedecanais') ||
+        a.url.includes('76iqsc65sxxn71.com') ||
+        a.url.includes('dramasfree') ||
+        a.url.includes('gviudclrb')
+      const bIsNativeDubbed =
+        b.url.includes('fontedecanais') ||
+        b.url.includes('76iqsc65sxxn71.com') ||
+        b.url.includes('dramasfree') ||
+        b.url.includes('gviudclrb')
+      if (aIsNativeDubbed && !bIsNativeDubbed) return -1
+      if (!aIsNativeDubbed && bIsNativeDubbed) return 1
+
       if (a.isDubbedHint && !b.isDubbedHint) return -1
       if (!a.isDubbedHint && b.isDubbedHint) return 1
       if (a.kind === 'mp4' && b.kind === 'hls') return -1

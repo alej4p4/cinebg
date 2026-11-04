@@ -1199,3 +1199,17 @@ test('UQLOAD-PAYWALL-STREAM-FILTER-1: Bloqueio estrito de streams do uqload com 
   // 2. MainActivity.java deve bloquear uqload antes de liberar .m3u8/.mp4
   assert.ok(mainActivitySrc.includes('lower.contains("uqload")'), 'MainActivity.java deve interceptar e bloquear uqload')
 })
+
+test('AUTO-DUBBED-DETECTION-AND-MP4-PRIORITY-1: Prioridade absoluta para MP4 dublado nativo e detecção automática de dublagem recém-lançada', () => {
+  const streamsSrc = fs.readFileSync('src/services/streams.ts', 'utf8')
+  const detailsSrc = fs.readFileSync('src/pages/Details.tsx', 'utf8')
+
+  // 1. streams.ts deve priorizar fontedecanais / 76iqsc65sxxn71.com / dramasfree no topo da lista
+  assert.ok(streamsSrc.includes('aIsNativeDubbed'), 'streams.ts deve ordenar fontes com prioridade para MP4 dublado nativo')
+
+  // 2. streams.ts deve expirar cache em 60s para títulos sem dublagem para detectar tradução lançada
+  assert.ok(streamsSrc.includes('entry.data.candidates.length === 0 ? 60 * 1000 : RESOLVED_CACHE_TTL_MS'), 'streams.ts deve invalidar cache rápido em 60s quando sem fontes dubladas')
+
+  // 3. Details.tsx deve alternar automaticamente para dublado ao detectar nova fonte
+  assert.ok(detailsSrc.includes("setAudioOption('dub')"), 'Details.tsx deve definir áudio como dub quando fonte dublada estiver presente')
+})
