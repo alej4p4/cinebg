@@ -1,15 +1,15 @@
 {
-  "version": "1.3.43",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.43/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.43/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.43/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.43/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.43/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.43/CineBG-Tv-release.apk",
+  "version": "1.3.44",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.44/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.44/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.44/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.44/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.44/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.44/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Eliminação definitiva de fontes do servidor uqload com tela de aviso de paywall e aprimoramento da estabilidade de reprodução.",
-  "versionCode": 133,
-  "notes": "Eliminação definitiva de fontes do servidor uqload com tela de aviso de paywall e aprimoramento da estabilidade de reprodução.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.43/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.43/CineBG-Tv-release.apk"
+  "releaseNotes": "Separação estilo YouCine: player nativo direto v1.3.30 para filmes e séries em português e player legendado com auto-ocultação de avisos para conteúdos internacionais.",
+  "versionCode": 134,
+  "notes": "Separação estilo YouCine: player nativo direto v1.3.30 para filmes e séries em português e player legendado com auto-ocultação de avisos para conteúdos internacionais.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.44/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.44/CineBG-Tv-release.apk"
 }

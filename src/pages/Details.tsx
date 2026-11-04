@@ -89,7 +89,16 @@ const Details = () => {
   // Pré-resolve a fonte direta do filme/episódio em background (estilo YouCine, sem trailer do YouTube e sem ocupar o MediaCodec antes do Play)
   useEffect(() => {
     if (!mediaId || Number.isNaN(mediaId)) return
-    resolveMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', selectedSeason, selectedEpisode, originalLanguage).catch(() => {})
+    resolveMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', selectedSeason, selectedEpisode, originalLanguage)
+      .then((resolved) => {
+        const isPt = (originalLanguage || '').toLowerCase() === 'pt'
+        const hasDub = isPt || (resolved.candidates && resolved.candidates.length > 0)
+        // Separação inteligente YouCine: se não houver tradução em português disponível, ajusta automaticamente para Legendado
+        if (!hasDub) {
+          setAudioOption('orig')
+        }
+      })
+      .catch(() => {})
   }, [mediaId, isMovie, selectedSeason, selectedEpisode, originalLanguage])
 
   useEffect(() => {

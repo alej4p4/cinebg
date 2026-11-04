@@ -1,13 +1,13 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1793752652.9773133,
-    "seen": 1793752838.829248,
-    "ast_hash": "b6e1e7661ce2141cafbf4275c1cdf597",
+    "mtime": 1793754626.8502114,
+    "seen": 1793754760.2290752,
+    "ast_hash": "5af7f4ce2b6b7d9764ac3ddeaeb8d646",
     "semantic_hash": ""
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1793752809.0303323,
-    "seen": 1793752838.8292563,
+    "mtime": 1793754734.3175828,
+    "seen": 1793754760.229085,
     "ast_hash": "4d2bbe5da73933ac326a41f41302842f",
     "semantic_hash": "4d2bbe5da73933ac326a41f41302842f"
   },
@@ -18,8 +18,8 @@
     "semantic_hash": "c777a4127ae7213f7da22c4105bdfeab"
   },
   "android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java": {
-    "mtime": 1793752652.955533,
-    "seen": 1793752838.829268,
+    "mtime": 1793752918.719122,
+    "seen": 1793754760.229099,
     "ast_hash": "853ce345875a79b1ab23d10402c17383",
     "semantic_hash": ""
   },
@@ -36,8 +36,8 @@
     "semantic_hash": "7f78ed82e3572a8411139bcde77ed922"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1793752809.029337,
-    "seen": 1793752838.8292751,
+    "mtime": 1793754734.3175828,
+    "seen": 1793754760.2291076,
     "ast_hash": "aa014fc13e426f53986cc2fec0130a09",
     "semantic_hash": "aa014fc13e426f53986cc2fec0130a09"
   },
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793752652.9753146,
-    "seen": 1793752838.8293092,
-    "ast_hash": "20eb5dece12d1b453da4acfb34745686",
+    "mtime": 1793754626.8492093,
+    "seen": 1793754760.2291315,
+    "ast_hash": "d953c66188bedc6227ddb3cdbc04daab",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -90,9 +90,9 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1793752652.9793217,
-    "seen": 1793752838.8293178,
-    "ast_hash": "337afdb3542983e4609c850cc62c9175",
+    "mtime": 1793754626.8512118,
+    "seen": 1793754760.2291415,
+    "ast_hash": "eedb3e2ba6f846920ed303b71b1809b1",
     "semantic_hash": ""
   },
   "scripts/create-issues.py": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "src/components/player/StreamPlayer.tsx": {
-    "mtime": 1793751393.6214871,
-    "seen": 1793752838.829348,
-    "ast_hash": "7ba287b08d0b7ac79651cf1b77267aa1",
+    "mtime": 1793754626.8311074,
+    "seen": 1793754760.2291744,
+    "ast_hash": "5bd847c0807ffeaf58231f81c1d5749a",
     "semantic_hash": ""
   },
   "src/components/tv/Focusable.tsx": {
@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "src/pages/Details.tsx": {
-    "mtime": 1793040538.9422836,
-    "seen": 1793285134.363464,
-    "ast_hash": "9a6541a3e60c469a42e2ecba08009b98",
+    "mtime": 1793754626.8245788,
+    "seen": 1793754760.229236,
+    "ast_hash": "932f818947e2d74bfc2e144b25495bb3",
     "semantic_hash": ""
   },
   "src/pages/Downloads.tsx": {
@@ -360,9 +360,9 @@
     "semantic_hash": "82666891da0f8c0fa988b5d4aaf499c5"
   },
   "src/services/streams.ts": {
-    "mtime": 1793752711.941197,
-    "seen": 1793752838.8294554,
-    "ast_hash": "eaf66f6f2b4a2358350a7adda884fd8a",
+    "mtime": 1793752918.7325015,
+    "seen": 1793754760.2292895,
+    "ast_hash": "1aa940ba129159e20164c2c1d1cd3f42",
     "semantic_hash": ""
   },
   "src/services/tmdb.ts": {
@@ -396,9 +396,9 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1793752652.9783216,
-    "seen": 1793752838.829476,
-    "ast_hash": "6e6f3331d8c98f4efadd45a1c4fcec87",
+    "mtime": 1793754626.8512118,
+    "seen": 1793754760.2293124,
+    "ast_hash": "c413129d70dc22cd0730e8564418613c",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "tests/unit/qa-audit.test.mjs": {
-    "mtime": 1793752652.9604008,
-    "seen": 1793752838.8294916,
-    "ast_hash": "80d02e7031060ee4a28b304b3119d082",
+    "mtime": 1793752918.7335038,
+    "seen": 1793754760.2293284,
+    "ast_hash": "b3366e1dc36eba434cd2035933bb78ba",
     "semantic_hash": ""
   },
   "tests/unit/trial.test.mjs": {
