@@ -40,7 +40,7 @@ const Profiles = () => {
     updateInfo,
   } = useAppStore()
 
-  const { isLicensed, isTrial, trialDaysLeft, licenseDaysLeft, license } = useLicense()
+  const { isLicensed, isTrial, isTrialBlockDisabled, trialDaysLeft, licenseDaysLeft, license } = useLicense()
 
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState(EMOJIS[0])
@@ -202,6 +202,10 @@ const Profiles = () => {
                   ) : isTrial ? (
                     <span className="text-amber-300 font-semibold">
                       ⚡ Período de Teste Grátis: {trialDaysLeft} {trialDaysLeft === 1 ? 'dia restante' : 'dias restantes'} (de 3 dias)
+                    </span>
+                  ) : isTrialBlockDisabled ? (
+                    <span className="text-emerald-300 font-semibold">
+                      🧪 Modo Homologação e Testes (Bloqueio Desativado) • Acesso Liberado
                     </span>
                   ) : (
                     <span className="text-red-300 font-semibold">

@@ -274,7 +274,7 @@ function App() {
   useEpisodeNotifications()
   useOrientationFullscreen()
   const appVersion = import.meta.env.VITE_APP_VERSION || CURRENT_APP_VERSION
-const { isLicensed, isTrial, loading } = useLicense()
+const { isLicensed, isTrial, isTrialBlockDisabled, loading } = useLicense()
   const [appError, setAppError] = useState<string | null>(null)
 
   // Captura erros de inicialização para evitar tela preta em redes móveis
@@ -351,7 +351,7 @@ const { isLicensed, isTrial, loading } = useLicense()
     return () => clearTimeout(timer)
   }, [])
 
-  const isVipOrTrialActive = isLicensed || isTrial
+  const isVipOrTrialActive = isTrialBlockDisabled || isLicensed || isTrial
 
   return (
     <>
