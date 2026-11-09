@@ -9,6 +9,12 @@ import {
 } from '@/services/trial'
 
 export const TRIAL_DAYS = 3
+/**
+ * Flag de homologação e testes contínuos:
+ * Desativa o bloqueio após o término do período de 3 dias de teste para permitir
+ * testes na aplicação e atualizações em ambientes de nuvem sem interrupção de reprodução.
+ */
+export const IS_TRIAL_BLOCK_DISABLED = true
 const LICENSE_KEY = 'cinebg_license'
 const FIRST_USE_KEY = 'cinebg_first_use'
 export const TRIAL_V31_EPOCH_KEY = 'cinebg_trial_v31_epoch'
@@ -403,6 +409,7 @@ export const useLicense = () => {
     license,
     isLicensed,
     isTrial,
+    isTrialBlockDisabled: IS_TRIAL_BLOCK_DISABLED,
     loading,
     trialDaysLeft,
     trialHoursLeft,

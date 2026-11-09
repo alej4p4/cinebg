@@ -29,11 +29,12 @@ interface PremiumContentGateProps {
  * - Oferece opção direta para contratação/assinatura e retorno ao catálogo.
  */
 const PremiumContentGate = ({ contentType, variant = 'fullscreen', children }: PremiumContentGateProps) => {
-  const { isLicensed, isTrial, loading } = useLicense()
+  const { isLicensed, isTrial, isTrialBlockDisabled, loading } = useLicense()
   const setVipModalOpen = useAppStore((s) => s.setVipModalOpen)
   const navigate = useNavigate()
 
-  if (loading || isLicensed || isTrial) {
+  // Bloqueio desativado para testes e atualizações em nuvem
+  if (isTrialBlockDisabled || loading || isLicensed || isTrial) {
     return <>{children}</>
   }
 

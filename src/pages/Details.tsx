@@ -60,8 +60,8 @@ const Details = () => {
   const [selectedResolution, setSelectedResolution] = useState('1080p')
   const [isDownloading, setIsDownloading] = useState(false)
   const [subscriberModalOpen, setSubscriberModalOpen] = useState(false)
-  const { isLicensed, isTrial } = useLicense()
-  const isSubscriber = isLicensed || isTrial
+  const { isLicensed, isTrial, isTrialBlockDisabled } = useLicense()
+  const isSubscriber = isTrialBlockDisabled || isLicensed || isTrial
   const setVipModalOpen = useAppStore((s) => s.setVipModalOpen)
 
   const fullscreenBtnRef = useRef<HTMLButtonElement | null>(null)

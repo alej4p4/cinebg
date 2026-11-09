@@ -44,7 +44,7 @@ const LiveTV = () => {
   const [favorites, setFavorites] = useState<Set<string>>(() => loadLiveFavorites())
   const [lastChannelId, setLastChannelId] = useState<string | null>(() => loadLastLiveChannelId())
   const [recentChannelIds, setRecentChannelIds] = useState<string[]>(() => loadRecentLiveChannels())
-  const { isLicensed, isTrial } = useLicense()
+  const { isLicensed, isTrial, isTrialBlockDisabled } = useLicense()
   const { setVipModalOpen } = useAppStore()
   const [searchParams] = useSearchParams()
   const channelParam = searchParams.get('channel')
@@ -374,7 +374,7 @@ const LiveTV = () => {
           )}
 
           {/* Banner Informativo quando o teste encerrou: Canais Abertos Liberados */}
-          {!isLicensed && !isTrial && (
+          {!isTrialBlockDisabled && !isLicensed && !isTrial && (
             <div className="mb-4 p-3 sm:p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent border border-amber-400/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
               <div className="flex items-center gap-2.5 text-xs sm:text-sm text-amber-200">
                 <span className="text-xl flex-shrink-0">📺</span>
