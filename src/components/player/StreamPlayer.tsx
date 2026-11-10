@@ -932,7 +932,7 @@ const StreamPlayer = ({
       setResolvingDirect(true)
     }
 
-    resolveMegaEmbed(tmdbId, mediaType, season, episode, originalLanguage)
+    resolveMegaEmbed(tmdbId, mediaType, season, episode, originalLanguage, title)
       .then((resolved) => {
         if (cancelled) return
         const list = resolved.candidates || []

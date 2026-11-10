@@ -608,11 +608,17 @@ export const resolveMegaEmbed = async (
         url: xtreamStream.url,
         kind: xtreamStream.kind,
         label: xtreamStream.label,
-        isDubbedHint: true,
+        isDubbedHint: xtreamStream.isDubbedHint,
       })
     }
 
     candidates.sort((a, b) => {
+      // 0. Servidor dedicado Xtream Codes / VOD de alta performance tem prioridade ABSOLUTA #1 (sem paywalls nem limites)
+      const aIsXtream = a.url.includes('/movie/') || a.url.includes('/series/') || a.url.includes('/live/') || a.url.includes('drd33.com') || a.url.includes('auth/') || a.url.includes('vauth/')
+      const bIsXtream = b.url.includes('/movie/') || b.url.includes('/series/') || b.url.includes('/live/') || b.url.includes('drd33.com') || b.url.includes('auth/') || b.url.includes('vauth/')
+      if (aIsXtream && !bIsXtream) return -1
+      if (!aIsXtream && bIsXtream) return 1
+
       // 1. Fontes com áudio MP4 dublado nativo comprovado ('fontedecanais' / '76iqsc65sxxn71.com' / 'dramasfree' / 'gviudclrb') têm prioridade máxima #1
       const aIsNativeDubbed =
         a.url.includes('fontedecanais') ||

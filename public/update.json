@@ -1,15 +1,15 @@
 {
-  "version": "1.3.49",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk",
+  "version": "1.3.50",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.50/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.50/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.50/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.50/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.50/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.50/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Fluidez maxima na navegacao Smart TV, autoplay com legendas PT nativas e persistencia exata de canal, categoria e foco na aba TV ao vivo.",
-  "versionCode": 139,
-  "notes": "Fluidez maxima na navegacao Smart TV, autoplay com legendas PT nativas e persistencia exata de canal, categoria e foco na aba TV ao vivo.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk"
+  "releaseNotes": "Integracao de fabrica do servidor dedicado Xtream Codes para VOD e TV 24/7 sem necessidade de digitacao pelo cliente.",
+  "versionCode": 140,
+  "notes": "Integracao de fabrica do servidor dedicado Xtream Codes para VOD e TV 24/7 sem necessidade de digitacao pelo cliente.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.50/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.50/CineBG-Tv-release.apk"
 }
