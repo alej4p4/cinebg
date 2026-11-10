@@ -8,7 +8,7 @@ import { reportAdInterception } from '@/services/observability'
 let shieldInitialized = false
 let shieldActive = false
 
-const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+const handleBeforeUnload = (_e: BeforeUnloadEvent) => {
   // Apenas cancela o evento se aplicável sem atribuir e.returnValue
   // para evitar o modal nativo "Confirmar navegação / Sair desta página"
   if (document.activeElement && document.activeElement.tagName === 'IFRAME') {

@@ -32,7 +32,6 @@ import {
   resolveMegaEmbed,
   getCachedMegaEmbed,
   clearResolvedSourcesCache,
-  MIRRORS,
   isCaptchaOrBotBlockUrl,
   type DirectCandidate,
 } from '@/services/streams'
@@ -97,7 +96,7 @@ const StreamPlayer = ({
     addFavorite,
     removeFavorite,
     tvMode,
-    virtualCursor,
+    virtualCursor: _virtualCursor,
     setVirtualCursor,
   } = useAppStore()
   const isTv =
@@ -394,7 +393,7 @@ const StreamPlayer = ({
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isScrubbing, setIsScrubbing] = useState(false)
+  const [, setIsScrubbing] = useState(false)
   const isScrubbingRef = useRef(false)
   const hudTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -657,7 +656,7 @@ const StreamPlayer = ({
     setError(false)
     setFallbackAttempt(0)
     setKey((k) => k + 1)
-  }, [setAudioOption, showFeedback])
+  }, [setAudioOption, showFeedback, isPtOriginal])
 
   // Falha na reprodução direta da fonte atual: testa a próxima opção limpa da lista sem closure obsoleta
   const handleDirectMediaError = useCallback(() => {
@@ -714,7 +713,7 @@ const StreamPlayer = ({
     setAllowIframe(true)
     setLoaded(false)
     setError(false)
-  }, [])
+  }, [episode, isPtOriginal, season, title, tmdbId, type])
 
   // Alternância manual cíclica pelo botão "Opção 1 / Servidor" no controle remoto
   const handleCycleServerOption = useCallback(() => {
@@ -1298,7 +1297,7 @@ const StreamPlayer = ({
       alive = false
       clearActiveSubtitleBlobs()
     }
-  }, [type, tmdbId, season, episode, subtitleOption])
+  }, [type, tmdbId, season, episode, subtitleOption, activeAudio, isPtOriginal])
 
   // Monitor de conectividade e auto-recuperação de rede
   useEffect(() => {
@@ -2105,6 +2104,7 @@ const StreamPlayer = ({
     episodesDrawerOpen,
     onBack,
     audioOption,
+    activeAudio,
     type,
     onNextEpisode,
     cycleSubtitles,
@@ -2215,17 +2215,6 @@ const StreamPlayer = ({
         }, 280)
       }
     }
-  }
-
-  const audioLabels = {
-    dub: '🇧🇷 Dublado (PT-BR)',
-    sub: 'Legendado (PT-BR)',
-    orig: '🇺🇸 Original',
-  }
-
-  const getMirrorLabel = (id: string) => {
-    const mirror = MIRRORS.find(m => m.id === id)
-    return mirror ? mirror.name : id
   }
 
   // O iframe (provedor externo) só entra em cena se o usuário pedir explicitamente.

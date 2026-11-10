@@ -25,6 +25,7 @@ import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 import { markBackHandled, setNativePlayerLandscape, isTVDevice, isMobileDevice } from '@/utils/tv'
 import { logLiveChannelError } from '@/services/observability'
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function isClassic43Channel(ch?: LiveChannel | null): boolean {
   if (!ch) return false
   if (ch.aspectRatio === '4:3') return true
@@ -131,14 +132,14 @@ const LivePlayer = ({
     })
   }, [])
 
-  const resetOsdTimer = () => {
+  const resetOsdTimer = useCallback(() => {
     if (isLocked) return
     setShowOsd(true)
     if (osdTimerRef.current) clearTimeout(osdTimerRef.current)
     osdTimerRef.current = setTimeout(() => {
       setShowOsd(false)
     }, 5500)
-  }
+  }, [isLocked])
 
   // Proporção de tela e preenchimento total adaptativo no celular
   const [fitMode, setFitMode] = useState<'cover' | 'contain' | 'fill' | 'classic'>(() => {
@@ -154,7 +155,7 @@ const LivePlayer = ({
     } else {
       setFitMode(isMobileDevice() ? 'cover' : 'contain')
     }
-  }, [channel.id])
+  }, [channel])
 
   const toggleFitMode = useCallback(() => {
     setFitMode((prev) => {
@@ -201,7 +202,7 @@ const LivePlayer = ({
     if (!v) return
     if (v.paused) v.play().catch(() => {})
     else v.pause()
-  }, [isLocked, handleLockTap, toggleFitMode])
+  }, [isLocked, handleLockTap, toggleFitMode, resetOsdTimer])
 
   // Monitor de conectividade e auto-recuperação de rede na Live TV
   useEffect(() => {
@@ -274,7 +275,7 @@ const LivePlayer = ({
           .catch(() => {})
       }
     }
-  }, [channel.id])
+  }, [channel, resetOsdTimer])
 
   const [sourceIndex, setSourceIndex] = useState(0)
   const [mountKey, setMountKey] = useState(0)
@@ -467,7 +468,7 @@ const LivePlayer = ({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [channel, onNextChannel, onPrevChannel, handleClose, selectSource, toggleMute, handleFullscreen, sourceIndex])
+  }, [channel, onNextChannel, onPrevChannel, handleClose, selectSource, toggleMute, handleFullscreen, sourceIndex, resetOsdTimer])
 
   // Reinicia o player quando o canal muda.
   useEffect(() => {
@@ -483,7 +484,7 @@ const LivePlayer = ({
     setLoaded(false)
     setError(false)
     setStatusMessage('Sintonizando sinal...')
-  }, [channel.id])
+  }, [channel])
 
   // Monitor anti-congelamento (anti-freeze watchdog) para TV: detecta micro-travamentos e recupera o fluxo
   const lastTimeRef = useRef(0)
@@ -554,7 +555,7 @@ const LivePlayer = ({
         playPendingRef.current = false
       })
     })
-  }, [markPlaying])
+  }, [markPlaying, tryUnmute])
 
   const tryPlay = useCallback(() => {
     const video = videoRef.current
@@ -908,7 +909,7 @@ const LivePlayer = ({
         hlsInstanceRef.current = null
       }
     }
-  }, [channel.id, channel.sources, sourceIndex, mountKey, markPlaying, tryPlay, goNext])
+  }, [channel.id, channel.name, channel.sources, sourceIndex, mountKey, markPlaying, tryPlay, goNext])
 
   return (
     <div
@@ -944,7 +945,7 @@ const LivePlayer = ({
           {channel.name && (
             <p className="text-white/80 font-medium text-sm tracking-wide">{channel.name}</p>
           )}
-          <p className="text-white/40 text-xs mt-0.5">Toque na tela para iniciar a reprodução</p>
+          <p className="text-white/40 text-xs mt-0.5">{statusMessage || 'Toque na tela para iniciar a reprodução'}</p>
             {onNextChannel && (
               <button
                 type="button"

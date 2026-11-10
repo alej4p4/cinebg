@@ -121,11 +121,15 @@ export const useOrientationFullscreen = () => {
       events.push(['change', screen.orientation])
     }
 
-    events.forEach(([event, target]) => target.addEventListener(event, safeUpdate))
+    events.forEach(([event, target]) => {
+      target.addEventListener(event, safeUpdate)
+    })
     safeUpdate()
 
     return () => {
-      events.forEach(([event, target]) => target.removeEventListener(event, safeUpdate))
+      events.forEach(([event, target]) => {
+        target.removeEventListener(event, safeUpdate)
+      })
     }
   }, [])
 }

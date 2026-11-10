@@ -62,6 +62,65 @@ export interface MovieBoxCatalogSubject {
   genre?: string
 }
 
+export interface MovieBoxRawSubject {
+  subjectId?: string | number
+  id?: string | number
+  title?: string
+  name?: string
+  subjectType?: number
+  stype?: number
+  releaseDate?: string
+  year?: string
+  cover?: { url?: string }
+  coverUrl?: string
+  poster?: string
+  duration?: string
+  imdbRatingValue?: string
+  genre?: string
+}
+
+export interface MovieBoxRawCaption {
+  lanName?: string
+  lan?: string
+  url?: string
+}
+
+export interface MovieBoxPlayStream {
+  id?: string | number
+  url?: string
+  signCookie?: string
+  resolution?: number
+  resolutions?: string
+  format?: string
+  codecName?: string
+  size?: number | string
+}
+
+export interface MovieBoxRawResourceItem {
+  resourceId?: string | number
+  resourceLink?: string
+  url?: string
+  resolution?: number | string
+  codecName?: string
+  size?: number | string
+}
+
+export interface MovieBoxApiResponse {
+  code?: number
+  message?: string
+  data?: {
+    results?: Array<{ subjects?: MovieBoxRawSubject[] }>
+    list?: MovieBoxRawResourceItem[]
+    streams?: MovieBoxPlayStream[]
+    extCaptions?: MovieBoxRawCaption[]
+    displayResolutions?: string
+    [key: string]: unknown
+  }
+  results?: Array<{ subjects?: MovieBoxRawSubject[] }>
+  list?: MovieBoxRawResourceItem[]
+  [key: string]: unknown
+}
+
 // ============================================================================
 // ASSINATURA E GERAÇÃO DE CABEÇALHOS (PADRÃO MOVIEBOX-TUI)
 // ============================================================================
@@ -239,7 +298,7 @@ async function executeRawRequest(
   pathAndQuery: string,
   body: string | null,
   authToken: string | null
-): Promise<any> {
+): Promise<MovieBoxApiResponse> {
   const ts = Date.now()
   const accept = 'application/json'
   const contentType = 'application/json'
@@ -302,8 +361,8 @@ async function executeRawRequest(
           return await fetchResp.json()
         }
       }
-    } catch (err: any) {
-      lastError = err
+    } catch (err: unknown) {
+      lastError = err instanceof Error ? err : new Error(String(err))
       continue
     }
   }
@@ -314,14 +373,14 @@ async function executeRawRequest(
 export async function requestMovieBox(
   method: string,
   pathAndQuery: string,
-  body: any = null
-): Promise<any> {
+  body: unknown = null
+): Promise<MovieBoxApiResponse> {
   const token = await ensureMovieBoxSession()
   const bodyStr = body ? JSON.stringify(body) : null
 
   try {
     return await executeRawRequest(method, pathAndQuery, bodyStr, token)
-  } catch (err: any) {
+  } catch {
     // Se o token expirou (401/403), invalida e tenta uma vez mais com token fresco
     cachedSessionToken = null
     const freshToken = await ensureMovieBoxSession()
@@ -346,7 +405,7 @@ export function isDeprecationNoticeUrl(url: string): boolean {
 }
 
 function toDashMpd(urlStr: string): string | null {
-  const base = urlStr.replace(/[*\/]+$/, '')
+  const base = urlStr.replace(/[*/]+$/, '')
   if (
     base &&
     (base.startsWith('http://') || base.startsWith('https://')) &&
@@ -420,9 +479,9 @@ export async function searchMovieBox(
   )
 
   const results = res?.data?.results || res?.results || []
-  const list = results[0]?.subjects || res?.data?.list || []
+  const list = (results[0]?.subjects || res?.data?.list || []) as MovieBoxRawSubject[]
 
-  return list.map((item: any) => ({
+  return list.map((item: MovieBoxRawSubject) => ({
     subjectId: String(item.subjectId || item.id || ''),
     title: String(item.title || item.name || 'Sem título'),
     subjectType: Number(item.subjectType || item.stype || 1),
@@ -434,7 +493,7 @@ export async function searchMovieBox(
   }))
 }
 
-export async function getMovieBoxDetails(subjectId: string): Promise<any> {
+export async function getMovieBoxDetails(subjectId: string): Promise<MovieBoxApiResponse> {
   return await requestMovieBox(
     'GET',
     `/wefeed-mobile-bff/subject-api/get?subjectId=${subjectId}`
@@ -445,7 +504,7 @@ export async function getMovieBoxPlayInfo(
   subjectId: string,
   season = 0,
   episode = 0
-): Promise<any> {
+): Promise<MovieBoxApiResponse> {
   const path =
     season === 0 && episode === 0
       ? `/wefeed-mobile-bff/subject-api/play-info/v2?subjectId=${subjectId}`
@@ -459,7 +518,7 @@ export async function getMovieBoxResources(
   episode = 0,
   page = 1,
   perPage = 20
-): Promise<any> {
+): Promise<MovieBoxApiResponse> {
   const path =
     season === 0 && episode === 0
       ? `/wefeed-mobile-bff/subject-api/resource?subjectId=${subjectId}&page=${page}&perPage=${perPage}`
@@ -480,7 +539,7 @@ export async function resolveMovieBoxStream(
   try {
     // 1. Busca por título no catálogo
     const cleanTitle = title
-      .replace(/[:\-]/g, ' ')
+      .replace(/[:-]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
     const subjects = await searchMovieBox(cleanTitle, 1)
@@ -510,17 +569,15 @@ export async function resolveMovieBoxStream(
     // 2.1 Processa play-info
     if (playInfoRes.status === 'fulfilled' && playInfoRes.value) {
       const data = playInfoRes.value.data || playInfoRes.value
-      const streams = data.streams || []
-      const extCaptions = data.extCaptions || []
+      const streams = (Array.isArray(data?.streams) ? data.streams : []) as MovieBoxPlayStream[]
+      const extCaptions = (Array.isArray(data?.extCaptions) ? data.extCaptions : []) as MovieBoxRawCaption[]
 
-      const subtitles: MovieBoxSubtitle[] = Array.isArray(extCaptions)
-        ? extCaptions
-            .filter((c: any) => c.url && !c.url.includes('aa348f2541d13ffe'))
-            .map((c: any) => ({
-              name: c.lanName || c.lan || 'Legenda',
-              url: c.url,
-            }))
-        : []
+      const subtitles: MovieBoxSubtitle[] = extCaptions
+        .filter((c: MovieBoxRawCaption) => c.url && !c.url.includes('aa348f2541d13ffe'))
+        .map((c: MovieBoxRawCaption) => ({
+          name: c.lanName || c.lan || 'Legenda',
+          url: c.url || '',
+        }))
 
       for (const stream of streams) {
         const rawUrl = stream.url || ''
@@ -541,7 +598,7 @@ export async function resolveMovieBoxStream(
           headers['Cookie'] = signCookie
         }
 
-        const resStr = stream.resolutions || data.displayResolutions || '1080'
+        const resStr = String(stream.resolutions || (data as Record<string, unknown>)?.displayResolutions || '1080')
         const resolution = Number.parseInt(resStr) || 1080
 
         releases.push({
@@ -560,8 +617,8 @@ export async function resolveMovieBoxStream(
 
     // 2.2 Processa direct resources caso play-info não tenha links diretos
     if (resourcesRes.status === 'fulfilled' && resourcesRes.value) {
-      const list =
-        resourcesRes.value?.data?.list || resourcesRes.value?.list || []
+      const rawList = resourcesRes.value?.data?.list || resourcesRes.value?.list
+      const list = (Array.isArray(rawList) ? rawList : []) as MovieBoxRawResourceItem[]
       for (const item of list) {
         const link = item.resourceLink || item.url
         if (!link || isDeprecationNoticeUrl(link)) continue

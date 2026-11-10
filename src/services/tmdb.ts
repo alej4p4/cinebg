@@ -244,7 +244,9 @@ if (typeof window !== 'undefined') {
           legacyKeys.push(k)
         }
       }
-      legacyKeys.forEach((k) => localStorage.removeItem(k))
+      legacyKeys.forEach((k) => {
+        localStorage.removeItem(k)
+      })
     } catch {}
   }, 2000)
 }
@@ -296,7 +298,9 @@ const flushStorageQueue = () => {
             keysToRemove.push(k)
           }
         }
-        keysToRemove.slice(0, Math.ceil(keysToRemove.length / 2)).forEach((k) => localStorage.removeItem(k))
+        keysToRemove.slice(0, Math.ceil(keysToRemove.length / 2)).forEach((k) => {
+          localStorage.removeItem(k)
+        })
       } catch {}
     }
     processed++
@@ -411,7 +415,8 @@ const cachedGet = async <T>(url: string, params?: Record<string, unknown>): Prom
       url.includes('/airing_today') ||
       url.includes('/now_playing') ||
       url.includes('/discover/')
-    const ttl = isDetails ? DETAILS_TTL_MS : isDynamicFeed ? DYNAMIC_FEED_TTL_MS : DEFAULT_CATALOG_TTL_MS
+    const isReturningShow = url.includes('/tv/') && (url.includes('/season') || url.includes('/latest'))
+    const ttl = isReturningShow ? RETURNING_SHOW_TTL_MS : isDetails ? DETAILS_TTL_MS : isDynamicFeed ? DYNAMIC_FEED_TTL_MS : DEFAULT_CATALOG_TTL_MS
     setMemoryCache(key, { data, expiresAt: now + ttl })
     saveToLocalStorage(key, data, ttl)
     return data
