@@ -1,13 +1,13 @@
 import { getStreamIncidentLogs, clearStreamIncidentLogs, formatIncidentsAsGitHubMarkdown } from '@/services/observability'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode, Download, RefreshCw, MousePointer2, ShieldAlert, Copy, CheckCircle2 } from 'lucide-react'
+import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode, Download, RefreshCw, ShieldAlert, Copy, CheckCircle2 } from 'lucide-react'
 import { useAppStore, type UserProfile } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
 import { isMobileDevice } from '@/utils/tv'
 import { getXtreamConfig, saveXtreamConfig, testXtreamConnection, type XtreamConfig } from '@/services/xtream'
-import { Server, Globe, Key, User, Radio, Link as LinkIcon, Power, AlertCircle as AlertCircleIcon } from 'lucide-react'
+import { Server, Globe, Key, User, AlertCircle as AlertCircleIcon } from 'lucide-react'
 import {
   checkForNewEpisodes,
   requestNotificationPermissionExplicit,
@@ -28,8 +28,6 @@ const Profiles = () => {
     setNotificationsEnabled,
     tvMode,
     setTvMode,
-    virtualCursor,
-    setVirtualCursor,
     audioOption,
     setAudioOption,
     subtitleOption,

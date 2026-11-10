@@ -244,7 +244,7 @@ export const useAppStore = create<AppState>()(
               } catch {}
             }
 
-            const shouldOpenModal = manual ? true : (hasUpdate && isMandatory)
+            const shouldOpenModal = manual ? true : (hasUpdate && (isMandatory || !isDismissed))
 
             set({
               updateInfo: {

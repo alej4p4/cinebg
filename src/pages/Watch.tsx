@@ -286,6 +286,7 @@ const Watch = () => {
           onSelectEpisode={handleEpisodeSelect}
           onBack={() => {
             markBackHandled()
+            markPlayerExited()
             // Sempre retorna diretamente para a tela de Sinopse/Detalhes daquele filme ou série
             navigate(`/details/${type}/${mediaId}`, { replace: true })
           }}
