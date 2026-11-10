@@ -102,7 +102,7 @@ const Details = () => {
         }
       })
       .catch(() => {})
-  }, [mediaId, isMovie, selectedSeason, selectedEpisode, originalLanguage, mediaTitle])
+  }, [mediaId, isMovie, selectedSeason, selectedEpisode, originalLanguage, mediaTitle, setAudioOption])
 
   useEffect(() => {
     if (!id || !type) return

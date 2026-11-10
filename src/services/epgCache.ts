@@ -41,6 +41,9 @@ const FULL_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000 // 6h
 let dbPromise: Promise<IDBDatabase> | null = null
 
 function openDB(): Promise<IDBDatabase> {
+  if (typeof indexedDB === 'undefined') {
+    return Promise.reject(new Error('IndexedDB não suportado neste ambiente'))
+  }
   if (dbPromise) return dbPromise
 
   dbPromise = new Promise((resolve, reject) => {
@@ -74,107 +77,123 @@ function openDB(): Promise<IDBDatabase> {
 // --- Cache Operations ---
 
 export async function getCachedProgram(channelId: string): Promise<EPGProgram | null> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_PROGRAMS, 'readonly')
-    const store = tx.objectStore(STORE_PROGRAMS)
-    const request = store.get(channelId)
+  try {
+    const db = await openDB()
+    return await new Promise((resolve) => {
+      const tx = db.transaction(STORE_PROGRAMS, 'readonly')
+      const store = tx.objectStore(STORE_PROGRAMS)
+      const request = store.get(channelId)
 
-    request.onsuccess = () => {
-      const data = request.result as CachedEPGProgram | undefined
-      if (data && data.expiresAt > Date.now()) {
-        resolve({
-          title: data.title,
-          description: data.description,
-          start: data.start,
-          end: data.end,
-          startMinutes: data.startMinutes,
-          endMinutes: data.endMinutes,
-          category: data.category,
-          progress: data.progress,
-          nextTitle: data.nextTitle,
-        })
-      } else {
-        resolve(null)
+      request.onsuccess = () => {
+        const data = request.result as CachedEPGProgram | undefined
+        if (data && data.expiresAt > Date.now()) {
+          resolve({
+            title: data.title,
+            description: data.description,
+            start: data.start,
+            end: data.end,
+            startMinutes: data.startMinutes,
+            endMinutes: data.endMinutes,
+            category: data.category,
+            progress: data.progress,
+            nextTitle: data.nextTitle,
+          })
+        } else {
+          resolve(null)
+        }
       }
-    }
-    request.onerror = () => reject(request.error)
-  })
+      request.onerror = () => resolve(null)
+    })
+  } catch {
+    return null
+  }
 }
 
 // Retorna o programa com metadados (para sync incremental)
 async function getCachedProgramRaw(channelId: string): Promise<CachedEPGProgram | null> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_PROGRAMS, 'readonly')
-    const store = tx.objectStore(STORE_PROGRAMS)
-    const request = store.get(channelId)
+  try {
+    const db = await openDB()
+    return await new Promise((resolve) => {
+      const tx = db.transaction(STORE_PROGRAMS, 'readonly')
+      const store = tx.objectStore(STORE_PROGRAMS)
+      const request = store.get(channelId)
 
-    request.onsuccess = () => {
-      const data = request.result as CachedEPGProgram | undefined
-      if (data && data.expiresAt > Date.now()) {
-        resolve(data)
-      } else {
-        resolve(null)
+      request.onsuccess = () => {
+        const data = request.result as CachedEPGProgram | undefined
+        if (data && data.expiresAt > Date.now()) {
+          resolve(data)
+        } else {
+          resolve(null)
+        }
       }
-    }
-    request.onerror = () => reject(request.error)
-  })
+      request.onerror = () => resolve(null)
+    })
+  } catch {
+    return null
+  }
 }
 
 export async function setCachedProgram(channelId: string, program: EPGProgram): Promise<void> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_PROGRAMS, 'readwrite')
-    const store = tx.objectStore(STORE_PROGRAMS)
-    const now = Date.now()
-    const data: CachedEPGProgram = {
-      channelId,
-      ...program,
-      cachedAt: now,
-      expiresAt: now + PROGRAM_TTL_MS,
-    }
-    const request = store.put(data)
-    request.onsuccess = () => resolve()
-    request.onerror = () => reject(request.error)
-  })
+  try {
+    const db = await openDB()
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PROGRAMS, 'readwrite')
+      const store = tx.objectStore(STORE_PROGRAMS)
+      const now = Date.now()
+      const data: CachedEPGProgram = {
+        channelId,
+        ...program,
+        cachedAt: now,
+        expiresAt: now + PROGRAM_TTL_MS,
+      }
+      const request = store.put(data)
+      request.onsuccess = () => resolve()
+      request.onerror = () => reject(request.error)
+    })
+  } catch {}
 }
 
 export async function getCachedSchedule(channelId: string): Promise<DailyScheduleItem[] | null> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_SCHEDULES, 'readonly')
-    const store = tx.objectStore(STORE_SCHEDULES)
-    const request = store.get(channelId)
+  try {
+    const db = await openDB()
+    return await new Promise((resolve) => {
+      const tx = db.transaction(STORE_SCHEDULES, 'readonly')
+      const store = tx.objectStore(STORE_SCHEDULES)
+      const request = store.get(channelId)
 
-    request.onsuccess = () => {
-      const data = request.result as CachedDailySchedule | undefined
-      if (data && data.expiresAt > Date.now()) {
-        resolve(data.schedule)
-      } else {
-        resolve(null)
+      request.onsuccess = () => {
+        const data = request.result as CachedDailySchedule | undefined
+        if (data && data.expiresAt > Date.now()) {
+          resolve(data.schedule)
+        } else {
+          resolve(null)
+        }
       }
-    }
-    request.onerror = () => reject(request.error)
-  })
+      request.onerror = () => resolve(null)
+    })
+  } catch {
+    return null
+  }
 }
 
 export async function setCachedSchedule(channelId: string, schedule: DailyScheduleItem[]): Promise<void> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_SCHEDULES, 'readwrite')
-    const store = tx.objectStore(STORE_SCHEDULES)
-    const now = Date.now()
-    const data: CachedDailySchedule = {
-      channelId,
-      schedule,
-      cachedAt: now,
-      expiresAt: now + SCHEDULE_TTL_MS,
-    }
-    const request = store.put(data)
-    request.onsuccess = () => resolve()
-    request.onerror = () => reject(request.error)
-  })
+  try {
+    const db = await openDB()
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_SCHEDULES, 'readwrite')
+      const store = tx.objectStore(STORE_SCHEDULES)
+      const now = Date.now()
+      const data: CachedDailySchedule = {
+        channelId,
+        schedule,
+        cachedAt: now,
+        expiresAt: now + SCHEDULE_TTL_MS,
+      }
+      const request = store.put(data)
+      request.onsuccess = () => resolve()
+      request.onerror = () => reject(request.error)
+    })
+  } catch {}
 }
 
 // --- Meta Operations ---

@@ -136,6 +136,9 @@ let inMemoryLiveList: XtreamLiveChannelMapped[] | null = null
 let vodFetchPromise: Promise<XtreamVodStream[] | null> | null = null
 let seriesFetchPromise: Promise<XtreamSeriesItem[] | null> | null = null
 let liveFetchPromise: Promise<XtreamLiveChannelMapped[] | null> | null = null
+let vodCacheTime = 0
+let seriesCacheTime = 0
+let liveCacheTime = 0
 
 // Normaliza URLs de servidor (adiciona http:// se omitido e remove barra final)
 export const normalizeServerUrl = (raw: string): string => {
@@ -358,12 +361,16 @@ export const searchXtreamVod = async (
   if (!targetTitle) return null
 
   // Tenta carregar catálogo VOD em memória
+  if (inMemoryVodList && Date.now() - vodCacheTime > CACHE_TTL_MS) {
+    inMemoryVodList = null
+  }
   if (!inMemoryVodList) {
     if (!vodFetchPromise) {
       const endpoint = `${config.serverUrl}/player_api.php?username=${encodeURIComponent(config.username)}&password=${encodeURIComponent(config.password)}&action=get_vod_streams`
       vodFetchPromise = xtreamFetchJson<XtreamVodStream[]>(endpoint, 20000).then((res) => {
         if (res && Array.isArray(res)) {
           inMemoryVodList = res
+          vodCacheTime = Date.now()
         }
         vodFetchPromise = null
         return inMemoryVodList
@@ -415,12 +422,16 @@ export const searchXtreamSeriesEpisode = async (
   const targetTitle = sanitizeTitleForSearch(title)
   if (!targetTitle) return null
 
+  if (inMemorySeriesList && Date.now() - seriesCacheTime > CACHE_TTL_MS) {
+    inMemorySeriesList = null
+  }
   if (!inMemorySeriesList) {
     if (!seriesFetchPromise) {
       const endpoint = `${config.serverUrl}/player_api.php?username=${encodeURIComponent(config.username)}&password=${encodeURIComponent(config.password)}&action=get_series`
       seriesFetchPromise = xtreamFetchJson<XtreamSeriesItem[]>(endpoint, 20000).then((res) => {
         if (res && Array.isArray(res)) {
           inMemorySeriesList = res
+          seriesCacheTime = Date.now()
         }
         seriesFetchPromise = null
         return inMemorySeriesList
@@ -497,6 +508,9 @@ export const resolveXtreamMedia = async (
 
 // Carrega os canais ao vivo fornecidos pelo servidor Xtream Codes
 export const fetchXtreamLiveChannels = async (): Promise<XtreamLiveChannelMapped[]> => {
+  if (inMemoryLiveList && Date.now() - liveCacheTime > CACHE_TTL_MS) {
+    inMemoryLiveList = null
+  }
   if (inMemoryLiveList) return inMemoryLiveList
   const config = getXtreamConfig()
   if (!config || !config.enabled || config.syncLiveChannels === false) return []
@@ -506,6 +520,7 @@ export const fetchXtreamLiveChannels = async (): Promise<XtreamLiveChannelMapped
     liveFetchPromise = xtreamFetchJson<XtreamLiveStream[]>(endpoint, 15000).then((rawStreams) => {
       liveFetchPromise = null
       if (!rawStreams || !Array.isArray(rawStreams)) return []
+      liveCacheTime = Date.now()
       inMemoryLiveList = rawStreams.slice(0, 500).map((s) => ({
         id: `xtream-${s.stream_id}`,
         name: s.name,

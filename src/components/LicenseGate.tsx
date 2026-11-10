@@ -160,7 +160,7 @@ const LicenseGate = ({ isModal = false, onClose }: LicenseGateProps) => {
   // Gera o Pix e QR Code automaticamente ao abrir a tela ou alternar plano
   useEffect(() => {
     handleGeneratePix(currentPlan)
-  }, [selectedPlanIndex])
+  }, [selectedPlanIndex, currentPlan, handleGeneratePix])
 
   // Gera o QR Code localmente em alta resolução via QRCode.toDataURL (zero falha de rede na TV)
   useEffect(() => {

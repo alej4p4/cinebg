@@ -108,6 +108,10 @@ export function startSpan(
     },
     status: 'UNSET',
   }
+  if (activeSpans.size >= 100) {
+    const oldestKey = activeSpans.keys().next().value
+    if (oldestKey) activeSpans.delete(oldestKey)
+  }
   activeSpans.set(span.spanId, span)
   return span
 }

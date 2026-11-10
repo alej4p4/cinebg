@@ -1,5 +1,4 @@
 import { isXtreamActive, fetchXtreamLiveChannels, sanitizeTitleForSearch } from '@/services/xtream'
-import { Capacitor, CapacitorHttp } from '@capacitor/core'
 // =========================================================================
 // TV CINEBG — CATÁLOGO OFICIAL DE CANAIS AO VIVO
 // -------------------------------------------------------------------------
@@ -933,10 +932,8 @@ export const YUCINE_CHANNELS: LiveChannel[] = [
 export const IPTV_ORG_BR_PLAYLIST_URL = 'https://iptv-org.github.io/iptv/countries/br.m3u'
 const SYNC_STORAGE_KEY = 'cinebg_synced_channels_v2'
 const SYNC_EXPIRY_KEY = 'cinebg_synced_channels_exp'
-const SYNC_TTL_MS = 24 * 60 * 60 * 1000 // 24 horas
 
 let memorySyncedChannels: LiveChannel[] | null = null
-let isSyncInProgress = false
 
 export const parseM3UPlaylist = (content: string): LiveChannel[] => {
   const lines = content.split(/\r?\n/)
@@ -1076,6 +1073,10 @@ export const syncIPTVOrgChannels = async (_forceRefresh = false): Promise<LiveCh
 
 // Carrega os canais do catálogo CineBG (com 0ms de espera e zero canais quebrados)
 export const loadLiveChannels = async (): Promise<LiveChannel[]> => {
+  if (memorySyncedChannels && !isXtreamActive()) {
+    return memorySyncedChannels
+  }
+
   // Limpa imediatamente caches legados que continham canais instáveis externos
   if (typeof localStorage !== 'undefined') {
     try {
