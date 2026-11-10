@@ -182,9 +182,9 @@ const Watch = () => {
   // Pré-resolve o próximo episódio em background para troca instantânea em 0ms
   useEffect(() => {
     if (!isMovie && mediaId) {
-      resolveMegaEmbed(mediaId, 'tv', season, episode + 1, originalLanguage).catch(() => {})
+      resolveMegaEmbed(mediaId, 'tv', season, episode + 1, originalLanguage, title).catch(() => {})
     }
-  }, [isMovie, mediaId, season, episode, originalLanguage])
+  }, [isMovie, mediaId, season, episode, originalLanguage, title])
 
   const handleNextEpisode = () => {
     const realSeasons = showData?.seasons?.filter((s) => s.season_number > 0) || []
@@ -223,6 +223,7 @@ const Watch = () => {
         season,
         episode,
         originalLanguage,
+        title
       )
       if (!resolved.dubbedMp4) {
         alert('Esta fonte não está disponível para download. Tente novamente mais tarde.')

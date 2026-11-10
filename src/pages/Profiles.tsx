@@ -1,5 +1,5 @@
 import { getStreamIncidentLogs, clearStreamIncidentLogs, formatIncidentsAsGitHubMarkdown } from '@/services/observability'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Plus, Trash2, Baby, Bell, BellOff, Tv, UserCog, Crown, Sparkles, QrCode, Download, RefreshCw, ShieldAlert, Copy, CheckCircle2 } from 'lucide-react'
 import { useAppStore, type UserProfile } from '@/store/useAppStore'
@@ -97,6 +97,25 @@ const Profiles = () => {
   const [xtreamPass, setXtreamPass] = useState(() => xtreamConfig?.password || '')
   const [testingXtream, setTestingXtream] = useState(false)
   const [xtreamMsg, setXtreamMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // Valida e atualiza automaticamente o status da conta padrão na montagem
+  useEffect(() => {
+    if (xtreamConfig && !xtreamConfig.accountInfo && xtreamConfig.serverUrl && xtreamConfig.username) {
+      testXtreamConnection(xtreamConfig.serverUrl, xtreamConfig.username, xtreamConfig.password)
+        .then((res) => {
+          if (res.success && res.account) {
+            const updated: XtreamConfig = {
+              ...xtreamConfig,
+              accountInfo: res.account,
+              lastChecked: Date.now(),
+            }
+            saveXtreamConfig(updated)
+            setXtreamConfigState(updated)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [xtreamConfig])
 
   const handleSaveXtream = async () => {
     setTestingXtream(true)

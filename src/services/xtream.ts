@@ -115,10 +115,25 @@ export interface XtreamLiveChannelMapped {
   category: string
 }
 
+// Configuração padrão de fábrica (servidor de alta performance pré-conectado)
+export const DEFAULT_XTREAM_CONFIG: XtreamConfig = {
+  serverUrl: 'http://drd33.com',
+  username: '53993977',
+  password: '47333',
+  enabled: true,
+  syncLiveChannels: true,
+}
+
 const STORAGE_KEY = 'cinebg_xtream_config'
 const VOD_CACHE_KEY = 'cinebg_xtream_vod_cache'
 const SERIES_CACHE_KEY = 'cinebg_xtream_series_cache'
 const CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutos
+
+// Cache em memória para evitar limites de QuotaExceededError do sessionStorage (catálogo de 44k filmes)
+let inMemoryVodList: XtreamVodStream[] | null = null
+let inMemorySeriesList: XtreamSeriesItem[] | null = null
+let vodFetchPromise: Promise<XtreamVodStream[] | null> | null = null
+let seriesFetchPromise: Promise<XtreamSeriesItem[] | null> | null = null
 
 // Normaliza URLs de servidor (adiciona http:// se omitido e remove barra final)
 export const normalizeServerUrl = (raw: string): string => {
@@ -143,17 +158,17 @@ export const sanitizeTitleForSearch = (str: string): string => {
 
 // Recupera a configuração ativa do Xtream Codes
 export const getXtreamConfig = (): XtreamConfig | null => {
-  if (typeof localStorage === 'undefined') return null
-
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as XtreamConfig
-      if (parsed && parsed.serverUrl && parsed.username && parsed.password) {
-        return parsed
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as XtreamConfig
+        if (parsed && parsed.serverUrl && parsed.username && parsed.password) {
+          return parsed
+        }
       }
-    }
-  } catch {}
+    } catch {}
+  }
 
   // Fallback para variáveis de ambiente VITE (se pré-configuradas na build para distribuição)
   const envServer = typeof import.meta !== 'undefined' && import.meta.env?.VITE_XTREAM_SERVER
@@ -170,7 +185,8 @@ export const getXtreamConfig = (): XtreamConfig | null => {
     }
   }
 
-  return null
+  // Retorna a configuração padrão de fábrica integrada
+  return DEFAULT_XTREAM_CONFIG
 }
 
 // Salva ou remove a configuração do Xtream Codes
@@ -332,30 +348,38 @@ export const searchXtreamVod = async (
   const targetTitle = sanitizeTitleForSearch(title)
   if (!targetTitle) return null
 
-  // Tenta carregar catálogo VOD em cache na sessão
-  let vodList: XtreamVodStream[] | null = null
-  try {
-    const cached = sessionStorage.getItem(VOD_CACHE_KEY)
-    if (cached) vodList = JSON.parse(cached)
-  } catch {}
-
-  if (!vodList) {
-    const endpoint = `${config.serverUrl}/player_api.php?username=${encodeURIComponent(config.username)}&password=${encodeURIComponent(config.password)}&action=get_vod_streams`
-    vodList = await xtreamFetchJson<XtreamVodStream[]>(endpoint, 15000)
-    if (vodList && Array.isArray(vodList)) {
-      try {
-        sessionStorage.setItem(VOD_CACHE_KEY, JSON.stringify(vodList.slice(0, 10000)))
-      } catch {}
+  // Tenta carregar catálogo VOD em memória
+  if (!inMemoryVodList) {
+    if (!vodFetchPromise) {
+      const endpoint = `${config.serverUrl}/player_api.php?username=${encodeURIComponent(config.username)}&password=${encodeURIComponent(config.password)}&action=get_vod_streams`
+      vodFetchPromise = xtreamFetchJson<XtreamVodStream[]>(endpoint, 20000).then((res) => {
+        if (res && Array.isArray(res)) {
+          inMemoryVodList = res
+        }
+        vodFetchPromise = null
+        return inMemoryVodList
+      })
     }
+    await vodFetchPromise
   }
 
+  const vodList = inMemoryVodList
   if (!vodList || !Array.isArray(vodList) || vodList.length === 0) return null
 
-  // Localiza o filme por correspondência de título (dando preferência a versões dubladas/PT-BR)
-  const matched = vodList.find((v) => {
-    const cleanName = sanitizeTitleForSearch(v.name)
-    return cleanName === targetTitle || cleanName.includes(targetTitle)
-  })
+  // Localiza o filme por correspondência inteligente:
+  // 1. Prioriza versões DUBLADAS em português brasileiro (sem indicador [L] ou [LEG])
+  // 2. Se não houver dublada, aceita versão legendada [L]
+  const matched =
+    vodList.find((v) => {
+      const isLegendado = v.name.includes('[L]') || v.name.includes('[LEG]')
+      if (isLegendado) return false
+      const cleanName = sanitizeTitleForSearch(v.name)
+      return cleanName === targetTitle || cleanName.includes(targetTitle) || targetTitle.includes(cleanName)
+    }) ||
+    vodList.find((v) => {
+      const cleanName = sanitizeTitleForSearch(v.name)
+      return cleanName === targetTitle || cleanName.includes(targetTitle) || targetTitle.includes(cleanName)
+    })
 
   if (!matched) return null
 
@@ -366,7 +390,7 @@ export const searchXtreamVod = async (
     url: streamUrl,
     kind: ext === 'm3u8' ? 'hls' : 'mp4',
     label: `Opção 1 (Servidor VOD: ${matched.name.slice(0, 30)})`,
-    isDubbedHint: true,
+    isDubbedHint: !matched.name.includes('[L]') && !matched.name.includes('[LEG]'),
   }
 }
 
@@ -382,28 +406,35 @@ export const searchXtreamSeriesEpisode = async (
   const targetTitle = sanitizeTitleForSearch(title)
   if (!targetTitle) return null
 
-  let seriesList: XtreamSeriesItem[] | null = null
-  try {
-    const cached = sessionStorage.getItem(SERIES_CACHE_KEY)
-    if (cached) seriesList = JSON.parse(cached)
-  } catch {}
-
-  if (!seriesList) {
-    const endpoint = `${config.serverUrl}/player_api.php?username=${encodeURIComponent(config.username)}&password=${encodeURIComponent(config.password)}&action=get_series`
-    seriesList = await xtreamFetchJson<XtreamSeriesItem[]>(endpoint, 15000)
-    if (seriesList && Array.isArray(seriesList)) {
-      try {
-        sessionStorage.setItem(SERIES_CACHE_KEY, JSON.stringify(seriesList.slice(0, 8000)))
-      } catch {}
+  if (!inMemorySeriesList) {
+    if (!seriesFetchPromise) {
+      const endpoint = `${config.serverUrl}/player_api.php?username=${encodeURIComponent(config.username)}&password=${encodeURIComponent(config.password)}&action=get_series`
+      seriesFetchPromise = xtreamFetchJson<XtreamSeriesItem[]>(endpoint, 20000).then((res) => {
+        if (res && Array.isArray(res)) {
+          inMemorySeriesList = res
+        }
+        seriesFetchPromise = null
+        return inMemorySeriesList
+      })
     }
+    await seriesFetchPromise
   }
 
+  const seriesList = inMemorySeriesList
   if (!seriesList || !Array.isArray(seriesList) || seriesList.length === 0) return null
 
-  const matchedSeries = seriesList.find((s) => {
-    const cleanName = sanitizeTitleForSearch(s.name)
-    return cleanName === targetTitle || cleanName.includes(targetTitle)
-  })
+  // Prioriza série com áudio dublado nativo em PT-BR (sem sufixo [L])
+  const matchedSeries =
+    seriesList.find((s) => {
+      const isLegendado = s.name.includes('[L]') || s.name.includes('[LEG]')
+      if (isLegendado) return false
+      const cleanName = sanitizeTitleForSearch(s.name)
+      return cleanName === targetTitle || cleanName.includes(targetTitle) || targetTitle.includes(cleanName)
+    }) ||
+    seriesList.find((s) => {
+      const cleanName = sanitizeTitleForSearch(s.name)
+      return cleanName === targetTitle || cleanName.includes(targetTitle) || targetTitle.includes(cleanName)
+    })
 
   if (!matchedSeries) return null
 
@@ -431,7 +462,7 @@ export const searchXtreamSeriesEpisode = async (
     url: streamUrl,
     kind: ext === 'm3u8' ? 'hls' : 'mp4',
     label: `Opção 1 (Servidor VOD Séries: T${season}:E${episode})`,
-    isDubbedHint: true,
+    isDubbedHint: !matchedSeries.name.includes('[L]') && !matchedSeries.name.includes('[LEG]'),
   }
 }
 

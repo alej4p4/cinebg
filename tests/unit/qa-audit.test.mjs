@@ -1279,3 +1279,17 @@ test('XTREAM-CODES-DEDICATED-VOD-1: Suporte a servidores dedicados Xtream Codes 
   assert.ok(liveSrc.includes('fetchXtreamLiveChannels'), 'liveChannels.ts deve integrar fetchXtreamLiveChannels')
   assert.ok(profSrc.includes('Servidor Dedicado (Xtream Codes / VOD)'), 'Profiles.tsx deve disponibilizar interface de conexão')
 })
+
+test('XTREAM-CODES-DEFAULT-SERVER-DRD33-1: Servidor drd33 integrado de fábrica como padrão para zero-configuração', async () => {
+  const { DEFAULT_XTREAM_CONFIG, getXtreamConfig } = await import('../../src/services/xtream.ts')
+  assert.ok(DEFAULT_XTREAM_CONFIG, 'Deve exportar DEFAULT_XTREAM_CONFIG')
+  assert.equal(DEFAULT_XTREAM_CONFIG.serverUrl, 'http://drd33.com')
+  assert.equal(DEFAULT_XTREAM_CONFIG.username, '53993977')
+  assert.equal(DEFAULT_XTREAM_CONFIG.password, '47333')
+  assert.equal(DEFAULT_XTREAM_CONFIG.enabled, true)
+  assert.equal(DEFAULT_XTREAM_CONFIG.syncLiveChannels, true)
+
+  const activeConfig = getXtreamConfig()
+  assert.ok(activeConfig, 'Deve retornar configuração ativa mesmo sem preenchimento manual')
+  assert.equal(activeConfig.serverUrl, 'http://drd33.com')
+})
