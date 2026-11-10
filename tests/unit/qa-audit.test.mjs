@@ -1293,3 +1293,18 @@ test('XTREAM-CODES-DEFAULT-SERVER-DRD33-1: Servidor drd33 integrado de fábrica 
   assert.ok(activeConfig, 'Deve retornar configuração ativa mesmo sem preenchimento manual')
   assert.equal(activeConfig.serverUrl, 'http://drd33.com')
 })
+
+test('DETAILS-TDZ-INTEGRITY-1: Details.tsx não referencia variáveis em TDZ antes de early return ou declaração', () => {
+  const detailsSrc = fs.readFileSync('src/pages/Details.tsx', 'utf8')
+  const earlyReturnIdx = detailsSrc.indexOf('if (loading) {')
+  const effectIdx = detailsSrc.indexOf('resolveMegaEmbed(mediaId')
+  const displayTitleDecl = detailsSrc.indexOf('const displayTitle =')
+
+  assert.ok(effectIdx < earlyReturnIdx, 'O useEffect de resolução deve estar no topo de hooks')
+  assert.ok(earlyReturnIdx < displayTitleDecl, 'displayTitle é declarado após a checagem de loading')
+
+  // O useEffect não pode referenciar displayTitle antes de sua declaração
+  const effectSnippet = detailsSrc.slice(effectIdx, effectIdx + 150)
+  assert.doesNotMatch(effectSnippet, /displayTitle/, 'useEffect não deve acessar displayTitle em TDZ')
+  assert.match(effectSnippet, /mediaTitle/, 'useEffect deve acessar mediaTitle declarado no topo')
+})

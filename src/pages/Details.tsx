@@ -85,11 +85,12 @@ const Details = () => {
   }, [mediaId, isMovie, getLastWatched])
 
   const originalLanguage = (movieData?.original_language || showData?.original_language || '')
+  const mediaTitle = isMovie ? movieData?.title : showData?.name
 
   // Pré-resolve a fonte direta do filme/episódio em background (estilo YouCine, sem trailer do YouTube e sem ocupar o MediaCodec antes do Play)
   useEffect(() => {
     if (!mediaId || Number.isNaN(mediaId)) return
-    resolveMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', selectedSeason, selectedEpisode, originalLanguage, displayTitle)
+    resolveMegaEmbed(mediaId, isMovie ? 'movie' : 'tv', selectedSeason, selectedEpisode, originalLanguage, mediaTitle)
       .then((resolved) => {
         const isPt = (originalLanguage || '').toLowerCase() === 'pt'
         const hasDub = isPt || (resolved.candidates && resolved.candidates.length > 0)
@@ -101,7 +102,7 @@ const Details = () => {
         }
       })
       .catch(() => {})
-  }, [mediaId, isMovie, selectedSeason, selectedEpisode, originalLanguage])
+  }, [mediaId, isMovie, selectedSeason, selectedEpisode, originalLanguage, mediaTitle])
 
   useEffect(() => {
     if (!id || !type) return
