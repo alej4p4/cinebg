@@ -1,7 +1,7 @@
 {
   "android/app/build.gradle": {
-    "mtime": 1794267489.708208,
-    "seen": 1794267568.6945565,
+    "mtime": 1794267611.3991578,
+    "seen": 1794268882.0797477,
     "ast_hash": "99fffccc36cb58602317bb16aaefd825",
     "semantic_hash": ""
   },
@@ -72,8 +72,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1794267478.3113172,
-    "seen": 1794267568.6946394,
+    "mtime": 1794267611.4175732,
+    "seen": 1794268882.0797963,
     "ast_hash": "7267955da233b2c7d911830214e10331",
     "semantic_hash": ""
   },
@@ -90,8 +90,8 @@
     "semantic_hash": "767d4b2c05344099a139c5e146133915"
   },
   "public/update.json": {
-    "mtime": 1794267485.1707492,
-    "seen": 1794267568.694657,
+    "mtime": 1794267611.4188623,
+    "seen": 1794268882.0798051,
     "ast_hash": "c8bb5c584e2212f6e766cb9d8789c710",
     "semantic_hash": ""
   },
@@ -102,8 +102,8 @@
     "semantic_hash": "7b84649eb9726a218a9947c2ffe1fbb3"
   },
   "src/App.tsx": {
-    "mtime": 1794267082.6488807,
-    "seen": 1794267195.7141602,
+    "mtime": 1794267611.4267342,
+    "seen": 1794268882.0798116,
     "ast_hash": "6f80c41f21362c8ad02549233da20dbd",
     "semantic_hash": ""
   },
@@ -173,12 +173,6 @@
     "ast_hash": "6a4971290c7b56cf14d7d1656b3fd30e",
     "semantic_hash": "6a4971290c7b56cf14d7d1656b3fd30e"
   },
-  "src/components/ui/GenreBadge.tsx": {
-    "mtime": 1790891857.8198614,
-    "seen": 1792158340.1034873,
-    "ast_hash": "7b49bb9d167a046a558eef893e1baed8",
-    "semantic_hash": "7b49bb9d167a046a558eef893e1baed8"
-  },
   "src/components/ui/HeroBanner.tsx": {
     "mtime": 1793714125.371045,
     "seen": 1793714363.7900352,
@@ -190,12 +184,6 @@
     "seen": 1792598140.174224,
     "ast_hash": "c3702cbc144f5080e7afe086cdff703e",
     "semantic_hash": "c3702cbc144f5080e7afe086cdff703e"
-  },
-  "src/components/ui/LoadingSpinner.tsx": {
-    "mtime": 1792509482.7792714,
-    "seen": 1792598140.1742277,
-    "ast_hash": "b409ece19635dc7e123adf3b7995670f",
-    "semantic_hash": "b409ece19635dc7e123adf3b7995670f"
   },
   "src/components/ui/MovieCard.tsx": {
     "mtime": 1792956070.0026855,
@@ -209,23 +197,11 @@
     "ast_hash": "3f165d89a4f09f871ebf1616074e713f",
     "semantic_hash": "3f165d89a4f09f871ebf1616074e713f"
   },
-  "src/components/ui/RatingBadge.tsx": {
-    "mtime": 1792509482.914194,
-    "seen": 1792598140.1742392,
-    "ast_hash": "ebb83b164026e20fbec7e376bbc7fd22",
-    "semantic_hash": "ebb83b164026e20fbec7e376bbc7fd22"
-  },
   "src/components/ui/SkeletonCard.tsx": {
     "mtime": 1792509482.9341848,
     "seen": 1792598140.1742427,
     "ast_hash": "bfb521865c83d05aea937c463b49fb6f",
     "semantic_hash": "bfb521865c83d05aea937c463b49fb6f"
-  },
-  "src/hooks/useAppUpdate.ts": {
-    "mtime": 1792509482.9619267,
-    "seen": 1792598140.1742542,
-    "ast_hash": "4842c126ece184290b1755e8e6d75c12",
-    "semantic_hash": "4842c126ece184290b1755e8e6d75c12"
   },
   "src/hooks/useEpisodeNotifications.ts": {
     "mtime": 1792509482.962925,
@@ -234,9 +210,9 @@
     "semantic_hash": "9912da3a1f74cb8c6fa0629743b07232"
   },
   "src/hooks/useLicense.ts": {
-    "mtime": 1794267060.4101028,
-    "seen": 1794267195.7143314,
-    "ast_hash": "f1f721f9e922d5fbd5223318b8bcba80",
+    "mtime": 1794267611.4289021,
+    "seen": 1794268882.0798736,
+    "ast_hash": "f18b13734d290f570ea01374476f1b7d",
     "semantic_hash": ""
   },
   "src/hooks/useOrientationFullscreen.ts": {
@@ -264,8 +240,8 @@
     "semantic_hash": ""
   },
   "src/pages/Details.tsx": {
-    "mtime": 1794267068.6108468,
-    "seen": 1794267195.7143621,
+    "mtime": 1794267611.429904,
+    "seen": 1794268882.0798857,
     "ast_hash": "88a10f50e1d101c2dd6c6f3fa053b720",
     "semantic_hash": ""
   },
@@ -294,8 +270,8 @@
     "semantic_hash": ""
   },
   "src/pages/LiveTV.tsx": {
-    "mtime": 1794267075.7760217,
-    "seen": 1794267195.714387,
+    "mtime": 1794267611.429904,
+    "seen": 1794268882.0798957,
     "ast_hash": "03c7642c76699f2148caf529b5bf1f6f",
     "semantic_hash": ""
   },
@@ -312,9 +288,9 @@
     "semantic_hash": "8225f2219be5166fea1b3c646de6648c"
   },
   "src/pages/Profiles.tsx": {
-    "mtime": 1794267094.224973,
-    "seen": 1794267195.7144012,
-    "ast_hash": "1d59c0ae51b9e1752a2d3e9ddbe4bd24",
+    "mtime": 1794268768.0005345,
+    "seen": 1794268882.0799017,
+    "ast_hash": "8d911161fe51aad3696009932294ed68",
     "semantic_hash": ""
   },
   "src/pages/Search.tsx": {
@@ -330,9 +306,9 @@
     "semantic_hash": ""
   },
   "src/pages/Watch.tsx": {
-    "mtime": 1793109373.9001281,
-    "seen": 1793285134.3635209,
-    "ast_hash": "63ff7132ee7f1f6b8991fea3951a570d",
+    "mtime": 1794268811.6155896,
+    "seen": 1794268882.0799081,
+    "ast_hash": "35f46275984600f9452d962e8fa8afdf",
     "semantic_hash": ""
   },
   "src/services/downloads.ts": {
@@ -372,9 +348,9 @@
     "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1793720294.886797,
-    "seen": 1793720940.5635152,
-    "ast_hash": "1b6777e71fc7906c35f92ec063187b04",
+    "mtime": 1794268776.9227083,
+    "seen": 1794268882.079943,
+    "ast_hash": "c41699056ab4a84c7d9de43a6ec03d9c",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -396,8 +372,8 @@
     "semantic_hash": "c2639ae601ba90c40bf822d00ed9c6af"
   },
   "src/utils/tv.ts": {
-    "mtime": 1794267494.569159,
-    "seen": 1794267568.6950047,
+    "mtime": 1794267611.432333,
+    "seen": 1794268882.0799537,
     "ast_hash": "5cdabcf81eef76b094d49afdd81b6c35",
     "semantic_hash": ""
   },
@@ -876,8 +852,8 @@
     "semantic_hash": ""
   },
   "src/components/PremiumContentGate.tsx": {
-    "mtime": 1794267065.5171578,
-    "seen": 1794267195.7141774,
+    "mtime": 1794267611.4277344,
+    "seen": 1794268882.079819,
     "ast_hash": "f0d4e5683396666e261f97d6e04d8135",
     "semantic_hash": ""
   },
@@ -905,22 +881,10 @@
     "ast_hash": "b7717ab1ba6bc3801a511407432267cd",
     "semantic_hash": ""
   },
-  "src/services/dashboard.ts": {
-    "mtime": 1792932389.2972558,
-    "seen": 1792933406.3500655,
-    "ast_hash": "3ebb1274dc0931bd24de14c07096f1ed",
-    "semantic_hash": ""
-  },
   "src/services/epgCache.ts": {
     "mtime": 1793662970.3454857,
     "seen": 1793665740.9771986,
     "ast_hash": "9f1ca173daf97634c29253c4c6d3c6fa",
-    "semantic_hash": ""
-  },
-  "src/utils/buffer.ts": {
-    "mtime": 1792932389.299255,
-    "seen": 1792933406.3500996,
-    "ast_hash": "d7a3af6616736f40b8d035612e9dc698",
     "semantic_hash": ""
   },
   "vitest.config.ts": {
