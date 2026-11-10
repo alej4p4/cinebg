@@ -1,15 +1,15 @@
 {
-  "version": "1.3.52",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.52/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.52/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.52/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.52/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.52/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.52/CineBG-Tv-release.apk",
+  "version": "1.3.53",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Desativacao automatica de legendas em titulos com audio em portugues e integracao plena do servidor dedicado Xtream para VOD e LiveTV.",
-  "versionCode": 142,
-  "notes": "Desativacao automatica de legendas em titulos com audio em portugues e integracao plena do servidor dedicado Xtream para VOD e LiveTV.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.52/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.52/CineBG-Tv-release.apk"
+  "releaseNotes": "Experiencia definitiva em Player Unico de alta fidelidade (1080p Full HD com prioridade de audio dublado PT-BR) e failover transparente.",
+  "versionCode": 143,
+  "notes": "Experiencia definitiva em Player Unico de alta fidelidade (1080p Full HD com prioridade de audio dublado PT-BR) e failover transparente.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk"
 }

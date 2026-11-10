@@ -3018,17 +3018,17 @@ const StreamPlayer = ({
                 <span>Ajustes</span>
               </button>
 
-              {/* 3. Resolução / Opção de Servidor */}
+              {/* 3. Indicador de Resolução / Qualidade Máxima (1080p Full HD) */}
               <button
                 type="button"
                 id="hud-btn-server"
                 data-hud-btn="true"
                 onClick={handleCycleServerOption}
                 className="flex items-center justify-center gap-2 bg-[#171824]/90 hover:bg-[#232538] text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold border border-white/10 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 focus:bg-yellow-400 focus:text-black focus:scale-105 shadow-md"
-                title="Alternar servidor ou resolução"
+                title="Qualidade da Transmissão (1080p Full HD / Melhor Sinal)"
               >
                 <Server className="w-4 h-4 text-yellow-400" />
-                <span>{candidates.length > 0 && !allowIframe ? `Opção ${candidateIndex + 1}/${candidates.length}` : `Servidor ${fallbackAttempt + 1}`}</span>
+                <span>{candidates.length > 0 && !allowIframe ? '1080p Full HD' : `Melhor Sinal ${fallbackAttempt + 1}`}</span>
               </button>
 
               {/* 4. Episódios (Para Séries) */}
