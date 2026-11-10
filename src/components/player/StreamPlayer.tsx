@@ -1275,7 +1275,7 @@ const StreamPlayer = ({
         setExternalSubs(subs)
         setTimeout(() => {
           refreshTextTracksRef.current?.()
-          if (userManualAudioRef.current === 'orig' || subtitleOption === 'pt') {
+          if (userManualAudioRef.current === 'orig' || activeAudio === 'orig' || subtitleOption === 'pt' || !isPtOriginal) {
             applySubtitleLangRef.current?.('pt')
           }
         }, 400)
@@ -2764,16 +2764,21 @@ const StreamPlayer = ({
             }}
             onPause={() => setIsPlaying(false)}
           >
-            {externalSubs.map((sub) => (
-              <track
-                key={sub.id}
-                kind="subtitles"
-                label={sub.label}
-                src={sub.vttUrl}
-                srcLang={sub.language}
-                default={false}
-              />
-            ))}
+            {externalSubs.map((sub) => {
+              const isDefaultPt =
+                (activeAudio === 'orig' || subtitleOption === 'pt' || !isPtOriginal) &&
+                (sub.language === 'pt' || sub.language === 'pt-BR')
+              return (
+                <track
+                  key={sub.id}
+                  kind="subtitles"
+                  label={sub.label}
+                  src={sub.vttUrl}
+                  srcLang={sub.language}
+                  default={isDefaultPt}
+                />
+              )
+            })}
           </video>
         )}
 
