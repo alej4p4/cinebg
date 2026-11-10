@@ -38,7 +38,7 @@ export const initAntiRedirectShield = () => {
     location: { href: '', replace: () => {} },
   } as unknown as Window
 
-  window.open = function (url?: string | URL, _target?: string, _features?: string) {
+  window.open = (url?: string | URL, _target?: string, _features?: string) => {
     console.warn('[CineBG Anti-Ad] Tentativa de pop-up bloqueada:', url)
     try {
       reportAdInterception({

@@ -1,9 +1,9 @@
-export const CURRENT_APP_VERSION = '1.3.53'
+export const CURRENT_APP_VERSION = '1.3.54'
 
 export const DEFAULT_TV_APK_URL =
-  'https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk'
+  'https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Tv-release.apk'
 export const DEFAULT_MOBILE_APK_URL =
-  'https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Mobile-release.apk'
+  'https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Mobile-release.apk'
 
 export interface CineBGNativeBridge {
   getDeviceType?: () => string
@@ -17,6 +17,18 @@ export interface CineBGNativeBridge {
   getSavedLicense?: () => string
   saveLicense?: (licenseJson: string) => void
   setPlayerLandscape?: (landscape: boolean) => void
+  simulateTouch?: (xPercent: number, yPercent: number) => void
+}
+
+export const simulateNativeTouch = (xPercent: number, yPercent: number): boolean => {
+  try {
+    const bridge = getCineBGNativeBridge()
+    if (bridge && typeof bridge.simulateTouch === 'function') {
+      bridge.simulateTouch(xPercent, yPercent)
+      return true
+    }
+  } catch {}
+  return false
 }
 
 export const getCineBGNativeBridge = (): CineBGNativeBridge | null => {

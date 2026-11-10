@@ -1346,3 +1346,34 @@ test('PORTUGUESE-SUBTITLES-AUTO-DISABLED-1: Titulos com audio em portugues inici
     'loadLiveChannels deve enriquecer os canais com o servidor dedicado'
   )
 })
+
+test('SMART-TV-IFRAME-AUTOPLAY-UNMUTE-AND-REMOTE-BAR-1: Barra de controles para Smart TV, Play/Pausa e Ativação de Áudio no modo iframe', () => {
+  const tvSrc = fs.readFileSync('src/utils/tv.ts', 'utf8')
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+  const mainActivitySrc = fs.readFileSync('android/app/src/main/java/com/barrasoft/cinebg/MainActivity.java', 'utf8')
+  const updateJson = JSON.parse(fs.readFileSync('public/update.json', 'utf8'))
+  const gradleSrc = fs.readFileSync('android/app/build.gradle', 'utf8')
+  const pkgJson = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+
+  // 1. Injeção de toque nativo no Android WebView para superar isolamento cross-origin
+  assert.ok(tvSrc.includes('simulateNativeTouch'), 'tv.ts deve exportar simulateNativeTouch')
+  assert.ok(mainActivitySrc.includes('public void simulateTouch('), 'MainActivity.java deve expor simulateTouch na ponte nativa')
+
+  // 2. Barra de controles Smart TV para players externos
+  assert.ok(playerSrc.includes('id="hud-iframe-btn-play"'), 'StreamPlayer deve renderizar botão de play para iframe')
+  assert.ok(playerSrc.includes('id="hud-iframe-btn-unmute"'), 'StreamPlayer deve renderizar botão de ativar som para iframe')
+  assert.ok(playerSrc.includes('id="hud-iframe-btn-rewind"'), 'StreamPlayer deve renderizar botão de voltar 10s para iframe')
+  assert.ok(playerSrc.includes('id="hud-iframe-btn-forward"'), 'StreamPlayer deve renderizar botão de avançar 10s para iframe')
+
+  // 3. Permissões de autoplay e unmuting no iframe
+  assert.ok(playerSrc.includes('allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *"'), 'iframe deve conceder autoplay irrestrito')
+  assert.ok(playerSrc.includes('simulateNativeTouch(0.5, 0.5)'), 'StreamPlayer deve simular clique de play no centro')
+  assert.ok(playerSrc.includes('simulateNativeTouch(0.04, 0.82)'), 'StreamPlayer deve simular clique para ativar som')
+
+  // 4. Consistência de versão 1.3.54 / versionCode 144
+  assert.strictEqual(pkgJson.version, '1.3.54', 'package.json deve ser 1.3.54')
+  assert.strictEqual(updateJson.version, '1.3.54', 'update.json deve ser 1.3.54')
+  assert.strictEqual(updateJson.versionCode, 144, 'update.json versionCode deve ser 144')
+  assert.ok(gradleSrc.includes('versionCode 144'), 'build.gradle deve ter versionCode 144')
+  assert.ok(gradleSrc.includes('versionName "1.3.54"'), 'build.gradle deve ter versionName 1.3.54')
+})
