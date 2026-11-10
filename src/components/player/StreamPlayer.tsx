@@ -50,7 +50,7 @@ import type { TMDBSeason } from '@/types'
 import EpisodeSelector from './EpisodeSelector'
 import PlaybackSettingsModal from './PlaybackSettingsModal'
 import { initAntiRedirectShield, setAntiRedirectShieldActive } from '@/utils/antiRedirect'
-import { isTVDevice, isMobileDevice, markBackHandled, markPlayerExited, setNativePlayerLandscape } from '@/utils/tv'
+import { isTVDevice, isMobileDevice, markBackHandled, markPlayerExited, setNativePlayerLandscape, simulateNativeTouch } from '@/utils/tv'
 import { trackStreamPlayback, reportStreamIncident, setActivePlaybackContext } from '@/services/observability'
 import { SpatialNavigation } from '@noriginmedia/norigin-spatial-navigation'
 
@@ -197,6 +197,8 @@ const StreamPlayer = ({
   const [key, setKey] = useState(0)
   // Só mostra o iframe se o usuário pedir explicitamente em caso extremo. O padrão é 100% nativo.
   const [allowIframe, setAllowIframe] = useState(false)
+  // O iframe (provedor externo) só entra em cena se o usuário pedir explicitamente.
+  const showIframe = allowIframe && !resolvingDirect
 
   const loadedRef = useRef(false)
   const nativeActiveRef = useRef(false)
@@ -1031,6 +1033,17 @@ const StreamPlayer = ({
     setLoaded(true)
     setError(false)
     if (autoFallbackTimerRef.current) clearTimeout(autoFallbackTimerRef.current)
+
+    // Em Smart TVs e TV Boxes, dispara automaticamente o Play e desmutar áudio via simulação de toque nativo
+    if (isTv) {
+      setTimeout(() => {
+        simulateNativeTouch(0.5, 0.5) // Disparo de Play no centro do player
+      }, 1000)
+      setTimeout(() => {
+        simulateNativeTouch(0.04, 0.82) // Ativar áudio no ícone de som
+        simulateNativeTouch(0.04, 0.88)
+      }, 2000)
+    }
   }
 
   const attemptPlay = useCallback(() => {
@@ -1781,6 +1794,85 @@ const StreamPlayer = ({
       // Qualquer tecla no controle remoto reativa e exibe o HUD
       resetHudTimer()
 
+      const currentFocused = document.activeElement as HTMLElement | null
+
+      // MODO IFRAME (Player Externo): Navegação dedicada D-Pad para Smart TV
+      if (showIframe) {
+        const iframeBtns = Array.from(
+          containerRef.current?.querySelectorAll<HTMLElement>(
+            'button[id^="hud-iframe-btn-"]'
+          ) || []
+        )
+
+        // Tecla D-Pad Para Baixo: Foca a barra de controles inferiores do iframe
+        if (key === 'ArrowDown' || code === 40 || code === 20) {
+          e.preventDefault()
+          e.stopPropagation()
+          setShowHud(true)
+          if (iframeBtns.length > 0) {
+            const currentIdx = iframeBtns.indexOf(currentFocused as HTMLElement)
+            if (currentIdx === -1) {
+              iframeBtns[0].focus()
+            } else if (currentIdx < iframeBtns.length - 1) {
+              iframeBtns[currentIdx + 1].focus()
+            }
+          }
+          return
+        }
+
+        // Tecla D-Pad Para Cima: Foca o botão Voltar no topo
+        if (key === 'ArrowUp' || code === 38 || code === 19) {
+          e.preventDefault()
+          e.stopPropagation()
+          setShowHud(true)
+          document.getElementById('hud-btn-back')?.focus()
+          return
+        }
+
+        // Tecla D-Pad Para a Esquerda: Navega entre os botões da barra do iframe
+        if (key === 'ArrowLeft' || code === 37 || code === 21) {
+          e.preventDefault()
+          e.stopPropagation()
+          setShowHud(true)
+          const currentIdx = iframeBtns.indexOf(currentFocused as HTMLElement)
+          if (currentIdx > 0) {
+            iframeBtns[currentIdx - 1].focus()
+          } else if (currentIdx === -1 && iframeBtns.length > 0) {
+            iframeBtns[0].focus()
+          }
+          return
+        }
+
+        // Tecla D-Pad Para a Direita: Navega entre os botões da barra do iframe
+        if (key === 'ArrowRight' || code === 39 || code === 22) {
+          e.preventDefault()
+          e.stopPropagation()
+          setShowHud(true)
+          const currentIdx = iframeBtns.indexOf(currentFocused as HTMLElement)
+          if (currentIdx >= 0 && currentIdx < iframeBtns.length - 1) {
+            iframeBtns[currentIdx + 1].focus()
+          } else if (currentIdx === -1 && iframeBtns.length > 0) {
+            iframeBtns[0].focus()
+          }
+          return
+        }
+
+        // Tecla Enter / OK / D-Pad Center no modo iframe
+        if (key === 'Enter' || code === 13 || code === 23 || code === 66) {
+          if (currentFocused && currentFocused.tagName === 'BUTTON') {
+            e.preventDefault()
+            e.stopPropagation()
+            currentFocused.click()
+            return
+          }
+          e.preventDefault()
+          e.stopPropagation()
+          simulateNativeTouch(0.5, 0.5)
+          showFeedback('Play / Pausa')
+          return
+        }
+      }
+
       // Lista de botões inferiores do HUD (exclui player controls e voltar)
       const getBottomHudButtons = (): HTMLElement[] => {
         if (!containerRef.current) return []
@@ -1797,7 +1889,6 @@ const StreamPlayer = ({
         )
       }
 
-      const currentFocused = document.activeElement as HTMLElement | null
       const isFocusedOnBottomBtn =
         !!currentFocused &&
         currentFocused.matches('button[data-hud-btn="true"]') &&
@@ -2119,6 +2210,7 @@ const StreamPlayer = ({
     togglePlay,
     handleRewind10,
     handleForward10,
+    showIframe,
   ])
 
   // Tratamento inteligente de toque mobile e cliques na tela do player
@@ -2216,9 +2308,6 @@ const StreamPlayer = ({
       }
     }
   }
-
-  // O iframe (provedor externo) só entra em cena se o usuário pedir explicitamente.
-  const showIframe = allowIframe && !resolvingDirect
 
   // Ativa/desativa o escudo anti-redirect conforme o iframe é exibido
   useEffect(() => {
@@ -2694,7 +2783,7 @@ const StreamPlayer = ({
             title={title}
             className="w-full h-full border-0"
             allowFullScreen
-            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+            allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *"
             referrerPolicy="no-referrer"
             onLoad={handleIframeLoad}
             onError={handleStreamFailure}
@@ -2706,7 +2795,117 @@ const StreamPlayer = ({
           <div className="absolute top-4 inset-x-4 z-50 pointer-events-none flex justify-center animate-fade-in">
             <div className="flex items-center gap-2.5 bg-black/90 border border-yellow-400/60 px-4 py-2 rounded-full text-xs font-semibold text-white shadow-2xl backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-              <span>Controle TV: Pressione <b>OK</b> no centro para Play • Mova as setas até o Som para desmutar • <b>MENU</b> alterna cursor</span>
+              <span>Controle TV: Pressione <b>OK</b> para Play/Pausa • Pressione <b>Ativar Som</b> para áudio • Setas navegam nos botões</span>
+            </div>
+          </div>
+        )}
+
+        {/* Barra de Controles Smart TV para Players Externos / Iframes */}
+        {showIframe && (
+          <div
+            className={`absolute bottom-6 inset-x-4 z-50 flex flex-wrap items-center justify-center gap-3 transition-opacity duration-300 ${
+              showHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+            }`}
+            onClick={(e) => {
+              e.stopPropagation()
+              resetHudTimer()
+            }}
+          >
+            <div className="flex flex-wrap items-center gap-2.5 bg-black/90 border border-yellow-400/50 px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-xl">
+              {/* Botão Play / Pausa */}
+              <button
+                type="button"
+                id="hud-iframe-btn-play"
+                data-hud-btn="true"
+                onClick={() => {
+                  simulateNativeTouch(0.5, 0.5)
+                  showFeedback('Play / Pausa')
+                }}
+                className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-yellow-500/20 transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:bg-yellow-400 focus:text-black cursor-pointer"
+                title="Reproduzir / Pausar vídeo"
+                aria-label="Reproduzir ou pausar"
+              >
+                <Play className="w-4 h-4 fill-black" />
+                <span>Reproduzir / Pausar</span>
+              </button>
+
+              {/* Botão Ativar Áudio / Desmutar */}
+              <button
+                type="button"
+                id="hud-iframe-btn-unmute"
+                data-hud-btn="true"
+                onClick={() => {
+                  simulateNativeTouch(0.04, 0.82)
+                  simulateNativeTouch(0.04, 0.88)
+                  showFeedback('Áudio Ativado 🔊')
+                }}
+                className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:bg-yellow-400 focus:text-black cursor-pointer"
+                title="Ativar áudio do vídeo"
+                aria-label="Ativar som"
+              >
+                <Volume2 className="w-4 h-4 text-black" />
+                <span>Ativar Som</span>
+              </button>
+
+              {/* Botão Retroceder 10s */}
+              <button
+                type="button"
+                id="hud-iframe-btn-rewind"
+                data-hud-btn="true"
+                onClick={() => {
+                  simulateNativeTouch(0.38, 0.50)
+                  showFeedback('Voltar -10s ⏪')
+                }}
+                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:bg-yellow-400 focus:text-black cursor-pointer"
+                title="Voltar 10 segundos"
+                aria-label="Voltar 10 segundos"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>-10s</span>
+              </button>
+
+              {/* Botão Avançar 10s */}
+              <button
+                type="button"
+                id="hud-iframe-btn-forward"
+                data-hud-btn="true"
+                onClick={() => {
+                  simulateNativeTouch(0.62, 0.50)
+                  showFeedback('Avançar +10s ⏩')
+                }}
+                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:bg-yellow-400 focus:text-black cursor-pointer"
+                title="Avançar 10 segundos"
+                aria-label="Avançar 10 segundos"
+              >
+                <FastForward className="w-3.5 h-3.5" />
+                <span>+10s</span>
+              </button>
+
+              {/* Botão Trocar Servidor */}
+              <button
+                type="button"
+                id="hud-iframe-btn-mirror"
+                data-hud-btn="true"
+                onClick={handleCycleServerOption}
+                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:bg-yellow-400 focus:text-black cursor-pointer"
+                title="Alternar servidor de espelho"
+              >
+                <Server className="w-3.5 h-3.5 text-yellow-400" />
+                <span>Servidor ({activeMirror === 'vidsrc' ? 'VidSrc' : activeMirror === 'embed2' ? '2Embed' : 'VidLink'})</span>
+              </button>
+
+              {/* Botão Buscar Dublado */}
+              <button
+                type="button"
+                id="hud-iframe-btn-refresh"
+                data-hud-btn="true"
+                onClick={handleManualRefresh}
+                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:bg-yellow-400 focus:text-black cursor-pointer"
+                title="Buscar fonte direta dublada"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-yellow-400" />
+                <span>Buscar Dublado</span>
+              </button>
             </div>
           </div>
         )}

@@ -232,7 +232,7 @@ public class MainActivity extends BridgeActivity {
         "pangle", "yandex", "anonymizer", "coinhive", "coinimp", "crypto-loot",
         "adkeep", "pemsrv", "adtng", "ad-score", "adtarget", "adfactor", "adnuntius",
         "outstream", "vidoomy", "in-page-push", "pushnotification", "adserver",
-        "videoshare", "streamshield", "clck", "embedplayer", "solitary-field", "individualbranding", "uqload"
+        "videoshare", "streamshield", "clck", "embedplayer", "individualbranding", "uqload"
     };
 
     private static boolean isAdUrl(String url) {
@@ -454,6 +454,32 @@ public class MainActivity extends BridgeActivity {
                             runOnUiThread(() -> {
                                 applyDeviceOrientation();
                                 setupImmersiveMode();
+                            });
+                        }
+
+                        @android.webkit.JavascriptInterface
+                        public void simulateTouch(final float xPercent, final float yPercent) {
+                            runOnUiThread(() -> {
+                                try {
+                                    WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+                                    if (webView == null) return;
+                                    int width = webView.getWidth();
+                                    int height = webView.getHeight();
+                                    if (width <= 0 || height <= 0) return;
+                                    float x = width * Math.max(0.01f, Math.min(0.99f, xPercent));
+                                    float y = height * Math.max(0.01f, Math.min(0.99f, yPercent));
+                                    long now = android.os.SystemClock.uptimeMillis();
+                                    android.view.MotionEvent down = android.view.MotionEvent.obtain(
+                                        now, now, android.view.MotionEvent.ACTION_DOWN, x, y, 0
+                                    );
+                                    android.view.MotionEvent up = android.view.MotionEvent.obtain(
+                                        now, now + 40, android.view.MotionEvent.ACTION_UP, x, y, 0
+                                    );
+                                    webView.dispatchTouchEvent(down);
+                                    webView.dispatchTouchEvent(up);
+                                    down.recycle();
+                                    up.recycle();
+                                } catch (Exception ignored) {}
                             });
                         }
                     }, "CineBGNative");

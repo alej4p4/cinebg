@@ -1,15 +1,15 @@
 {
-  "version": "1.3.53",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk",
+  "version": "1.3.54",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Experiencia definitiva em Player Unico de alta fidelidade (1080p Full HD com prioridade de audio dublado PT-BR) e failover transparente.",
-  "versionCode": 143,
-  "notes": "Experiencia definitiva em Player Unico de alta fidelidade (1080p Full HD com prioridade de audio dublado PT-BR) e failover transparente.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.53/CineBG-Tv-release.apk"
+  "releaseNotes": "Correção definitiva do player na Smart TV: reprodução nativa direta, som desmutado e controle remoto 100% integrado.",
+  "versionCode": 144,
+  "notes": "Correção definitiva do player na Smart TV: reprodução nativa direta, som desmutado e controle remoto 100% integrado.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.54/CineBG-Tv-release.apk"
 }

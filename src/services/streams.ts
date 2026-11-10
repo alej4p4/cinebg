@@ -246,7 +246,13 @@ export const isPortugueseAudioCandidate = (
 
   // 5. No ecossistema MegaEmbed (mgeb.lat), fontes diretas retornadas para filmes/séries que não
   // possuam marcação explícita de legenda/inglês são streams padrão dubladas em português
-  const isEmbedCdnStream = u.includes('mgeb.') || u.includes('/embed') || u.includes('/hls') || u.includes('.m3u8')
+  const isEmbedCdnStream =
+    u.includes('mgeb.') ||
+    u.includes('/embed') ||
+    u.includes('/hls') ||
+    u.includes('.m3u8') ||
+    u.includes('workers.dev') ||
+    u.includes('playercdn')
   if (isEmbedCdnStream && !l.includes('leg') && !l.includes('sub')) {
     return true
   }
@@ -597,6 +603,53 @@ export const resolveMegaEmbed = async (
           : `Opção ${candidates.length + 1}`,
         isDubbedHint: isDubbed,
       })
+    }
+
+    // Se não encontrou fontes dubladas, mas existem fontes diretas HLS/MP4 no MegaEmbed (com áudio original / legendas):
+    // Prioriza o player nativo direto com legendas em vez de cair em iframe externo que trava em Smart TV
+    if (candidates.length === 0) {
+      for (let i = 0; i < rawSources.length; i++) {
+        const s = rawSources[i]
+        const file = s.file || ''
+        if (!file || typeof file !== 'string' || s.type === 'iframe' || file.includes('/embed')) continue
+        if ((s as { ipLocked?: boolean; serverBound?: boolean }).ipLocked || (s as { ipLocked?: boolean; serverBound?: boolean }).serverBound) continue
+        const cleanUrl = formatDirectStreamUrl(file)
+        if (!cleanUrl) continue
+        const lowerUrl = cleanUrl.toLowerCase()
+        if (BROKEN_IP_LOCKED_HOSTS.some((badHost) => lowerUrl.includes(badHost))) continue
+        if (isAdOrCamripStream(cleanUrl) || isAdOrCamripStream(s.label)) continue
+        const canonicalKey = getCanonicalMediaKey(cleanUrl)
+        if (seenCanonicalKeys.has(canonicalKey)) continue
+        seenCanonicalKeys.add(canonicalKey)
+
+        const isHls =
+          s.type === 'hls' ||
+          lowerUrl.includes('.m3u8') ||
+          lowerUrl.includes('/hls') ||
+          lowerUrl.includes('/includes/hls.php')
+
+        candidates.push({
+          url: cleanUrl,
+          kind: isHls ? 'hls' : 'mp4',
+          label: s.label || `Opção Direta ${candidates.length + 1}`,
+          isDubbedHint: false,
+        })
+      }
+    }
+
+    // Se ainda assim não encontrou candidatos diretos, tenta MovieBox HD
+    if (candidates.length === 0 && title) {
+      try {
+        const mb = await resolveMovieBoxStream(title, undefined, season, episode)
+        if (mb && mb.directUrl) {
+          candidates.push({
+            url: mb.directUrl,
+            kind: mb.format === 'hls' || mb.directUrl.includes('.m3u8') ? 'hls' : 'mp4',
+            label: `CineBG MovieBox (FHD/4K Direct)`,
+            isDubbedHint: false,
+          })
+        }
+      } catch {}
     }
 
     // Ordenação inteligente estilo YuCine:

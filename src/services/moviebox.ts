@@ -363,7 +363,6 @@ async function executeRawRequest(
       }
     } catch (err: unknown) {
       lastError = err instanceof Error ? err : new Error(String(err))
-      continue
     }
   }
 
