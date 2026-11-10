@@ -45,9 +45,10 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'FHD 1080p',
     type: 'multi_sub',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`,
+    getMovieUrl: (tmdbId) =>
+      `https://vidsrc.me/embed/movie?tmdb=${tmdbId}&autoplay=1&autonext=1&sub=pt&ds_lang=pt&sub_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`,
+      `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}&autoplay=1&autonext=1&sub=pt&ds_lang=pt&sub_lang=pt`,
   },
   {
     id: 'embed2',
@@ -56,9 +57,9 @@ export const MIRRORS: StreamMirror[] = [
     quality: 'HD 720p/1080p',
     type: 'multi_sub',
     sandboxed: false,
-    getMovieUrl: (tmdbId) => `https://www.2embed.cc/embed/${tmdbId}`,
+    getMovieUrl: (tmdbId) => `https://www.2embed.cc/embed/${tmdbId}?autoplay=1&sub=pt&sub_lang=pt`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://www.2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`,
+      `https://www.2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}&autoplay=1&sub=pt&sub_lang=pt`,
   },
   {
     id: 'moviebox',
@@ -68,9 +69,9 @@ export const MIRRORS: StreamMirror[] = [
     type: 'multi_sub',
     sandboxed: false,
     getMovieUrl: (tmdbId) =>
-      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true`,
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&lang=pt-BR&audio_lang=pt-BR&audio=pt&autoplay=true&muted=false&fallback=true&ads=0`,
     getShowUrl: (tmdbId, season, episode) =>
-      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&autoplay=true`,
+      `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=ef4444&secondaryColor=10b981&sub_lang=pt&lang=pt-BR&audio_lang=pt-BR&audio=pt&autoplay=true&muted=false&fallback=true&ads=0`,
   },
   // Quarentena permanente: superflix e megaembed (mgeb.lat) bloqueados por impor Cloudflare Turnstile Captcha ("Validação segura") e bloqueio WebView.
   // Mantidos estritamente para compatibilidade de tipagem e integridade arquitetural sem serem acionados em iframes no runtime.
