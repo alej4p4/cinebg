@@ -87,6 +87,17 @@ export const useSpatialNavigation = (explicitEnabled: boolean, routeKey: string)
       }
 
       if (routeKey === '/live') {
+        let lastChanId = ''
+        try {
+          lastChanId =
+            sessionStorage.getItem('cinebg_livetv_last_channel') ||
+            localStorage.getItem('cinebg_last_live_channel') ||
+            ''
+        } catch {}
+        if (lastChanId && doesFocusableExist(`channel-${lastChanId}`)) {
+          setFocus(`channel-${lastChanId}`)
+          return
+        }
         if (doesFocusableExist('cat-todos')) {
           setFocus('cat-todos')
           return

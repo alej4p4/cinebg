@@ -16,6 +16,7 @@ import ProgressBar from '@/components/ui/ProgressBar'
 import {
   LIVE_CATEGORIES,
   loadLiveChannels,
+  YUCINE_CHANNELS,
   type LiveChannel,
 } from '@/services/liveChannels'
 import {
@@ -29,21 +30,28 @@ import {
 import { useLicense } from '@/hooks/useLicense'
 import { useAppStore } from '@/store/useAppStore'
 import { PAGE_VARIANTS, STAGGER_CONTAINER, STAGGER_ITEM } from '@/utils/motion'
-import { markBackHandled } from '@/utils/tv'
+import { markBackHandled, scrollTvElementIntoView } from '@/utils/tv'
 import { App as CapApp } from '@capacitor/app'
 import { startEPGBackgroundSync, getEPGProgramCached } from '@/services/epgCache'
 import { type EPGProgram } from '@/services/epg'
 
 const LiveTV = () => {
   const navigate = useNavigate()
-  const [channels, setChannels] = useState<LiveChannel[]>([])
-  const [loading, setLoading] = useState(true)
-  const [category, setCategory] = useState<string>('todos')
+  const [channels, setChannels] = useState<LiveChannel[]>(() => YUCINE_CHANNELS)
+  const [loading, setLoading] = useState(false)
+  const [category, setCategory] = useState<string>(() => {
+    try {
+      return sessionStorage.getItem('cinebg_livetv_last_category') || 'todos'
+    } catch {
+      return 'todos'
+    }
+  })
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<LiveChannel | null>(null)
   const [favorites, setFavorites] = useState<Set<string>>(() => loadLiveFavorites())
   const [lastChannelId, setLastChannelId] = useState<string | null>(() => loadLastLiveChannelId())
   const [recentChannelIds, setRecentChannelIds] = useState<string[]>(() => loadRecentLiveChannels())
+  const savedScrollYRef = useRef<number>(0)
   const { isLicensed, isTrial, isTrialBlockDisabled } = useLicense()
   const { setVipModalOpen } = useAppStore()
   const [searchParams] = useSearchParams()
@@ -64,12 +72,6 @@ const LiveTV = () => {
       .then((list) => {
         if (alive) {
           setChannels(list)
-          if (lastChannelId) {
-            const found = list.find((c) => c.id === lastChannelId)
-            if (found && !selected) {
-              // não seleciona automaticamente para não tocar áudio sem interação
-            }
-          }
         }
       })
       .finally(() => {
@@ -145,6 +147,14 @@ const LiveTV = () => {
   }, [channels, category, query, favorites, recentChannelIds])
 
   const currentIndex = selected ? filtered.findIndex((c) => c.id === selected.id) : -1
+  const handleSelectCategory = (catId: string) => {
+    setCategory(catId)
+    try {
+      sessionStorage.setItem('cinebg_livetv_last_category', catId)
+      sessionStorage.setItem('cinebg_livetv_scroll', '0')
+    } catch {}
+  }
+
   const handleNextChannel = () => {
     if (filtered.length === 0) return
     const nextIdx = (currentIndex + 1) % filtered.length
@@ -159,12 +169,18 @@ const LiveTV = () => {
   // Restaura o foco D-Pad no card do canal quando o player fecha
   const handleClosePlayer = useCallback(() => {
     const targetId = selected?.id || lastSelectedChannelIdRef.current || lastChannelId
+    const savedY = savedScrollYRef.current || Number(sessionStorage.getItem('cinebg_livetv_scroll') || 0)
     setSelected(null)
 
     const restoreCardFocus = () => {
       try {
         SpatialNavigation.resume()
         SpatialNavigation.updateAllLayouts().catch(() => {})
+
+        if (savedY > 0) {
+          window.scrollTo({ top: savedY, behavior: 'instant' })
+        }
+
         const focusKey = targetId && doesFocusableExist(`channel-${targetId}`)
           ? `channel-${targetId}`
           : filtered.length > 0 && doesFocusableExist(`channel-${filtered[0].id}`)
@@ -175,14 +191,15 @@ const LiveTV = () => {
         const domEl = document.querySelector(`[data-focus-key="${focusKey}"]`) as HTMLElement | null
         if (domEl) {
           domEl.focus()
-          domEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+          scrollTvElementIntoView(domEl, 'center')
         }
       } catch {}
     }
 
-    setTimeout(restoreCardFocus, 60)
-    setTimeout(restoreCardFocus, 200)
-    setTimeout(restoreCardFocus, 500)
+    requestAnimationFrame(restoreCardFocus)
+    setTimeout(restoreCardFocus, 50)
+    setTimeout(restoreCardFocus, 180)
+    setTimeout(restoreCardFocus, 450)
   }, [selected, filtered, lastChannelId])
 
   useEffect(() => {
@@ -299,14 +316,25 @@ const LiveTV = () => {
       const timer = setTimeout(() => {
         try {
           SpatialNavigation.updateAllLayouts().catch(() => {})
-          const targetId = lastChannelId || channels[0]?.id
+          const savedY = Number(sessionStorage.getItem('cinebg_livetv_scroll') || 0)
+          if (savedY > 0) {
+            window.scrollTo({ top: savedY, behavior: 'instant' })
+          }
+          const targetId =
+            sessionStorage.getItem('cinebg_livetv_last_channel') ||
+            lastChannelId ||
+            channels[0]?.id
           if (targetId && doesFocusableExist(`channel-${targetId}`)) {
             setFocus(`channel-${targetId}`)
+            const domEl = document.querySelector(`[data-focus-key="channel-${targetId}"]`) as HTMLElement | null
+            if (domEl) {
+              scrollTvElementIntoView(domEl, 'center')
+            }
           } else {
             setFocus(ROOT_FOCUS_KEY).catch(() => {})
           }
         } catch {}
-      }, 120)
+      }, 80)
       return () => clearTimeout(timer)
     }
   }, [loading, channels, selected, lastChannelId])
@@ -404,11 +432,11 @@ const LiveTV = () => {
                   <Focusable
                     key={cat.id}
                     focusKey={`cat-${cat.id}`}
-                    onEnterPress={() => setCategory(cat.id)}
+                    onEnterPress={() => handleSelectCategory(cat.id)}
                     className="rounded-full flex-shrink-0"
                   >
                     <button
-                      onClick={() => setCategory(cat.id)}
+                      onClick={() => handleSelectCategory(cat.id)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-200 outline-none ${
                         active
                           ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/30 scale-105'
@@ -461,8 +489,12 @@ const LiveTV = () => {
                       setFavorites(toggleLiveFavorite(favorites, channel.id))
                     }
                     onClick={() => {
+                      savedScrollYRef.current = window.scrollY
+                      try {
+                        sessionStorage.setItem('cinebg_livetv_scroll', String(window.scrollY))
+                        sessionStorage.setItem('cinebg_livetv_last_channel', channel.id)
+                      } catch {}
                       setSelected(channel)
-                      window.scrollTo({ top: 0, behavior: 'smooth' })
                     }}
                   />
                 </motion.div>
