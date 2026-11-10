@@ -1,17 +1,17 @@
 # Graph Report - cinebg  (2026-11-09)
 
 ## Corpus Check
-- 115 files · ~445,841 words
+- 115 files · ~445,945 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 23 file(s) not represented in the graph (top: .xml 10, (none) 3, .properties 3)
 
 ## Summary
-- 1208 nodes · 2707 edges · 80 communities (60 shown, 20 thin omitted)
+- 1208 nodes · 2710 edges · 80 communities (60 shown, 20 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 72 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8586f614`
+- Built from commit: `39de4063`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -187,7 +187,7 @@ Cohesion: 0.14
 Nodes (14): scripts, build, build:apk, cap:open, cap:sync, check:knip, dev, lint (+6 more)
 
 ### Community 21 - "useAppStore"
-Cohesion: 0.05
+Cohesion: 0.06
 Nodes (94): framer-motion, lucide-react, @noriginmedia/norigin-spatial-navigation, react, react-router-dom, CATEGORIES_GRID, NAV_LINKS, LivePlayerProps (+86 more)
 
 ### Community 22 - "buildMovieUrl"
@@ -356,7 +356,7 @@ Nodes (4): ADR-014: Player Sem Botão de Retry (Estilo YuCine), Consequências, 
 
 ## Knowledge Gaps
 - **16 isolated node(s):** `@capacitor/android`, `@capacitor/haptics`, `@capacitor/keyboard`, `@stryker-mutator/core`, `@stryker-mutator/html-reporter` (+11 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 533 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 532 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions

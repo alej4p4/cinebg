@@ -1,15 +1,15 @@
 {
-  "version": "1.3.48",
-  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.48/CineBG-Tv-release.apk",
-  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.48/CineBG-Tv-release.apk",
-  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.48/CineBG-Mobile-release.apk",
-  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.48/CineBG-Tv-release.apk",
-  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.48/CineBG-Mobile-release.apk",
-  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.48/CineBG-Tv-release.apk",
+  "version": "1.3.49",
+  "downloadUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk",
+  "downloadUrlTv": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk",
+  "downloadUrlMobile": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Mobile-release.apk",
+  "tvUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk",
+  "mobileUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Mobile-release.apk",
+  "downloadUrlLegacy": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk",
   "mandatory": true,
-  "releaseNotes": "Desativação do bloqueio de 3 dias de teste para homologação e testes contínuos da equipe em ambientes de nuvem.",
-  "versionCode": 138,
-  "notes": "Desativação do bloqueio de 3 dias de teste para homologação e testes contínuos da equipe em ambientes de nuvem.",
-  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.48/CineBG-Mobile-release.apk",
-  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.48/CineBG-Tv-release.apk"
+  "releaseNotes": "Fluidez maxima na navegacao Smart TV, autoplay com legendas PT nativas e persistencia exata de canal, categoria e foco na aba TV ao vivo.",
+  "versionCode": 139,
+  "notes": "Fluidez maxima na navegacao Smart TV, autoplay com legendas PT nativas e persistencia exata de canal, categoria e foco na aba TV ao vivo.",
+  "apkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Mobile-release.apk",
+  "tvApkUrl": "https://github.com/alej4p4/cinebg/releases/download/v1.3.49/CineBG-Tv-release.apk"
 }
