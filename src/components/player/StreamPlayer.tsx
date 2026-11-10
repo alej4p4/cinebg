@@ -143,12 +143,9 @@ const StreamPlayer = ({
 
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [subDelay, setSubDelay] = useState(0)
-  const [subLang, setSubLang] = useState<'off' | 'pt' | 'en'>(() => {
-    return subtitleOption || 'pt'
-  })
-  const [subStyle, setSubStyle] = useState<'white' | 'yellow' | 'boxed'>('boxed')
-  const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hlsRef = useRef<Hls | null>(null)
+
+  // Identifica se o título é produção original em português
+  const isPtOriginal = (originalLanguage || '').toLowerCase() === 'pt'
 
   // Áudio ativo específico da mídia em reprodução (padrão: Dublado / Português se disponível)
   const [activeAudio, setActiveAudio] = useState<'dub' | 'orig'>(() => initialAudio || 'dub')
@@ -157,7 +154,15 @@ const StreamPlayer = ({
     activeAudioRef.current = activeAudio
   }, [activeAudio])
 
-  const isPtOriginal = (originalLanguage || '').toLowerCase() === 'pt'
+  // Se o título está em português (áudio dublado ou nacional), a legenda DEVE iniciar desativada por padrão
+  const isAudioPortuguese = (initialAudio || 'dub') === 'dub' || isPtOriginal
+  const [subLang, setSubLang] = useState<'off' | 'pt' | 'en'>(() => {
+    if (isAudioPortuguese) return 'off'
+    return subtitleOption === 'off' ? 'off' : 'pt'
+  })
+  const [subStyle, setSubStyle] = useState<'white' | 'yellow' | 'boxed'>('boxed')
+  const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hlsRef = useRef<Hls | null>(null)
   const initialMediaType: 'movie' | 'tv' = type === 'movie' ? 'movie' : 'tv'
   const initialCachedStream = getCachedMegaEmbed(tmdbId, initialMediaType, season, episode, originalLanguage)
   const initialFirstCandidate =
@@ -948,6 +953,7 @@ const StreamPlayer = ({
             setActiveAudio('dub')
             setSubLang('off')
             setSubtitleOption('off')
+            applySubtitleLangRef.current?.('off')
             const dubIdx = list.findIndex((c) => c.isDubbedHint)
             const targetIdx = dubIdx !== -1 ? dubIdx : 0
             const firstCandidate = list[targetIdx]
@@ -968,6 +974,9 @@ const StreamPlayer = ({
             setError(true)
           } else {
             setActiveAudio('dub')
+            setSubLang('off')
+            setSubtitleOption('off')
+            applySubtitleLangRef.current?.('off')
             setActiveMirror(isPtOriginal ? 'vidsrc' : 'vidlink')
             setAllowIframe(true)
             setError(false)
@@ -1275,8 +1284,12 @@ const StreamPlayer = ({
         setExternalSubs(subs)
         setTimeout(() => {
           refreshTextTracksRef.current?.()
-          if (userManualAudioRef.current === 'orig' || activeAudio === 'orig' || subtitleOption === 'pt' || !isPtOriginal) {
+          const isDub = userManualAudioRef.current === 'dub' || activeAudio === 'dub'
+          const isPt = isPtOriginal || isDub
+          if (!isPt && (userManualAudioRef.current === 'orig' || activeAudio === 'orig' || subtitleOption === 'pt')) {
             applySubtitleLangRef.current?.('pt')
+          } else if (isPt) {
+            applySubtitleLangRef.current?.('off')
           }
         }, 400)
       }
@@ -2766,7 +2779,9 @@ const StreamPlayer = ({
           >
             {externalSubs.map((sub) => {
               const isDefaultPt =
-                (activeAudio === 'orig' || subtitleOption === 'pt' || !isPtOriginal) &&
+                subLang !== 'off' &&
+                !isPtOriginal &&
+                activeAudio === 'orig' &&
                 (sub.language === 'pt' || sub.language === 'pt-BR')
               return (
                 <track

@@ -1,4 +1,4 @@
-import { isXtreamActive, fetchXtreamLiveChannels } from '@/services/xtream'
+import { isXtreamActive, fetchXtreamLiveChannels, sanitizeTitleForSearch } from '@/services/xtream'
 import { Capacitor, CapacitorHttp } from '@capacitor/core'
 // =========================================================================
 // TV CINEBG — CATÁLOGO OFICIAL DE CANAIS AO VIVO
@@ -1083,6 +1083,33 @@ export const loadLiveChannels = async (): Promise<LiveChannel[]> => {
       localStorage.removeItem('cinebg_synced_channels_v2')
       localStorage.removeItem('cinebg_synced_channels_exp')
     } catch {}
+  }
+
+  if (isXtreamActive()) {
+    try {
+      const xtreamChannels = await fetchXtreamLiveChannels()
+      if (xtreamChannels && xtreamChannels.length > 0) {
+        // Enriquece canais oficiais CineBG com o sinal prioritário do servidor dedicado Xtream
+        const enriched = YUCINE_CHANNELS.map((ch) => {
+          const cleanCh = sanitizeTitleForSearch(ch.name)
+          const match = xtreamChannels.find((xc) => {
+            const cleanXc = sanitizeTitleForSearch(xc.name)
+            return cleanXc.includes(cleanCh) || cleanCh.includes(cleanXc)
+          })
+          if (match && !ch.sources.includes(match.streamUrl)) {
+            return {
+              ...ch,
+              sources: [match.streamUrl, ...ch.sources],
+            }
+          }
+          return ch
+        })
+        memorySyncedChannels = enriched
+        return enriched
+      }
+    } catch (e) {
+      console.warn('[LiveTV] Erro ao sincronizar canais com servidor dedicado:', e)
+    }
   }
 
   memorySyncedChannels = YUCINE_CHANNELS

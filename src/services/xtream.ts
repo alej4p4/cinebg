@@ -132,8 +132,10 @@ const CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutos
 // Cache em memória para evitar limites de QuotaExceededError do sessionStorage (catálogo de 44k filmes)
 let inMemoryVodList: XtreamVodStream[] | null = null
 let inMemorySeriesList: XtreamSeriesItem[] | null = null
+let inMemoryLiveList: XtreamLiveChannelMapped[] | null = null
 let vodFetchPromise: Promise<XtreamVodStream[] | null> | null = null
 let seriesFetchPromise: Promise<XtreamSeriesItem[] | null> | null = null
+let liveFetchPromise: Promise<XtreamLiveChannelMapped[] | null> | null = null
 
 // Normaliza URLs de servidor (adiciona http:// se omitido e remove barra final)
 export const normalizeServerUrl = (raw: string): string => {
@@ -191,6 +193,9 @@ export const getXtreamConfig = (): XtreamConfig | null => {
 
 // Salva ou remove a configuração do Xtream Codes
 export const saveXtreamConfig = (config: XtreamConfig | null): void => {
+  inMemoryVodList = null
+  inMemorySeriesList = null
+  inMemoryLiveList = null
   if (typeof localStorage === 'undefined') return
   if (!config) {
     localStorage.removeItem(STORAGE_KEY)
@@ -329,6 +334,10 @@ export const buildXtreamStreamUrl = (
   const ext = containerExtension.replace(/^\.+/, '')
 
   if (type === 'live') {
+    // Servidores XUI específicos (como drd33) utilizam o formato direto sem o prefixo /live/
+    if (base.includes('drd33.com') || base.includes('pjrplay.xyz')) {
+      return `${base}/${user}/${pass}/${streamId}.m3u8`
+    }
     return `${base}/live/${user}/${pass}/${streamId}.m3u8`
   }
   if (type === 'movie') {
@@ -488,23 +497,26 @@ export const resolveXtreamMedia = async (
 
 // Carrega os canais ao vivo fornecidos pelo servidor Xtream Codes
 export const fetchXtreamLiveChannels = async (): Promise<XtreamLiveChannelMapped[]> => {
+  if (inMemoryLiveList) return inMemoryLiveList
   const config = getXtreamConfig()
   if (!config || !config.enabled || config.syncLiveChannels === false) return []
 
-  const endpoint = `${config.serverUrl}/player_api.php?username=${encodeURIComponent(config.username)}&password=${encodeURIComponent(config.password)}&action=get_live_streams`
-
-  try {
-    const rawStreams = await xtreamFetchJson<XtreamLiveStream[]>(endpoint, 15000)
-    if (!rawStreams || !Array.isArray(rawStreams)) return []
-
-    return rawStreams.slice(0, 300).map((s) => ({
-      id: `xtream-${s.stream_id}`,
-      name: s.name,
-      streamUrl: buildXtreamStreamUrl(config, 'live', s.stream_id, 'm3u8'),
-      logo: s.stream_icon || 'https://i.imgur.com/tc1ALuu.png',
-      category: 'Servidor IPTV Dedicado',
-    }))
-  } catch {
-    return []
+  if (!liveFetchPromise) {
+    const endpoint = `${config.serverUrl}/player_api.php?username=${encodeURIComponent(config.username)}&password=${encodeURIComponent(config.password)}&action=get_live_streams`
+    liveFetchPromise = xtreamFetchJson<XtreamLiveStream[]>(endpoint, 15000).then((rawStreams) => {
+      liveFetchPromise = null
+      if (!rawStreams || !Array.isArray(rawStreams)) return []
+      inMemoryLiveList = rawStreams.slice(0, 500).map((s) => ({
+        id: `xtream-${s.stream_id}`,
+        name: s.name,
+        streamUrl: buildXtreamStreamUrl(config, 'live', s.stream_id, 'm3u8'),
+        logo: s.stream_icon || 'https://i.imgur.com/tc1ALuu.png',
+        category: 'Servidor IPTV Dedicado',
+      }))
+      return inMemoryLiveList
+    })
   }
+
+  const res = await liveFetchPromise
+  return res || []
 }

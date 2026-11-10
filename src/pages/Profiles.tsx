@@ -6,7 +6,7 @@ import { useAppStore, type UserProfile } from '@/store/useAppStore'
 import { useLicense } from '@/hooks/useLicense'
 import Focusable from '@/components/tv/Focusable'
 import { isMobileDevice } from '@/utils/tv'
-import { getXtreamConfig, saveXtreamConfig, testXtreamConnection, type XtreamConfig } from '@/services/xtream'
+import { getXtreamConfig, saveXtreamConfig, testXtreamConnection, DEFAULT_XTREAM_CONFIG, type XtreamConfig } from '@/services/xtream'
 import { Server, Globe, Key, User, AlertCircle as AlertCircleIcon } from 'lucide-react'
 import {
   checkForNewEpisodes,
@@ -142,11 +142,11 @@ const Profiles = () => {
 
   const handleDisconnectXtream = () => {
     saveXtreamConfig(null)
-    setXtreamConfigState(null)
-    setXtreamServer('')
-    setXtreamUser('')
-    setXtreamPass('')
-    setXtreamMsg({ type: 'success', text: 'Servidor desconectado.' })
+    setXtreamConfigState(DEFAULT_XTREAM_CONFIG)
+    setXtreamServer(DEFAULT_XTREAM_CONFIG.serverUrl)
+    setXtreamUser(DEFAULT_XTREAM_CONFIG.username)
+    setXtreamPass(DEFAULT_XTREAM_CONFIG.password)
+    setXtreamMsg({ type: 'success', text: 'Configuração padrão de fábrica restaurada!' })
   }
   const handleAdd = () => {
     const trimmed = name.trim()

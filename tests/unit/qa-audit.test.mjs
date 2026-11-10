@@ -1308,3 +1308,41 @@ test('DETAILS-TDZ-INTEGRITY-1: Details.tsx não referencia variáveis em TDZ ant
   assert.doesNotMatch(effectSnippet, /displayTitle/, 'useEffect não deve acessar displayTitle em TDZ')
   assert.match(effectSnippet, /mediaTitle/, 'useEffect deve acessar mediaTitle declarado no topo')
 })
+
+test('PORTUGUESE-SUBTITLES-AUTO-DISABLED-1: Titulos com audio em portugues iniciam com legendas desativadas por padrao', () => {
+  const playerSrc = fs.readFileSync('src/components/player/StreamPlayer.tsx', 'utf8')
+  const liveSrc = fs.readFileSync('src/services/liveChannels.ts', 'utf8')
+
+  // 1. Inicializacao do estado de legenda no StreamPlayer
+  assert.match(
+    playerSrc,
+    /isAudioPortuguese = \(initialAudio \|\| 'dub'\) === 'dub' \|\| isPtOriginal/,
+    'StreamPlayer deve detectar se o titulo e dublado ou nacional'
+  )
+  assert.match(
+    playerSrc,
+    /if \(isAudioPortuguese\) return 'off'/,
+    'subLang deve iniciar como off quando o audio for em portugues'
+  )
+
+  // 2. Desativacao explicita de legendas ao carregar fontes dubladas
+  assert.match(
+    playerSrc,
+    /applySubtitleLangRef\.current\?\.\('off'\)/,
+    'Deve forcar desativacao de legendas ao selecionar fonte dublada'
+  )
+
+  // 3. Track HTML5 default nao pode ser ativado em titulos dublados
+  assert.match(
+    playerSrc,
+    /subLang !== 'off' &&\s*!isPtOriginal &&\s*activeAudio === 'orig'/,
+    'Track padrao nao deve ser renderizado quando o audio for dublado/nacional'
+  )
+
+  // 4. LiveTV integrado ao servidor dedicado
+  assert.match(
+    liveSrc,
+    /fetchXtreamLiveChannels\(\)/,
+    'loadLiveChannels deve enriquecer os canais com o servidor dedicado'
+  )
+})
